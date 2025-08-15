@@ -43,7 +43,18 @@ header .top-actions { position:absolute; top:50%; right:1.2rem; transform:transl
 .gh-btn .label { display:none; }
 @media (min-width:520px){ .gh-btn .label { display:inline; } }
 main { max-width:960px; margin:1.5rem auto; padding:0 1rem; }
-input#search { width:100%; padding:.6rem .75rem; font-size:1rem; border:1px solid var(--panel-border); background:var(--panel); color:var(--text); border-radius:6px; margin-bottom:1rem; }
+input#search {
+	display:block;
+	min-width: 200px;
+	align-self: center;
+	margin:0 2rem 1rem 2rem;
+	padding:.6rem .75rem;
+	font-size:1rem;
+	border:1px solid var(--panel-border);
+	background:var(--panel);
+	color:var(--text);
+	border-radius:6px;
+}
 input#search:focus { outline:2px solid var(--accent); outline-offset:1px; }
 /* 响应式网格：自动填充列，卡片最小宽 240px，空间足够时均匀拉伸 */
 .module-list { display:grid; gap:1rem; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); align-items:stretch; }

@@ -1,7 +1,7 @@
 {% extends "layouts/base.njk" %}
 {% block title %}{{ config.siteName }}{% endblock %}
 {% block content %}
-<section>
+<section style="display:flex;flex-direction:column">
   <input id="search" type="text" placeholder="搜索模块..." />
   <div id="results" class="module-list">
     {% for m in modules %}
