@@ -55,8 +55,11 @@
   </section>
   {% if module.hasDemo %}
   <section>
-    <h2>演示</h2>
-  <iframe src="https://turbowarp.org/embed?project_url={{ (config.baseUrl + '/modules/' + module.slug + '/demo.sb3') | urlencode }}&autoplay=false&lightmode&stretch" allowfullscreen loading="lazy" style="width:480px;height:402px;border:0;"></iframe>
+    <div style="display:flex;align-items:center;gap:1em;margin-bottom:0.5rem;">
+      <h2 style="margin:0;">演示</h2>
+      <a class="tw-open-btn" href="https://turbowarp.org/editor?project_url={{ (config.baseUrl + '/modules/' + module.slug + '/demo.sb3') | urlencode }}" target="_blank" rel="noopener" style="display:inline-block;padding:0.5em 1em;background:#4c97ff;color:#fff;border-radius:4px;text-decoration:none;font-weight:bold;font-size:1rem;">在 Turbowarp 编辑器中打开</a>
+    </div>
+    <iframe src="https://turbowarp.org/embed?project_url={{ (config.baseUrl + '/modules/' + module.slug + '/demo.sb3') | urlencode }}&settings-button&addons=pause,clones&stretch" width="482" height="412" allowtransparency="true" frameborder="0" scrolling="no" allowfullscreen loading="lazy"></iframe>
   </section>
   {% endif %}
   {% if module.variables.length %}
