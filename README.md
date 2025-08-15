@@ -19,7 +19,7 @@ content/modules/<module-id>/
 ```
 
 ## meta.json 字段
-- id, name, description, tags, contributors, keywords(可选)
+- id, name, description, tags, contributors
 - contributors 支持逗号分隔字符串: `gh/user, sc/another, Alice`
   - `gh/xxx` -> 转成 GitHub 链接
   - `sc/xxx` -> 转成 Scratch 用户链接
@@ -42,7 +42,7 @@ public/vendor/
 若需更新版本：从官方仓库构建最新 release，替换上述两个文件即可。
 
 ## 搜索
-基于 MiniSearch，字段：name,id,description,tags,keywords。
+基于 MiniSearch，字段：name,id,description,tags
 
 ## 多脚本支持
 三种方式任选其一：

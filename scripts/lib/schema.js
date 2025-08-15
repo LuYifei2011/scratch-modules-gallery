@@ -30,7 +30,7 @@ function normalizeOne(entry) {
 }
 
 export function buildModuleRecord(meta, extra) {
-  const { id, name, description, tags, contributors, keywords } = meta;
+  const { id, name, description, tags, contributors } = meta;
   const errors = [];
   if (!id) errors.push('missing id');
   if (!name) errors.push('missing name');
@@ -44,7 +44,7 @@ export function buildModuleRecord(meta, extra) {
     description,
     tags: Array.isArray(tags) ? tags : [],
     contributors: parseContributors(contributors),
-    keywords: Array.isArray(keywords) ? keywords : (typeof keywords === 'string' ? keywords.split(',').map(s => s.trim()).filter(Boolean) : []),
+  // keywords field removed - rely on tags for searchability
     // 兼容旧格式: script 保留第一段脚本内容
     script: extra.script || (Array.isArray(extra.scripts) && extra.scripts.length ? extra.scripts[0].content : ''),
     // 新增: scripts 数组 [{ title, content }]

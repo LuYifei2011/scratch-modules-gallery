@@ -32,14 +32,12 @@ content/modules/fps/
   "description": "在 Scratch 中统计帧率的模块。",
   "tags": ["performance", "utility"],
   "contributors": "gh/yourname, sc/scratchuser",
-  "keywords": ["fps", "frame", "counter"]
 }
 ```
 字段说明：
 - `id`：与目录同名；仅小写字母/数字/短横线。
 - `tags`：数组；用于搜索与分类徽章。
 - `contributors`：字符串或数组；支持 `gh/` 与 `sc/` 前缀自动生成链接。
-- `keywords`：可选额外搜索词（字符串数组或逗号分隔字符串）。
 
 ## 编写脚本（Scratchblocks）
 三种模式：

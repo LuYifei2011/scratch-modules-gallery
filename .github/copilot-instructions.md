@@ -17,13 +17,13 @@
 
 ## 数据解析要点 (`scripts/lib/schema.js`)
 - `parseContributors()` 支持: `gh/user`, `sc/user`, 普通名称，逗号分隔或数组。
-- `buildModuleRecord()` 汇总字段：`id, slug, name, description, tags[], contributors[], keywords[], script, scripts[], hasDemo, demoFile, variables[], notesHtml, references[]`。
+- `buildModuleRecord()` 汇总字段：`id, slug, name, description, tags[], contributors[], script, scripts[], hasDemo, demoFile, variables[], notesHtml, references[]`。
 - `notes` 极简 Markdown：段落拆分 + **粗体** + `行内代码`，不引入完整解析库。
 
 ## 构建流程关键步骤
 1. 动态导入 `site.config.js` (需 `pathToFileURL`)。
 2. 读取模块 & 聚合错误（非致命）到 `errorsAll`。
-3. 构建 MiniSearch：加权 (name5 > id4 > tags3 > description2 > keywords1)。
+3. 构建 MiniSearch：加权 (name5 > id4 > tags3 > description2)。
 4. 写出索引 / 文档列表 / 页面 / sitemap / robots。
 5. 拷贝：公共资源 (`public`)、客户端 (`src/client/*.js|css`)、MiniSearch UMD、模块 demo 与 assets。
 

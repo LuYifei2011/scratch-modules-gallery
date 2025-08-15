@@ -20,10 +20,10 @@
     ]);
     const [idxJson, docsList] = await Promise.all([idxRes.json(), docsRes.json()]);
     const opts = {
-      fields: ['name', 'id', 'description', 'tags', 'keywords'],
+      fields: ['name', 'id', 'description', 'tags'],
       storeFields: ['id', 'name', 'description', 'tags', 'slug', 'hasDemo'],
       idField: 'id',
-      searchOptions: { boost: { name: 5, id: 4, tags: 3, description: 2, keywords: 1 } }
+      searchOptions: { boost: { name: 5, id: 4, tags: 3, description: 2 } }
     };
     mini = MiniSearch.loadJS(idxJson, opts);
     allDocs = docsList;

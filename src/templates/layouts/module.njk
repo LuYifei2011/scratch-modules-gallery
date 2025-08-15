@@ -11,12 +11,7 @@
   "programmingLanguage": "Scratch",
   {# 合并 tags 与 keywords，确保都是数组 #}
   {% set tags_str = module.tags | join(',') %}
-  {% if module.keywords and module.keywords.length %}
-    {% set keywords_str = module.keywords | join(',') %}
-    "keywords": "{{ tags_str }}{% if tags_str and keywords_str %},{% endif %}{{ keywords_str }}",
-  {% else %}
-    "keywords": "{{ tags_str }}",
-  {% endif %}
+  "keywords": "{{ tags_str }}",
   "url": "{{ config.baseUrl }}/modules/{{ module.slug }}/"
 }</script>
 {% endblock %}

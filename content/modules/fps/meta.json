@@ -3,6 +3,5 @@
   "name": "FPS",
   "description": "计算FPS。",
   "tags": ["性能", "fps"],
-  "contributors": "gh/LuYifei2011",
-  "keywords": ["scratch", "fps", "性能"]
+  "contributors": "gh/LuYifei2011"
 }

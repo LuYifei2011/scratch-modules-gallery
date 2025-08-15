@@ -115,10 +115,10 @@ function escapeHtml(str='') {
 
 function buildSearchIndex(modules) {
   const mini = new MiniSearch({
-    fields: ['name', 'id', 'description', 'tags', 'keywords'],
+    fields: ['name', 'id', 'description', 'tags'],
     storeFields: ['id', 'name', 'description', 'tags', 'slug', 'hasDemo'],
     idField: 'id',
-    searchOptions: { boost: { name: 5, id: 4, tags: 3, description: 2, keywords: 1 } }
+    searchOptions: { boost: { name: 5, id: 4, tags: 3, description: 2 } }
   });
   mini.addAll(modules);
   return mini.toJSON();
