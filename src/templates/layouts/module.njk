@@ -49,22 +49,13 @@
       <pre class="scratchblocks">{{ module.script | escape }}</pre>
     {% endif %}
   </section>
-  {% if module.hasDemo %}
-  <section>
-    <div style="display:flex;align-items:center;gap:1em;margin-bottom:0.5rem;">
-      <h2 style="margin:0;">演示</h2>
-      <a class="tw-open-btn" href="https://turbowarp.org/editor?project_url={{ (config.baseUrl + '/modules/' + module.slug + '/demo.sb3') | urlencode }}" target="_blank" rel="noopener" style="display:inline-block;padding:0.5em 1em;background:#4c97ff;color:#fff;border-radius:4px;text-decoration:none;font-weight:bold;font-size:1rem;">在 Turbowarp 编辑器中打开</a>
-    </div>
-    <iframe src="https://turbowarp.org/embed?project_url={{ (config.baseUrl + '/modules/' + module.slug + '/demo.sb3') | urlencode }}&settings-button&addons=pause,clones" width="482" height="412" allowtransparency="true" frameborder="0" scrolling="no" allowfullscreen loading="lazy"></iframe>
-  </section>
-  {% endif %}
   {% if module.variables.length %}
   <section>
     <h2>变量 / 列表</h2>
     <table class="variables"><thead><tr><th>名称</th><th>类型</th><th>作用域</th></tr></thead><tbody>
       {% for v in module.variables %}
-  {% set typeMap = { 'variable': '变量', 'list': '列表' } %}
-  {% set scopeMap = { 'global': '全局', 'sprite': '角色', 'cloud': '云变量' } %}
+  {% set typeMap = { 'variable': '变量', 'list': '列表', 'cloud': '云变量' } %}
+  {% set scopeMap = { 'global': '全局', 'sprite': '角色', 'choose': '按需自选' } %}
   <tr><td>{{ v.name }}</td><td>{{ typeMap[v.type] or v.type }}</td><td>{{ scopeMap[v.scope] or v.scope }}</td></tr>
       {% endfor %}
     </tbody></table>
@@ -74,6 +65,15 @@
   <section>
     <h2>备注</h2>
     {{ module.notesHtml | safe }}
+  </section>
+  {% endif %}
+  {% if module.hasDemo %}
+  <section>
+    <div style="display:flex;align-items:center;gap:1em;margin-bottom:0.83rem;margin-top:0.83rem;">
+      <h2 style="margin:0;">演示</h2>
+      <a class="tw-open-btn" href="https://turbowarp.org/editor?project_url={{ (config.baseUrl + '/modules/' + module.slug + '/demo.sb3') | urlencode }}" target="_blank" rel="noopener" style="display:inline-block;padding:0.5em 1em;background:#4c97ff;color:#fff;border-radius:4px;text-decoration:none;font-weight:bold;font-size:1rem;">在 Turbowarp 编辑器中打开</a>
+    </div>
+    <iframe src="https://turbowarp.org/embed?project_url={{ (config.baseUrl + '/modules/' + module.slug + '/demo.sb3') | urlencode }}&settings-button&addons=pause,clones" width="482" height="412" allowtransparency="true" frameborder="0" scrolling="no" allowfullscreen loading="lazy"></iframe>
   </section>
   {% endif %}
   {% if module.references.length %}

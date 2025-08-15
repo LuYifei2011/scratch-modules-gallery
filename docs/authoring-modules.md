@@ -60,14 +60,14 @@ content/modules/fps/
 定义变量/列表。支持直接数组：
 ```json
 [
-  {"name":"fps","type":"variable","scope":"全局"},
-  {"name":"samples","type":"list","scope":"全局"}
+  {"name":"fps","type":"variable","scope":"global"},
+  {"name":"samples","type":"list","scope":"global"}
 ]
 ```
 或 `{"variables": [...]}` 形式（构建脚本将兼容）。字段：
 - `name` 变量或列表名称
-- `type` `variable` | `list`
-- `scope` 文本描述（如 全局 / 角色）
+- `type` `variable` | `list` | `cloud`
+- `scope` `global` | `sprite` | `choose`
 
 ## notes.md / notes.txt
 支持极简 Markdown：
