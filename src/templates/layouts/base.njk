@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>{% block title %}{{ config.siteName }}{% endblock %}</title>
   <meta name="description" content="{% block meta_description %}{{ config.description }}{% endblock %}" />
+  {% block meta_keywords %}<meta name="keywords" content="{{ config.keywords or '' }}" />{% endblock %}
   <meta name="darkreader-lock" content="true" />
   <meta name="theme-color" content="#1747a6" media="(prefers-color-scheme: light)">
   <meta name="theme-color" content="#0d1e33" media="(prefers-color-scheme: dark)">

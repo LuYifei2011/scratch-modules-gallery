@@ -31,6 +31,17 @@ npm run build
 ```
 输出在 `dist/`。
 
+## 站点配置 (site.config.js)
+项目读取 `site.config.js` 作为构建配置。常用字段：
+- `siteName`, `baseUrl`, `description`, `language`
+- `outDir`, `contentDir`
+- `repoUrl`, `repoBranch`
+- `keywords`：用于生成 `<meta name="keywords">`（首页与模块页可合并使用，详见模板）
+
+构建前准备：
+- 请先运行 `npm install`（或 `pnpm install`/`yarn`）以安装 `minisearch` 等依赖；构建脚本会尝试从 `node_modules` 拷贝 MiniSearch 的 UMD 文件到 `dist/vendor/`。
+- scratchblocks 编译文件需手动放在 `public/vendor/`（参见下文）。
+
 ### scratchblocks 说明
 项目不再通过 npm 安装 `scratchblocks`；请手动将已编译资源放入 `public/vendor/`：
 ```
@@ -40,6 +51,10 @@ public/vendor/
 ```
 构建时它们会原样复制到 `dist/vendor/` 并由模板引用。
 若需更新版本：从官方仓库构建最新 release，替换上述两个文件即可。
+
+### 验证 meta keywords
+- 构建后检查 `dist/index.html` 中 `<meta name="keywords">` 是否为 `site.config.js` 中 `keywords` 的值。
+- 检查模块页 `dist/modules/<id>/index.html` 中的 keywords（模块页会包含 site 配置 keywords 与模块 tags 的组合）。
 
 ## 搜索
 基于 MiniSearch，字段：name,id,description,tags

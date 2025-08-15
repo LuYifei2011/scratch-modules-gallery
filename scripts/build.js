@@ -106,7 +106,9 @@ async function loadModules() {
     if (errors.length) errorsAll.push(`${dir}: ${errors.join(', ')}`);
     modules.push(record);
   }
-  return { modules, errorsAll };
+  // 统计所有 tags，去重后拼接 keywords
+  const allTags = Array.from(new Set(modules.flatMap(m => m.tags || []))).join(',');
+  return { modules, errorsAll, allTags };
 }
 
 function escapeHtml(str='') {
@@ -124,7 +126,7 @@ function buildSearchIndex(modules) {
   return mini.toJSON();
 }
 
-async function render(modules) {
+async function render(modules, allTags) {
   const outDir = path.join(root, config.outDir);
   await fs.emptyDir(outDir);
   // 计算 basePath (用于相对资源路径) —— 例如 https://user.github.io/repo => /repo
@@ -215,8 +217,8 @@ async function render(modules) {
 
 (async () => {
   console.time('build');
-  const { modules, errorsAll } = await loadModules();
-  await render(modules);
+  const { modules, errorsAll, allTags } = await loadModules();
+  await render(modules, allTags);
   console.log(`Built ${modules.length} modules.`);
   if (errorsAll.length) {
     console.warn('Issues:\n' + errorsAll.map(e => ' - ' + e).join('\n'));

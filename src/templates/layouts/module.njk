@@ -2,6 +2,7 @@
 {% block title %}{{ module.name }} - {{ config.siteName }}{% endblock %}
 {% set canonical = '/modules/' + module.slug + '/' %}
 {% block meta_description %}{{ module.description }}{% endblock %}
+{% block meta_keywords %}<meta name="keywords" content="{{ config.keywords }}{% if module.tags.length %},{{ module.tags | join(',') }}{% endif %}" />{% endblock %}
 {% block head_extra %}
 <script type="application/ld+json">{
   "@context": "https://schema.org",

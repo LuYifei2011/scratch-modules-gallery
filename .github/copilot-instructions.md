@@ -1,60 +1,58 @@
-# AI 协作快速指引 (scratch-modules-gallery)
+## AI 快速协作指引 — scratch-modules-gallery
 
-目的：帮助智能代理在本项目中快速、低风险地做改动。保持当前“极简静态生成 + 零额外复杂度”原则。
+目标：让智能代理快速、安全地编辑源码并生成 `dist/` 输出，保持“极简静态生成 + 零额外复杂度”原则。
 
-## 架构速览
-- 单次构建脚本：`scripts/build.js` 扫描 `content/modules/*` 生成 `dist/` (HTML + 搜索索引 + sitemap/robots + vendor 拷贝)。
-- 渲染：Nunjucks 模板 (`src/templates/layouts/`)；前端只做搜索与 scratchblocks 渲染 (`src/client/app.js`)。
-- 搜索：MiniSearch UMD（本地 vendor），索引存 `search-index.json` + 展示字段 `search-docs.json`，前端用 `MiniSearch.loadJS` 复原。
+要点速览
+- 构建：一次性 Node 脚本 `scripts/build.js` 读取 `content/modules/*` -> 生成 `dist/`（HTML、`search-index.json`、`search-docs.json`、`sitemap.xml`、`robots.txt`、拷贝 vendor/assets）。
+- 渲染：Nunjucks 模板位于 `src/templates/layouts/`，请在模板中使用 `config`, `module`, `year`, `basePath`。
+- 搜索：使用本地 UMD MiniSearch（vendor），构建产物包含 `search-index.json`（MiniSearch.toJSON）与 `search-docs.json`（前端展示字段）。
 
-## 内容模型 (模块目录)
-必需：`meta.json` + 至少一种脚本形式。可选：`variables.json` / `notes.md|txt` / `references.json` / `demo.sb3` / `assets/`。
-脚本三种来源(按优先级)：
-1. `scripts/*.txt` 多脚本；按文件名自然排序；文件名可含序号前缀(01-, 02_ 等)，去前缀后余下即标题。
-2. `script-*.txt` 平铺多脚本（同样解析序号+标题）。
-3. 兼容旧单文件 `script.txt`。
-数据模型同时暴露：`scripts: [{title, content}]` 与兼容字段 `script` (首个脚本内容)。
+重要约定（请遵守）
+- ESM 源码；若需 `require`，使用 `createRequire(import.meta.url)`（见 `scripts/build.js`）。
+- 不引入大型打包器或新框架；优先小改动并保持向后兼容。
+- 模板不要在运行时调用 `new Date()`；构建脚本传入 `year`。
+- scratchblocks 编译文件不会由 npm 自动拷贝：放到 `public/vendor/`。
 
-## 数据解析要点 (`scripts/lib/schema.js`)
-- `parseContributors()` 支持: `gh/user`, `sc/user`, 普通名称，逗号分隔或数组。
-- `buildModuleRecord()` 汇总字段：`id, slug, name, description, tags[], contributors[], script, scripts[], hasDemo, demoFile, variables[], notesHtml, references[]`。
-- `notes` 极简 Markdown：段落拆分 + **粗体** + `行内代码`，不引入完整解析库。
+模块目录约定（内容模型）
+- 必需：`meta.json`（id、name、description、tags[]）和至少一种脚本（见下）。
+- 脚本优先级：
+	1. `scripts/*.txt`（按文件名自然排序，文件名可含序号，去前缀为标题）
+	2. `script-*.txt`
+	3. `script.txt`（旧格式回退）
+- 可选：`variables.json`, `notes.md|txt`, `references.json`, `demo.sb3`, `assets/`。
 
-## 构建流程关键步骤
-1. 动态导入 `site.config.js` (需 `pathToFileURL`)。
-2. 读取模块 & 聚合错误（非致命）到 `errorsAll`。
-3. 构建 MiniSearch：加权 (name5 > id4 > tags3 > description2)。
-4. 写出索引 / 文档列表 / 页面 / sitemap / robots。
-5. 拷贝：公共资源 (`public`)、客户端 (`src/client/*.js|css`)、MiniSearch UMD、模块 demo 与 assets。
+关键实现点（常改动处）
+- `scripts/lib/schema.js`：解析作者贡献者、构建模块 record（id, slug, name, description, tags, contributors, scripts, script, hasDemo, demoFile, variables, notesHtml, references）。
+- `scripts/build.js`：核心流程为 loadModules() -> buildSearchIndex() -> render(). 若修改构建输出或模板数据，优先调整此处。
+- 模板：
+	- `base.njk`：页面骨架，head 区块可通过 `block head_extra` 注入额外 meta/script。
+	- `home.njk`：列出所有模块（SEO：无分页）。
+	- `module.njk`：渲染 scripts 列表或单脚本；包含 JSON-LD。
 
-## 模板与前端
-- `home.njk`：无分页列出全部模块（利于 SEO）。
-- `module.njk`：渲染多脚本：存在 `scripts` 则循环 `<div class="script-block">`，单脚本回退 `module.script`。含 JSON-LD (SoftwareSourceCode)。
-- 前端搜索：加载两个 JSON，`index.search(query, { prefix:true })`（内部封装于 `app.js`）。禁用访问 MiniSearch 私有结构。
+验证与本地运行（快速命令）
+- 构建：
+	npm install
+	npm run build
+- 本地预览：
+	python -m http.server 8800 -d dist
+- 验证要点：
+	- `dist/index.html` head 中 meta（description/keywords/canonical）是否正确
+	- `dist/search-index.json` 与 `dist/search-docs.json` 是否存在且包含模块
+	- `dist/sitemap.xml` 与 `dist/robots.txt`
 
-## 约束与风格
-- 保持 ESM；需要 `require` 用 `createRequire`。
-- 不引入打包器/大型框架；只接受明确必要的轻量依赖。
-- 不使用 `MiniSearch.loadJSON`；必须 `MiniSearch.loadJS`。
-- 模板不要直接 `new Date()`；从构建上下文传 `year`。
-- 增强功能需保持向后兼容（旧 `script.txt` 仍工作）。
+常见坑与注意事项
+- 不要手动编辑 `dist/`；所有变更应修改源码并重建。
+- 新增脚本目录但为空时，构建会回退到 `script.txt`；确认是否遗漏内容。
+- 文件名排序依赖自然字符串排序，避免混用前导零与非前导零。
 
-## 常见易错点
-- 忘记本地 vendor 化 scratchblocks（放在 `public/vendor/`）。
-- 新增脚本目录但为空：构建会回退单文件；确认是否意图缺失内容。
-- 文件名排序：依赖自然字符串排序 + 数字前缀；不要混用前导零与非前导零导致顺序意外。
+编辑与提交建议
+- 小步提交，修改后立刻 `npm run build` 验证无错误。
+- 若新增依赖：更新 `package.json` 并记录原因。
 
-## 提交与验证流程
-1. 修改前先阅读相关文件当前版本，避免覆盖已有改动。
-2. 小步迭代：每次编辑后 `npm run build`；确保无未捕获异常。
-3. 若添加依赖：更新 `package.json` -> 安装 -> 再引用；不留未使用依赖。
-4. 输出只落地到 `dist/`（不要手改 `dist/` 内容；通过源码生成）。
+参考入口（首选阅读顺序）
+1. `scripts/build.js`  — 构建主流程
+2. `scripts/lib/schema.js` — 模型与解析
+3. `src/templates/layouts/` — 页面模板（`base.njk`, `home.njk`, `module.njk`）
+4. `content/modules/` — 示例模块（`fps/`, `order-sprites/`）
 
-## 参考入口
-- 构建逻辑：`scripts/build.js`
-- 数据结构：`scripts/lib/schema.js`
-- 模板：`src/templates/layouts/`
-- 前端逻辑：`src/client/app.js`
-- 示例模块：`content/modules/fps/` 等
-
-需要新增能力或存在未覆盖情形，请显式列出需求再改动。
+有任何不完整或需要补充的地方，请指出具体场景，我会迭代补充。

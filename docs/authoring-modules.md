@@ -37,6 +37,7 @@ content/modules/fps/
 字段说明：
 - `id`：与目录同名；仅小写字母/数字/短横线。
 - `tags`：数组；用于搜索与分类徽章。
+- `keywords` 与 tags：站点级 `site.config.js` 中的 `keywords` 控制首页的 meta keywords；模块的 tags 会用于模块页的 meta keywords（构建会合并 site 关键字与模块 tags）。
 - `contributors`：字符串或数组；支持 `gh/` 与 `sc/` 前缀自动生成链接。
 
 ## 编写脚本（Scratchblocks）

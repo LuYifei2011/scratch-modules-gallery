@@ -1,5 +1,7 @@
 {% extends "layouts/base.njk" %}
 {% block title %}{{ config.siteName }}{% endblock %}
+{# Nunjucks 无 unique 过滤器，直接拼接所有 tags，可能有重复 #}
+{% block meta_keywords %}<meta name="keywords" content="{{ config.keywords }}" />{% endblock %}
 {% block content %}
 <section style="display:flex;flex-direction:column">
   <input id="search" type="text" placeholder="搜索模块..." />
