@@ -127,6 +127,14 @@ function buildSearchIndex(modules) {
 async function render(modules) {
   const outDir = path.join(root, config.outDir);
   await fs.emptyDir(outDir);
+  // 计算 basePath (用于相对资源路径) —— 例如 https://user.github.io/repo => /repo
+  let basePath = '';
+  try {
+    const u = new URL(config.baseUrl);
+    basePath = u.pathname.replace(/\/$/, ''); // '' 或 '/subdir'
+  } catch (e) {
+    basePath = '';
+  }
   // copy public
   const publicDir = path.join(root, 'public');
   if (await fs.pathExists(publicDir)) await fs.copy(publicDir, outDir);
@@ -188,11 +196,11 @@ async function render(modules) {
 
   // render pages
   const year = new Date().getFullYear();
-  const indexHtml = nunjucks.render('layouts/home.njk', { modules, config, year });
+  const indexHtml = nunjucks.render('layouts/home.njk', { modules, config, year, basePath });
   await fs.outputFile(path.join(outDir, 'index.html'), indexHtml, 'utf8');
 
   for (const m of modules) {
-  const html = nunjucks.render('layouts/module.njk', { module: m, config, year });
+  const html = nunjucks.render('layouts/module.njk', { module: m, config, year, basePath });
     const moduleDir = path.join(outDir, 'modules', m.slug);
     await fs.ensureDir(moduleDir);
     await fs.writeFile(path.join(moduleDir, 'index.html'), html, 'utf8');

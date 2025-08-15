@@ -6,11 +6,17 @@
   let mini = null;
   let allDocs = [];
 
+  // 计算 basePath: 通过当前脚本标签 src 推断 (末尾 /app.js)
+  const scriptEl = document.currentScript || Array.from(document.querySelectorAll('script')).find(s => /\/app\.js$/.test(s.src));
+  let basePath = '';
+  if (scriptEl) {
+    try { basePath = new URL(scriptEl.src, location.href).pathname.replace(/\/app\.js$/, ''); } catch (e) {}
+  }
   async function initSearch() {
     // 并行获取索引和文档列表
     const [idxRes, docsRes] = await Promise.all([
-      fetch('/search-index.json'),
-      fetch('/search-docs.json')
+  fetch(basePath + '/search-index.json'),
+  fetch(basePath + '/search-docs.json')
     ]);
     const [idxJson, docsList] = await Promise.all([idxRes.json(), docsRes.json()]);
     const opts = {
@@ -26,7 +32,7 @@
   function renderList(docs) {
     if (!resultsDiv) return;
     if (!docs.length) { resultsDiv.innerHTML = '<p>无结果</p>'; return; }
-    resultsDiv.innerHTML = docs.map(d => `<article class="module-item">\n<h2><a href="/modules/${d.slug}/">${escapeHtml(d.name)}</a>${d.hasDemo ? ' <span class=badge>demo</span>' : ''}</h2>\n<p>${escapeHtml(d.description)}</p>\n<p class="tags">${(d.tags || []).map(t => `<span class=tag>${escapeHtml(t)}</span>`).join('')}</p>\n</article>`).join('\n');
+  resultsDiv.innerHTML = docs.map(d => `<article class="module-item">\n<h2><a href="${basePath}/modules/${d.slug}/">${escapeHtml(d.name)}</a>${d.hasDemo ? ' <span class=badge>demo</span>' : ''}</h2>\n<p>${escapeHtml(d.description)}</p>\n<p class="tags">${(d.tags || []).map(t => `<span class=tag>${escapeHtml(t)}</span>`).join('')}</p>\n</article>`).join('\n');
   }
 
   function escapeHtml(str = '') { return str.replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#39;" }[c])); }

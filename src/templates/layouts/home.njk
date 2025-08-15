@@ -6,7 +6,7 @@
   <div id="results" class="module-list">
     {% for m in modules %}
       <article class="module-item">
-        <h2><a href="/modules/{{ m.slug }}/">{{ m.name }}</a>{% if m.hasDemo %} <span class="badge">demo</span>{% endif %}</h2>
+  <h2><a href="{{ basePath }}/modules/{{ m.slug }}/">{{ m.name }}</a>{% if m.hasDemo %} <span class="badge">demo</span>{% endif %}</h2>
         <p>{{ m.description }}</p>
         <p class="tags">{% for t in m.tags %}<span class="tag">{{ t }}</span>{% endfor %}</p>
       </article>

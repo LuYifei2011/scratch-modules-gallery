@@ -8,16 +8,17 @@
   <meta name="darkreader-lock" content="true" />
   <meta name="theme-color" content="#1747a6" media="(prefers-color-scheme: light)">
   <meta name="theme-color" content="#0d1e33" media="(prefers-color-scheme: dark)">
+  {# basePath: 由构建脚本解析 config.baseUrl pathname, 例如 "/scratch-modules-gallery" 或 "" #}
   <link rel="canonical" href="{{ config.baseUrl }}{{ canonical or '/' }}" />
-  <link rel="stylesheet" href="/style.css" />
-  <script defer src="/vendor/minisearch.js"></script>
-  <script defer src="/vendor/scratchblocks.min.js"></script>
-  <script defer src="/vendor/scratchblocks-translations.js"></script>
+  <link rel="stylesheet" href="{{ basePath }}/style.css" />
+  <script defer src="{{ basePath }}/vendor/minisearch.js"></script>
+  <script defer src="{{ basePath }}/vendor/scratchblocks.min.js"></script>
+  <script defer src="{{ basePath }}/vendor/scratchblocks-translations.js"></script>
   {% block head_extra %}{% endblock %}
 </head>
 <body>
 <header>
-  <h1><a href="/">{{ config.siteName }}</a></h1>
+  <h1><a href="{{ basePath }}/">{{ config.siteName }}</a></h1>
   <nav class="top-actions">
     {% if config.repoUrl %}
   <a class="gh-btn" href="{% if module %}{{ config.repoUrl }}/tree/{{ config.repoBranch | default('main') }}/{{ config.contentDir }}/{{ module.slug }}{% else %}{{ config.repoUrl }}{% endif %}" target="_blank" rel="noopener" aria-label="GitHub 仓库">
@@ -33,6 +34,6 @@
 <footer>
   <p>&copy; {{ year }} Scratch Modules Gallery</p>
 </footer>
-<script defer src="/app.js"></script>
+<script defer src="{{ basePath }}/app.js"></script>
 </body>
 </html>
