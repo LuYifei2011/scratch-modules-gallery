@@ -10,20 +10,35 @@
   const scriptEl = document.currentScript || Array.from(document.querySelectorAll('script')).find(s => /\/app\.js$/.test(s.src));
   let basePath = '';
   if (scriptEl) {
-    try { basePath = new URL(scriptEl.src, location.href).pathname.replace(/\/app\.js$/, ''); } catch (e) {}
+    try { basePath = new URL(scriptEl.src, location.href).pathname.replace(/\/app\.js$/, ''); } catch (e) { }
   }
   async function initSearch() {
     // 并行获取索引和文档列表
     const [idxRes, docsRes] = await Promise.all([
-  fetch(basePath + '/search-index.json'),
-  fetch(basePath + '/search-docs.json')
+      fetch(basePath + '/search-index.json'),
+      fetch(basePath + '/search-docs.json')
     ]);
     const [idxJson, docsList] = await Promise.all([idxRes.json(), docsRes.json()]);
+    function tokenizeCJK(text) {
+      if (!text) return [];
+      const baseTokens = (text.match(/[\p{L}\p{N}\p{M}\p{Pc}\-']+/gu) || []);
+      const out = [];
+      for (const tok of baseTokens) {
+        out.push(tok);
+        if (/^[\u4e00-\u9fff]+$/.test(tok) && tok.length > 1) {
+          const chars = Array.from(tok);
+          for (const c of chars) out.push(c);
+          for (let i = 0; i < chars.length - 1; i++) out.push(chars[i] + chars[i + 1]);
+        }
+      }
+      return Array.from(new Set(out));
+    }
     const opts = {
       fields: ['name', 'id', 'description', 'tags'],
       storeFields: ['id', 'name', 'description', 'tags', 'slug', 'hasDemo'],
       idField: 'id',
-      searchOptions: { boost: { name: 5, id: 4, tags: 3, description: 2 } }
+      searchOptions: { boost: { name: 5, id: 4, tags: 3, description: 2 } },
+      tokenize: tokenizeCJK
     };
     mini = MiniSearch.loadJS(idxJson, opts);
     allDocs = docsList;
@@ -32,18 +47,38 @@
   function renderList(docs) {
     if (!resultsDiv) return;
     if (!docs.length) { resultsDiv.innerHTML = '<p>无结果</p>'; return; }
-  resultsDiv.innerHTML = docs.map(d => `<article class="module-item">\n<h2><a href="${basePath}/modules/${d.slug}/">${escapeHtml(d.name)}</a>${d.hasDemo ? ' <span class=badge>demo</span>' : ''}</h2>\n<p>${escapeHtml(d.description)}</p>\n<p class="tags">${(d.tags || []).map(t => `<span class=tag>${escapeHtml(t)}</span>`).join('')}</p>\n</article>`).join('\n');
+    resultsDiv.innerHTML = docs.map(d => `<article class="module-item">\n<h2><a href="${basePath}/modules/${d.slug}/">${escapeHtml(d.name)}</a>${d.hasDemo ? ' <span class=badge>在线演示</span>' : ''}</h2>\n<p>${escapeHtml(d.description)}</p>\n<p class="tags">${(d.tags || []).map(t => `<span class=tag>${escapeHtml(t)}</span>`).join('')}</p>\n</article>`).join('\n');
   }
 
   function escapeHtml(str = '') { return str.replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#39;" }[c])); }
 
   if (searchInput) {
     await initSearch();
+    // 简易防抖，减少快速输入时的重复搜索
+    let timer = null;
     searchInput.addEventListener('input', () => {
-      const q = searchInput.value.trim();
-      if (!q) { renderList(allDocs); return; }
-      const hits = mini.search(q, { prefix: true }).map(h => allDocs.find(d => d.id === h.id)).filter(Boolean);
-      renderList(hits);
+      if (timer) clearTimeout(timer);
+      timer = setTimeout(() => {
+        const q = searchInput.value.trim();
+        if (!q) { renderList(allDocs); return; }
+        // 组合 prefix + fuzzy 结果：
+        // 1) 精确/前缀结果优先
+        // 2) 补充模糊匹配（允许少量拼写错误）
+        const exactHits = mini.search(q, { prefix: true, fuzzy: false });
+        const fuzzyHits = mini.search(q, { fuzzy: 0.2 }); // 0.2 距离阈值（相对长度），适中
+        const merged = [];
+        const seen = new Set();
+        function pushList(list) {
+          for (const h of list) {
+            if (!seen.has(h.id)) { seen.add(h.id); merged.push(h); }
+          }
+        }
+        pushList(exactHits);
+        pushList(fuzzyHits);
+        // 转换为 docs，保持原排序
+        const docs = merged.map(h => allDocs.find(d => d.id === h.id)).filter(Boolean);
+        renderList(docs);
+      }, 120);
     });
     renderList(allDocs);
   }

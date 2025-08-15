@@ -115,12 +115,34 @@ function escapeHtml(str='') {
   return str.replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 }
 
+// 自定义分词：为纯中文连续片段额外生成 单字 + 双字 词，用于支持中文子串搜索 ("排序" 命中 "排序角色")
+function tokenizeCJK(text) {
+  if (!text) return [];
+  const baseTokens = (text.match(/[\p{L}\p{N}\p{M}\p{Pc}\-']+/gu) || []);
+  const out = [];
+  for (const tok of baseTokens) {
+    out.push(tok);
+    if (/^[\u4e00-\u9fff]+$/.test(tok) && tok.length > 1) {
+      const chars = Array.from(tok);
+      // 单字
+      for (const c of chars) out.push(c);
+      // 双字滑窗
+      for (let i = 0; i < chars.length - 1; i++) {
+        out.push(chars[i] + chars[i + 1]);
+      }
+    }
+  }
+  // 去重
+  return Array.from(new Set(out));
+}
+
 function buildSearchIndex(modules) {
   const mini = new MiniSearch({
     fields: ['name', 'id', 'description', 'tags'],
     storeFields: ['id', 'name', 'description', 'tags', 'slug', 'hasDemo'],
     idField: 'id',
-    searchOptions: { boost: { name: 5, id: 4, tags: 3, description: 2 } }
+    searchOptions: { boost: { name: 5, id: 4, tags: 3, description: 2 } },
+    tokenize: tokenizeCJK
   });
   mini.addAll(modules);
   return mini.toJSON();
