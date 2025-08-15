@@ -1,0 +1,8 @@
+{
+  "id": "order-sprites",
+  "name": "排序角色",
+  "description": "对角色进行排序。",
+  "tags": ["层", "排序"],
+  "contributors": "gh/LuYifei2011",
+  "keywords": ["scratch", "排序", "层"]
+}

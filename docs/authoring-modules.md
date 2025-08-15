@@ -1,0 +1,119 @@
+# 模块编写指南
+
+面向贡献者，说明如何新增 / 维护一个模块目录。
+
+## 快速上手步骤
+1. 选择唯一 `id`（目录名同时用作 slug，不含空格；用短横线连接）。
+2. 在 `content/modules/<id>/` 新建目录，创建最少文件：`meta.json` + 脚本文件（`script.txt` 或多脚本形式之一）。
+3. 运行 `npm run build` 验证生成是否成功（查看控制台是否有 warnings / errors）。
+4. 打开生成的 `dist/modules/<id>/index.html` 或启动本地静态服务查看效果。
+
+## 目录结构示例
+```
+content/modules/fps/
+  meta.json
+  scripts/
+    01-初始化.txt
+    02-计时逻辑.txt
+  variables.json
+  notes.md
+  references.json
+  demo.sb3
+  assets/
+    cover.png
+```
+
+## meta.json 规范
+必填字段：
+```json
+{
+  "id": "fps",
+  "name": "FPS 计数器",
+  "description": "在 Scratch 中统计帧率的模块。",
+  "tags": ["performance", "utility"],
+  "contributors": "gh/yourname, sc/scratchuser",
+  "keywords": ["fps", "frame", "counter"]
+}
+```
+字段说明：
+- `id`：与目录同名；仅小写字母/数字/短横线。
+- `tags`：数组；用于搜索与分类徽章。
+- `contributors`：字符串或数组；支持 `gh/` 与 `sc/` 前缀自动生成链接。
+- `keywords`：可选额外搜索词（字符串数组或逗号分隔字符串）。
+
+## 编写脚本（Scratchblocks）
+三种模式：
+1. 单文件：`script.txt`
+2. 目录：`scripts/*.txt`
+3. 平铺：`script-*.txt`
+
+优先级：目录 > 平铺 > 单文件。
+
+### 多脚本文件命名
+- 支持前缀排序：`01-初始化.txt`, `02_主循环.txt`, `10 清理.txt`
+- 去掉前缀与分隔符后的部分作为标题；若剩余为空则该段无标题。
+
+### 内容建议
+- 纯文本 scratchblocks 语法，避免 tab 混杂（统一 UTF-8 LF）。
+- 可加入空行分段；渲染时保持顺序展示。
+
+## variables.json
+定义变量/列表。支持直接数组：
+```json
+[
+  {"name":"fps","type":"variable","scope":"全局"},
+  {"name":"samples","type":"list","scope":"全局"}
+]
+```
+或 `{"variables": [...]}` 形式（构建脚本将兼容）。字段：
+- `name` 变量或列表名称
+- `type` `variable` | `list`
+- `scope` 文本描述（如 全局 / 角色）
+
+## notes.md / notes.txt
+支持极简 Markdown：
+- 段落：空行分隔
+- **粗体**：`**text**`
+- 行内代码：`` `code` ``
+其余语法不解析，保持简单。
+
+## references.json
+可选引用列表：
+```json
+[
+  {"title":"Scratch Wiki: FPS","url":"https://...","type":"wiki"},
+  {"title":"相关帖子","url":"https://..."}
+]
+```
+`type` 可选，展示为强调文本。
+
+## demo.sb3
+若提供，将在模块页嵌入 TurboWarp iframe。确保文件可正常运行且不包含敏感信息。
+
+## assets 目录
+自由放置图片/附加素材；构建时整目录复制到 `dist/modules/<id>/assets/`。
+
+## 校验与调试
+- 执行 `npm run build`：若出现 `Issues:` 列表，请修复再提交。
+- 常见错误：
+  - 缺失必填字段（id/name/description/tags）
+  - JSON 语法错误（注意逗号、引号）
+  - 空的 `scripts/` 目录：将回退到 `script.txt`；确认是否预期。
+
+## 搜索策略
+索引字段权重：`name(5) > id(4) > tags(3) > description(2) > keywords(1)`。合理撰写 `name` 与 `tags` 以提升可发现性。
+
+## 提交前清单
+- [ ] 构建成功且无未理解警告
+- [ ] 文件命名与编码规范（UTF-8，无 BOM）
+- [ ] 脚本语法在 scratchblocks 预览中正常
+- [ ] 引用链接可访问
+
+## 后续增强（仅讨论，不必提前实现）
+- 自动截图封面
+- 语法校验 / lint 多脚本
+- 模块互相关联引用
+
+欢迎补充改进点或提交 PR。
+
+> 此文档由 AI 生成，可能不够完善，欢迎反馈。

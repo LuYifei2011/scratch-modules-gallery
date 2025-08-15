@@ -1,0 +1,91 @@
+{% extends "layouts/base.njk" %}
+{% block title %}{{ module.name }} - {{ config.siteName }}{% endblock %}
+{% set canonical = '/modules/' + module.slug + '/' %}
+{% block meta_description %}{{ module.description }}{% endblock %}
+{% block head_extra %}
+<script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "SoftwareSourceCode",
+  "name": "{{ module.name | replace('"','\"') }}",
+  "description": "{{ module.description | replace('"','\"') }}",
+  "programmingLanguage": "Scratch",
+  {# 合并 tags 与 keywords，确保都是数组 #}
+  {% set tags_str = module.tags | join(',') %}
+  {% if module.keywords and module.keywords.length %}
+    {% set keywords_str = module.keywords | join(',') %}
+    "keywords": "{{ tags_str }}{% if tags_str and keywords_str %},{% endif %}{{ keywords_str }}",
+  {% else %}
+    "keywords": "{{ tags_str }}",
+  {% endif %}
+  "url": "{{ config.baseUrl }}/modules/{{ module.slug }}/"
+}</script>
+{% endblock %}
+{% block content %}
+<article class="module-detail">
+  <h1>{{ module.name }}</h1>
+  <p>{{ module.description }}</p>
+  <p class="tags">{% for t in module.tags %}<span class="tag">{{ t }}</span>{% endfor %}</p>
+  {% if module.contributors.length %}
+  <p class="contributors">贡献者:
+    {% for c in module.contributors %}
+      <span class="contributor">{% if c.url %}<a href="{{ c.url }}" target="_blank" rel="noopener">{{ c.name }}</a>{% else %}{{ c.name }}{% endif %}</span>
+    {% endfor %}
+  </p>
+  {% endif %}
+  <section>
+    <h2>脚本</h2>
+    <div class="sb-style-switcher" style="margin:0 0 1rem;">
+      <label for="sb-style">渲染风格: </label>
+      <select id="sb-style">
+        <option value="scratch3" selected>Scratch 3</option>
+        <option value="scratch3-high-contrast" selected>Scratch 3 (高对比度)</option>
+        <option value="scratch2">Scratch 2</option>
+      </select>
+    </div>
+    {% if module.scripts and module.scripts.length %}
+      {% for s in module.scripts %}
+        <div class="script-block">
+          {% if s.title %}<h3 class="script-title">{{ s.title }}</h3>{% endif %}
+          <pre class="scratchblocks">{{ s.content | escape }}</pre>
+        </div>
+      {% endfor %}
+    {% else %}
+      <pre class="scratchblocks">{{ module.script | escape }}</pre>
+    {% endif %}
+  </section>
+  {% if module.hasDemo %}
+  <section>
+    <h2>演示</h2>
+    <iframe src="https://turbowarp.org/embed?project_url={{ (config.baseUrl + '/modules/' + module.slug + '/demo.sb3') | urlencode }}&autoplay=false&lightmode&stretch" allowfullscreen loading="lazy" style="width:480px;height:402px;border:0;"></iframe>
+  </section>
+  {% endif %}
+  {% if module.variables.length %}
+  <section>
+    <h2>变量 / 列表</h2>
+    <table class="variables"><thead><tr><th>名称</th><th>类型</th><th>作用域</th></tr></thead><tbody>
+      {% for v in module.variables %}
+  {% set typeMap = { 'variable': '变量', 'list': '列表' } %}
+  {% set scopeMap = { 'global': '全局', 'sprite': '角色', 'cloud': '云变量' } %}
+  <tr><td>{{ v.name }}</td><td>{{ typeMap[v.type] or v.type }}</td><td>{{ scopeMap[v.scope] or v.scope }}</td></tr>
+      {% endfor %}
+    </tbody></table>
+  </section>
+  {% endif %}
+  {% if module.notesHtml %}
+  <section>
+    <h2>备注</h2>
+    {{ module.notesHtml | safe }}
+  </section>
+  {% endif %}
+  {% if module.references.length %}
+  <section>
+    <h2>参考链接</h2>
+    <ul>
+    {% for r in module.references %}
+      <li><a href="{{ r.url }}" target="_blank" rel="noopener">{{ r.title }}</a>{% if r.type %} <em>({{ r.type }})</em>{% endif %}</li>
+    {% endfor %}
+    </ul>
+  </section>
+  {% endif %}
+</article>
+{% endblock %}

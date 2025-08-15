@@ -1,0 +1,40 @@
+# --- Node & Dependency directories ---
+node_modules/
+
+# --- Build output ---
+dist/
+
+# --- Logs & Diagnostics ---
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+*.log
+
+# --- Environment / Secrets (none currently, keep clean) ---
+.env
+.env.local
+.env.*.local
+
+# --- Caches & Temp ---
+.cache/
+.tmp/
+tmp/
+*.tmp
+
+# --- Coverage ---
+coverage/
+.nyc_output/
+
+# --- Editors / IDE ---
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# --- OS cruft ---
+.DS_Store
+Thumbs.db
+
+# --- Misc ---
+# Add additional ignores below as the project evolves.

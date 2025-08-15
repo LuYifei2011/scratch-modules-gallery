@@ -1,0 +1,16 @@
+{% extends "layouts/base.njk" %}
+{% block title %}{{ config.siteName }}{% endblock %}
+{% block content %}
+<section>
+  <input id="search" type="text" placeholder="搜索模块..." />
+  <div id="results" class="module-list">
+    {% for m in modules %}
+      <article class="module-item">
+        <h2><a href="/modules/{{ m.slug }}/">{{ m.name }}</a>{% if m.hasDemo %} <span class="badge">demo</span>{% endif %}</h2>
+        <p>{{ m.description }}</p>
+        <p class="tags">{% for t in m.tags %}<span class="tag">{{ t }}</span>{% endfor %}</p>
+      </article>
+    {% endfor %}
+  </div>
+</section>
+{% endblock %}

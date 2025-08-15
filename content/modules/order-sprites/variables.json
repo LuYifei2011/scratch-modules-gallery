@@ -1,0 +1,4 @@
+[
+  { "name": "Z顺序", "scope": "global", "type": "list" },
+  { "name": "i", "scope": "sprite", "type": "variable" }
+]
