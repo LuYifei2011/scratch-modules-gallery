@@ -1,0 +1,7 @@
+{
+  "id": "tweening",
+  "name": "补间",
+  "description": "使用补间/插值实现平滑动画。",
+  "tags": ["动画", "补间"],
+  "contributors": "gh/LuYifei2011"
+}
