@@ -27,7 +27,12 @@
 </head>
 <body>
 <header>
-  <h1><a href="{{ basePath }}/">{{ config.siteName }}</a></h1>
+  {# 统一使用 .site-title 容器，样式在 CSS 中处理（保持与原先 h1 外观一致） #}
+  <div class="site-title"><a href="{{ basePath }}/">{{ config.siteName }}</a></div>
+  {# 当渲染首页时，构建脚本会传入 modules 列表；仅在 modules 可用且不是单个 module 页面时显示站点总数 #}
+  {% if modules is defined and not module %}
+  <p class="site-module-count">站点共有 {{ modules | length }} 个模块</p>
+  {% endif %}
   <nav class="top-actions">
     {% if config.repoUrl %}
   <a class="gh-btn" href="{% if module %}{{ config.repoUrl }}/tree/{{ config.repoBranch | default('main') }}/{{ config.contentDir }}/{{ module.slug }}{% else %}{{ config.repoUrl }}{% endif %}" target="_blank" rel="noopener" aria-label="GitHub 仓库">

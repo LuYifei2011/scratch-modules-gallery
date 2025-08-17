@@ -32,17 +32,24 @@
 	img, video, svg { filter:none !important; } /* 避免 DarkReader 再次处理，配合 lock */
 }
 body { font-family: system-ui, Arial, sans-serif; margin:0; padding:0; background:var(--bg); color:var(--text); }
-header { background:var(--panel); padding:1rem 1.5rem; box-shadow:var(--shadow); position:sticky; top:0; z-index:100; }
+header { background:var(--panel); padding:1rem 1.5rem; box-shadow:var(--shadow); position:sticky; top:0; z-index:100; display:flex; align-items:center; gap:0.75rem; }
 footer { background:var(--panel); padding:1rem 1.5rem; box-shadow:var(--shadow); position:relative; }
-header h1 { font-size:1.25rem; margin:0; }
+header h1 { font-size:1.25rem; margin:0; display:inline-block; }
 header a { text-decoration:none; color:var(--accent); }
-header .top-actions { position:absolute; top:50%; right:1.2rem; transform:translateY(-50%); display:flex; gap:.6rem; align-items:center; }
+/* 当站点标题在模块页面降级为 .site-title 时，保持与 h1 相同的外观 */
+.site-title { font-size:1.25rem; margin:0; display:inline-block; font-weight:700; }
+/* Ensure the link inside site-title matches header h1 link styling */
+.site-title a { text-decoration:none; color:var(--accent); font-weight:inherit; }
+/* 把操作按钮放在行尾，这样标题与计数可以在同一行 */
+header .top-actions { display:flex; gap:.6rem; align-items:center; margin-left:auto; position:static; transform:none; }
 .gh-btn { display:inline-flex; align-items:center; gap:.35rem; font-size:.75rem; background:#24292f; color:#fff; padding:.38rem .65rem; border-radius:6px; text-decoration:none; line-height:1; transition:background .15s ease; }
 .gh-btn:hover, .gh-btn:focus { background:#000; }
 .gh-btn svg { display:block; }
 .gh-btn .label { display:none; }
 @media (min-width:520px){ .gh-btn .label { display:inline; } }
 main { max-width:960px; margin:1.5rem auto; padding:0 1rem; }
+/* 站点模块计数，显示在标题旁边 */
+.site-module-count { margin:0; font-size:0.95rem; color:var(--text); opacity:0.85; }
 input#search {
 	display:block;
 	min-width: 200px;
