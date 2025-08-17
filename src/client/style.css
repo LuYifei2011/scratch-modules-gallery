@@ -81,3 +81,12 @@ pre.scratchblocks { background:var(--panel); border:1px solid var(--panel-border
 .script-block { margin-bottom:1.25rem; }
 .script-block:last-child { margin-bottom:0; }
 .script-title { margin:.2rem 0 .4rem; font-size:1rem; line-height:1.2; }
+/* 导入脚本折叠块 */
+details.imported-script { margin:1rem 0; border:1px solid var(--panel-border); border-radius:6px; background:var(--panel); padding:.5rem .75rem; }
+details.imported-script[open] { background:var(--panel); }
+details.imported-script summary { cursor:pointer; outline:none; font-size:.85rem; font-weight:600; color:var(--accent); display:flex; flex-wrap:wrap; gap:.25rem; align-items:center; }
+details.imported-script summary::-webkit-details-marker { display:none; }
+details.imported-script summary:focus { outline:2px solid var(--accent); outline-offset:2px; }
+details.imported-script a { color:var(--accent); }
+details.imported-script a:hover { color:var(--accent-hover); }
+details.imported-script pre { margin-top:.5rem; }

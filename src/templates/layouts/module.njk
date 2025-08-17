@@ -40,10 +40,33 @@
     </div>
     {% if module.scripts and module.scripts.length %}
       {% for s in module.scripts %}
+        {% if s.imported %}
+        <details class="imported-script">
+          <summary>
+            引入模块 <a href="{{ basePath }}/modules/{{ s.fromId }}/">{{ s.fromName }}</a>
+            {% if s.fromTitle %} · {{ s.fromTitle }}{% endif %}
+            {% if s.fromIndex %} (#{{ s.fromIndex }}){% endif %}
+          </summary>
+          <pre class="scratchblocks">{{ s.content | escape }}</pre>
+        </details>
+        {% else %}
         <div class="script-block">
           {% if s.title %}<h3 class="script-title">{{ s.title }}</h3>{% endif %}
+          {% if s.leadingImports %}
+            {% for imp in s.leadingImports %}
+            <details class="imported-script">
+              <summary>
+                引入模块 <a href="{{ basePath }}/modules/{{ imp.fromId }}/">{{ imp.fromName }}</a>
+                {% if imp.fromTitle %} · {{ imp.fromTitle }}{% endif %}
+                {% if imp.fromIndex %} (#{{ imp.fromIndex }}){% endif %}
+              </summary>
+              <pre class="scratchblocks">{{ imp.content | escape }}</pre>
+            </details>
+            {% endfor %}
+          {% endif %}
           <pre class="scratchblocks">{{ s.content | escape }}</pre>
         </div>
+        {% endif %}
       {% endfor %}
     {% else %}
       <pre class="scratchblocks">{{ module.script | escape }}</pre>
