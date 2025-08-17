@@ -1,0 +1,7 @@
+{
+  "id": "exponentiation",
+  "name": "幂 (乘方)",
+  "description": "计算 a 的 b 次幂",
+  "tags": ["数学", "幂"],
+  "contributors": "gh/LuYifei2011"
+}
