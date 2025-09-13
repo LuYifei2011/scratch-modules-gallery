@@ -4,15 +4,19 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "node ./scripts/build.js"
+    "build": "node ./scripts/build.js",
+    "dev": "node ./scripts/dev-server.js",
+    "dev:https": "powershell -NoProfile -Command \"$env:HTTPS='1'; node ./scripts/dev-server.js\""
   },
   "dependencies": {
     "fast-glob": "^3.3.2",
     "fs-extra": "^11.2.0",
     "nunjucks": "^3.2.4",
-  "minisearch": "^7.1.2"
+    "minisearch": "^7.1.2"
   },
   "devDependencies": {
-    "prettier": "^3.3.3"
+    "prettier": "^3.3.3",
+    "chokidar": "^3.6.0",
+    "selfsigned": "^2.4.1"
   }
 }

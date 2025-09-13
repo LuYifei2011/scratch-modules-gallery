@@ -11,7 +11,15 @@ const require = createRequire(import.meta.url);
 const root = path.resolve('.');
 // 动态 ESM 导入配置
 const configModule = await import(pathToFileURL(path.join(root, 'site.config.js')).href);
-const config = configModule.default || configModule;
+const config = (configModule.default || configModule);
+// 覆盖 baseUrl 与开发模式标记
+const isDev = String(process.env.IS_DEV || '').toLowerCase() === 'true' || process.env.IS_DEV === '1';
+if (process.env.BASE_URL) {
+  try {
+    // 只替换 baseUrl 字段，不引入额外复杂度
+    config.baseUrl = process.env.BASE_URL;
+  } catch {}
+}
 
 const templatesPath = path.join(root, 'src', 'templates');
 nunjucks.configure(templatesPath, { autoescape: true });
@@ -352,11 +360,11 @@ async function render(modules, allTags) {
 
   // render pages
   const year = new Date().getFullYear();
-  const indexHtml = nunjucks.render('layouts/home.njk', { modules, config, year, basePath });
+  const indexHtml = nunjucks.render('layouts/home.njk', { modules, config, year, basePath, IS_DEV: isDev });
   await fs.outputFile(path.join(outDir, 'index.html'), indexHtml, 'utf8');
 
   for (const m of modules) {
-  const html = nunjucks.render('layouts/module.njk', { module: m, config, year, basePath });
+  const html = nunjucks.render('layouts/module.njk', { module: m, config, year, basePath, IS_DEV: isDev });
     const moduleDir = path.join(outDir, 'modules', m.slug);
     await fs.ensureDir(moduleDir);
     await fs.writeFile(path.join(moduleDir, 'index.html'), html, 'utf8');

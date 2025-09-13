@@ -1,18 +1,29 @@
 {% extends "layouts/base.njk" %}
-{% block title %}{{ config.siteName }}{% endblock %}
+{% block title %}
+  {{ config.siteName }}
+{% endblock %}
 {# Nunjucks 无 unique 过滤器，直接拼接所有 tags，可能有重复 #}
-{% block meta_keywords %}<meta name="keywords" content="{{ config.keywords }}" />{% endblock %}
+{% block meta_keywords %}<meta name="keywords" content="{{ config.keywords }}"/>{% endblock %}
 {% block content %}
-<section style="display:flex;flex-direction:column">
-  <input id="search" type="text" placeholder="搜索模块..." />
-  <div id="results" class="module-list">
-    {% for m in modules %}
-      <article class="module-item">
-  <h2><a href="{{ basePath }}/modules/{{ m.slug }}/">{{ m.name }}</a>{% if m.hasDemo %} <span class="badge">在线演示</span>{% endif %}</h2>
-        <p>{{ m.description }}</p>
-        <p class="tags">{% for t in m.tags %}<span class="tag">{{ t }}</span>{% endfor %}</p>
-      </article>
-    {% endfor %}
-  </div>
-</section>
+  <section style="display:flex;flex-direction:column">
+    <input id="search" type="text" placeholder="搜索模块..."/>
+    <div id="results" class="module-list">
+      {% for m in modules %}
+        <article class="module-item">
+          <h2>
+            <a href="{{ basePath }}/modules/{{ m.slug }}/">{{ m.name }}</a>
+            {% if m.hasDemo %}
+              <span class="badge">在线演示</span>
+            {% endif %}
+          </h2>
+          <p>{{ m.description }}</p>
+          <p class="tags">
+            {% for t in m.tags %}
+              <span class="tag">{{ t }}</span>
+            {% endfor %}
+          </p>
+        </article>
+      {% endfor %}
+    </div>
+  </section>
 {% endblock %}

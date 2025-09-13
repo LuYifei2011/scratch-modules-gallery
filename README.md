@@ -4,6 +4,16 @@
 
 > 新增模块？请阅读：`docs/authoring-modules.md`（模块编写指南）。
 
+## 快速开始
+
+```
+npm install
+npm run build           # 生成 dist/
+npm run dev             # 启动本地开发服务器（自动重建 + 自动刷新）
+# 或启用 HTTPS（自动生成本地自签证书）：
+npm run dev:https
+```
+
 ## 目录结构
 ```
 content/modules/<module-id>/
@@ -30,6 +40,35 @@ pnpm install # 或 npm install / yarn
 npm run build
 ```
 输出在 `dist/`。
+
+### 开发服务器（推荐）
+
+开发体验：
+- 文件监听：更改 `content/`、`src/`、`public/`、`site.config.js`、`scripts/build.js` 会自动触发重建。
+- 自动刷新：构建完成后通过 SSE 通知浏览器刷新，无需手动刷新页面。
+- 路由回退：当访问 `/foo` 或 `/foo/` 时返回对应目录下的 `index.html`（即 `/foo/index.html`）。
+- 禁用缓存：开发模式下所有响应都带 `Cache-Control: no-cache, no-store` 等，确保刷新不命中缓存。
+- CORS：静态资源设置 `Access-Control-Allow-Origin: *` 以便调试。
+
+HTTPS 支持：
+- 运行 `npm run dev:https` 自动使用自签证书（首次会在 `.cert/` 生成并保存）。
+- 或自备证书（PowerShell 示例）：
+  ```pwsh
+  $env:HTTPS="1"; $env:HTTPS_KEY="certs/localhost-key.pem"; $env:HTTPS_CERT="certs/localhost.pem"; npm run dev
+  ```
+- 支持 PFX：`$env:HTTPS_PFX="certs/localhost.pfx"; $env:HTTPS_PASSPHRASE="pass"`。
+
+环境变量覆盖：
+- `BASE_URL`：在构建时覆盖 `site.config.js` 的 `baseUrl`，示例：
+  ```pwsh
+  $env:BASE_URL="http://localhost:8800"; npm run build
+  ```
+- `IS_DEV`：构建时传入模板上下文；开发服务器会自动设置为 `true`。模板中可用变量 `IS_DEV`；页面已注入 `window.IS_DEV`，前端 JS 可读取：
+  ```js
+  if (window.IS_DEV) {
+    console.debug('[dev] 开发模式');
+  }
+  ```
 
 ## 站点配置 (site.config.js)
 项目读取 `site.config.js` 作为构建配置。常用字段：
