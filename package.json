@@ -6,7 +6,8 @@
   "scripts": {
     "build": "node ./scripts/build.js",
     "dev": "node ./scripts/dev-server.js",
-    "dev:https": "powershell -NoProfile -Command \"$env:HTTPS='1'; node ./scripts/dev-server.js\""
+    "dev:https": "powershell -NoProfile -Command \"$env:HTTPS='1'; node ./scripts/dev-server.js\"",
+    "format": "prettier --write ."
   },
   "dependencies": {
     "fast-glob": "^3.3.2",
