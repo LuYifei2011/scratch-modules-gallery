@@ -65,6 +65,7 @@
         false
       {% endif %};
     </script>
-    <script defer src="{{ basePath }}/app.js"></script>
+    {# 页面可在此注入页面专用脚本/样式。模板会在需要时覆盖该块。 #}
+    {% block page_scripts %}{% endblock %}
   </body>
 </html>

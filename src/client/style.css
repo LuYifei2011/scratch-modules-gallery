@@ -202,29 +202,12 @@ input#search:focus {
 .module-detail h1 {
   margin-top: 0;
 }
-.variables {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 0.85rem;
-}
-.variables th,
-.variables td {
-  border: 1px solid var(--panel-border);
-  padding: 4px 6px;
-}
 .contributors .contributor {
   margin-right: 0.5rem;
 }
 footer {
   font-size: 0.75rem;
   text-align: center;
-}
-pre.scratchblocks {
-  background: var(--panel);
-  border: 1px solid var(--panel-border-strong);
-  padding: 0.75rem;
-  border-radius: 8px;
-  overflow: auto;
 }
 /* GitHub 按钮在深色模式中保持原色，仅微调背景 */
 .gh-btn {
@@ -240,52 +223,4 @@ pre.scratchblocks {
   }
 }
 /* 多脚本块布局 */
-.script-block {
-  margin-bottom: 1.25rem;
-}
-.script-block:last-child {
-  margin-bottom: 0;
-}
-.script-title {
-  margin: 0.2rem 0 0.4rem;
-  font-size: 1rem;
-  line-height: 1.2;
-}
-/* 导入脚本折叠块 */
-details.imported-script {
-  margin: 1rem 0;
-  border: 1px solid var(--panel-border);
-  border-radius: 6px;
-  background: var(--panel);
-  padding: 0.5rem 0.75rem;
-}
-details.imported-script[open] {
-  background: var(--panel);
-}
-details.imported-script summary {
-  cursor: pointer;
-  outline: none;
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: var(--accent);
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.25rem;
-  align-items: center;
-}
-details.imported-script summary::-webkit-details-marker {
-  display: none;
-}
-details.imported-script summary:focus {
-  outline: 2px solid var(--accent);
-  outline-offset: 2px;
-}
-details.imported-script a {
-  color: var(--accent);
-}
-details.imported-script a:hover {
-  color: var(--accent-hover);
-}
-details.imported-script pre {
-  margin-top: 0.5rem;
-}
+

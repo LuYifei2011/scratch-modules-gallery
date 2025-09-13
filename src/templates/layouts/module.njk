@@ -9,13 +9,12 @@
 {% block meta_keywords %}<meta name="keywords" content="{{ config.keywords }}{% if module.tags.length %},{{ module.tags | join(',') }}{% endif %}"/>{% endblock %}
 {% block head_extra %}
   <script type="application/ld+json">{ "@context": "https://schema.org", "@type": "SoftwareSourceCode", "name": "{{ module.name | replace('"','\"') }}",
-      "description": "{{ module.description | replace('"','\"') }}",
-      "programmingLanguage": "Scratch",
+                  "description": "{{ module.description | replace('"','\"') }} ", "programmingLanguage": "Scratch",
     {# 合并 tags 与 keywords，确保都是数组 #}
-    {% set tags_str = module.tags | join(',') %}
-    "keywords": "{{ tags_str }}",
-      "url": "{{ config.baseUrl }}/modules/{{ module.slug }}/"
-    }</script>
+    {% set tags_str = module.tags | join(',') %} "keywords": "{{ tags_str }}",
+                  "url": "{{ config.baseUrl }}
+    /modules/{{ module.slug }}/"
+                }</script>
 {% endblock %}
 {% block content %}
   <article class="module-detail">
@@ -48,6 +47,13 @@
           <option value="scratch3" selected>Scratch 3</option>
           <option value="scratch3-high-contrast">Scratch 3 (高对比度)</option>
           <option value="scratch2">Scratch 2</option>
+        </select>
+      </div>
+      <div class="sb-translate-switcher" style="margin:0 0 1rem;">
+        <label for="sb-translate">翻译语言:
+        </label>
+        <select id="sb-translate">
+          <option value="None" selected>不翻译</option>
         </select>
       </div>
       {% if module.scripts and module.scripts.length %}
@@ -136,7 +142,7 @@
             rel="noopener"
             style="display:inline-block;padding:0.5em
               1em;background:#4c97ff;color:#fff;border-radius:4px;text-decoration:none;font-weight:bold;font-size:1rem;">
-          在 Turbowarp 编辑器中打开</a>
+            在 Turbowarp 编辑器中打开</a>
         </div>
         <iframe
           src="https://turbowarp.org/embed?project_url={{ (config.baseUrl + '/modules/' + module.slug + '/demo.sb3') | urlencode }}&settings-button&addons=pause,clones"
@@ -165,4 +171,8 @@
       </section>
     {% endif %}
   </article>
+{% endblock %}
+{% block page_scripts %}
+  <link rel="stylesheet" href="{{ basePath }}/module.css"/>
+  <script defer src="{{ basePath }}/module.js"></script>
 {% endblock %}
