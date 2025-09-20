@@ -83,12 +83,47 @@ let building = false
 let pending = false
 const sseClients = new Set()
 
+// 记录最近一次构建触发时间，用于简单节流分析
+let lastBuildStart = 0
+
+// --- 简易小文件缓存 (仅开发，用于减少频繁磁盘 IO) ---
+// 策略：< 256KB 且命中 mtime 不变则复用；超过阈值走流式读取
+const SMALL_FILE_LIMIT = 256 * 1024
+const fileCache = new Map() // key: absPath -> { mtimeMs, data: Buffer|string, isHTML }
+function getCachedFile(absPath, stat) {
+  const c = fileCache.get(absPath)
+  if (c && c.mtimeMs === stat.mtimeMs) return c
+  return null
+}
+function setCachedFile(absPath, stat, payload) {
+  // 简单容量控制：超过 300 条随即删除 30%（朴素做法即可）
+  if (fileCache.size > 300) {
+    let i = 0
+    for (const k of fileCache.keys()) {
+      if (Math.random() < 0.3) fileCache.delete(k)
+      if (++i > 400) break
+    }
+  }
+  fileCache.set(absPath, { mtimeMs: stat.mtimeMs, ...payload })
+}
+
+function broadcast(obj) {
+  const msg = JSON.stringify(obj)
+  for (const res of sseClients) {
+    try {
+      res.write(`data: ${msg}\n\n`)
+    } catch {}
+  }
+}
+
 function runBuild(reason = 'changed') {
   if (building) {
     pending = true
     return
   }
   building = true
+  lastBuildStart = Date.now()
+  broadcast({ type: 'building', reason, time: lastBuildStart })
   const env = { ...process.env, IS_DEV: '1', BASE_URL: BASE_URL }
   const p = spawn(process.execPath, [path.resolve('scripts', 'build.js')], {
     stdio: 'inherit',
@@ -96,16 +131,12 @@ function runBuild(reason = 'changed') {
   })
   p.on('exit', (code) => {
     building = false
+    const duration = Date.now() - lastBuildStart
     if (code === 0) {
-      // 广播刷新
-      const msg = JSON.stringify({ type: 'reload', reason, time: Date.now() })
-      for (const res of sseClients) {
-        try {
-          res.write(`data: ${msg}\n\n`)
-        } catch {}
-      }
-      console.log('[dev] build finished.')
+      broadcast({ type: 'reload', reason, time: Date.now(), duration })
+      console.log(`[dev] build finished in ${duration}ms.`)
     } else {
+      broadcast({ type: 'build-error', code, time: Date.now(), duration })
       console.error('[dev] build failed with code', code)
     }
     if (pending) {
@@ -124,9 +155,20 @@ const watcher = chokidar.watch(
   { ignoreInitial: true }
 )
 
+// Debounce 聚合：短时间多事件只触发一次构建
+let debounceTimer = null
+let aggregatedReasons = []
+const DEBOUNCE_MS = 120
 watcher.on('all', (event, file) => {
-  console.log(`[watch] ${event}: ${file}`)
-  runBuild(`${event}:${file}`)
+  const reason = `${event}:${file}`
+  aggregatedReasons.push(reason)
+  if (debounceTimer) clearTimeout(debounceTimer)
+  debounceTimer = setTimeout(() => {
+    const uniq = Array.from(new Set(aggregatedReasons))
+    aggregatedReasons = []
+    console.log(`[watch] ${uniq.length} change(s):\n - ${uniq.join('\n - ')}`)
+    runBuild(uniq.slice(0, 5).join(','))
+  }, DEBOUNCE_MS)
 })
 
 const requestHandler = (req, res) => {
@@ -161,11 +203,11 @@ const requestHandler = (req, res) => {
   const requestedPath = path.join(DIST_DIR, pathname)
 
   const sendFile = (absPath) => {
-    fs.readFile(absPath, (err, data) => {
-      if (err) {
+    fs.stat(absPath, (err, stat) => {
+      if (err || !stat.isFile()) {
         res.statusCode = 404
         res.end('404 Not Found')
-        console.warn(`[dev] 404: ${absPath}`)
+        if (!err?.code || err.code !== 'ENOENT') console.warn(`[dev] 404: ${absPath}`)
         return
       }
       const ext = path.extname(absPath).toLowerCase()
@@ -183,35 +225,74 @@ const requestHandler = (req, res) => {
         }[ext] || 'application/octet-stream'
       res.setHeader('Content-Type', mime)
       res.setHeader('Access-Control-Allow-Origin', '*')
-      // 强制禁用缓存，确保自动刷新时不命中缓存
       res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate')
       res.setHeader('Pragma', 'no-cache')
       res.setHeader('Expires', '0')
-      if (ext === '.html') {
-        let html = data.toString('utf8')
-        const inject = `\n<script src=\"/__dev/client.js\"></script>\n`
-        if (html.includes('</body>')) html = html.replace('</body>', `${inject}</body>`)
-        else html += inject
-        res.end(html)
+      res.setHeader('Connection', 'keep-alive')
+      res.setHeader('Keep-Alive', 'timeout=5')
+
+      // 小文件缓存逻辑
+      if (
+        stat.size <= SMALL_FILE_LIMIT &&
+        ['.html', '.js', '.css', '.json', '.txt'].includes(ext)
+      ) {
+        const cached = getCachedFile(absPath, stat)
+        if (cached) {
+          if (cached.isHTML) return res.end(cached.data)
+          return res.end(cached.data)
+        }
+        fs.readFile(absPath, (er2, buf) => {
+          if (er2) {
+            res.statusCode = 404
+            res.end('404 Not Found')
+            return
+          }
+          if (ext === '.html') {
+            let html = buf.toString('utf8')
+            const inject = `\n<script src=\"/__dev/client.js\"></script>\n`
+            if (html.includes('</body>')) html = html.replace('</body>', `${inject}</body>`)
+            else html += inject
+            setCachedFile(absPath, stat, { data: html, isHTML: true })
+            res.end(html)
+            return
+          }
+          setCachedFile(absPath, stat, { data: buf, isHTML: false })
+          res.end(buf)
+        })
         return
       }
-      res.end(data)
+
+      // 大文件使用流式
+      if (ext === '.html') {
+        fs.readFile(absPath, (er2, buf) => {
+          if (er2) {
+            res.statusCode = 404
+            res.end('404 Not Found')
+            return
+          }
+          let html = buf.toString('utf8')
+          const inject = `\n<script src=\"/__dev/client.js\"></script>\n`
+          if (html.includes('</body>')) html = html.replace('</body>', `${inject}</body>`)
+          else html += inject
+          res.end(html)
+        })
+        return
+      }
+      const stream = fs.createReadStream(absPath)
+      stream.on('error', () => {
+        res.statusCode = 404
+        res.end('404 Not Found')
+      })
+      stream.pipe(res)
     })
   }
 
   fs.stat(requestedPath, (err, stat) => {
     if (!err) {
-      if (stat.isDirectory()) {
-        // 目录 -> index.html
-        return sendFile(path.join(requestedPath, 'index.html'))
-      }
-      // 文件存在
+      if (stat.isDirectory()) return sendFile(path.join(requestedPath, 'index.html'))
       return sendFile(requestedPath)
     }
-    // 不存在：若无扩展名，尝试 /index.html 回退
-    if (!path.extname(requestedPath)) {
-      return sendFile(path.join(requestedPath, 'index.html'))
-    }
+    if (!path.extname(requestedPath)) return sendFile(path.join(requestedPath, 'index.html'))
     res.statusCode = 404
     res.end('404 Not Found')
   })
@@ -223,3 +304,9 @@ const server = HTTPS_ENABLED
 server.listen(PORT, HOST, () => {
   console.log(`Dev server running at ${protocol}://${HOST}:${PORT}/`)
 })
+
+// --- SSE 心跳：避免某些代理或浏览器在长时间无数据时断开，导致前端进入 Pending 状态 ---
+setInterval(() => {
+  if (!sseClients.size) return
+  broadcast({ type: 'ping', time: Date.now() })
+}, 25000)
