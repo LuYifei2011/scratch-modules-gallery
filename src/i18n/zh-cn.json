@@ -34,5 +34,15 @@
     "demo": "演示",
     "openInTW": "在 Turbowarp 编辑器中打开",
     "references": "参考链接"
+  },
+  "issues": {
+    "pageTitle": "构建问题",
+    "heading": "构建问题报告",
+    "none": "没有可显示的问题。",
+    "bannerErrors": "构建存在错误",
+    "bannerWarnings": "构建存在警告",
+    "bannerCounts": "( {errors} 错误 / {warnings} 警告 )",
+    "bannerView": "查看报告",
+    "summaryPrefix": "共 {total} 条：{errors} 错误 / {warnings} 警告"
   }
 }

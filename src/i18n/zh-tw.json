@@ -34,5 +34,15 @@
     "demo": "演示",
     "openInTW": "在 Turbowarp 編輯器中開啟",
     "references": "參考連結"
+  },
+  "issues": {
+    "pageTitle": "建置問題",
+    "heading": "建置問題報告",
+    "none": "沒有可顯示的問題。",
+    "bannerErrors": "建置存在錯誤",
+    "bannerWarnings": "建置存在警告",
+    "bannerCounts": "( {errors} 錯誤 / {warnings} 警告 )",
+    "bannerView": "查看報告",
+    "summaryPrefix": "共 {total} 筆：{errors} 錯誤 / {warnings} 警告"
   }
 }

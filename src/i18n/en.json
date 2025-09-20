@@ -34,5 +34,15 @@
     "demo": "Demo",
     "openInTW": "Open in Turbowarp Editor",
     "references": "References"
+  },
+  "issues": {
+    "pageTitle": "Build Issues",
+    "heading": "Build Issues Report",
+    "none": "No issues to display.",
+    "bannerErrors": "Build has errors",
+    "bannerWarnings": "Build has warnings",
+    "bannerCounts": "( {errors} errors / {warnings} warnings )",
+    "bannerView": "View report",
+    "summaryPrefix": "Total {total}: {errors} errors / {warnings} warnings"
   }
 }

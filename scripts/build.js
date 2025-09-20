@@ -50,170 +50,175 @@ async function loadModules() {
   const modules = []
   const errorsAll = []
   for (const dir of dirs) {
-    const moduleDir = path.join(baseDir, dir)
-    const metaFile = path.join(moduleDir, 'meta.json')
-    if (!(await fs.pathExists(metaFile))) continue // skip
-    let meta
     try {
-      meta = JSON.parse(await fs.readFile(metaFile, 'utf8'))
-    } catch (e) {
-      errorsAll.push(`${dir}: meta.json parse error ${e.message}`)
-      continue
-    }
-
-    const scriptPath = path.join(moduleDir, 'script.txt')
-    let script = ''
-    let scripts = []
-    // 新格式支持：
-    // 1) scripts/ 目录下若存在 *.txt，按文件名自然排序
-    // 2) script-*.txt (如 script-1-title.txt) 多文件
-    // 3) 兼容旧的单个 script.txt
-    const scriptsDir = path.join(moduleDir, 'scripts')
-    if (await fs.pathExists(scriptsDir)) {
-      const files = (await fg(['*.txt'], { cwd: scriptsDir, onlyFiles: true })).sort((a, b) =>
-        a.localeCompare(b, 'en', { numeric: true })
-      )
-      for (const f of files) {
-        const full = path.join(scriptsDir, f)
-        const content = await fs.readFile(full, 'utf8')
-        const base = path.basename(f, '.txt')
-        // 新标准：序号+id，例如 01-main.txt；无序号时，整个 base 为 id
-        const m = base.match(/^(\d+)[ _-](.+)$/)
-        const id = (m ? m[2] : base).trim()
-        scripts.push({ id, content })
-      }
-      // 若目录存在但为空，视为错误
-      if (!scripts.length) {
-        errorsAll.push(`${dir}: scripts/ is empty (expecting *.txt)`)
-      }
-    } else {
-      // 不再兼容旧格式（script.txt 或 script-*.txt）；严格要求 scripts/*.txt
-      errorsAll.push(`${dir}: missing scripts/ directory`)
-    }
-
-    const demoPath = path.join(moduleDir, 'demo.sb3')
-    const demoFile = (await fs.pathExists(demoPath)) ? `modules/${dir}/demo.sb3` : undefined
-
-    // optional variables.json
-    let variables = []
-    const variablesPath = path.join(moduleDir, 'variables.json')
-    if (await fs.pathExists(variablesPath)) {
+      const moduleDir = path.join(baseDir, dir)
+      const metaFile = path.join(moduleDir, 'meta.json')
+      if (!(await fs.pathExists(metaFile))) continue // skip
+      let meta
       try {
-        const vRaw = JSON.parse(await fs.readFile(variablesPath, 'utf8'))
-        if (Array.isArray(vRaw)) variables = vRaw
-        else if (vRaw && typeof vRaw === 'object' && Array.isArray(vRaw.variables))
-          variables = vRaw.variables
-        else variables = []
+        meta = JSON.parse(await fs.readFile(metaFile, 'utf8'))
       } catch (e) {
-        errorsAll.push(`${dir}: variables.json parse error`)
+        errorsAll.push(`${dir}: meta.json parse error ${e.message}`)
+        continue
       }
-    }
 
-    // optional notes (md or txt)
-    let notesHtml = ''
-    for (const fname of ['notes.md', 'notes.txt']) {
-      const p = path.join(moduleDir, fname)
-      if (await fs.pathExists(p)) {
-        const raw = await fs.readFile(p, 'utf8')
-        // 极简 markdown 转换（仅支持换行->段落、**粗体**、`行内代码`）
-        notesHtml = raw
-          .split(/\n{2,}/)
-          .map(
-            (block) =>
-              `<p>${escapeHtml(block)
-                .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-                .replace(/`([^`]+)`/g, '<code>$1</code>')}</p>`
-          )
-          .join('\n')
-        break
+      const scriptPath = path.join(moduleDir, 'script.txt')
+      let script = ''
+      let scripts = []
+      // scripts/ 目录下若存在 *.txt，按文件名自然排序
+      const scriptsDir = path.join(moduleDir, 'scripts')
+      if (await fs.pathExists(scriptsDir)) {
+        const files = (await fg(['*.txt'], { cwd: scriptsDir, onlyFiles: true })).sort((a, b) =>
+          a.localeCompare(b, 'en', { numeric: true })
+        )
+        for (const f of files) {
+          const full = path.join(scriptsDir, f)
+          const content = await fs.readFile(full, 'utf8')
+          const base = path.basename(f, '.txt')
+          // 新标准：序号+id，例如 01-main.txt；无序号时，整个 base 为 id
+          const m = base.match(/^(\d+)[ _-](.+)$/)
+          const id = (m ? m[2] : base).trim()
+          scripts.push({ id, content })
+        }
+        // 若目录存在但为空，视为错误
+        if (!scripts.length) {
+          errorsAll.push(`${dir}: scripts/ is empty (expecting *.txt)`)
+        }
+      } else {
+        // 不再兼容旧格式（script.txt 或 script-*.txt）；严格要求 scripts/*.txt
+        errorsAll.push(`${dir}: missing scripts/ directory`)
       }
-    }
 
-    // optional references.json
-    let references = []
-    const refPath = path.join(moduleDir, 'references.json')
-    if (await fs.pathExists(refPath)) {
-      try {
-        references = JSON.parse(await fs.readFile(refPath, 'utf8'))
-      } catch (e) {
-        errorsAll.push(`${dir}: references.json parse error`)
-      }
-    }
+      const demoPath = path.join(moduleDir, 'demo.sb3')
+      const demoFile = (await fs.pathExists(demoPath)) ? `modules/${dir}/demo.sb3` : undefined
 
-    // optional per-module translations: i18n/<locale>.json
-    // 文件结构：{ name?: string, description?: string, tags?: string[], variables?: Record<origName,string>, lists?: Record<origName,string> }
-    let translations = {}
-    const i18nDir = path.join(moduleDir, 'i18n')
-    if (await fs.pathExists(i18nDir)) {
-      const files = (await fg(['*.json'], { cwd: i18nDir, onlyFiles: true })).sort((a, b) =>
-        a.localeCompare(b, 'en', { numeric: true })
-      )
-      for (const f of files) {
-        const loc = path.basename(f, '.json')
+      // optional variables.json
+      let variables = []
+      const variablesPath = path.join(moduleDir, 'variables.json')
+      if (await fs.pathExists(variablesPath)) {
         try {
-          const obj = JSON.parse(await fs.readFile(path.join(i18nDir, f), 'utf8'))
-          if (obj && typeof obj === 'object') {
-            const one = {}
-            if (typeof obj.name === 'string') one.name = obj.name
-            if (typeof obj.description === 'string') one.description = obj.description
-            if (Array.isArray(obj.tags)) one.tags = obj.tags
-            // 新增：变量/列表名称映射（按原名 -> 本地化名）
-            if (
-              obj.variables &&
-              typeof obj.variables === 'object' &&
-              !Array.isArray(obj.variables)
-            ) {
-              one.variables = obj.variables
-            }
-            if (obj.lists && typeof obj.lists === 'object' && !Array.isArray(obj.lists)) {
-              one.lists = obj.lists
-            }
-            // 新增：事件名称映射（事件/广播名 -> 本地化名）
-            if (obj.events && typeof obj.events === 'object' && !Array.isArray(obj.events)) {
-              one.events = obj.events
-            }
-            // 新增：脚本标题映射（脚本 id -> 本地化标题）
-            if (
-              obj.scriptTitles &&
-              typeof obj.scriptTitles === 'object' &&
-              !Array.isArray(obj.scriptTitles)
-            ) {
-              one.scriptTitles = obj.scriptTitles
-            }
-            // 新增：自定义块翻译（英文基准 -> 本地化文本）以及参数名称映射
-            if (
-              obj.procedures &&
-              typeof obj.procedures === 'object' &&
-              !Array.isArray(obj.procedures)
-            ) {
-              one.procedures = obj.procedures
-            }
-            if (
-              obj.procedureParams &&
-              typeof obj.procedureParams === 'object' &&
-              !Array.isArray(obj.procedureParams)
-            ) {
-              one.procedureParams = obj.procedureParams
-            }
-            translations[loc] = one
-          }
+          const vRaw = JSON.parse(await fs.readFile(variablesPath, 'utf8'))
+          if (Array.isArray(vRaw)) variables = vRaw
+          else if (vRaw && typeof vRaw === 'object' && Array.isArray(vRaw.variables))
+            variables = vRaw.variables
+          else variables = []
         } catch (e) {
-          errorsAll.push(`${dir}: i18n/${f} parse error`)
+          errorsAll.push(`${dir}: variables.json parse error`)
         }
       }
-    }
 
-    const { record, errors } = buildModuleRecord(meta, {
-      script,
-      scripts,
-      demoFile,
-      variables,
-      notesHtml,
-      references,
-      translations,
-    })
-    if (errors.length) errorsAll.push(`${dir}: ${errors.join(', ')}`)
-    modules.push(record)
+      // optional notes (md or txt)
+      let notesHtml = ''
+      for (const fname of ['notes.md', 'notes.txt']) {
+        const p = path.join(moduleDir, fname)
+        if (await fs.pathExists(p)) {
+          const raw = await fs.readFile(p, 'utf8')
+          // 极简 markdown 转换（仅支持换行->段落、**粗体**、`行内代码`）
+          notesHtml = raw
+            .split(/\n{2,}/)
+            .map(
+              (block) =>
+                `<p>${escapeHtml(block)
+                  .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+                  .replace(/`([^`]+)`/g, '<code>$1</code>')}</p>`
+            )
+            .join('\n')
+          break
+        }
+      }
+
+      // optional references.json
+      let references = []
+      const refPath = path.join(moduleDir, 'references.json')
+      if (await fs.pathExists(refPath)) {
+        try {
+          references = JSON.parse(await fs.readFile(refPath, 'utf8'))
+        } catch (e) {
+          errorsAll.push(`${dir}: references.json parse error`)
+        }
+      }
+
+      // optional per-module translations: i18n/<locale>.json
+      // 文件结构：{ name?: string, description?: string, tags?: string[], variables?: Record<origName,string>, lists?: Record<origName,string> }
+      let translations = {}
+      const i18nDir = path.join(moduleDir, 'i18n')
+      if (await fs.pathExists(i18nDir)) {
+        const files = (await fg(['*.json'], { cwd: i18nDir, onlyFiles: true })).sort((a, b) =>
+          a.localeCompare(b, 'en', { numeric: true })
+        )
+        for (const f of files) {
+          const loc = path.basename(f, '.json')
+          try {
+            const obj = JSON.parse(await fs.readFile(path.join(i18nDir, f), 'utf8'))
+            if (obj && typeof obj === 'object') {
+              const one = {}
+              if (typeof obj.name === 'string') one.name = obj.name
+              if (typeof obj.description === 'string') one.description = obj.description
+              if (Array.isArray(obj.tags)) one.tags = obj.tags
+              // 新增：变量/列表名称映射（按原名 -> 本地化名）
+              if (
+                obj.variables &&
+                typeof obj.variables === 'object' &&
+                !Array.isArray(obj.variables)
+              ) {
+                one.variables = obj.variables
+              }
+              if (obj.lists && typeof obj.lists === 'object' && !Array.isArray(obj.lists)) {
+                one.lists = obj.lists
+              }
+              // 新增：事件名称映射（事件/广播名 -> 本地化名）
+              if (obj.events && typeof obj.events === 'object' && !Array.isArray(obj.events)) {
+                one.events = obj.events
+              }
+              // 新增：脚本标题映射（脚本 id -> 本地化标题）
+              if (
+                obj.scriptTitles &&
+                typeof obj.scriptTitles === 'object' &&
+                !Array.isArray(obj.scriptTitles)
+              ) {
+                one.scriptTitles = obj.scriptTitles
+              }
+              // 新增：自定义块翻译（英文基准 -> 本地化文本）以及参数名称映射
+              if (
+                obj.procedures &&
+                typeof obj.procedures === 'object' &&
+                !Array.isArray(obj.procedures)
+              ) {
+                one.procedures = obj.procedures
+              }
+              if (
+                obj.procedureParams &&
+                typeof obj.procedureParams === 'object' &&
+                !Array.isArray(obj.procedureParams)
+              ) {
+                one.procedureParams = obj.procedureParams
+              }
+              translations[loc] = one
+            }
+          } catch (e) {
+            errorsAll.push(`${dir}: i18n/${f} parse error`)
+          }
+        }
+      }
+
+      const { record, errors } = buildModuleRecord(meta, {
+        script,
+        scripts,
+        demoFile,
+        variables,
+        notesHtml,
+        references,
+        translations,
+      })
+      if (errors.length) errorsAll.push(`${dir}: ${errors.join(', ')}`)
+      modules.push(record)
+    } catch (e) {
+      errorsAll.push(`${dir}: unexpected build error ${(e && e.message) || e}`)
+      if (isDev) {
+        // 保留堆栈便于调试
+        console.error(e)
+      }
+    }
   }
   // 统计所有 tags，去重后拼接 keywords
   const allTags = Array.from(new Set(modules.flatMap((m) => m.tags || []))).join(',')
@@ -541,7 +546,7 @@ function translateScriptText(raw, targetLangKey, nameMaps) {
 }
 
 // 针对某语言，返回带有已翻译脚本内容与元信息本地化的 modules 副本
-async function translateModulesForLocale(modules, dict, locale) {
+async function translateModulesForLocale(modules, dict, locale, options = {}) {
   const languageTag = (dict[locale]?.meta?.languageTag || locale || 'en')
     .replace('-', '_')
     .toLowerCase()
@@ -916,6 +921,80 @@ async function translateModulesForLocale(modules, dict, locale) {
       }
       nm.scripts = newScripts
     }
+    // --- 缺失翻译检测（仅非英文 locale，且未跳过） ---
+    if (!isEnglishLocale && !options.skipMissingCheck) {
+      try {
+        const missingFields = []
+        const locTrans = per[locale] || {}
+        if (!('name' in locTrans)) missingFields.push('name')
+        if (!('description' in locTrans)) missingFields.push('description')
+        if (!('tags' in locTrans)) missingFields.push('tags')
+        // 脚本标题
+        const scriptIds = Array.isArray(m.scripts) ? m.scripts.map((x) => x.id).filter(Boolean) : []
+        if (scriptIds.length) {
+          const locTitles = locTrans.scriptTitles || {}
+          const missingTitleIds = scriptIds.filter((id) => !(id in locTitles))
+          if (missingTitleIds.length)
+            missingFields.push(
+              'scriptTitles(' +
+                missingTitleIds.slice(0, 5).join(',') +
+                (missingTitleIds.length > 5 ? '…' : '') +
+                ')'
+            )
+        }
+        // 变量/列表
+        if (Array.isArray(m.variables) && m.variables.length) {
+          const varsNames = m.variables
+            .filter((v) => v && v.name && v.type !== 'list')
+            .map((v) => v.name)
+          const listNames = m.variables
+            .filter((v) => v && v.name && v.type === 'list')
+            .map((v) => v.name)
+          const locVarMap = locTrans.variables || {}
+          const locListMap = locTrans.lists || {}
+          const missVars = varsNames.filter((n) => !(n in locVarMap))
+          const missLists = listNames.filter((n) => !(n in locListMap))
+          if (missVars.length)
+            missingFields.push(
+              'variables(' + missVars.slice(0, 5).join(',') + (missVars.length > 5 ? '…' : '') + ')'
+            )
+          if (missLists.length)
+            missingFields.push(
+              'lists(' + missLists.slice(0, 5).join(',') + (missLists.length > 5 ? '…' : '') + ')'
+            )
+        }
+        // 自定义块 pattern 与参数
+        const enProc = (per['en'] && per['en'].procedures) || undefined
+        if (enProc && typeof enProc === 'object') {
+          const locProc = locTrans.procedures || {}
+          const missProc = Object.keys(enProc).filter((k) => !(k in locProc))
+          if (missProc.length)
+            missingFields.push(
+              'procedures(' +
+                missProc.slice(0, 3).join(',') +
+                (missProc.length > 3 ? '…' : '') +
+                ')'
+            )
+        }
+        const enParams = (per['en'] && per['en'].procedureParams) || undefined
+        if (enParams && typeof enParams === 'object') {
+          const locParams = locTrans.procedureParams || {}
+          const missParam = Object.keys(enParams).filter((k) => !(k in locParams))
+          if (missParam.length)
+            missingFields.push(
+              'procedureParams(' +
+                missParam.slice(0, 3).join(',') +
+                (missParam.length > 3 ? '…' : '') +
+                ')'
+            )
+        }
+        if (missingFields.length) {
+          console.warn(`[i18n-missing][${locale}] ${m.id}: ` + missingFields.join(', '))
+        }
+      } catch (e) {
+        console.warn('[i18n-missing] 检测失败', m.id, e?.message || e)
+      }
+    }
     out.push(nm)
   }
   return out
@@ -999,6 +1078,16 @@ async function render(modules, allTags) {
   const langTags = Object.fromEntries(
     locales.map((loc) => [loc, (dict[loc]?.meta && dict[loc].meta.languageTag) || loc])
   )
+  // 预先一次性收集所有语言的缺失翻译警告，确保之后所有页面的 buildIssuesSummary 一致
+  if (isDev) {
+    for (const loc of locales) {
+      if (loc === 'en') continue
+      try {
+        await translateModulesForLocale(modules, dict, loc, { skipMissingCheck: false })
+      } catch {}
+    }
+  }
+
   for (const loc of locales) {
     const locOut = path.join(outDir, loc)
     await fs.ensureDir(locOut)
@@ -1007,7 +1096,9 @@ async function render(modules, allTags) {
     const pageBase = (basePath ? basePath : '') + '/' + loc
     const $t = dict[loc]
     // 针对当前语言，生成脚本文本与元信息已翻译的模块数据（不影响其他语言）
-    const modulesForLoc = await translateModulesForLocale(modules, dict, loc)
+    const modulesForLoc = await translateModulesForLocale(modules, dict, loc, {
+      skipMissingCheck: true,
+    })
 
     // 每种语言目录写入搜索数据（使用本地化后的模块）
     const searchIndex = buildSearchIndex(modulesForLoc)
@@ -1126,17 +1217,148 @@ async function render(modules, allTags) {
     `User-agent: *\nAllow: /\nSitemap: ${config.baseUrl.replace(/\/$/, '')}/sitemap.xml\n`,
     'utf8'
   )
+
+  // 在所有语言与模块页面渲染完成后，再统一生成 issues 页面，确保每个语言目录看到的是全集合
+  if (isDev) {
+    // 统一使用最终 collectedIssues（通过 nunjucks.render monkey patch 注入到模板）
+    const dict = await loadI18n()
+    const locales = Object.keys(dict)
+    const langTags = Object.fromEntries(
+      locales.map((loc) => [loc, (dict[loc]?.meta && dict[loc].meta.languageTag) || loc])
+    )
+    for (const loc of locales) {
+      const locConfig = pickConfigForLocale(config, loc, dict)
+      const pageBase = (basePath ? basePath : '') + '/' + loc
+      const assetBase = basePath || ''
+      // 由于我们在统一生成阶段调用 render，此时 monkey patch 仍会注入 buildIssues & summary。
+      // 但为稳妥（避免某些运行路径失效），这里显式计算一次并覆盖（模板优先使用传入值）。
+      const summary = collectedIssues.reduce(
+        (acc, i) => {
+          if (i.type === 'error') acc.errors++
+          else if (i.type === 'warn') acc.warnings++
+          acc.total++
+          return acc
+        },
+        { errors: 0, warnings: 0, total: 0 }
+      )
+      const dictIssues = dict[loc]?.issues
+      const summaryText = dictIssues?.summaryPrefix
+        ? dictIssues.summaryPrefix
+            .replace('{total}', String(summary.total))
+            .replace('{errors}', String(summary.errors))
+            .replace('{warnings}', String(summary.warnings))
+        : ''
+      const issuesHtml = nunjucks.render('layouts/issues.njk', {
+        modules: [],
+        config: locConfig,
+        year,
+        basePath,
+        assetBase,
+        pageBase,
+        pagePath: '/issues/',
+        IS_DEV: isDev,
+        t: dict[loc],
+        locale: loc,
+        locales,
+        langTags,
+        i18n: dict,
+        buildIssues: collectedIssues,
+        buildIssuesSummary: summary,
+        buildIssuesSummaryText: summaryText,
+      })
+      const locOut = path.join(outDir, loc)
+      const issuesDir = path.join(locOut, 'issues')
+      await fs.ensureDir(issuesDir)
+      await fs.writeFile(path.join(issuesDir, 'index.html'), issuesHtml, 'utf8')
+    }
+  }
+}
+
+// --- 开发模式下的构建问题聚合 ---
+// 收集的结构：{ type: 'error'|'warn', message: string }
+const collectedIssues = []
+if (isDev) {
+  const origWarn = console.warn
+  const origError = console.error
+  const push = (type, args) => {
+    try {
+      const msg = args
+        .map((a) =>
+          a instanceof Error
+            ? a.stack || a.message
+            : typeof a === 'object'
+              ? JSON.stringify(a)
+              : String(a)
+        )
+        .join(' ')
+      collectedIssues.push({ type, message: msg })
+    } catch {}
+  }
+  console.warn = (...args) => {
+    push('warn', args)
+    origWarn.apply(console, args)
+  }
+  console.error = (...args) => {
+    push('error', args)
+    origError.apply(console, args)
+  }
 }
 
 ;(async () => {
   console.time('build')
   const { modules, errorsAll, allTags } = await loadModules()
+  // 将 loadModules 的结构化错误加入 collectedIssues
+  for (const msg of errorsAll) collectedIssues.push({ type: 'error', message: msg })
   // 解析 !import 指令
   resolveImports(modules)
+  // 在渲染前把 issues 注入 nunjucks 全局或通过参数传递
+  // 这里采用环境变量对象传递：扩展 nunjucks.render 上下文
+  // 修改 render 调用：封装一层以包含 buildIssues
+  const origRender = nunjucks.render
+  nunjucks.render = function (...args) {
+    if (typeof args[1] === 'object' && args[1] !== null) {
+      args[1].buildIssues = collectedIssues
+      const summary = collectedIssues.reduce(
+        (acc, i) => {
+          if (i.type === 'error') acc.errors++
+          else if (i.type === 'warn') acc.warnings++
+          acc.total++
+          return acc
+        },
+        { errors: 0, warnings: 0, total: 0 }
+      )
+      args[1].buildIssuesSummary = summary
+      // 预计算本地化 summary 文本，避免在模板中链式 replace 引发解析问题
+      try {
+        const dictIssues = args[1].t && args[1].t.issues
+        if (dictIssues && typeof dictIssues.summaryPrefix === 'string') {
+          args[1].buildIssuesSummaryText = dictIssues.summaryPrefix
+            .replace('{total}', String(summary.total))
+            .replace('{errors}', String(summary.errors))
+            .replace('{warnings}', String(summary.warnings))
+        }
+      } catch (e) {
+        // 静默失败，不影响主流程
+      }
+    }
+    return origRender.apply(this, args)
+  }
   await render(modules, allTags)
   console.log(`Built ${modules.length} modules.`)
-  if (errorsAll.length) {
-    console.warn('Issues:\n' + errorsAll.map((e) => ' - ' + e).join('\n'))
+  if (collectedIssues.length) {
+    const summary = collectedIssues.reduce(
+      (acc, i) => {
+        if (i.type === 'error') acc.errors++
+        else if (i.type === 'warn') acc.warnings++
+        return acc
+      },
+      { errors: 0, warnings: 0 }
+    )
+    console.log(`[build] Issues collected: ${summary.errors} errors, ${summary.warnings} warnings`)
   }
   console.timeEnd('build')
+  // 开发模式：即使有错误也不以非零码退出
+  if (!isDev && collectedIssues.some((x) => x.type === 'error')) {
+    process.exitCode = 1
+  }
 })()
