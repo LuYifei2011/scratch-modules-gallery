@@ -46,6 +46,96 @@ content/modules/fps/
 - `keywords` 与 tags：站点级 `site.config.js` 中的 `keywords` 控制首页的 meta keywords；模块的 tags 会用于模块页的 meta keywords（构建会合并 site 关键字与模块 tags）。
 - `contributors`：字符串或数组；支持 `gh/` 与 `sc/` 前缀自动生成链接。
 
+### 多语言支持（name/description/tags）
+
+从现在起，`name`、`description`、`tags` 支持 i18n 形式：
+
+1. 仍可使用原来的简单值（向后兼容）：
+
+```json
+{
+  "name": "FPS 计数器",
+  "description": "在 Scratch 中统计帧率的模块。",
+  "tags": ["performance", "utility"]
+}
+```
+
+2. 也可以提供按语言映射的对象。键使用站点的语言代码（见 `src/i18n/*.json` 的文件名，例如 `zh-cn`、`zh-tw`、`en`）：
+
+```json
+{
+  "name": { "zh-cn": "FPS 计数器", "en": "FPS Counter" },
+  "description": {
+    "zh-cn": "在 Scratch 中统计帧率的模块。",
+    "en": "Count frames per second in Scratch."
+  },
+  "tags": {
+    "zh-cn": ["性能", "工具"],
+    "en": ["performance", "utility"]
+  }
+}
+```
+
+构建时：
+
+- 页面与搜索索引会根据当前语言选择相应值；
+- 默认基线为英文（建议 `meta.json` 写英文），如果映射/独立翻译缺失，将优先使用英文；
+- `zh-tw` 与 `zh-cn` 会相互回退：
+  - 请求 `zh-tw` 时，按 `zh-tw -> zh-cn -> en -> 基线(meta)` 顺序回退；
+  - 请求 `zh-cn` 时，按 `zh-cn -> zh-tw -> en -> 基线(meta)` 顺序回退；
+- 未提供映射/翻译时按 `meta.json` 的简单值处理。
+
+#### 独立翻译文件（推荐）
+
+为便于单独提交/审阅每个语言的修改时间，可在模块目录下新增 `i18n/` 子目录，按语言放置 JSON 文件：
+
+```
+content/modules/<id>/
+  meta.json            # 建议英文基线（默认）
+  i18n/
+    zh-cn.json         # 可选：中文简体
+    zh-tw.json         # 可选：中文繁体
+```
+
+文件结构（任意字段可省略，缺失将按回退规则取值）：
+
+```json
+{
+  "name": "排序角色",
+  "description": "对角色进行排序。",
+  "tags": ["层", "排序"]
+}
+```
+
+
+### 变量与列表名称翻译（可选）
+
+现在支持在模块的 `i18n/<locale>.json` 中分别为“变量名”和“列表名”提供翻译映射。键为原始名称，值为本地化后的展示名称：
+
+```jsonc
+// i18n/zh-cn.json
+{
+  "name": "帧率 (FPS)",
+  "description": "计算与展示 FPS 的通用脚本",
+  "variables": {
+    "FPS": "帧率",
+    "DELTA": "时间差"
+  },
+  "lists": {
+    "samples": "采样列表"
+  }
+}
+```
+
+渲染时仅影响页面表格中的展示名称，不会修改源码脚本或原始 `variables.json`。如果未提供翻译，则回退到原始名称。
+
+回退规则（与其它字段一致）：
+
+- 当前语言命中 -> 使用之
+- zh-tw 缺失时回退 zh-cn；zh-cn 缺失时回退 zh-tw
+- 再回退 en
+- 最后回退为原始名称
+
 ## 编写脚本（Scratchblocks）
 
 三种模式：

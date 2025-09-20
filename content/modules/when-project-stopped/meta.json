@@ -1,7 +1,10 @@
 {
   "id": "when-project-stopped",
-  "name": "当作品停止",
-  "description": "当作品停止时触发的事件。",
-  "tags": ["事件"],
+  "name": "When project stopped",
+  "description": "Event triggered when the project stops.",
+  "tags": ["event"],
+  "scriptTitles": {
+    "main": "Main"
+  },
   "contributors": "gh/LuYifei2011"
 }

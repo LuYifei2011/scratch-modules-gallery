@@ -13,7 +13,8 @@
     "fast-glob": "^3.3.2",
     "fs-extra": "^11.2.0",
     "nunjucks": "^3.2.4",
-    "minisearch": "^7.1.2"
+    "minisearch": "^7.1.2",
+    "scratchblocks": "github:LuYifei2011/scratchblocks#release"
   },
   "devDependencies": {
     "prettier": "^3.3.3",

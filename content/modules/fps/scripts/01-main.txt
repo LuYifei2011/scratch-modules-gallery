@@ -1,0 +1,11 @@
+when flag clicked
+set [DELTA v] to (1)
+set [tick30 v] to (0)
+forever 
+  FPS (tick30) :: custom
+end
+
+define FPS (last tick30 :: custom-arg)
+set [tick30 v] to ((timer) * (30))
+set [DELTA v] to ((tick30) - (last tick30 :: custom-arg))
+set [FPS v] to (round ((30) / (DELTA)))

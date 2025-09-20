@@ -1,7 +1,17 @@
 {
   "id": "tweening",
-  "name": "补间",
-  "description": "使用补间/插值实现平滑动画。",
-  "tags": ["动画", "补间"],
+  "name": "Tweening",
+  "description": "Use tweening/interpolation for smooth animation.",
+  "tags": ["animation", "tween"],
+  "scriptTitles": {
+    "linear": "Linear",
+    "sine": "Sine",
+    "power": "Power",
+    "expo": "Exponential",
+    "circular": "Circular",
+    "back": "Back",
+    "elastic": "Elastic",
+    "bounce": "Bounce"
+  },
   "contributors": "gh/LuYifei2011"
 }

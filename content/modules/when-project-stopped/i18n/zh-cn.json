@@ -1,0 +1,8 @@
+{
+  "name": "当作品停止",
+  "description": "当作品停止时触发的事件。",
+  "tags": ["事件"],
+  "scriptTitles": {
+    "main": "主脚本"
+  }
+}

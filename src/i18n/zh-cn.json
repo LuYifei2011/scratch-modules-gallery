@@ -1,0 +1,38 @@
+{
+  "meta": {
+    "languageTag": "zh-CN",
+    "languageName": "简体中文",
+    "siteName": "Scratch 模块库",
+    "description": "一个可搜索的 Scratch 模块索引库",
+    "keywords": "Scratch,模块库,编程,代码库"
+  },
+  "base": {
+    "moduleCount": "站点共有 {count} 个模块",
+    "githubAriaLabel": "GitHub 仓库",
+    "languageSwitchTitle": "语言"
+  },
+  "home": {
+    "searchPlaceholder": "搜索模块...",
+    "onlineDemoBadge": "在线演示",
+    "noResults": "无结果"
+  },
+  "module": {
+    "contributors": "贡献者",
+    "scripts": "脚本",
+    "renderStyle": "渲染风格:",
+    "highContrast": "高对比度",
+    "translateTo": "翻译为:",
+    "noTranslate": "不翻译",
+    "importedFrom": "引入模块",
+    "variablesTitle": "变量 / 列表",
+    "varName": "名称",
+    "varType": "类型",
+    "varScope": "作用域",
+    "typeMap": { "variable": "变量", "list": "列表", "cloud": "云变量" },
+    "scopeMap": { "global": "全局", "sprite": "角色", "choose": "按需自选" },
+    "notes": "备注",
+    "demo": "演示",
+    "openInTW": "在 Turbowarp 编辑器中打开",
+    "references": "参考链接"
+  }
+}

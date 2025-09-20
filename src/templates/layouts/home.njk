@@ -6,14 +6,14 @@
 {% block meta_keywords %}<meta name="keywords" content="{{ config.keywords }}"/>{% endblock %}
 {% block content %}
   <section style="display:flex;flex-direction:column">
-    <input id="search" type="text" placeholder="搜索模块..."/>
+    <input id="search" type="text" placeholder="{{ t.home.searchPlaceholder }}"/>
     <div id="results" class="module-list">
       {% for m in modules %}
         <article class="module-item">
           <h2>
-            <a href="{{ basePath }}/modules/{{ m.slug }}/">{{ m.name }}</a>
+            <a href="{{ pageBase }}/modules/{{ m.slug }}/">{{ m.name }}</a>
             {% if m.hasDemo %}
-              <span class="badge">在线演示</span>
+              <span class="badge">{{ t.home.onlineDemoBadge }}</span>
             {% endif %}
           </h2>
           <p>{{ m.description }}</p>
@@ -28,5 +28,5 @@
   </section>
 {% endblock %}
 {% block page_scripts %}
-  <script defer src="{{ basePath }}/home.js"></script>
+  <script type="module" src="{{ assetBase }}/home.js"></script>
 {% endblock %}

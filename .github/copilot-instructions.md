@@ -1,71 +1,70 @@
-## AI 快速协作指引 — scratch-modules-gallery
+## AI 协作速览（scratch-modules-gallery）
 
-目标：让智能代理快速、安全地编辑源码并生成 `dist/` 输出，保持“极简静态生成 + 零额外复杂度”原则。
+> 目标：快速理解并安全扩展本仓库。保持“单 Node 构建脚本 + 纯静态输出”原则，禁止引入前端打包器或框架级迁移。
 
-要点速览
+### 核心流水线
 
-- 构建：一次性 Node 脚本 `scripts/build.js` 读取 `content/modules/*` -> 生成 `dist/`（HTML、`search-index.json`、`search-docs.json`、`sitemap.xml`、`robots.txt`、拷贝 vendor/assets）。
-- 渲染：Nunjucks 模板位于 `src/templates/layouts/`，请在模板中使用 `config`, `module`, `year`, `basePath`。
-- 搜索：使用本地 UMD MiniSearch（vendor），构建产物包含 `search-index.json`（MiniSearch.toJSON）与 `search-docs.json`（前端展示字段）。
-- 开发：`scripts/dev-server.js` 支持监听变更自动重建、SSE 自动刷新、HTTPS（可自签），目录/无扩展路径回退到 index.html，并默认禁用缓存。
+1. 入口 `scripts/build.js`：读取 `site.config.js` → 扫描模块(`content/modules/**`)→ 解析脚本/导入/变量 → 合并模块级 i18n → 逐语言生成 HTML + 搜索 JSON → 生成根跳转、sitemap、robots。
+2. 数据模型产出自 `scripts/lib/schema.js`：统一字段 (id, slug, name, description, tags, contributors[], scripts[], hasDemo, variables[], notesHtml, references)。任何字段变更需评估链路：schema -> build -> 模板 -> 搜索 -> 前端脚本。
+3. 模板：`src/templates/layouts/{base,home,module}.njk` 只做展示；上下文：`config,module,t,locale,pageBase,assetBase,pagePath,locales,year,IS_DEV,langTags`。禁止模板中直接调用时间或访问浏览器环境。
+4. 前端 JS：`src/client/{home.js,module.js}` 仅负责搜索索引加载、语言切换、scratchblocks 二次渲染。全局注入：`window.__I18N`, `PAGE_BASE`, `ASSET_BASE`, `IS_DEV`。
+5. 搜索：MiniSearch（ES 模块拷贝至 `dist/vendor/`）；索引字段：name,id,description,tags；自定义 CJK 分词在 `build.js` 中定义。
 
-重要约定（请遵守）
+### 脚本与导入
 
-- ESM 源码；若需 `require`，使用 `createRequire(import.meta.url)`（见 `scripts/build.js`）。
-- 不引入大型打包器或新框架；优先小改动并保持向后兼容。
-- 模板不要在运行时调用 `new Date()`；构建脚本传入 `year`。
-- scratchblocks 编译文件不会由 npm 自动拷贝：放到 `public/vendor/`。
+- 每模块必须 `scripts/*.txt`；文件名解析：`01-main.txt` → id `main`；无数字前缀则文件名去 `.txt`。
+- 行级 `!import otherModuleId[:scriptIndex]`：
+  - 顶部连续 import 折叠为 `leadingImports`；正文/中间 import 拆成独立段。
+  - 递归展开时限制深度，循环/缺失/越界写入注释 `// 导入失败`。
 
-模块目录约定（内容模型）
+### 国际化 (全局 + 模块)
 
-- 必需：`meta.json`（id、name、description、tags[]）和至少一种脚本（见下）。
-- 脚本优先级：
-  1.  `scripts/*.txt`（按文件名自然排序，文件名可含序号，去前缀为标题）
-  2.  `script-*.txt`
-  3.  `script.txt`（旧格式回退）
-- 可选：`variables.json`, `notes.md|txt`, `references.json`, `demo.sb3`, `assets/`。
+- 全局语言：`src/i18n/*.json` 控制站点 UI、元信息。
+- 模块局部：`content/modules/<id>/i18n/<locale>.json` 可覆盖：name, description, tags, variables, lists, events, scriptTitles, procedures, procedureParams。
+- 变量/列表/事件：构建时计算 `displayName`（不改变原始 name），优先级（示例 zh-cn）：当前语言 > 同类中文变体 > 英文。
+- 自定义块（方案A）：脚本源统一英文；`procedures` 使用英文 pattern（`_` 为参数槽）映射本地化文本；`procedureParams` 映射参数名称（在 scratchblocks AST 阶段替换 reporter）。处理顺序：先基于英文原文做文本层 pattern 替换，再做 scratchblocks 翻译 + 参数名替换。
 
-关键实现点（常改动处）
+### 构建/开发
 
-- `scripts/lib/schema.js`：解析作者贡献者、构建模块 record（id, slug, name, description, tags, contributors, scripts, script, hasDemo, demoFile, variables, notesHtml, references）。
-- `scripts/build.js`：核心流程为 loadModules() -> buildSearchIndex() -> render(). 若修改构建输出或模板数据，优先调整此处。
-- 模板：
-  - `base.njk`：页面骨架，head 区块可通过 `block head_extra` 注入额外 meta/script。
-  - `home.njk`：列出所有模块（SEO：无分页）。
-  - `module.njk`：渲染 scripts 列表或单脚本；包含 JSON-LD。
+- 构建：`npm run build` → 输出到 `dist/`（按语言子目录）。
+- 开发：`npm run dev` / `dev:https` 提供自动重建 + SSE 刷新；HTTPS 可用自签或自备证书（环境变量参考 README）。
+- 环境变量：`BASE_URL` 覆盖 canonical / sitemap；`IS_DEV` 进入模板 + 前端。
 
-验证与本地运行（快速命令）
+### 约束与安全边界
 
-- 构建：
-  npm install
-  npm run build
-- 本地预览（推荐使用内置开发服务器）：
-  npm run dev # http
-  npm run dev:https # https，自签证书
-- 验证要点：
-  - `dist/index.html` head 中 meta（description/keywords/canonical）是否正确
-  - `dist/search-index.json` 与 `dist/search-docs.json` 是否存在且包含模块
-  - `dist/sitemap.xml` 与 `dist/robots.txt`
-  - 开发服务器是否：自动重建、页面自动刷新、目录/无扩展回退、禁用缓存、HTTPS 正常
+- 禁止：引入打包器、修改输出目录结构、硬编码绝对 URL、在模板直接生成当前时间、写入 `dist/` 手工文件。
+- 需要 CommonJS 依赖时使用 `createRequire(import.meta.url)`。
+- 所有内部链接/静态资源路径必须通过 `pageBase` / `assetBase` 拼接以保持多语言部署兼容。
 
-常见坑与注意事项
+### 常见修改指南
 
-- 不要手动编辑 `dist/`；所有变更应修改源码并重建。
-- 新增脚本目录但为空时，构建会回退到 `script.txt`；确认是否遗漏内容。
-- 文件名排序依赖自然字符串排序，避免混用前导零与非前导零。
-- 如需与第三方页面（如 TurboWarp）交互，请优先使用 HTTPS 开发服务器，或确保 `config.baseUrl` 与 `BASE_URL` 环境变量一致以避免混合内容与跨源限制。
+| 目标                 | 入口                         | 注意点                                       |
+| -------------------- | ---------------------------- | -------------------------------------------- |
+| 新增模块             | `content/modules/<id>/`      | 至少 1 个脚本；补齐 meta 与（可选）i18n      |
+| 扩展数据字段         | `schema.js`                  | 同步模板 & 搜索 & 前端依赖字段               |
+| 新语言               | 复制一份 `src/i18n/en.json`  | 如果需要模块级翻译，新增对应 i18n JSON       |
+| 自定义块新增 pattern | 模块 i18n `procedures`       | 保持英文源脚本同步；`_` 数量需与参数个数一致 |
+| SEO 调整             | `site.config.js` + 模板 head | 确保 `hreflang`、canonical 含语言段          |
 
-编辑与提交建议
+### 验证清单（提交前）
 
-- 小步提交，修改后立刻 `npm run build` 验证无错误。
-- 若新增依赖：更新 `package.json` 并记录原因。
+1. `npm run build` 无异常；所有语言目录含 `search-index.json` / `search-docs.json`。
+2. 任意模块页 `<head>`：canonical 正确、全量 hreflang + `x-default`。
+3. 导入展开无意外 `// 导入失败`（除演示）。
+4. 自定义块：英文源含 `define ...`；目标语言出现本地化标题 + 参数名称替换。
+5. 首页搜索：中文子串命中（CJK 分词生效）。
+6. 根 `index.html` 按浏览器语言/LocalStorage 跳转期望语言。
 
-参考入口（首选阅读顺序）
+### 易踩坑 & 提示
 
-1. `scripts/build.js` — 构建主流程
-2. `scripts/lib/schema.js` — 模型与解析
-3. `src/templates/layouts/` — 页面模板（`base.njk`, `home.njk`, `module.njk`）
-4. `scripts/dev-server.js` — 开发服务器
-5. `content/modules/` — 示例模块（`fps/`, `order-sprites/`）
+- 缺少 `scripts/` 或空目录 → 仍构建但出现在 `Issues:`。
+- 参数/自定义块翻译顺序错误会导致 pattern 匹配失败（务必先 pattern 后 AST 翻译）。
+- 变量/列表英文名如果与局部 i18n 键不一致不会显示本地化 displayName。
+- 文件名排序混用（`1-` vs `01-`）会引发顺序意外；统一使用两位或不加前导零。
+- 忘记使用 `assetBase` 加载搜索 JSON 会导致跨语言路径 404。
 
-有任何不完整或需要补充的地方，请指出具体场景，我会迭代补充。
+### 推荐阅读顺序
+
+`scripts/build.js` → `scripts/lib/schema.js` → `src/templates/layouts/*.njk` → `src/client/*.js` → 示例模块 `content/modules/fps/`。
+
+若新增特性（如：额外资源类型、本地化维度、搜索字段）请在提交中同步更新此文件并列出回归验证步骤。

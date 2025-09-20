@@ -34,20 +34,64 @@ function normalizeOne(entry) {
   return null
 }
 
+// 选择多语言映射的默认值（优先 en -> zh-cn -> 第一个）
+function pickDefaultFromMap(map) {
+  if (!map || typeof map !== 'object') return undefined
+  if (map['en']) return map['en']
+  if (map['zh-cn']) return map['zh-cn']
+  const keys = Object.keys(map)
+  return keys.length ? map[keys[0]] : undefined
+}
+
+function normalizeI18nStringOrMap(v) {
+  if (v == null) return { base: undefined, map: undefined }
+  if (typeof v === 'string') return { base: v, map: undefined }
+  if (typeof v === 'object') {
+    const base = pickDefaultFromMap(v)
+    return { base, map: v }
+  }
+  return { base: String(v), map: undefined }
+}
+
+function normalizeI18nTags(v) {
+  if (Array.isArray(v)) return { base: v, map: undefined }
+  if (v && typeof v === 'object') {
+    const base = pickDefaultFromMap(v)
+    return { base: Array.isArray(base) ? base : [], map: v }
+  }
+  return { base: [], map: undefined }
+}
+
 export function buildModuleRecord(meta, extra) {
   const { id, name, description, tags, contributors } = meta
   const errors = []
   if (!id) errors.push('missing id')
   if (!name) errors.push('missing name')
   if (!description) errors.push('missing description')
-  if (!Array.isArray(tags)) errors.push('tags must be array')
+  if (!(Array.isArray(tags) || (tags && typeof tags === 'object')))
+    errors.push('tags must be array or i18n map')
+
+  const nameNorm = normalizeI18nStringOrMap(name)
+  const descNorm = normalizeI18nStringOrMap(description)
+  const tagsNorm = normalizeI18nTags(tags)
+  // 脚本标题（英文，按脚本 id -> 标题）
+  const scriptTitles =
+    meta && typeof meta.scriptTitles === 'object' && !Array.isArray(meta.scriptTitles)
+      ? meta.scriptTitles
+      : {}
 
   const record = {
     id,
     slug: id, // slug 直接使用 id
-    name,
-    description,
-    tags: Array.isArray(tags) ? tags : [],
+    name: nameNorm.base,
+    description: descNorm.base,
+    tags: Array.isArray(tagsNorm.base) ? tagsNorm.base : [],
+    // 保留 i18n 原始映射，供后续按语言本地化
+    name_i18n: nameNorm.map,
+    description_i18n: descNorm.map,
+    tags_i18n: tagsNorm.map,
+    // 新增：脚本标题（英文）
+    scriptTitles,
     contributors: parseContributors(contributors),
     // keywords field removed - rely on tags for searchability
     // 兼容旧格式: script 保留第一段脚本内容
@@ -65,6 +109,7 @@ export function buildModuleRecord(meta, extra) {
     variables: extra.variables || [],
     notesHtml: extra.notesHtml || '',
     references: extra.references || [],
+    translations: extra.translations || {},
   }
   return { record, errors }
 }

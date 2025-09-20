@@ -1,0 +1,38 @@
+{
+  "meta": {
+    "languageTag": "zh-TW",
+    "languageName": "繁體中文",
+    "siteName": "Scratch 模組庫",
+    "description": "一個可搜尋的 Scratch 模組索引庫",
+    "keywords": "Scratch,模組庫,程式設計,程式碼庫"
+  },
+  "base": {
+    "moduleCount": "站點共有 {count} 個模組",
+    "githubAriaLabel": "GitHub 倉庫",
+    "languageSwitchTitle": "語言"
+  },
+  "home": {
+    "searchPlaceholder": "搜尋模組...",
+    "onlineDemoBadge": "線上演示",
+    "noResults": "無結果"
+  },
+  "module": {
+    "contributors": "貢獻者",
+    "scripts": "腳本",
+    "renderStyle": "渲染風格:",
+    "highContrast": "高對比度",
+    "translateTo": "翻譯為:",
+    "noTranslate": "不翻譯",
+    "importedFrom": "引入模組",
+    "variablesTitle": "變數 / 清單",
+    "varName": "名稱",
+    "varType": "類型",
+    "varScope": "作用域",
+    "typeMap": { "variable": "變數", "list": "清單", "cloud": "雲變數" },
+    "scopeMap": { "global": "全域", "sprite": "角色", "choose": "按需自選" },
+    "notes": "備註",
+    "demo": "演示",
+    "openInTW": "在 Turbowarp 編輯器中開啟",
+    "references": "參考連結"
+  }
+}

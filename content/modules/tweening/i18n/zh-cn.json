@@ -1,0 +1,47 @@
+{
+  "name": "补间",
+  "description": "使用补间/插值实现平滑动画。",
+  "tags": ["动画", "补间"],
+  "variables": {
+    "Tween": "补间"
+  },
+  "scriptTitles": {
+    "linear": "线性",
+    "sine": "正弦",
+    "power": "次方",
+    "expo": "指数",
+    "circular": "圆形",
+    "back": "回弹",
+    "elastic": "弹性",
+    "bounce": "弹跳"
+  },
+  "procedures": {
+    "linear from _ to _ progress _": "线性 从 _ 到 _ 进度 _ %",
+    "sine ease in from _ to _ progress _": "正弦 缓入 从 _ 到 _ 进度 _ %",
+    "sine ease out from _ to _ progress _": "正弦 缓出 从 _ 到 _ 进度 _ %",
+    "sine ease in-out from _ to _ progress _": "正弦 缓入和出 从 _ 到 _ 进度 _ %",
+    "power-in from _ to _ progress _": "二次 缓入 从 _ 到 _ 进度 _ %",
+    "power-out from _ to _ progress _": "二次 缓出 从 _ 到 _ 进度 _ %",
+    "power-in-out from _ to _ progress _": "二次 缓入和出 从 _ 到 _ 进度 _ %",
+    "expo ease in from _ to _ progress _": "指数 缓入 从 _ 到 _ 进度 _ %",
+    "expo ease out from _ to _ progress _": "指数 缓出 从 _ 到 _ 进度 _ %",
+    "expo ease in-out from _ to _ progress _": "指数 缓入和出 从 _ 到 _ 进度 _ %",
+    "circular ease in from _ to _ progress _": "圆形 缓入 从 _ 到 _ 进度 _ %",
+    "circular ease out from _ to _ progress _": "圆形 缓出 从 _ 到 _ 进度 _ %",
+    "circular ease in-out from _ to _ progress _": "圆形 缓入和出 从 _ 到 _ 进度 _ %",
+    "back ease in from _ to _ progress _": "回弹 缓入 从 _ 到 _ 进度 _ %",
+    "back ease out from _ to _ progress _": "回弹 缓出 从 _ 到 _ 进度 _ %",
+    "back ease in-out from _ to _ progress _": "回弹 缓入和出 从 _ 到 _ 进度 _ %",
+    "elastic ease in from _ to _ progress _": "弹性 缓入 从 _ 到 _ 进度 _ %",
+    "elastic ease out from _ to _ progress _": "弹性 缓出 从 _ 到 _ 进度 _ %",
+    "elastic ease in-out from _ to _ progress _": "弹性 缓入和出 从 _ 到 _ 进度 _ %",
+    "bounce ease in from _ to _ progress _": "弹跳 缓入 从 _ 到 _ 进度 _ %",
+    "bounce ease out from _ to _ progress _": "弹跳 缓出 从 _ 到 _ 进度 _ %",
+    "bounce ease in-out from _ to _ progress _": "弹跳 缓入和出 从 _ 到 _ 进度 _ %"
+  },
+  "procedureParams": {
+    "start": "起始值",
+    "end": "结束值",
+    "progress%": "进度"
+  }
+}

@@ -8,6 +8,8 @@ import { pathToFileURL } from 'url'
 import { createRequire } from 'module'
 const require = createRequire(import.meta.url)
 
+import * as scratchblocks from 'scratchblocks/syntax/index.js'
+
 const root = path.resolve('.')
 // 动态 ESM 导入配置
 const configModule = await import(pathToFileURL(path.join(root, 'site.config.js')).href)
@@ -21,6 +23,23 @@ if (process.env.BASE_URL) {
     config.baseUrl = process.env.BASE_URL
   } catch {}
 }
+
+fs.readdir(path.join(root, 'node_modules', 'scratchblocks', 'locales'), (err, files) => {
+  if (err || !files) return
+  files.forEach((file) => {
+    const fullPath = path.join(root, 'node_modules', 'scratchblocks', 'locales', file)
+    if (file.endsWith('.json')) {
+      const langKey = path.basename(file, '.json').replace('-', '_').toLowerCase()
+      try {
+        const data = fs.readFileSync(fullPath, 'utf8')
+        const obj = JSON.parse(data)
+        scratchblocks.loadLanguages({ [langKey]: obj })
+      } catch (e) {
+        console.warn(`[scratchblocks] 载入语言文件失败，跳过 ${file}:`, e?.message || e)
+      }
+    }
+  })
+})
 
 const templatesPath = path.join(root, 'src', 'templates')
 nunjucks.configure(templatesPath, { autoescape: true })
@@ -58,33 +77,18 @@ async function loadModules() {
         const full = path.join(scriptsDir, f)
         const content = await fs.readFile(full, 'utf8')
         const base = path.basename(f, '.txt')
-        // 文件名可选形如: 01-标题 / 01_标题 / 01 标题 / 标题
-        let title = base.replace(/^\d+[ _-]?/, '')
-        scripts.push({ title: title.trim(), content })
+        // 新标准：序号+id，例如 01-main.txt；无序号时，整个 base 为 id
+        const m = base.match(/^(\d+)[ _-](.+)$/)
+        const id = (m ? m[2] : base).trim()
+        scripts.push({ id, content })
       }
-      // 若目录存在但为空，回退到单文件 script.txt
-      if (!scripts.length && (await fs.pathExists(scriptPath))) {
-        script = await fs.readFile(scriptPath, 'utf8')
+      // 若目录存在但为空，视为错误
+      if (!scripts.length) {
+        errorsAll.push(`${dir}: scripts/ is empty (expecting *.txt)`)
       }
     } else {
-      // 查找 script-*.txt
-      const multiFiles = (await fg(['script-*.txt'], { cwd: moduleDir, onlyFiles: true })).sort(
-        (a, b) => a.localeCompare(b, 'en', { numeric: true })
-      )
-      if (multiFiles.length) {
-        for (const f of multiFiles) {
-          const full = path.join(moduleDir, f)
-          const content = await fs.readFile(full, 'utf8')
-          const base = path.basename(f, '.txt').replace(/^script-/, '')
-          // 允许 script-01-title -> title
-          let title = base.replace(/^\d+[ _-]?/, '')
-          scripts.push({ title: title.trim(), content })
-        }
-      } else if (await fs.pathExists(scriptPath)) {
-        script = await fs.readFile(scriptPath, 'utf8')
-      } else {
-        errorsAll.push(`${dir}: missing script.txt`)
-      }
+      // 不再兼容旧格式（script.txt 或 script-*.txt）；严格要求 scripts/*.txt
+      errorsAll.push(`${dir}: missing scripts/ directory`)
     }
 
     const demoPath = path.join(moduleDir, 'demo.sb3')
@@ -95,7 +99,11 @@ async function loadModules() {
     const variablesPath = path.join(moduleDir, 'variables.json')
     if (await fs.pathExists(variablesPath)) {
       try {
-        variables = JSON.parse(await fs.readFile(variablesPath, 'utf8'))
+        const vRaw = JSON.parse(await fs.readFile(variablesPath, 'utf8'))
+        if (Array.isArray(vRaw)) variables = vRaw
+        else if (vRaw && typeof vRaw === 'object' && Array.isArray(vRaw.variables))
+          variables = vRaw.variables
+        else variables = []
       } catch (e) {
         errorsAll.push(`${dir}: variables.json parse error`)
       }
@@ -132,6 +140,69 @@ async function loadModules() {
       }
     }
 
+    // optional per-module translations: i18n/<locale>.json
+    // 文件结构：{ name?: string, description?: string, tags?: string[], variables?: Record<origName,string>, lists?: Record<origName,string> }
+    let translations = {}
+    const i18nDir = path.join(moduleDir, 'i18n')
+    if (await fs.pathExists(i18nDir)) {
+      const files = (await fg(['*.json'], { cwd: i18nDir, onlyFiles: true })).sort((a, b) =>
+        a.localeCompare(b, 'en', { numeric: true })
+      )
+      for (const f of files) {
+        const loc = path.basename(f, '.json')
+        try {
+          const obj = JSON.parse(await fs.readFile(path.join(i18nDir, f), 'utf8'))
+          if (obj && typeof obj === 'object') {
+            const one = {}
+            if (typeof obj.name === 'string') one.name = obj.name
+            if (typeof obj.description === 'string') one.description = obj.description
+            if (Array.isArray(obj.tags)) one.tags = obj.tags
+            // 新增：变量/列表名称映射（按原名 -> 本地化名）
+            if (
+              obj.variables &&
+              typeof obj.variables === 'object' &&
+              !Array.isArray(obj.variables)
+            ) {
+              one.variables = obj.variables
+            }
+            if (obj.lists && typeof obj.lists === 'object' && !Array.isArray(obj.lists)) {
+              one.lists = obj.lists
+            }
+            // 新增：事件名称映射（事件/广播名 -> 本地化名）
+            if (obj.events && typeof obj.events === 'object' && !Array.isArray(obj.events)) {
+              one.events = obj.events
+            }
+            // 新增：脚本标题映射（脚本 id -> 本地化标题）
+            if (
+              obj.scriptTitles &&
+              typeof obj.scriptTitles === 'object' &&
+              !Array.isArray(obj.scriptTitles)
+            ) {
+              one.scriptTitles = obj.scriptTitles
+            }
+            // 新增：自定义块翻译（英文基准 -> 本地化文本）以及参数名称映射
+            if (
+              obj.procedures &&
+              typeof obj.procedures === 'object' &&
+              !Array.isArray(obj.procedures)
+            ) {
+              one.procedures = obj.procedures
+            }
+            if (
+              obj.procedureParams &&
+              typeof obj.procedureParams === 'object' &&
+              !Array.isArray(obj.procedureParams)
+            ) {
+              one.procedureParams = obj.procedureParams
+            }
+            translations[loc] = one
+          }
+        } catch (e) {
+          errorsAll.push(`${dir}: i18n/${f} parse error`)
+        }
+      }
+    }
+
     const { record, errors } = buildModuleRecord(meta, {
       script,
       scripts,
@@ -139,6 +210,7 @@ async function loadModules() {
       variables,
       notesHtml,
       references,
+      translations,
     })
     if (errors.length) errorsAll.push(`${dir}: ${errors.join(', ')}`)
     modules.push(record)
@@ -200,7 +272,7 @@ function resolveImports(modules) {
     if (targetModule.scripts && targetModule.scripts.length) {
       scriptsArr = targetModule.scripts
     } else if (targetModule.script) {
-      scriptsArr = [{ title: '', content: targetModule.script }]
+      scriptsArr = [{ id: 'main', title: '', content: targetModule.script }]
     }
     if (!scriptsArr.length) return { error: '目标模块无脚本' }
     const idx = index1 != null ? index1 - 1 : 0
@@ -249,10 +321,11 @@ function resolveImports(modules) {
     let modChanged = false // 仅用于内部判断（当前未输出日志）
     // 标准化为 scripts 数组
     if ((!mod.scripts || !mod.scripts.length) && mod.script) {
-      mod.scripts = [{ title: '', content: mod.script }]
+      mod.scripts = [{ id: 'main', title: '', content: mod.script }]
     }
     if (!mod.scripts) continue
     const newScripts = []
+    let seq = 0
     for (const original of mod.scripts) {
       const content = original.content || ''
       const lines = content.split(/\r?\n/)
@@ -298,7 +371,8 @@ function resolveImports(modules) {
           fromId: refId,
           fromName: targetModule.name || refId,
           fromIndex: index1,
-          fromTitle: targetScript.title || '',
+          fromTitle: '',
+          fromScriptId: targetScript.id || undefined,
         })
       }
       let buffer = []
@@ -314,6 +388,7 @@ function resolveImports(modules) {
         // 遇到正文中的 import
         if (!mainBlockAdded) {
           newScripts.push({
+            id: original.id,
             title: original.title,
             content: buffer.join('\n'),
             leadingImports: leadingImports.length ? leadingImports : undefined,
@@ -356,19 +431,21 @@ function resolveImports(modules) {
           fromId: refId,
           fromName: targetModule.name || refId,
           fromIndex: index1,
-          fromTitle: targetScript.title || '',
+          fromTitle: '',
+          fromScriptId: targetScript.id || undefined,
         })
       }
       // 收尾: 若正文块尚未添加，则现在添加（包含可能的 leadingImports）
       if (!mainBlockAdded) {
         newScripts.push({
+          id: original.id,
           title: original.title,
           content: buffer.join('\n'),
           leadingImports: leadingImports.length ? leadingImports : undefined,
         })
       } else if (buffer.length) {
         // mainBlock 已添加，还有尾部代码
-        newScripts.push({ title: '', content: buffer.join('\n') })
+        newScripts.push({ id: undefined, title: '', content: buffer.join('\n') })
       }
       if (!modChanged) {
         // 没有任何 import，保持原对象
@@ -384,6 +461,464 @@ function resolveImports(modules) {
     mod.scripts = newScripts
     // modChanged 目前不做输出
   }
+}
+
+// 加载 i18n 词典（自动扫描 src/i18n/*.json）
+async function loadI18n() {
+  const i18nDir = path.join(root, 'src', 'i18n')
+  const files = (await fg(['*.json'], { cwd: i18nDir, onlyFiles: true })).sort((a, b) =>
+    a.localeCompare(b, 'en', { numeric: true })
+  )
+  const dict = {}
+  for (const f of files) {
+    const loc = path.basename(f, '.json')
+    try {
+      dict[loc] = JSON.parse(await fs.readFile(path.join(i18nDir, f), 'utf8'))
+    } catch (e) {
+      console.warn(`[i18n] 解析失败，跳过 ${f}:`, e?.message || e)
+    }
+  }
+  return dict
+}
+
+function pickConfigForLocale(baseConfig, locale, dict) {
+  const meta = dict[locale]?.meta || {}
+  return {
+    ...baseConfig,
+    siteName: meta.siteName || baseConfig.siteName,
+    description: meta.description || baseConfig.description,
+    keywords: meta.keywords || baseConfig.keywords,
+    language: meta.languageTag || baseConfig.language,
+  }
+}
+
+// 将 scratchblocks 文本翻译为指定语言（构建期），并可替换变量/列表名称
+function translateScriptFields(blocks, nameMaps) {
+  if (!blocks || !nameMaps) return
+  blocks.forEach((block) => {
+    if (block instanceof scratchblocks.Comment) return
+    if (block.info.selector === 'readVariable' && nameMaps.vars) {
+      block.children[0].value = nameMaps.vars[block.children[0].value] || block.children[0].value
+      return
+    }
+    if (block.info.category === 'custom-arg' && nameMaps.params) {
+      block.children[0].value = nameMaps.params[block.children[0].value] || block.children[0].value
+      return
+    }
+    block.children.forEach((child) => {
+      if (child instanceof scratchblocks.Script) {
+        translateScriptFields(child.blocks, nameMaps)
+        return
+      } else if (child.isBlock) {
+        translateScriptFields([child], nameMaps)
+      }
+      if (child.shape === 'dropdown' && !child.menu) {
+        if (block.info.category === 'variables' && nameMaps.vars) {
+          child.value = nameMaps.vars[child.value] || child.value
+        } else if (block.info.category === 'lists' && nameMaps.lists) {
+          child.value = nameMaps.lists[child.value] || child.value
+        } else if (block.info.category === 'events' && nameMaps.events) {
+          child.value = nameMaps.events[child.value] || child.value
+        }
+      }
+    })
+  })
+}
+
+function translateScriptText(raw, targetLangKey, nameMaps) {
+  if (!raw) return raw
+  const allKeys = Object.keys(scratchblocks.allLanguages || {})
+  if (!allKeys.length) return raw
+  const doc = scratchblocks.parse(raw, { languages: allKeys })
+  const targetLang = scratchblocks.allLanguages[targetLangKey]
+  if (!targetLang) return raw
+  doc.translate(targetLang)
+  doc.scripts.forEach((script) => {
+    translateScriptFields(script.blocks, nameMaps)
+  })
+  const translated = doc.stringify()
+  return translated
+}
+
+// 针对某语言，返回带有已翻译脚本内容与元信息本地化的 modules 副本
+async function translateModulesForLocale(modules, dict, locale) {
+  const languageTag = (dict[locale]?.meta?.languageTag || locale || 'en')
+    .replace('-', '_')
+    .toLowerCase()
+  const isEnglishLocale = locale === 'en' || languageTag.startsWith('en')
+  const out = []
+
+  // 构造当前语言下的变量/列表名称映射（原名 -> 本地化名）
+  function buildNameMapsForModule(mod) {
+    const per = mod.translations || {}
+    const mapLocV = per[locale]?.variables
+    const mapLocL = per[locale]?.lists
+    const mapLocE = per[locale]?.events
+    const mapTwV = per['zh-tw']?.variables
+    const mapTwL = per['zh-tw']?.lists
+    const mapTwE = per['zh-tw']?.events
+    const mapCnV = per['zh-cn']?.variables
+    const mapCnL = per['zh-cn']?.lists
+    const mapCnE = per['zh-cn']?.events
+    const mapEnV = per['en']?.variables
+    const mapEnL = per['en']?.lists
+    const mapEnE = per['en']?.events
+    const maps = { vars: {}, lists: {}, events: {} }
+    function pick(mapLoc, mapTw, mapCn, mapEn, key) {
+      if (locale === 'zh-tw') {
+        return (
+          (mapLoc && mapLoc[key]) ||
+          (mapTw && mapTw[key]) ||
+          (mapCn && mapCn[key]) ||
+          (mapEn && mapEn[key])
+        )
+      }
+      if (locale === 'zh-cn') {
+        return (
+          (mapLoc && mapLoc[key]) ||
+          (mapCn && mapCn[key]) ||
+          (mapTw && mapTw[key]) ||
+          (mapEn && mapEn[key])
+        )
+      }
+      // 其他语言（例如 en）：仅使用本地或英文映射，避免错误回退到中文
+      return (mapLoc && mapLoc[key]) || (mapEn && mapEn[key])
+    }
+    const varsArr = Array.isArray(mod.variables) ? mod.variables : []
+    for (const v of varsArr) {
+      if (!v || !v.name) continue
+      if (v.type === 'list') {
+        const to = pick(mapLocL, mapTwL, mapCnL, mapEnL, v.name)
+        if (to) maps.lists[v.name] = to
+      } else {
+        const to = pick(mapLocV, mapTwV, mapCnV, mapEnV, v.name)
+        if (to) maps.vars[v.name] = to
+      }
+    }
+    // 事件名称映射：直接按优先顺序合并（不做键过滤）
+    const mergePref = (target, src) => {
+      if (!src || typeof src !== 'object') return
+      for (const k of Object.keys(src)) {
+        if (!(k in target)) target[k] = src[k]
+      }
+    }
+    if (locale === 'zh-tw') {
+      mergePref(maps.events, mapLocE)
+      mergePref(maps.events, mapTwE)
+      mergePref(maps.events, mapCnE)
+      mergePref(maps.events, mapEnE)
+    } else if (locale === 'zh-cn') {
+      mergePref(maps.events, mapLocE)
+      mergePref(maps.events, mapCnE)
+      mergePref(maps.events, mapTwE)
+      mergePref(maps.events, mapEnE)
+    } else {
+      mergePref(maps.events, mapLocE)
+      mergePref(maps.events, mapEnE)
+      mergePref(maps.events, mapCnE)
+      mergePref(maps.events, mapTwE)
+    }
+
+    if (
+      !Object.keys(maps.vars).length &&
+      !Object.keys(maps.lists).length &&
+      !Object.keys(maps.events).length
+    )
+      return undefined
+    return maps
+  }
+
+  // 构造当前语言的自定义块与其参数映射（方案A：以英文源为 key，_ 占位参数）
+  function buildProcedureMaps(mod) {
+    const per = mod.translations || {}
+    function pick(mapLoc, mapTw, mapCn, mapEn) {
+      if (locale === 'zh-tw') return mapLoc || mapTw || mapCn || mapEn
+      if (locale === 'zh-cn') return mapLoc || mapCn || mapTw || mapEn
+      return mapLoc || mapEn || mapCn || mapTw
+    }
+    const procMap = pick(
+      per[locale]?.procedures,
+      per['zh-tw']?.procedures,
+      per['zh-cn']?.procedures,
+      per['en']?.procedures
+    )
+    const paramMap = pick(
+      per[locale]?.procedureParams,
+      per['zh-tw']?.procedureParams,
+      per['zh-cn']?.procedureParams,
+      per['en']?.procedureParams
+    )
+    if (!procMap && !paramMap) return undefined
+    return { procMap, paramMap }
+  }
+
+  function escapeProcReg(str = '') {
+    return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+  }
+
+  // 进行文本层本地化：替换 define 行与调用行；然后替换参数槽名称
+  function localizeProcedures(raw, procMaps) {
+    if (!raw || !procMaps) return raw
+    let out = raw
+    const { procMap, paramMap } = procMaps
+    if (procMap && typeof procMap === 'object') {
+      // 先按 key 长度降序，避免前缀冲突
+      const entries = Object.entries(procMap).sort((a, b) => b[0].length - a[0].length)
+      for (const [englishPattern, localizedPattern] of entries) {
+        // 拆分英文 pattern 获取占位符数量（_ 表示一个参数括号）
+        const parts = englishPattern.split('_')
+        const slotCount = parts.length - 1
+        if (slotCount <= 0) continue
+        const localizedSlots = (localizedPattern.match(/_/g) || []).length
+        if (localizedSlots !== slotCount) {
+          console.warn(
+            `[procedures] 本地化占位符数量不匹配: pattern="${englishPattern}" slots=${slotCount} localizedSlots=${localizedSlots}`
+          )
+        }
+        // placeholder 捕获一个 custom-arg 括号，允许内部出现 :: custom-arg 及任意非换行内容
+        const placeholder = '\\s*(\\([^\n]*?\\))\\s*'
+        // 构造 core 正则主体：各静态片段之间用捕获组
+        const core = parts.map((p) => escapeProcReg(p)).join(placeholder)
+        let reDef, reCall
+        try {
+          reDef = new RegExp('^define\\s+' + core + '$', 'gm')
+          reCall = new RegExp('(^|\n)' + core + '(?=\n|$)', 'g')
+        } catch (e) {
+          console.warn('[procedures] 构造正则失败:', englishPattern, e?.message || e)
+          continue
+        }
+
+        function rebuildLocalized(captures) {
+          let idx = 0
+          // 依次把 '_' 替换为对应 capture
+          return localizedPattern.replace(/_/g, () => {
+            const rep = captures[idx++]
+            if (!rep) {
+              console.warn(
+                `[procedures] 捕获参数不足: pattern="${englishPattern}" need=${slotCount} have=${captures.length}`
+              )
+            }
+            return rep || '_'
+          })
+        }
+
+        // 处理 define 行
+        out = out.replace(reDef, (full, ...groups) => {
+          // groups = capturedSlots + (last two are offset & input per JS replace spec)
+          const pure = groups.slice(0, slotCount)
+          return 'define ' + rebuildLocalized(pure)
+        })
+        // 处理调用行
+        out = out.replace(reCall, (full, prefix, ...rest) => {
+          const captures = rest.slice(0, slotCount)
+          return prefix + rebuildLocalized(captures)
+        })
+      }
+    }
+    return out
+  }
+
+  for (const m of modules) {
+    const nm = { ...m }
+    const per = m.translations || {}
+    const enScriptTitles = m.scriptTitles || {}
+    function pickStr(base, map) {
+      const vLoc = per[locale]?.[base] ?? (map && map[locale])
+      const vTw = per['zh-tw']?.[base] ?? (map && map['zh-tw'])
+      const vCn = per['zh-cn']?.[base] ?? (map && map['zh-cn'])
+      const vEn = per['en']?.[base] ?? (map && map['en'])
+      if (locale === 'zh-tw') return vLoc || vTw || vCn || vEn || nm[base]
+      if (locale === 'zh-cn') return vLoc || vCn || vTw || vEn || nm[base]
+      return vLoc || vEn || nm[base] || vCn || vTw
+    }
+    function pickArr(base, map) {
+      const vLoc = per[locale]?.[base] ?? (map && map[locale])
+      const vTw = per['zh-tw']?.[base] ?? (map && map['zh-tw'])
+      const vCn = per['zh-cn']?.[base] ?? (map && map['zh-cn'])
+      const vEn = per['en']?.[base] ?? (map && map['en'])
+      if (locale === 'zh-tw') return vLoc || vTw || vCn || vEn || nm[base]
+      if (locale === 'zh-cn') return vLoc || vCn || vTw || vEn || nm[base]
+      return vLoc || vEn || nm[base] || vCn || vTw
+    }
+    function pickTitleForScript(scriptId, index1) {
+      const mapLoc = per[locale]?.scriptTitles
+      const mapTw = per['zh-tw']?.scriptTitles
+      const mapCn = per['zh-cn']?.scriptTitles
+      const mapEn = per['en']?.scriptTitles
+      // 回退顺序：
+      // - 当前语言明确提供
+      // - 目标语言 en 提供
+      // - 元信息（meta.scriptTitles，英文权威）
+      // - 其他中文映射（仅在前者都缺失时作为最后回退）
+      const best =
+        (mapLoc && mapLoc[scriptId]) ||
+        (mapEn && mapEn[scriptId]) ||
+        enScriptTitles[scriptId] ||
+        (locale === 'zh-tw'
+          ? (mapTw && mapTw[scriptId]) || (mapCn && mapCn[scriptId])
+          : locale === 'zh-cn'
+            ? (mapCn && mapCn[scriptId]) || (mapTw && mapTw[scriptId])
+            : (mapCn && mapCn[scriptId]) || (mapTw && mapTw[scriptId]))
+      return best || scriptId || (index1 != null ? '#' + index1 : '')
+    }
+    if (m.name_i18n || per[locale] || per['en'] || per['zh-cn'] || per['zh-tw']) {
+      nm.name = pickStr('name', m.name_i18n)
+    }
+    if (m.description_i18n || per[locale] || per['en'] || per['zh-cn'] || per['zh-tw']) {
+      nm.description = pickStr('description', m.description_i18n)
+    }
+    if (m.tags_i18n || per[locale] || per['en'] || per['zh-cn'] || per['zh-tw']) {
+      const tv = pickArr('tags', m.tags_i18n)
+      if (Array.isArray(tv)) nm.tags = tv
+    }
+
+    const ownNameMaps = buildNameMapsForModule(m)
+    // 为“变量 / 列表”表格计算本地化显示名称（模块级，始终执行）
+    if (Array.isArray(nm.variables) && nm.variables.length) {
+      const maps = ownNameMaps || { vars: {}, lists: {} }
+      nm.variables = nm.variables.map((v) => {
+        try {
+          const isList = String(v?.type) === 'list'
+          const origName = v?.name || ''
+          const mapped = isList ? maps.lists?.[origName] : maps.vars?.[origName]
+          // displayName 仅用于展示，不改变原始 name
+          return { ...v, displayName: mapped || origName }
+        } catch {
+          return { ...v }
+        }
+      })
+    }
+    if (Array.isArray(m.scripts) && m.scripts.length) {
+      const newScripts = []
+      for (let si = 0; si < m.scripts.length; si++) {
+        const s = m.scripts[si]
+        const ns = { ...s }
+        try {
+          if (isEnglishLocale) {
+            // 英文环境：不做翻译（要求脚本源为英文）
+            ns.content = s.content
+          } else {
+            let mapsForThis = ownNameMaps
+            let targetForProc
+            if (s.imported && s.fromId) {
+              targetForProc = modules.find((x) => x.id === s.fromId)
+              if (targetForProc) mapsForThis = buildNameMapsForModule(targetForProc) || mapsForThis
+            }
+            const procMaps = buildProcedureMaps(targetForProc || m)
+            if (procMaps && procMaps.paramMap) {
+              mapsForThis = mapsForThis || {}
+              mapsForThis.params = procMaps.paramMap
+            }
+            // 先做过程标题文本替换（基于英文模式），避免后续 scratchblocks 翻译改变关键字导致匹配失败
+            const preLocalized = localizeProcedures(s.content, procMaps)
+            // 再进行 AST 翻译与参数本地化（参数由 translateScriptFields 处理）
+            ns.content = translateScriptText(preLocalized, languageTag, mapsForThis)
+          }
+        } catch (e) {
+          console.warn(`[translate] error ${m.id} "${s.title}":`, e?.message || e)
+        }
+        // 标题本地化（自身脚本）
+        if (!s.imported) {
+          ns.title = pickTitleForScript(s.id, si + 1)
+        }
+        if (Array.isArray(s.leadingImports) && s.leadingImports.length) {
+          const arr = []
+          for (const imp of s.leadingImports) {
+            let localizedFromName = imp.fromName
+            const target = modules.find((x) => x.id === imp.fromId)
+            if (target) {
+              const perT = target.translations || {}
+              const nameMap = target.name_i18n || {}
+              const bestName = (function () {
+                const vLoc = perT[locale]?.name ?? nameMap[locale]
+                const vTw = perT['zh-tw']?.name ?? nameMap['zh-tw']
+                const vCn = perT['zh-cn']?.name ?? nameMap['zh-cn']
+                const vEn = perT['en']?.name ?? nameMap['en']
+                if (locale === 'zh-tw') return vLoc || vTw || vCn || vEn || target.name
+                if (locale === 'zh-cn') return vLoc || vCn || vTw || vEn || target.name
+                // 其他语言优先使用英文（meta 或 per-language），否则退回 meta 英文名，再考虑中文
+                return vLoc || vEn || target.name || vCn || vTw
+              })()
+              if (bestName) localizedFromName = bestName
+            }
+            const mapsImported = isEnglishLocale
+              ? undefined
+              : target
+                ? buildNameMapsForModule(target)
+                : undefined
+            arr.push({
+              ...imp,
+              content: isEnglishLocale
+                ? imp.content
+                : (function () {
+                    const procMaps = buildProcedureMaps(target || m)
+                    let mf = mapsImported
+                    if (procMaps && procMaps.paramMap) {
+                      mf = mf || {}
+                      mf.params = procMaps.paramMap
+                    }
+                    const preLocalized = localizeProcedures(imp.content, procMaps)
+                    const translated = translateScriptText(preLocalized, languageTag, mf)
+                    return translated
+                  })(),
+              fromName: localizedFromName,
+              fromTitle:
+                imp.fromScriptId && target
+                  ? (function () {
+                      const enTitles = target.scriptTitles || {}
+                      const perT = target.translations || {}
+                      const mapLoc = perT[locale]?.scriptTitles
+                      const mapTw = perT['zh-tw']?.scriptTitles
+                      const mapCn = perT['zh-cn']?.scriptTitles
+                      const mapEn = perT['en']?.scriptTitles
+                      return (
+                        (mapLoc && mapLoc[imp.fromScriptId]) ||
+                        (mapEn && mapEn[imp.fromScriptId]) ||
+                        enTitles[imp.fromScriptId] ||
+                        (locale === 'zh-tw'
+                          ? (mapTw && mapTw[imp.fromScriptId]) || (mapCn && mapCn[imp.fromScriptId])
+                          : locale === 'zh-cn'
+                            ? (mapCn && mapCn[imp.fromScriptId]) ||
+                              (mapTw && mapTw[imp.fromScriptId])
+                            : (mapCn && mapCn[imp.fromScriptId]) ||
+                              (mapTw && mapTw[imp.fromScriptId])) ||
+                        imp.fromScriptId
+                      )
+                    })()
+                  : imp.fromTitle,
+            })
+          }
+          ns.leadingImports = arr
+        }
+        // 被导入块（非 leadingImports）
+        if (s.imported && s.fromId && s.fromScriptId) {
+          const target = modules.find((x) => x.id === s.fromId)
+          if (target) {
+            const enTitles = target.scriptTitles || {}
+            const perT = target.translations || {}
+            const mapLoc = perT[locale]?.scriptTitles
+            const mapTw = perT['zh-tw']?.scriptTitles
+            const mapCn = perT['zh-cn']?.scriptTitles
+            const mapEn = perT['en']?.scriptTitles
+            ns.fromTitle =
+              (mapLoc && mapLoc[s.fromScriptId]) ||
+              (mapEn && mapEn[s.fromScriptId]) ||
+              enTitles[s.fromScriptId] ||
+              (locale === 'zh-tw'
+                ? (mapTw && mapTw[s.fromScriptId]) || (mapCn && mapCn[s.fromScriptId])
+                : locale === 'zh-cn'
+                  ? (mapCn && mapCn[s.fromScriptId]) || (mapTw && mapTw[s.fromScriptId])
+                  : (mapCn && mapCn[s.fromScriptId]) || (mapTw && mapTw[s.fromScriptId])) ||
+              s.fromScriptId
+          }
+        }
+        newScripts.push(ns)
+      }
+      nm.scripts = newScripts
+    }
+    out.push(nm)
+  }
+  return out
 }
 
 async function render(modules, allTags) {
@@ -409,30 +944,40 @@ async function render(modules, allTags) {
       }
     }
   }
-  // vendor: minisearch (scratchblocks 改为手动放入 public/vendor 不再由脚本复制)
+  // vendor: minisearch, scratchblocks
   const vendorDir = path.join(outDir, 'vendor')
   await fs.ensureDir(vendorDir)
   try {
-    // 通过入口文件反推 dist/umd 目录
+    // 通过入口文件反推 dist/es 目录
     const minisearchEntry = require.resolve('minisearch')
-    // 入口一般在 dist/cjs/index.cjs -> dist/umd/index.min.js
-    let miniUmd = path.resolve(path.dirname(minisearchEntry), '..', 'umd', 'index.min.js')
-    if (!(await fs.pathExists(miniUmd))) {
-      // 回退到非压缩版 index.js
-      miniUmd = path.resolve(path.dirname(minisearchEntry), '..', 'umd', 'index.js')
-    }
-    if (await fs.pathExists(miniUmd)) {
-      const targetName = path.basename(miniUmd).includes('.min.')
-        ? 'minisearch.min.js'
-        : 'minisearch.js'
-      await fs.copy(miniUmd, path.join(vendorDir, targetName))
+    // 入口在 dist/es/index.js
+    let miniEs = path.resolve(path.dirname(minisearchEntry), '..', 'es', 'index.js')
+    if (await fs.pathExists(miniEs)) {
+      const targetName = 'minisearch.js'
+      await fs.copy(miniEs, path.join(vendorDir, targetName))
     } else {
-      console.warn('minisearch UMD 文件未找到:', miniUmd)
+      console.warn('minisearch ES 文件未找到:', miniEs)
     }
   } catch (e) {
     console.error('Error copying minisearch:', e)
   }
-  // scratchblocks 不再通过 npm 复制；请将已编译文件放入 public/vendor/
+  try {
+    const browserCandidates = [
+      { from: 'scratchblocks/build/scratchblocks.min.es.js', to: 'scratchblocks.min.es.js' },
+      {
+        from: 'scratchblocks/build/translations-all-es.js',
+        to: 'scratchblocks-translations-all-es.js',
+      },
+    ]
+    for (const item of browserCandidates) {
+      try {
+        const src = require.resolve(item.from)
+        await fs.copy(src, path.join(vendorDir, item.to))
+      } catch (e) {}
+    }
+  } catch (e) {
+    console.warn('[scratchblocks] 复制浏览器端资源失败:', e?.message || e)
+  }
 
   // copy demo & assets
   for (const m of modules) {
@@ -444,46 +989,136 @@ async function render(modules, allTags) {
     if (await fs.pathExists(assetsDir)) await fs.copy(assetsDir, path.join(targetDir, 'assets'))
   }
 
-  // generate search index
-  const searchIndex = buildSearchIndex(modules)
-  await fs.writeJson(path.join(outDir, 'search-index.json'), searchIndex)
-  // generate docs list (storeFields subset)
-  const docs = modules.map((m) => ({
-    id: m.id,
-    name: m.name,
-    description: m.description,
-    tags: m.tags,
-    slug: m.slug,
-    hasDemo: m.hasDemo,
-  }))
-  await fs.writeJson(path.join(outDir, 'search-docs.json'), docs)
+  // 搜索与文档列表将按语言分别生成
 
-  // render pages
+  // render pages per locale
   const year = new Date().getFullYear()
-  const indexHtml = nunjucks.render('layouts/home.njk', {
-    modules,
-    config,
-    year,
-    basePath,
-    IS_DEV: isDev,
-  })
-  await fs.outputFile(path.join(outDir, 'index.html'), indexHtml, 'utf8')
+  const dict = await loadI18n()
+  const locales = Object.keys(dict)
+  // 每种语言的 hreflang 标记（优先使用 i18n.meta.languageTag）
+  const langTags = Object.fromEntries(
+    locales.map((loc) => [loc, (dict[loc]?.meta && dict[loc].meta.languageTag) || loc])
+  )
+  for (const loc of locales) {
+    const locOut = path.join(outDir, loc)
+    await fs.ensureDir(locOut)
+    const locConfig = pickConfigForLocale(config, loc, dict)
+    const assetBase = basePath || ''
+    const pageBase = (basePath ? basePath : '') + '/' + loc
+    const $t = dict[loc]
+    // 针对当前语言，生成脚本文本与元信息已翻译的模块数据（不影响其他语言）
+    const modulesForLoc = await translateModulesForLocale(modules, dict, loc)
 
-  for (const m of modules) {
-    const html = nunjucks.render('layouts/module.njk', {
-      module: m,
-      config,
+    // 每种语言目录写入搜索数据（使用本地化后的模块）
+    const searchIndex = buildSearchIndex(modulesForLoc)
+    const docs = modulesForLoc.map((m) => ({
+      id: m.id,
+      name: m.name,
+      description: m.description,
+      tags: m.tags,
+      slug: m.slug,
+      hasDemo: m.hasDemo,
+    }))
+    await fs.writeJson(path.join(locOut, 'search-index.json'), searchIndex)
+    await fs.writeJson(path.join(locOut, 'search-docs.json'), docs)
+
+    const indexHtml = nunjucks.render('layouts/home.njk', {
+      modules: modulesForLoc,
+      config: locConfig,
       year,
       basePath,
+      assetBase,
+      pageBase,
+      pagePath: '/',
       IS_DEV: isDev,
+      t: $t,
+      locale: loc,
+      canonical: '/' + loc + '/',
+      locales,
+      langTags,
+      i18n: dict,
     })
-    const moduleDir = path.join(outDir, 'modules', m.slug)
-    await fs.ensureDir(moduleDir)
-    await fs.writeFile(path.join(moduleDir, 'index.html'), html, 'utf8')
+    await fs.outputFile(path.join(locOut, 'index.html'), indexHtml, 'utf8')
+
+    for (const m of modules) {
+      const html = nunjucks.render('layouts/module.njk', {
+        module: modulesForLoc.find((x) => x.id === m.id) || m,
+        config: locConfig,
+        year,
+        basePath,
+        assetBase,
+        pageBase,
+        pagePath: '/modules/' + m.slug + '/',
+        IS_DEV: isDev,
+        t: $t,
+        locale: loc,
+        locales,
+        langTags,
+        i18n: dict,
+      })
+      const moduleDir = path.join(locOut, 'modules', m.slug)
+      await fs.ensureDir(moduleDir)
+      await fs.writeFile(path.join(moduleDir, 'index.html'), html, 'utf8')
+    }
   }
 
+  // 生成根路径自动语言跳转页（需使用本作用域的 basePath）
+  const redirectLocales = JSON.stringify(locales)
+  // 默认语言优先：若存在 zh-cn 则用之，否则第一个
+  const defaultLocale = locales.includes('zh-cn') ? 'zh-cn' : locales[0] || 'en'
+  const redirectHtml = `<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"/>
+<meta http-equiv="Cache-Control" content="no-store"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Redirecting…</title>
+<noscript>
+  <meta http-equiv="refresh" content="0; url=${basePath || ''}/${defaultLocale}/"/>
+  <link rel="canonical" href="${config.baseUrl.replace(/\/$/, '')}/${defaultLocale}/"/>
+  <style>body{font-family:system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif;padding:2rem}</style>
+</noscript>
+</head><body>
+<script>(function(){
+  var base='${basePath || ''}';
+  var locales=${redirectLocales};
+  function pickLocale(browserLangs){
+    if(!Array.isArray(browserLangs)) browserLangs = [navigator.language || ''];
+    var ls = browserLangs.map(function(l){return String(l||'').toLowerCase()});
+    // 优先精确匹配
+    for(var i=0;i<ls.length;i++){
+      if(locales.includes(ls[i])) return ls[i];
+    }
+    // 特殊处理中文简繁体
+    for(var i=0;i<ls.length;i++){
+      var l = ls[i];
+      if(l.startsWith('zh')){
+        if((/-tw|-hk|-mo|hant/).test(l) && locales.includes('zh-tw')) return 'zh-tw';
+        if(locales.includes('zh-cn')) return 'zh-cn';
+        // 回退到任一以 zh- 开头的可用语言
+        var z = locales.find(function(x){return x.toLowerCase().startsWith('zh-')});
+        if(z) return z;
+      }
+    }
+    // 主语言前缀匹配，如 en-US -> en
+    for(var i=0;i<ls.length;i++){
+      var primary = ls[i].split('-')[0];
+      var hit = locales.find(function(x){ return x.split('-')[0] === primary });
+      if(hit) return hit;
+    }
+    return '${defaultLocale}';
+  }
+  var pref=''; try{pref=localStorage.getItem('preferred-locale')||'';}catch(e){}
+  var target = locales.includes(pref) ? pref : pickLocale(navigator.languages||[navigator.language||'']);
+  var dest=(base?base:'') + '/' + target + '/';
+  location.replace(dest);
+})();</script>
+<p>Redirecting…</p>
+</body></html>`
+  await fs.outputFile(path.join(outDir, 'index.html'), redirectHtml, 'utf8')
+
   // sitemap
-  const urls = ['/', ...modules.map((m) => `/modules/${m.slug}/`)]
+  const urls = locales.flatMap((loc) => [
+    `/${loc}/`,
+    ...modules.map((m) => `/${loc}/modules/${m.slug}/`),
+  ])
   const sitemap = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.map((u) => `  <url><loc>${config.baseUrl.replace(/\/$/, '')}${u}</loc></url>`).join('\n')}\n</urlset>`
   await fs.writeFile(path.join(outDir, 'sitemap.xml'), sitemap, 'utf8')
   await fs.writeFile(

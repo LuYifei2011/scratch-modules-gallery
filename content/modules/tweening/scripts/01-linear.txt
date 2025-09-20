@@ -1,0 +1,3 @@
+define linear from (start :: custom-arg) to (end :: custom-arg) progress (progress% :: custom-arg)
+set [Tween v] to ((progress% :: custom-arg) / (100))
+set [Tween v] to (((Tween) * ((end :: custom-arg) - (start :: custom-arg))) + (start :: custom-arg))

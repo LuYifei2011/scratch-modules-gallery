@@ -1,6 +1,9 @@
 {
   "id": "rotate-counterclockwise",
-  "name": "逆时针旋转",
-  "description": "将角色绕坐标点逆时针旋转指定角度。",
-  "tags": ["运动", "旋转"]
+  "name": "Rotate counterclockwise",
+  "description": "Rotate a sprite counterclockwise around a coordinate point by a given angle.",
+  "tags": ["motion", "rotate"],
+  "scriptTitles": {
+    "main": "Main"
+  }
 }

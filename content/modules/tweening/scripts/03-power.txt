@@ -1,0 +1,25 @@
+// You can change exponent: square / cubic / quartic / quintic
+define power-in from (start :: custom-arg) to (end :: custom-arg) progress (progress% :: custom-arg)
+set [Tween v] to ((progress% :: custom-arg) / (100))
+set [Tween v] to ((Tween) * (Tween)) // cubic: multiply again; quartic/quintic: and so on
+set [Tween v] to (((Tween) * ((end :: custom-arg) - (start :: custom-arg))) + (start :: custom-arg))
+
+define power-out from (start :: custom-arg) to (end :: custom-arg) progress (progress% :: custom-arg)
+set [Tween v] to ((progress% :: custom-arg) / (100))
+set [Tween v] to ((1) - (Tween))
+set [Tween v] to ((Tween) * (Tween)) // cubic: multiply again
+set [Tween v] to ((1) - (Tween))
+set [Tween v] to (((Tween) * ((end :: custom-arg) - (start :: custom-arg))) + (start :: custom-arg))
+
+define power-in-out from (start :: custom-arg) to (end :: custom-arg) progress (progress% :: custom-arg)
+set [Tween v] to ((progress% :: custom-arg) / (100))
+if <(Tween) < (0.5)> then 
+  set [Tween v] to ((2) * (Tween))
+  set [Tween v] to ((Tween) * (Tween)) // cubic: multiply again
+  set [Tween v] to ((Tween) / (2))
+else 
+  set [Tween v] to (((-2) * (Tween)) + (2))
+  set [Tween v] to ((Tween) * (Tween)) // cubic: multiply again
+  set [Tween v] to ((1) - ((Tween) / (2)))
+end
+set [Tween v] to (((Tween) * ((end :: custom-arg) - (start :: custom-arg))) + (start :: custom-arg))

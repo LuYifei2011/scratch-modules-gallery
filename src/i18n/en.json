@@ -1,0 +1,38 @@
+{
+  "meta": {
+    "languageTag": "en",
+    "languageName": "English",
+    "siteName": "Scratch Modules Gallery",
+    "description": "A searchable index of Scratch modules",
+    "keywords": "Scratch,modules,programming,code library"
+  },
+  "base": {
+    "moduleCount": "{count} modules on site",
+    "githubAriaLabel": "GitHub repository",
+    "languageSwitchTitle": "Language"
+  },
+  "home": {
+    "searchPlaceholder": "Search modules...",
+    "onlineDemoBadge": "Live Demo",
+    "noResults": "No results"
+  },
+  "module": {
+    "contributors": "Contributors",
+    "scripts": "Scripts",
+    "renderStyle": "Render style:",
+    "highContrast": "High contrast",
+    "translateTo": "Translate to:",
+    "noTranslate": "No translation",
+    "importedFrom": "Imported Module",
+    "variablesTitle": "Variables / Lists",
+    "varName": "Name",
+    "varType": "Type",
+    "varScope": "Scope",
+    "typeMap": { "variable": "Variable", "list": "List", "cloud": "Cloud Variable" },
+    "scopeMap": { "global": "Global", "sprite": "Sprite", "choose": "Choose as needed" },
+    "notes": "Notes",
+    "demo": "Demo",
+    "openInTW": "Open in Turbowarp Editor",
+    "references": "References"
+  }
+}

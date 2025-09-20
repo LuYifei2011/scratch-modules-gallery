@@ -2,19 +2,18 @@
 {% block title %}
   {{ module.name }} - {{ config.siteName }}
 {% endblock %}
-{% set canonical = '/modules/' + module.slug + '/' %}
+{% set canonical = '/' + locale + '/modules/' + module.slug + '/' %}
 {% block meta_description %}
   {{ module.description }}
 {% endblock %}
 {% block meta_keywords %}<meta name="keywords" content="{{ config.keywords }}{% if module.tags.length %},{{ module.tags | join(',') }}{% endif %}"/>{% endblock %}
 {% block head_extra %}
   <script type="application/ld+json">{ "@context": "https://schema.org", "@type": "SoftwareSourceCode", "name": "{{ module.name | replace('"','\"') }}",
-                  "description": "{{ module.description | replace('"','\"') }} ", "programmingLanguage": "Scratch",
+                                                                              "description": "{{ module.description | replace('"','\"') }} ", "programmingLanguage": "Scratch",
     {# 合并 tags 与 keywords，确保都是数组 #}
-    {% set tags_str = module.tags | join(',') %} "keywords": "{{ tags_str }}",
-                  "url": "{{ config.baseUrl }}
+    {% set tags_str = module.tags | join(',') %} "keywords": "{{ tags_str }}", "url": "{{ config.baseUrl }} /{{ locale }}
     /modules/{{ module.slug }}/"
-                }</script>
+                                                                            }</script>
 {% endblock %}
 {% block content %}
   <article class="module-detail">
@@ -26,7 +25,7 @@
       {% endfor %}
     </p>
     {% if module.contributors.length %}
-      <p class="contributors">贡献者:
+      <p class="contributors">{{ t.module.contributors }}:
         {% for c in module.contributors %}
           <span class="contributor">
             {% if c.url %}
@@ -39,21 +38,21 @@
       </p>
     {% endif %}
     <section>
-      <h2>脚本</h2>
+      <h2>{{ t.module.scripts }}</h2>
       <div class="sb-style-switcher" style="margin:0 0 1rem;">
-        <label for="sb-style">渲染风格:
+        <label for="sb-style">{{ t.module.renderStyle }}
         </label>
         <select id="sb-style">
           <option value="scratch3" selected>Scratch 3</option>
-          <option value="scratch3-high-contrast">Scratch 3 (高对比度)</option>
+          <option value="scratch3-high-contrast">Scratch 3 ({{ t.module.highContrast }})</option>
           <option value="scratch2">Scratch 2</option>
         </select>
       </div>
       <div class="sb-translate-switcher" style="margin:0 0 1rem;">
-        <label for="sb-translate">翻译语言:
+        <label for="sb-translate">{{ t.module.translateTo }}
         </label>
         <select id="sb-translate">
-          <option value="None" selected>不翻译</option>
+          <option value="no-translate" selected>{{ t.module.noTranslate }}</option>
         </select>
       </div>
       {% if module.scripts and module.scripts.length %}
@@ -61,8 +60,8 @@
           {% if s.imported %}
             <details class="imported-script">
               <summary>
-                引入模块
-                <a href="{{ basePath }}/modules/{{ s.fromId }}/">{{ s.fromName }}</a>
+                {{ t.module.importedFrom }}
+                <a href="{{ pageBase }}/modules/{{ s.fromId }}/">{{ s.fromName }}</a>
                 {% if s.fromTitle %}
                   · {{ s.fromTitle }}
                 {% endif %}
@@ -80,8 +79,8 @@
                 {% for imp in s.leadingImports %}
                   <details class="imported-script">
                     <summary>
-                      引入模块
-                      <a href="{{ basePath }}/modules/{{ imp.fromId }}/">{{ imp.fromName }}</a>
+                      {{ t.module.importedFrom }}
+                      <a href="{{ pageBase }}/modules/{{ imp.fromId }}/">{{ imp.fromName }}</a>
                       {% if imp.fromTitle %}
                         · {{ imp.fromTitle }}
                       {% endif %}
@@ -102,21 +101,21 @@
     </section>
     {% if module.variables.length %}
       <section>
-        <h2>变量 / 列表</h2>
+        <h2>{{ t.module.variablesTitle }}</h2>
         <table class="variables">
           <thead>
             <tr>
-              <th>名称</th>
-              <th>类型</th>
-              <th>作用域</th>
+              <th>{{ t.module.varName }}</th>
+              <th>{{ t.module.varType }}</th>
+              <th>{{ t.module.varScope }}</th>
             </tr>
           </thead>
           <tbody>
             {% for v in module.variables %}
-              {% set typeMap = { 'variable': '变量', 'list': '列表', 'cloud': '云变量' } %}
-              {% set scopeMap = { 'global': '全局', 'sprite': '角色', 'choose': '按需自选' } %}
+              {% set typeMap = t.module.typeMap %}
+              {% set scopeMap = t.module.scopeMap %}
               <tr>
-                <td>{{ v.name }}</td>
+                <td>{{ v.displayName or v.name }}</td>
                 <td>{{ typeMap[v.type] or v.type }}</td>
                 <td>{{ scopeMap[v.scope] or v.scope }}</td>
               </tr>
@@ -127,14 +126,14 @@
     {% endif %}
     {% if module.notesHtml %}
       <section>
-        <h2>备注</h2>
+        <h2>{{ t.module.notes }}</h2>
         {{ module.notesHtml | safe }}
       </section>
     {% endif %}
     {% if module.hasDemo %}
       <section>
         <div style="display:flex;align-items:center;gap:1em;margin-bottom:0.83rem;margin-top:0.83rem;">
-          <h2 style="margin:0;">演示</h2>
+          <h2 style="margin:0;">{{ t.module.demo }}</h2>
           <a
             class="tw-open-btn"
             href="https://turbowarp.org/editor?project_url={{ (config.baseUrl + '/modules/' + module.slug + '/demo.sb3') | urlencode }}"
@@ -142,7 +141,7 @@
             rel="noopener"
             style="display:inline-block;padding:0.5em
               1em;background:#4c97ff;color:#fff;border-radius:4px;text-decoration:none;font-weight:bold;font-size:1rem;">
-            在 Turbowarp 编辑器中打开</a>
+            {{ t.module.openInTW }}</a>
         </div>
         <iframe
           src="https://turbowarp.org/embed?project_url={{ (config.baseUrl + '/modules/' + module.slug + '/demo.sb3') | urlencode }}&settings-button&addons=pause,clones"
@@ -157,7 +156,7 @@
     {% endif %}
     {% if module.references.length %}
       <section>
-        <h2>参考链接</h2>
+        <h2>{{ t.module.references }}</h2>
         <ul>
           {% for r in module.references %}
             <li>
@@ -173,6 +172,6 @@
   </article>
 {% endblock %}
 {% block page_scripts %}
-  <link rel="stylesheet" href="{{ basePath }}/module.css"/>
-  <script defer src="{{ basePath }}/module.js"></script>
+  <link rel="stylesheet" href="{{ assetBase }}/module.css"/>
+  <script type="module" src="{{ assetBase }}/module.js"></script>
 {% endblock %}

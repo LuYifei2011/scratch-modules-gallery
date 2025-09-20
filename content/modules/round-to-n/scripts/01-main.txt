@@ -1,0 +1,2 @@
+define Round (num :: custom-arg) to (n :: custom-arg) bits
+set [result v] to ((round ((num :: custom-arg) * ([10^ v] of (n :: custom-arg)))) / ([10^ v] of (n :: custom-arg)))

@@ -1,7 +1,10 @@
 {
   "id": "fps",
   "name": "FPS",
-  "description": "计算FPS。",
-  "tags": ["性能", "fps"],
+  "description": "Calculate FPS.",
+  "tags": ["performance", "fps"],
+  "scriptTitles": {
+    "main": "Main"
+  },
   "contributors": "gh/LuYifei2011"
 }

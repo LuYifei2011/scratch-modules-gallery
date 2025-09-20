@@ -1,0 +1,12 @@
+{
+  "name": "排序角色",
+  "description": "对角色进行排序。",
+  "tags": ["层", "排序"],
+  "events": {
+    "Order Sprites": "排序角色"
+  },
+  "scriptTitles": {
+    "order": "排序脚本",
+    "main": "主循环"
+  }
+}

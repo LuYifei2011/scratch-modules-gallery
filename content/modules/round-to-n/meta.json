@@ -1,7 +1,10 @@
 {
   "id": "round-to-n",
-  "name": "四舍五入到 n 位",
-  "description": "将数字四舍五入到指定的小数位数（n）。",
-  "tags": ["数学", "四舍五入"],
+  "name": "Round to n decimals",
+  "description": "Round a number to n decimal places.",
+  "tags": ["math", "round"],
+  "scriptTitles": {
+    "main": "Main"
+  },
   "contributors": "gh/LuYifei2011"
 }
