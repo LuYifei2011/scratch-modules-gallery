@@ -1,5 +1,11 @@
 # Scratch Modules Gallery
 
+![Project Status: In Development](https://img.shields.io/badge/status-in--development-orange)
+> 🚧 项目正在持续完善中。  
+> 🚧 This project is being refined and improved. English support is coming soon.
+
+---
+
 静态生成的 Scratch 模块索引。每个模块一个文件夹，包含 `meta.json`、`script.txt` 等。
 
 > 新增模块？请阅读：`docs/authoring-modules.md`（模块编写指南）。
