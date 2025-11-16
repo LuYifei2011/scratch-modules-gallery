@@ -7,7 +7,7 @@ import { buildModuleRecord } from './lib/schema.js'
 import { pathToFileURL } from 'url'
 import { createRequire } from 'module'
 const require = createRequire(import.meta.url)
-
+import { minify } from 'html-minifier-next'
 import * as scratchblocks from 'scratchblocks/syntax/index.js'
 
 const root = path.resolve('.')
@@ -230,6 +230,26 @@ function escapeHtml(str = '') {
     /[&<>"]/g,
     (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]
   )
+}
+
+async function maybeMinify(html) {
+  if (!html) return html
+  try {
+    return minify(html, {
+      collapseWhitespace: true,
+      removeComments: true,
+      removeRedundantAttributes: true,
+      removeEmptyAttributes: true,
+      collapseBooleanAttributes: true,
+      removeAttributeQuotes: false,
+      keepClosingSlash: true,
+      minifyCSS: true,
+      minifyJS: true,
+    })
+  } catch (e) {
+    console.warn('[minify] html-minifier-next 压缩失败，返回原始 HTML:', e?.message || e)
+    return html
+  }
 }
 
 // 自定义分词：为纯中文连续片段额外生成 单字 + 双字 词，用于支持中文子串搜索 ("排序" 命中 "排序角色")
@@ -1129,7 +1149,7 @@ async function render(modules, allTags) {
       langTags,
       i18n: dict,
     })
-    await fs.outputFile(path.join(locOut, 'index.html'), indexHtml, 'utf8')
+    await fs.outputFile(path.join(locOut, 'index.html'), await maybeMinify(indexHtml), 'utf8')
 
     for (const m of modules) {
       const html = nunjucks.render('layouts/module.njk', {
@@ -1149,7 +1169,7 @@ async function render(modules, allTags) {
       })
       const moduleDir = path.join(locOut, 'modules', m.slug)
       await fs.ensureDir(moduleDir)
-      await fs.writeFile(path.join(moduleDir, 'index.html'), html, 'utf8')
+      await fs.writeFile(path.join(moduleDir, 'index.html'), await maybeMinify(html), 'utf8')
     }
   }
 
@@ -1203,7 +1223,7 @@ async function render(modules, allTags) {
 })();</script>
 <p>Redirecting…</p>
 </body></html>`
-  await fs.outputFile(path.join(outDir, 'index.html'), redirectHtml, 'utf8')
+  await fs.outputFile(path.join(outDir, 'index.html'), await maybeMinify(redirectHtml), 'utf8')
 
   // sitemap
   const urls = locales.flatMap((loc) => [
@@ -1269,7 +1289,7 @@ async function render(modules, allTags) {
       const locOut = path.join(outDir, loc)
       const issuesDir = path.join(locOut, 'issues')
       await fs.ensureDir(issuesDir)
-      await fs.writeFile(path.join(issuesDir, 'index.html'), issuesHtml, 'utf8')
+      await fs.writeFile(path.join(issuesDir, 'index.html'), await maybeMinify(issuesHtml), 'utf8')
     }
   }
 }

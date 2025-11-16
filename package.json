@@ -14,7 +14,8 @@
     "fs-extra": "^11.2.0",
     "nunjucks": "^3.2.4",
     "minisearch": "^7.1.2",
-    "scratchblocks": "github:LuYifei2011/scratchblocks#release"
+    "scratchblocks": "github:LuYifei2011/scratchblocks#release",
+    "html-minifier-next": "^4.1.1"
   },
   "devDependencies": {
     "prettier": "^3.3.3",
