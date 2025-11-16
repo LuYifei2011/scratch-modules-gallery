@@ -1,5 +1,19 @@
 # Scratch Modules Gallery
 
+![Project Status: In Development](https://img.shields.io/badge/status-in--development-orange)
+
+> 🚧 项目正在持续完善中。  
+> 🚧 This project is being refined and improved. English support is coming soon.
+
+---
+
+![Project Status: In Development](https://img.shields.io/badge/status-in--development-orange)
+
+> 🚧 项目正在持续完善中。  
+> 🚧 This project is being refined and improved. English support is coming soon.
+
+---
+
 静态生成的多语言 Scratch 模块索引。单一 Node 构建脚本，无前端打包器。
 
 > 新增模块？请先阅读：`docs/authoring-modules.md`（模块编写指南）。本文档描述当前实现（以 `scripts/build.js` 为准）。
@@ -37,9 +51,9 @@ content/modules/<module-id>/
 
 ## meta.json 字段
 
-- `id` (slug 同步使用)  
-- `name`, `description`, `tags`：可为字符串 / 数组或多语言映射对象 `{ "en": "...", "zh-cn": "..." }`  
-- `contributors`：数组或逗号分隔字符串；支持 `gh/<user>` 与 `sc/<user>` 自动转链接  
+- `id` (slug 同步使用)
+- `name`, `description`, `tags`：可为字符串 / 数组或多语言映射对象 `{ "en": "...", "zh-cn": "..." }`
+- `contributors`：数组或逗号分隔字符串；支持 `gh/<user>` 与 `sc/<user>` 自动转链接
 - `scriptTitles`：可选，英文基准脚本标题映射 `{ "main": "Intro", "extra": "Advanced" }`（脚本 id 来自文件名解析）。
 
 构建期会抽取英文/中文优先顺序确定默认显示，并保留映射用于后续本地化。
@@ -52,6 +66,7 @@ npm run build
 ```
 
 输出到 `dist/`：
+
 - `dist/<locale>/index.html` + `modules/<id>/index.html`
 - `dist/<locale>/search-index.json` (MiniSearch.toJSON)
 - `dist/<locale>/search-docs.json` (前端展示列表)
@@ -108,9 +123,10 @@ HTTPS 支持：
 ### scratchblocks
 
 已作为依赖（`package.json` 指向自定义 release）。构建期：
+
 - 自动加载 `node_modules/scratchblocks/locales/*.json` 供脚本翻译
 - 复制浏览器端 ES 模块文件到 `dist/vendor/`：`scratchblocks.min.es.js`, `scratchblocks-translations-all-es.js`
-无需手动放置 vendor。
+  无需手动放置 vendor。
 
 ### 验证 meta keywords
 
@@ -126,16 +142,20 @@ MiniSearch 字段：`name,id,description,tags`；`storeFields`: `id,name,descrip
 ## 脚本与导入
 
 仅支持 `scripts/*.txt`。文件名解析：
+
 ```
 01-main.txt   -> id: main
 main.txt      -> id: main
 ```
+
 `meta.scriptTitles[id]` 提供英文基准标题；构建期按语言映射生成本地化标题。
 
 导入指令：在脚本中使用行：
+
 ```
 !import otherModuleId[:scriptIndex]
 ```
+
 顶部连续 import 归入“前置导入块”；正文/中间的 import 拆成独立导入段。`scriptIndex` 为 1 基；省略则取对方第 1 段。导入段在非英文语言下会进行 scratchblocks 翻译与变量 / 列表 / 事件名称映射。
 
 循环或索引错误会注入注释提示（`// 导入失败`）。
@@ -143,6 +163,7 @@ main.txt      -> id: main
 ## 模块 i18n
 
 `content/modules/<id>/i18n/<locale>.json` 支持按语言覆盖：
+
 ```
 {
   "name": "本地化名称",
@@ -154,6 +175,7 @@ main.txt      -> id: main
   "scriptTitles": {"main":"主逻辑"}
 }
 ```
+
 变量 / 列表 displayName 在构建期计算，不改变原始 name。优先级（示例 zh-cn）：当前语言 > 中文简体/繁体互通 > 英文。
 
 ## 新增模块步骤
