@@ -1,4 +1,4 @@
-import MiniSearch from '../vendor/minisearch.js'
+import MiniSearch from './vendor/minisearch.js'
 
 function qs(sel) {
   return document.querySelector(sel)

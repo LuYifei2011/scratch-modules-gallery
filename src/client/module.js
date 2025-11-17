@@ -1,5 +1,5 @@
-import scratchblocks from '../vendor/scratchblocks.min.es.js'
-import loadTranslations from '../vendor/scratchblocks-translations-all-es.js'
+import scratchblocks from './vendor/scratchblocks.min.es.js'
+import loadTranslations from './vendor/scratchblocks-translations-all-es.js'
 loadTranslations(scratchblocks)
 
 const pageLangSb = window.__I18N && window.__I18N.meta.languageTag.replace('-', '_').toLowerCase()
