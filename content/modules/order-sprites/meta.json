@@ -7,5 +7,16 @@
     "order": "Ordering",
     "main": "Main loop"
   },
-  "contributors": "gh/LuYifei2011"
+  "contributors": "gh/LuYifei2011",
+  "variables": [
+    { "name": "Z ORDER", "scope": "global", "type": "list" },
+    { "name": "i", "scope": "sprite", "type": "variable" }
+  ],
+  "references": [
+    {
+      "title": "Perfect Sprite Ordering in Scratch 🐱 | Backpack Depth Sort Tutorial",
+      "url": "https://youtu.be/bxjbYJLAUYU",
+      "type": "video"
+    }
+  ]
 }

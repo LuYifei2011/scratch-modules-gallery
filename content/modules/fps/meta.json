@@ -6,5 +6,17 @@
   "scriptTitles": {
     "main": "Main"
   },
-  "contributors": "gh/LuYifei2011"
+  "contributors": "gh/LuYifei2011",
+  "variables": [
+    { "name": "FPS", "scope": "global", "type": "variable" },
+    { "name": "DELTA", "scope": "global", "type": "variable" },
+    { "name": "tick30", "scope": "sprite", "type": "variable" }
+  ],
+  "references": [
+    {
+      "title": "ULTRA FAST Raycasting in Scratch - Unmissable E6 Update",
+      "url": "https://www.youtube.com/watch?v=mOoBbyO5hWU&t=56s",
+      "type": "video"
+    }
+  ]
 }

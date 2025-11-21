@@ -93,19 +93,7 @@ async function loadModules() {
       const demoFile = (await fs.pathExists(demoPath)) ? `modules/${dir}/demo.sb3` : undefined
 
       // optional variables.json
-      let variables = []
-      const variablesPath = path.join(moduleDir, 'variables.json')
-      if (await fs.pathExists(variablesPath)) {
-        try {
-          const vRaw = JSON.parse(await fs.readFile(variablesPath, 'utf8'))
-          if (Array.isArray(vRaw)) variables = vRaw
-          else if (vRaw && typeof vRaw === 'object' && Array.isArray(vRaw.variables))
-            variables = vRaw.variables
-          else variables = []
-        } catch (e) {
-          errorsAll.push(`${dir}: variables.json parse error`)
-        }
-      }
+      // variables.json 已废弃：变量应直接写入 meta.json 的 variables 字段
 
       // optional notes (md or txt)
       let notesHtml = ''
@@ -127,16 +115,7 @@ async function loadModules() {
         }
       }
 
-      // optional references.json
-      let references = []
-      const refPath = path.join(moduleDir, 'references.json')
-      if (await fs.pathExists(refPath)) {
-        try {
-          references = JSON.parse(await fs.readFile(refPath, 'utf8'))
-        } catch (e) {
-          errorsAll.push(`${dir}: references.json parse error`)
-        }
-      }
+      // references.json 已废弃：引用应直接写入 meta.json 的 references 字段
 
       // optional per-module translations: i18n/<locale>.json
       // 文件结构：{ name?: string, description?: string, tags?: string[], variables?: Record<origName,string>, lists?: Record<origName,string> }
@@ -205,9 +184,7 @@ async function loadModules() {
         script,
         scripts,
         demoFile,
-        variables,
         notesHtml,
-        references,
         translations,
       })
       if (errors.length) errorsAll.push(`${dir}: ${errors.join(', ')}`)
@@ -984,29 +961,73 @@ async function translateModulesForLocale(modules, dict, locale, options = {}) {
             )
         }
         // 自定义块 pattern 与参数
-        const enProc = (per['en'] && per['en'].procedures) || undefined
+        // --- 自定义块 / 参数缺失检测 ---
+        // 如果没有提供英文基准的 procedures / procedureParams，则尝试从原始脚本源码中自动提取
+        // 规则：匹配 "define xxx" 行；用 '_' 代替每个括号参数；括号内内容（去掉外层括号）视为参数英文名
+        function extractProceduresFromScripts(originalMod) {
+          const patterns = new Set(),
+            params = new Set()
+          const scriptsArr = Array.isArray(originalMod.scripts) ? originalMod.scripts : []
+          for (const sc of scriptsArr) {
+            if (!sc || !sc.content) continue
+            const lines = sc.content.split(/\r?\n/)
+            for (const line of lines) {
+              const mDef = line.match(/^define\s+(.+)$/)
+              if (!mDef) continue
+              const body = mDef[1].trim()
+              // 抽取参数：() 内的内容（非贪婪）
+              const paramParts = [...body.matchAll(/\(([^)]*)\)/g)]
+              for (const p of paramParts) {
+                const name = (p[1] || '').trim()
+                if (name) params.add(name)
+              }
+              let pattern = body
+                .replace(/\([^)]*\)/g, '_')
+                .replace(/\s+/g, ' ')
+                .trim()
+              if (pattern) patterns.add(pattern)
+            }
+          }
+          return { patterns, params }
+        }
+        let enProc = (per['en'] && per['en'].procedures) || undefined
+        let enParams = (per['en'] && per['en'].procedureParams) || undefined
+        if (!enProc || typeof enProc !== 'object') {
+          const extracted = extractProceduresFromScripts(m)
+          if (extracted.patterns.size) {
+            enProc = {}
+            extracted.patterns.forEach((p) => (enProc[p] = p))
+          }
+          if (!enParams || typeof enParams !== 'object') {
+            if (extracted.params.size) {
+              enParams = {}
+              extracted.params.forEach((p) => (enParams[p] = p))
+            }
+          }
+        }
         if (enProc && typeof enProc === 'object') {
           const locProc = locTrans.procedures || {}
           const missProc = Object.keys(enProc).filter((k) => !(k in locProc))
-          if (missProc.length)
+          if (missProc.length) {
             missingFields.push(
               'procedures(' +
                 missProc.slice(0, 3).join(',') +
                 (missProc.length > 3 ? '…' : '') +
                 ')'
             )
+          }
         }
-        const enParams = (per['en'] && per['en'].procedureParams) || undefined
         if (enParams && typeof enParams === 'object') {
-          const locParams = locTrans.procedureParams || {}
-          const missParam = Object.keys(enParams).filter((k) => !(k in locParams))
-          if (missParam.length)
+          const locParams = locTrans.procedureParams || {},
+            missParam = Object.keys(enParams).filter((k) => !(k in locParams))
+          if (missParam.length) {
             missingFields.push(
               'procedureParams(' +
                 missParam.slice(0, 3).join(',') +
                 (missParam.length > 3 ? '…' : '') +
                 ')'
             )
+          }
         }
         if (missingFields.length) {
           console.warn(`[i18n-missing][${locale}] ${m.id}: ` + missingFields.join(', '))

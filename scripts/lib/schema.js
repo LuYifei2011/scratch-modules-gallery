@@ -106,9 +106,10 @@ export function buildModuleRecord(meta, extra) {
         : [],
     hasDemo: !!extra.demoFile,
     demoFile: extra.demoFile,
-    variables: extra.variables || [],
+    // variables / references 已合并进 meta.json（不再单独文件）
+    variables: Array.isArray(meta.variables) ? meta.variables : [],
     notesHtml: extra.notesHtml || '',
-    references: extra.references || [],
+    references: Array.isArray(meta.references) ? meta.references : [],
     translations: extra.translations || {},
   }
   return { record, errors }

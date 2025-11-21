@@ -1,4 +1,0 @@
-[
-  { "name": "Z ORDER", "scope": "global", "type": "list" },
-  { "name": "i", "scope": "sprite", "type": "variable" }
-]

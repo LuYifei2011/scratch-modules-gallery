@@ -19,9 +19,9 @@
                     </h2>
                     <p>{{ m.description }}</p>
                     <p class="tags">
-                        {% for t in m.tags %}
+                        {%- for t in m.tags -%}
                             <span class="tag">{{ t }}</span>
-                        {% endfor %}
+                        {%- endfor -%}
                     </p>
                 </article>
             {% endfor %}

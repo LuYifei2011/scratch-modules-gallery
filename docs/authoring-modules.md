@@ -13,13 +13,11 @@
 
 ```
 content/modules/fps/
-  meta.json
+  meta.json              # 含 variables / references 字段（如需要）
   scripts/
     01-初始化.txt
     02-计时逻辑.txt
-  variables.json
   notes.md
-  references.json
   demo.sb3
   assets/
     cover.png
@@ -108,7 +106,7 @@ content/modules/<id>/
 ```
 
 
-### 变量与列表名称翻译（可选）
+### 变量与列表定义 + 名称翻译
 
 现在支持在模块的 `i18n/<locale>.json` 中分别为“变量名”和“列表名”提供翻译映射。键为原始名称，值为本地化后的展示名称：
 
@@ -205,22 +203,20 @@ content/modules/<id>/
 - 查看构建控制台是否出现 `导入失败` / `循环引用` 注释（Warnings 未集中列出，直接在生成块内容中）。
 - 打开生成 HTML，展开折叠块查看注释内容。
 
-## variables.json
+### 在 meta.json 中定义 variables
 
-定义变量/列表。支持直接数组：
+自本版本起不再使用独立 `variables.json`；直接在 `meta.json` 增加：
 
-```json
-[
-  { "name": "fps", "type": "variable", "scope": "global" },
-  { "name": "samples", "type": "list", "scope": "global" }
-]
+```jsonc
+{
+  "variables": [
+    { "name": "fps", "type": "variable", "scope": "global" },
+    { "name": "samples", "type": "list", "scope": "global" }
+  ]
+}
 ```
 
-或 `{"variables": [...]}` 形式（构建脚本将兼容）。字段：
-
-- `name` 变量或列表名称
-- `type` `variable` | `list` | `cloud`
-- `scope` `global` | `sprite` | `choose`
+字段同旧版：`name`, `type` (`variable|list|cloud`), `scope` (`global|sprite|choose`)。
 
 ## notes.md / notes.txt
 
@@ -231,18 +227,20 @@ content/modules/<id>/
 - 行内代码：`` `code` ``
   其余语法不解析，保持简单。
 
-## references.json
+### 在 meta.json 中定义 references
 
-可选引用列表：
+引用同样合并进 `meta.json`：
 
-```json
-[
-  { "title": "Scratch Wiki: FPS", "url": "https://...", "type": "wiki" },
-  { "title": "相关帖子", "url": "https://..." }
-]
+```jsonc
+{
+  "references": [
+    { "title": "Scratch Wiki: FPS", "url": "https://...", "type": "wiki" },
+    { "title": "相关帖子", "url": "https://..." }
+  ]
+}
 ```
 
-`type` 可选，展示为强调文本。
+`type` 可选，用于页面强调。
 
 ## demo.sb3
 

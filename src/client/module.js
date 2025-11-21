@@ -8,7 +8,7 @@ const blocks = []
 document.querySelectorAll('pre.scratchblocks').forEach((pre) => {
   blocks.push({
     el: pre,
-    doc: scratchblocks.parse(pre.textContent, { languages: [pageLangSb] }),
+    doc: scratchblocks.parse(pre.textContent, { languages: [pageLangSb, 'en'] }),
   })
   console.log(pre.textContent)
 })

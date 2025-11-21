@@ -3,14 +3,7 @@
 ![Project Status: In Development](https://img.shields.io/badge/status-in--development-orange)
 
 > 🚧 项目正在持续完善中。  
-> 🚧 This project is being refined and improved. English support is coming soon.
-
----
-
-![Project Status: In Development](https://img.shields.io/badge/status-in--development-orange)
-
-> 🚧 项目正在持续完善中。  
-> 🚧 This project is being refined and improved. English support is coming soon.
+> 🚧 This project is being refined and improved.
 
 ---
 
@@ -32,13 +25,11 @@ npm run dev:https
 
 ```
 content/modules/<module-id>/
-  meta.json              # 必填: id,name,description,tags,contributors[,scriptTitles]
+  meta.json              # 必填: id,name,description,tags,contributors[,scriptTitles,variables,references]
   scripts/               # 必填: 至少 1 个 *.txt；文件名可含排序前缀
     01-main.txt          # 文件名 -> 脚本 id: 去掉开头的 <数字><分隔符> 后剩余部分
     02-extra.txt         # 无序号则整个去 .txt 的部分为脚本 id
-  variables.json         # 可选: 变量 / 列表定义数组
   notes.md|notes.txt     # 可选: 极简 Markdown 解析
-  references.json        # 可选: 引用列表 (数组)
   demo.sb3               # 可选: 示例工程
   assets/                # 可选: 附带静态资源
   i18n/                  # 可选: 每语言局部覆盖与名称映射
@@ -55,6 +46,8 @@ content/modules/<module-id>/
 - `name`, `description`, `tags`：可为字符串 / 数组或多语言映射对象 `{ "en": "...", "zh-cn": "..." }`
 - `contributors`：数组或逗号分隔字符串；支持 `gh/<user>` 与 `sc/<user>` 自动转链接
 - `scriptTitles`：可选，英文基准脚本标题映射 `{ "main": "Intro", "extra": "Advanced" }`（脚本 id 来自文件名解析）。
+- `variables`：数组，原 `variables.json` 已合并；形如 `[{"name":"FPS","type":"variable","scope":"global"}]`。
+- `references`：数组，原 `references.json` 已合并；形如 `[{"title":"...","url":"...","type":"video"}]`。
 
 构建期会抽取英文/中文优先顺序确定默认显示，并保留映射用于后续本地化。
 
@@ -181,10 +174,10 @@ main.txt      -> id: main
 ## 新增模块步骤
 
 1. 新建 `content/modules/<id>/` 并添加 `meta.json` 与 `scripts/*.txt` 至少 1 段。
-2. （可选）添加 `variables.json`, `demo.sb3`, `notes.md`, `references.json`, `assets/`。
+2. （可选）在 `meta.json` 中新增 `variables`、`references`，并添加 `demo.sb3`, `notes.md`, `assets/`。
 3. （可选）添加 `i18n/<locale>.json` 做本地化。
 4. 运行 `npm run build`；修复 `Issues:` 中的错误。
-5. 打开 `dist/<locale>/modules/<id>/` 验证脚本、导入块与本地化。
+5. 打开 `dist/<locale>/modules/<id>/` 验证脚本、导入块、变量表与引用列表。
 
 ## 验证清单
 

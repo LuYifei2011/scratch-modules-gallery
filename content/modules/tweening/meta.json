@@ -13,5 +13,13 @@
     "elastic": "Elastic",
     "bounce": "Bounce"
   },
-  "contributors": "gh/LuYifei2011"
+  "contributors": "gh/LuYifei2011",
+  "variables": [{ "name": "Tween", "scope": "sprite", "type": "variable" }],
+  "references": [
+    {
+      "title": "Tween | TurboWarp Extensions",
+      "url": "https://github.com/TurboWarp/extensions/blob/master/extensions/JeremyGamer13/tween.js",
+      "type": "extension"
+    }
+  ]
 }

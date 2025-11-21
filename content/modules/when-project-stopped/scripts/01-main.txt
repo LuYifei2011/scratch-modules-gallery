@@ -3,5 +3,5 @@ forever
   set [timer v] to ((timer) + (0.1)) // Maybe it can be done without adding 0.1?
 end
 
-when [timer v] > (timer)
+when [timer v] > (timer :: variables)
 . . .
