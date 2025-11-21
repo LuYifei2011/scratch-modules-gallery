@@ -1112,7 +1112,6 @@ async function render(modules, allTags) {
   // 搜索与文档列表将按语言分别生成
 
   // render pages per locale
-  const year = new Date().getFullYear()
   const dict = await loadI18n()
   const locales = Object.keys(dict)
   // 每种语言的 hreflang 标记（优先使用 i18n.meta.languageTag）
@@ -1157,7 +1156,6 @@ async function render(modules, allTags) {
     const indexHtml = nunjucks.render('layouts/home.njk', {
       modules: modulesForLoc,
       config: locConfig,
-      year,
       basePath,
       assetBase,
       pageBase,
@@ -1176,7 +1174,6 @@ async function render(modules, allTags) {
       const html = nunjucks.render('layouts/module.njk', {
         module: modulesForLoc.find((x) => x.id === m.id) || m,
         config: locConfig,
-        year,
         basePath,
         assetBase,
         pageBase,
