@@ -24,11 +24,13 @@ if (process.env.BASE_URL) {
   } catch {}
 }
 
-fs.readdir(path.join(root, 'node_modules', 'scratchblocks', 'locales'), (err, files) => {
-  if (err || !files) return
+// 同步加载所有 scratchblocks 语言
+const localesDir = path.join(root, 'node_modules', 'scratchblocks', 'locales')
+try {
+  const files = fs.readdirSync(localesDir)
   files.forEach((file) => {
-    const fullPath = path.join(root, 'node_modules', 'scratchblocks', 'locales', file)
     if (file.endsWith('.json')) {
+      const fullPath = path.join(localesDir, file)
       const langKey = path.basename(file, '.json').replace('-', '_').toLowerCase()
       try {
         const data = fs.readFileSync(fullPath, 'utf8')
@@ -39,7 +41,17 @@ fs.readdir(path.join(root, 'node_modules', 'scratchblocks', 'locales'), (err, fi
       }
     }
   })
-})
+} catch (e) {
+  console.warn('[scratchblocks] 读取 locales 目录失败:', e?.message || e)
+}
+
+// 构建所有可用的 scratchblocks 语言列表
+const scratchblocksLanguages = Object.entries(scratchblocks.allLanguages)
+  .map(([code, info]) => ({
+    code,
+    name: info.name || code,
+  }))
+  .sort((a, b) => a.code.localeCompare(b.code))
 
 const templatesPath = path.join(root, 'src', 'templates')
 nunjucks.configure(templatesPath, { autoescape: true })
@@ -1082,18 +1094,29 @@ async function render(modules, allTags) {
     console.error('Error copying minisearch:', e)
   }
   try {
-    const browserCandidates = [
-      { from: 'scratchblocks/build/scratchblocks.min.es.js', to: 'scratchblocks.min.es.js' },
-      {
-        from: 'scratchblocks/build/translations-all-es.js',
-        to: 'scratchblocks-translations-all-es.js',
-      },
-    ]
-    for (const item of browserCandidates) {
-      try {
-        const src = require.resolve(item.from)
-        await fs.copy(src, path.join(vendorDir, item.to))
-      } catch (e) {}
+    // 只复制核心库文件
+    try {
+      const src = require.resolve('scratchblocks/build/scratchblocks.min.es.js')
+      await fs.copy(src, path.join(vendorDir, 'scratchblocks.min.es.js'))
+    } catch (e) {}
+
+    // 按需复制 scratchblocks 语言文件到 vendor/sb-langs/
+    // scratchblocks 的 locales 目录位于 node_modules/scratchblocks/locales
+    const localesSourceDir = path.join(root, 'node_modules', 'scratchblocks', 'locales')
+    const langVendorDir = path.join(vendorDir, 'sb-langs')
+    await fs.ensureDir(langVendorDir)
+
+    if (await fs.pathExists(localesSourceDir)) {
+      const localeFiles = await fs.readdir(localesSourceDir)
+      for (const file of localeFiles) {
+        if (file.endsWith('.json')) {
+          const src = path.join(localesSourceDir, file)
+          const dest = path.join(langVendorDir, file)
+          await fs.copy(src, dest)
+        }
+      }
+    } else {
+      console.warn('[scratchblocks] locales 目录未找到:', localesSourceDir)
     }
   } catch (e) {
     console.warn('[scratchblocks] 复制浏览器端资源失败:', e?.message || e)
@@ -1184,6 +1207,7 @@ async function render(modules, allTags) {
         locales,
         langTags,
         i18n: dict,
+        scratchblocksLanguages,
       })
       const moduleDir = path.join(locOut, 'modules', m.slug)
       await fs.ensureDir(moduleDir)

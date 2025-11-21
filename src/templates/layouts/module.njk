@@ -9,7 +9,7 @@
 {% block meta_keywords %}<meta name="keywords" content="{{ config.keywords }}{% if module.tags.length %},{{ module.tags | join(',') }}{% endif %}"/>{% endblock %}
 {% block head_extra %}
     <script type="application/ld+json">{ "@context": "https://schema.org", "@type": "SoftwareSourceCode", "name": "{{ module.name | replace('"','\"') }}",
-        "description": "{{ module.description | replace('"','\"') }} ", "programmingLanguage": "Scratch",
+                "description": "{{ module.description | replace('"','\"') }} ", "programmingLanguage": "Scratch",
         {# 合并 tags 与 keywords，确保都是数组 #}
         {% set tags_str = module.tags | join(',') %} "keywords": "{{ tags_str }}", "url": "{{ config.baseUrl }} /{{ locale }}
         /modules/{{ module.slug }}/" }</script>
@@ -52,6 +52,9 @@
                 </label>
                 <select id="sb-translate">
                     <option value="no-translate" selected>{{ t.module.noTranslate }}</option>
+                    {% for lang in scratchblocksLanguages %}
+                        <option value="{{ lang.code }}">{{ lang.name }}</option>
+                    {% endfor %}
                 </select>
             </div>
             {% if module.scripts and module.scripts.length %}
