@@ -5,8 +5,6 @@ import nunjucks from 'nunjucks'
 import MiniSearch from 'minisearch'
 import { buildModuleRecord } from './lib/schema.js'
 import { pathToFileURL } from 'url'
-import { createRequire } from 'module'
-const require = createRequire(import.meta.url)
 import { minify } from 'html-minifier-next'
 import * as scratchblocks from 'scratchblocks/syntax/index.js'
 
@@ -109,22 +107,19 @@ async function loadModules() {
 
       // optional notes (md or txt)
       let notesHtml = ''
-      for (const fname of ['notes.md', 'notes.txt']) {
-        const p = path.join(moduleDir, fname)
-        if (await fs.pathExists(p)) {
-          const raw = await fs.readFile(p, 'utf8')
-          // 极简 markdown 转换（仅支持换行->段落、**粗体**、`行内代码`）
-          notesHtml = raw
-            .split(/\n{2,}/)
-            .map(
-              (block) =>
-                `<p>${escapeHtml(block)
-                  .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-                  .replace(/`([^`]+)`/g, '<code>$1</code>')}</p>`
-            )
-            .join('\n')
-          break
-        }
+      const notesFiles = await fg(['notes.{md,txt}'], { cwd: moduleDir, onlyFiles: true })
+      if (notesFiles.length > 0) {
+        const raw = await fs.readFile(path.join(moduleDir, notesFiles[0]), 'utf8')
+        // 极简 markdown 转换（仅支持换行->段落、**粗体**、`行内代码`）
+        notesHtml = raw
+          .split(/\n{2,}/)
+          .map(
+            (block) =>
+              `<p>${escapeHtml(block)
+                .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+                .replace(/`([^`]+)`/g, '<code>$1</code>')}</p>`
+          )
+          .join('\n')
       }
 
       // references.json 已废弃：引用应直接写入 meta.json 的 references 字段
@@ -143,47 +138,22 @@ async function loadModules() {
             const obj = JSON.parse(await fs.readFile(path.join(i18nDir, f), 'utf8'))
             if (obj && typeof obj === 'object') {
               const one = {}
-              if (typeof obj.name === 'string') one.name = obj.name
-              if (typeof obj.description === 'string') one.description = obj.description
-              if (Array.isArray(obj.tags)) one.tags = obj.tags
-              // 新增：变量/列表名称映射（按原名 -> 本地化名）
-              if (
-                obj.variables &&
-                typeof obj.variables === 'object' &&
-                !Array.isArray(obj.variables)
-              ) {
-                one.variables = obj.variables
+              // 字段验证并拷贝的通用逻辑
+              const copyField = (key, validator = (v) => v !== null && v !== undefined) => {
+                if (validator(obj[key])) one[key] = obj[key]
               }
-              if (obj.lists && typeof obj.lists === 'object' && !Array.isArray(obj.lists)) {
-                one.lists = obj.lists
-              }
-              // 新增：事件名称映射（事件/广播名 -> 本地化名）
-              if (obj.events && typeof obj.events === 'object' && !Array.isArray(obj.events)) {
-                one.events = obj.events
-              }
-              // 新增：脚本标题映射（脚本 id -> 本地化标题）
-              if (
-                obj.scriptTitles &&
-                typeof obj.scriptTitles === 'object' &&
-                !Array.isArray(obj.scriptTitles)
-              ) {
-                one.scriptTitles = obj.scriptTitles
-              }
-              // 新增：自定义块翻译（英文基准 -> 本地化文本）以及参数名称映射
-              if (
-                obj.procedures &&
-                typeof obj.procedures === 'object' &&
-                !Array.isArray(obj.procedures)
-              ) {
-                one.procedures = obj.procedures
-              }
-              if (
-                obj.procedureParams &&
-                typeof obj.procedureParams === 'object' &&
-                !Array.isArray(obj.procedureParams)
-              ) {
-                one.procedureParams = obj.procedureParams
-              }
+              const isPlainObject = (v) => v && typeof v === 'object' && !Array.isArray(v)
+
+              copyField('name', (v) => typeof v === 'string')
+              copyField('description', (v) => typeof v === 'string')
+              copyField('tags', (v) => Array.isArray(v))
+              copyField('variables', isPlainObject)
+              copyField('lists', isPlainObject)
+              copyField('events', isPlainObject)
+              copyField('scriptTitles', isPlainObject)
+              copyField('procedures', isPlainObject)
+              copyField('procedureParams', isPlainObject)
+
               translations[loc] = one
             }
           } catch (e) {
@@ -560,79 +530,56 @@ async function translateModulesForLocale(modules, dict, locale, options = {}) {
     .replace('-', '_')
     .toLowerCase()
   const isEnglishLocale = locale === 'en' || languageTag.startsWith('en')
+
+  // 生成语言优先级顺序（避免重复判断）
+  const getLocalePriority = () => {
+    if (locale === 'zh-tw') return [locale, 'zh-tw', 'zh-cn', 'en']
+    if (locale === 'zh-cn') return [locale, 'zh-cn', 'zh-tw', 'en']
+    return [locale, 'en', 'zh-cn', 'zh-tw']
+  }
+  const localePriority = getLocalePriority()
+
   const out = []
 
   // 构造当前语言下的变量/列表名称映射（原名 -> 本地化名）
   function buildNameMapsForModule(mod) {
     const per = mod.translations || {}
-    const mapLocV = per[locale]?.variables
-    const mapLocL = per[locale]?.lists
-    const mapLocE = per[locale]?.events
-    const mapTwV = per['zh-tw']?.variables
-    const mapTwL = per['zh-tw']?.lists
-    const mapTwE = per['zh-tw']?.events
-    const mapCnV = per['zh-cn']?.variables
-    const mapCnL = per['zh-cn']?.lists
-    const mapCnE = per['zh-cn']?.events
-    const mapEnV = per['en']?.variables
-    const mapEnL = per['en']?.lists
-    const mapEnE = per['en']?.events
     const maps = { vars: {}, lists: {}, events: {} }
-    function pick(mapLoc, mapTw, mapCn, mapEn, key) {
-      if (locale === 'zh-tw') {
-        return (
-          (mapLoc && mapLoc[key]) ||
-          (mapTw && mapTw[key]) ||
-          (mapCn && mapCn[key]) ||
-          (mapEn && mapEn[key])
-        )
+
+    // 统一的优先级查询函数
+    function pickByPriority(fieldName, key) {
+      for (const loc of localePriority) {
+        const map = per[loc]?.[fieldName]
+        if (map && map[key]) return map[key]
       }
-      if (locale === 'zh-cn') {
-        return (
-          (mapLoc && mapLoc[key]) ||
-          (mapCn && mapCn[key]) ||
-          (mapTw && mapTw[key]) ||
-          (mapEn && mapEn[key])
-        )
-      }
-      // 其他语言（例如 en）：仅使用本地或英文映射，避免错误回退到中文
-      return (mapLoc && mapLoc[key]) || (mapEn && mapEn[key])
+      return null
     }
+
     const varsArr = Array.isArray(mod.variables) ? mod.variables : []
     for (const v of varsArr) {
       if (!v || !v.name) continue
-      if (v.type === 'list') {
-        const to = pick(mapLocL, mapTwL, mapCnL, mapEnL, v.name)
-        if (to) maps.lists[v.name] = to
-      } else {
-        const to = pick(mapLocV, mapTwV, mapCnV, mapEnV, v.name)
-        if (to) maps.vars[v.name] = to
+      const fieldName = v.type === 'list' ? 'lists' : 'variables'
+      const mapped = pickByPriority(fieldName, v.name)
+      if (mapped) {
+        if (v.type === 'list') {
+          maps.lists[v.name] = mapped
+        } else {
+          maps.vars[v.name] = mapped
+        }
       }
-    }
-    // 事件名称映射：直接按优先顺序合并（不做键过滤）
-    const mergePref = (target, src) => {
-      if (!src || typeof src !== 'object') return
-      for (const k of Object.keys(src)) {
-        if (!(k in target)) target[k] = src[k]
-      }
-    }
-    if (locale === 'zh-tw') {
-      mergePref(maps.events, mapLocE)
-      mergePref(maps.events, mapTwE)
-      mergePref(maps.events, mapCnE)
-      mergePref(maps.events, mapEnE)
-    } else if (locale === 'zh-cn') {
-      mergePref(maps.events, mapLocE)
-      mergePref(maps.events, mapCnE)
-      mergePref(maps.events, mapTwE)
-      mergePref(maps.events, mapEnE)
-    } else {
-      mergePref(maps.events, mapLocE)
-      mergePref(maps.events, mapEnE)
-      mergePref(maps.events, mapCnE)
-      mergePref(maps.events, mapTwE)
     }
 
+    // 事件名称映射：直接按优先顺序合并（不做键过滤）
+    for (const loc of localePriority) {
+      const eventMap = per[loc]?.events
+      if (eventMap && typeof eventMap === 'object') {
+        for (const k of Object.keys(eventMap)) {
+          if (!(k in maps.events)) {
+            maps.events[k] = eventMap[k]
+          }
+        }
+      }
+    }
     if (
       !Object.keys(maps.vars).length &&
       !Object.keys(maps.lists).length &&
@@ -645,23 +592,20 @@ async function translateModulesForLocale(modules, dict, locale, options = {}) {
   // 构造当前语言的自定义块与其参数映射（方案A：以英文源为 key，_ 占位参数）
   function buildProcedureMaps(mod) {
     const per = mod.translations || {}
-    function pick(mapLoc, mapTw, mapCn, mapEn) {
-      if (locale === 'zh-tw') return mapLoc || mapTw || mapCn || mapEn
-      if (locale === 'zh-cn') return mapLoc || mapCn || mapTw || mapEn
-      return mapLoc || mapEn || mapCn || mapTw
-    }
-    const procMap = pick(
-      per[locale]?.procedures,
-      per['zh-tw']?.procedures,
-      per['zh-cn']?.procedures,
-      per['en']?.procedures
-    )
-    const paramMap = pick(
-      per[locale]?.procedureParams,
-      per['zh-tw']?.procedureParams,
-      per['zh-cn']?.procedureParams,
-      per['en']?.procedureParams
-    )
+    const procMap = (() => {
+      for (const loc of localePriority) {
+        const map = per[loc]?.procedures
+        if (map && typeof map === 'object') return map
+      }
+      return null
+    })()
+    const paramMap = (() => {
+      for (const loc of localePriority) {
+        const map = per[loc]?.procedureParams
+        if (map && typeof map === 'object') return map
+      }
+      return null
+    })()
     if (!procMap && !paramMap) return undefined
     return { procMap, paramMap }
   }
@@ -737,43 +681,29 @@ async function translateModulesForLocale(modules, dict, locale, options = {}) {
     const per = m.translations || {}
     const enScriptTitles = m.scriptTitles || {}
     function pickStr(base, map) {
-      const vLoc = per[locale]?.[base] ?? (map && map[locale])
-      const vTw = per['zh-tw']?.[base] ?? (map && map['zh-tw'])
-      const vCn = per['zh-cn']?.[base] ?? (map && map['zh-cn'])
-      const vEn = per['en']?.[base] ?? (map && map['en'])
-      if (locale === 'zh-tw') return vLoc || vTw || vCn || vEn || nm[base]
-      if (locale === 'zh-cn') return vLoc || vCn || vTw || vEn || nm[base]
-      return vLoc || vEn || nm[base] || vCn || vTw
+      for (const loc of localePriority) {
+        const val = per[loc]?.[base] ?? (map && map[loc])
+        if (val) return val
+      }
+      return nm[base]
     }
     function pickArr(base, map) {
-      const vLoc = per[locale]?.[base] ?? (map && map[locale])
-      const vTw = per['zh-tw']?.[base] ?? (map && map['zh-tw'])
-      const vCn = per['zh-cn']?.[base] ?? (map && map['zh-cn'])
-      const vEn = per['en']?.[base] ?? (map && map['en'])
-      if (locale === 'zh-tw') return vLoc || vTw || vCn || vEn || nm[base]
-      if (locale === 'zh-cn') return vLoc || vCn || vTw || vEn || nm[base]
-      return vLoc || vEn || nm[base] || vCn || vTw
+      for (const loc of localePriority) {
+        const val = per[loc]?.[base] ?? (map && map[loc])
+        if (val) return val
+      }
+      return nm[base]
     }
     function pickTitleForScript(scriptId, index1) {
-      const mapLoc = per[locale]?.scriptTitles
-      const mapTw = per['zh-tw']?.scriptTitles
-      const mapCn = per['zh-cn']?.scriptTitles
-      const mapEn = per['en']?.scriptTitles
-      // 回退顺序：
-      // - 当前语言明确提供
-      // - 目标语言 en 提供
-      // - 元信息（meta.scriptTitles，英文权威）
-      // - 其他中文映射（仅在前者都缺失时作为最后回退）
-      const best =
-        (mapLoc && mapLoc[scriptId]) ||
-        (mapEn && mapEn[scriptId]) ||
-        enScriptTitles[scriptId] ||
-        (locale === 'zh-tw'
-          ? (mapTw && mapTw[scriptId]) || (mapCn && mapCn[scriptId])
-          : locale === 'zh-cn'
-            ? (mapCn && mapCn[scriptId]) || (mapTw && mapTw[scriptId])
-            : (mapCn && mapCn[scriptId]) || (mapTw && mapTw[scriptId]))
-      return best || scriptId || (index1 != null ? '#' + index1 : '')
+      // 按优先级查找脚本标题
+      for (const loc of localePriority) {
+        const titles = per[loc]?.scriptTitles
+        if (titles && titles[scriptId]) return titles[scriptId]
+      }
+      // 回退到元信息中的英文权威标题
+      if (enScriptTitles[scriptId]) return enScriptTitles[scriptId]
+      // 最后的默认值
+      return scriptId || (index1 != null ? '#' + index1 : '')
     }
     if (m.name_i18n || per[locale] || per['en'] || per['zh-cn'] || per['zh-tw']) {
       nm.name = pickStr('name', m.name_i18n)
@@ -843,17 +773,16 @@ async function translateModulesForLocale(modules, dict, locale, options = {}) {
             if (target) {
               const perT = target.translations || {}
               const nameMap = target.name_i18n || {}
-              const bestName = (function () {
-                const vLoc = perT[locale]?.name ?? nameMap[locale]
-                const vTw = perT['zh-tw']?.name ?? nameMap['zh-tw']
-                const vCn = perT['zh-cn']?.name ?? nameMap['zh-cn']
-                const vEn = perT['en']?.name ?? nameMap['en']
-                if (locale === 'zh-tw') return vLoc || vTw || vCn || vEn || target.name
-                if (locale === 'zh-cn') return vLoc || vCn || vTw || vEn || target.name
-                // 其他语言优先使用英文（meta 或 per-language），否则退回 meta 英文名，再考虑中文
-                return vLoc || vEn || target.name || vCn || vTw
-              })()
-              if (bestName) localizedFromName = bestName
+              for (const loc of localePriority) {
+                const name = perT[loc]?.name ?? nameMap[loc]
+                if (name) {
+                  localizedFromName = name
+                  break
+                }
+              }
+              if (!localizedFromName) {
+                localizedFromName = target.name
+              }
             }
             const mapsImported = isEnglishLocale
               ? undefined
@@ -881,23 +810,11 @@ async function translateModulesForLocale(modules, dict, locale, options = {}) {
                   ? (function () {
                       const enTitles = target.scriptTitles || {}
                       const perT = target.translations || {}
-                      const mapLoc = perT[locale]?.scriptTitles
-                      const mapTw = perT['zh-tw']?.scriptTitles
-                      const mapCn = perT['zh-cn']?.scriptTitles
-                      const mapEn = perT['en']?.scriptTitles
-                      return (
-                        (mapLoc && mapLoc[imp.fromScriptId]) ||
-                        (mapEn && mapEn[imp.fromScriptId]) ||
-                        enTitles[imp.fromScriptId] ||
-                        (locale === 'zh-tw'
-                          ? (mapTw && mapTw[imp.fromScriptId]) || (mapCn && mapCn[imp.fromScriptId])
-                          : locale === 'zh-cn'
-                            ? (mapCn && mapCn[imp.fromScriptId]) ||
-                              (mapTw && mapTw[imp.fromScriptId])
-                            : (mapCn && mapCn[imp.fromScriptId]) ||
-                              (mapTw && mapTw[imp.fromScriptId])) ||
-                        imp.fromScriptId
-                      )
+                      for (const loc of localePriority) {
+                        const titles = perT[loc]?.scriptTitles
+                        if (titles && titles[imp.fromScriptId]) return titles[imp.fromScriptId]
+                      }
+                      return enTitles[imp.fromScriptId] || imp.fromScriptId
                     })()
                   : imp.fromTitle,
             })
@@ -910,20 +827,16 @@ async function translateModulesForLocale(modules, dict, locale, options = {}) {
           if (target) {
             const enTitles = target.scriptTitles || {}
             const perT = target.translations || {}
-            const mapLoc = perT[locale]?.scriptTitles
-            const mapTw = perT['zh-tw']?.scriptTitles
-            const mapCn = perT['zh-cn']?.scriptTitles
-            const mapEn = perT['en']?.scriptTitles
-            ns.fromTitle =
-              (mapLoc && mapLoc[s.fromScriptId]) ||
-              (mapEn && mapEn[s.fromScriptId]) ||
-              enTitles[s.fromScriptId] ||
-              (locale === 'zh-tw'
-                ? (mapTw && mapTw[s.fromScriptId]) || (mapCn && mapCn[s.fromScriptId])
-                : locale === 'zh-cn'
-                  ? (mapCn && mapCn[s.fromScriptId]) || (mapTw && mapTw[s.fromScriptId])
-                  : (mapCn && mapCn[s.fromScriptId]) || (mapTw && mapTw[s.fromScriptId])) ||
-              s.fromScriptId
+            for (const loc of localePriority) {
+              const titles = perT[loc]?.scriptTitles
+              if (titles && titles[s.fromScriptId]) {
+                ns.fromTitle = titles[s.fromScriptId]
+                break
+              }
+            }
+            if (!ns.fromTitle) {
+              ns.fromTitle = enTitles[s.fromScriptId] || s.fromScriptId
+            }
           }
         }
         newScripts.push(ns)
@@ -1067,59 +980,60 @@ async function render(modules, allTags) {
   // copy public
   const publicDir = path.join(root, 'public')
   if (await fs.pathExists(publicDir)) await fs.copy(publicDir, outDir)
-  // copy client resources (app.js, style.css)
-  const clientDir = path.join(root, 'src', 'client')
-  if (await fs.pathExists(clientDir)) {
-    for (const file of await fs.readdir(clientDir)) {
-      if (/\.(js|css)$/i.test(file)) {
-        await fs.copy(path.join(clientDir, file), path.join(outDir, file))
-      }
-    }
+  // copy client resources (app.js, style.css) - 使用 glob 一次性选择
+  const clientFiles = await fg(['*.{js,css}'], {
+    cwd: path.join(root, 'src', 'client'),
+    onlyFiles: true,
+  })
+  for (const file of clientFiles) {
+    await fs.copy(path.join(root, 'src', 'client', file), path.join(outDir, file))
   }
+
   // vendor: minisearch, scratchblocks
   const vendorDir = path.join(outDir, 'vendor')
   await fs.ensureDir(vendorDir)
+
+  // 复制 minisearch ES 模块（标准化路径，无需动态解析）
   try {
-    // 通过入口文件反推 dist/es 目录
-    const minisearchEntry = require.resolve('minisearch')
-    // 入口在 dist/es/index.js
-    let miniEs = path.resolve(path.dirname(minisearchEntry), '..', 'es', 'index.js')
+    const miniEs = path.join(root, 'node_modules', 'minisearch', 'dist', 'es', 'index.js')
     if (await fs.pathExists(miniEs)) {
-      const targetName = 'minisearch.js'
-      await fs.copy(miniEs, path.join(vendorDir, targetName))
+      await fs.copy(miniEs, path.join(vendorDir, 'minisearch.js'))
     } else {
       console.warn('minisearch ES 文件未找到:', miniEs)
     }
   } catch (e) {
     console.error('Error copying minisearch:', e)
   }
+
+  // 复制 scratchblocks 核心库
   try {
-    // 只复制核心库文件
-    try {
-      const src = require.resolve('scratchblocks/build/scratchblocks.min.es.js')
-      await fs.copy(src, path.join(vendorDir, 'scratchblocks.min.es.js'))
-    } catch (e) {}
-
-    // 按需复制 scratchblocks 语言文件到 vendor/sb-langs/
-    // scratchblocks 的 locales 目录位于 node_modules/scratchblocks/locales
-    const localesSourceDir = path.join(root, 'node_modules', 'scratchblocks', 'locales')
-    const langVendorDir = path.join(vendorDir, 'sb-langs')
-    await fs.ensureDir(langVendorDir)
-
-    if (await fs.pathExists(localesSourceDir)) {
-      const localeFiles = await fs.readdir(localesSourceDir)
-      for (const file of localeFiles) {
-        if (file.endsWith('.json')) {
-          const src = path.join(localesSourceDir, file)
-          const dest = path.join(langVendorDir, file)
-          await fs.copy(src, dest)
-        }
-      }
-    } else {
-      console.warn('[scratchblocks] locales 目录未找到:', localesSourceDir)
+    const sbMinEs = path.join(
+      root,
+      'node_modules',
+      'scratchblocks',
+      'build',
+      'scratchblocks.min.es.js'
+    )
+    if (await fs.pathExists(sbMinEs)) {
+      await fs.copy(sbMinEs, path.join(vendorDir, 'scratchblocks.min.es.js'))
     }
   } catch (e) {
-    console.warn('[scratchblocks] 复制浏览器端资源失败:', e?.message || e)
+    console.warn('[scratchblocks] 复制核心库文件失败:', e?.message || e)
+  }
+
+  // 复制 scratchblocks 语言文件到 vendor/sb-langs/
+  try {
+    const localesSourceDir = path.join(root, 'node_modules', 'scratchblocks', 'locales')
+    const langVendorDir = path.join(vendorDir, 'sb-langs')
+    const localeFiles = await fg(['*.json'], { cwd: localesSourceDir, onlyFiles: true })
+    if (localeFiles.length > 0) {
+      await fs.ensureDir(langVendorDir)
+      for (const file of localeFiles) {
+        await fs.copy(path.join(localesSourceDir, file), path.join(langVendorDir, file))
+      }
+    }
+  } catch (e) {
+    console.warn('[scratchblocks] 复制语言文件失败:', e?.message || e)
   }
 
   // copy demo & assets
@@ -1127,9 +1041,21 @@ async function render(modules, allTags) {
     const srcDir = path.join(root, config.contentDir, m.slug)
     const targetDir = path.join(outDir, 'modules', m.slug)
     await fs.ensureDir(targetDir)
-    if (m.hasDemo) await fs.copy(path.join(srcDir, 'demo.sb3'), path.join(targetDir, 'demo.sb3'))
+    // demo.sb3 存在时复制
+    if (m.hasDemo) {
+      const demoSrc = path.join(srcDir, 'demo.sb3')
+      await fs.copy(demoSrc, path.join(targetDir, 'demo.sb3')).catch(() => {})
+    }
+    // assets 文件夹存在时复制整个目录
     const assetsDir = path.join(srcDir, 'assets')
-    if (await fs.pathExists(assetsDir)) await fs.copy(assetsDir, path.join(targetDir, 'assets'))
+    try {
+      const stat = await fs.stat(assetsDir)
+      if (stat.isDirectory()) {
+        await fs.copy(assetsDir, path.join(targetDir, 'assets'))
+      }
+    } catch (e) {
+      // assets 文件夹不存在时忽略
+    }
   }
 
   // 搜索与文档列表将按语言分别生成
@@ -1313,7 +1239,6 @@ async function render(modules, allTags) {
       const issuesHtml = nunjucks.render('layouts/issues.njk', {
         modules: [],
         config: locConfig,
-        year,
         basePath,
         assetBase,
         pageBase,
