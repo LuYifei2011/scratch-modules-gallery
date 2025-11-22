@@ -1198,7 +1198,9 @@ async function render(modules, allTags) {
     `/${loc}/`,
     ...modules.map((m) => `/${loc}/modules/${m.slug}/`),
   ])
-  const sitemap = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.map((u) => `  <url><loc>${config.baseUrl.replace(/\/$/, '')}${u}</loc></url>`).join('\n')}\n</urlset>`
+  // TODO: 用真实文件修改时间(ISO8601)替换
+  const now = new Date().toISOString().split('T')[0]
+  const sitemap = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.map((u) => `  <url><loc>${config.baseUrl.replace(/\/$/, '')}${u}</loc><lastmod>${now}</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>`).join('\n')}\n</urlset>`
   await fs.writeFile(path.join(outDir, 'sitemap.xml'), sitemap, 'utf8')
   await fs.writeFile(
     path.join(outDir, 'robots.txt'),
