@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="{{ lang | default('en') }}">
+    <head><meta charset="utf-8"/>
+        <meta http-equiv="Cache-Control" content="no-store"/>
+        <meta name="viewport" content="width=device-width,initial-scale=1"/>
+        <title>Redirecting…</title>
+        <noscript>
+            <meta http-equiv="refresh" content="0; url={{ basePath or '' }}/{{ defaultLocale }}/"/>
+            <link rel="canonical" href="{{ configBaseUrl }}/{{ defaultLocale }}/"/>
+            <style>
+                body {
+                    font-family: system-ui, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+                    padding: 2rem
+                }
+            </style>
+        </noscript>
+    </head>
+    <body>
+        <script>
+            var base ='{{ basePath or '' }}';
+            var locales = {{ redirectLocales | safe }};
+            function pickLocale(browserLangs) {
+                if (!Array.isArray(browserLangs)) 
+                    browserLangs = [navigator.language || ''];
+                
+                var ls = browserLangs.map(function (l) {
+                    return String(l || '').toLowerCase()
+                });
+                // 优先精确匹配
+                for (var i = 0; i < ls.length; i++) {
+                    if (locales.includes(ls[i])) 
+                        return ls[i];
+                    
+                }
+                // 特殊处理中文简繁体
+                for (var i = 0; i < ls.length; i++) {
+                    var l = ls[i];
+                    if (l.startsWith('zh')) {
+                        if ((/-tw|-hk|-mo|hant/).test(l) && locales.includes('zh-tw')) 
+                            return 'zh-tw';
+                        
+                        if (locales.includes('zh-cn')) 
+                            return 'zh-cn';
+                        
+                        var z = locales.find(function (x) {
+                            return x.toLowerCase().startsWith('zh-')
+                        });
+                        if (z) 
+                            return z;
+                        
+                    }
+                }
+                // 主语言前缀匹配，如 en-US -> en
+                for (var i = 0; i < ls.length; i++) {
+                    var primary = ls[i].split('-')[0];
+                    var hit = locales.find(function (x) {
+                        return x.split('-')[0] === primary
+                    });
+                    if (hit) 
+                        return hit;
+                    
+                }
+                return '{{ defaultLocale }}';
+            }
+            var pref = '';
+            try {
+                pref = localStorage.getItem('preferred-locale') || '';
+            } catch (e) {}
+            var target = locales.includes(pref)
+                ? pref
+                : pickLocale(navigator.languages || [navigator.language || '']);
+            var dest = (
+                base
+                ? base
+                : '') + '/' + target + '/';
+            location.replace(dest);
+        </script>
+        <p>Redirecting…</p>
+    </body>
+</html>

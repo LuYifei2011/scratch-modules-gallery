@@ -15,7 +15,8 @@
     "nunjucks": "^3.2.4",
     "minisearch": "^7.1.2",
     "scratchblocks": "github:LuYifei2011/scratchblocks#release",
-    "html-minifier-next": "^4.1.1"
+    "html-minifier-next": "^4.1.1",
+    "simple-git": "^3.22.0"
   },
   "devDependencies": {
     "prettier": "^3.3.3",

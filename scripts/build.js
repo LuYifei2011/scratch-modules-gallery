@@ -7,6 +7,7 @@ import { buildModuleRecord } from './lib/schema.js'
 import { pathToFileURL } from 'url'
 import { minify } from 'html-minifier-next'
 import * as scratchblocks from 'scratchblocks/syntax/index.js'
+import simpleGit from 'simple-git'
 
 const root = path.resolve('.')
 // 动态 ESM 导入配置
@@ -977,6 +978,94 @@ async function render(modules, allTags) {
   } catch (e) {
     basePath = ''
   }
+
+  // 从 git 历史获取文件的最后修改时间（ISO8601 日期字符串）
+  // 如果获取失败或不在 git 仓库中，回退到当前时间
+  async function getFileLastModDate(relativeFilePath) {
+    try {
+      const git = simpleGit(root)
+      const isRepo = await git.checkIsRepo()
+      if (!isRepo) {
+        return new Date().toISOString().split('T')[0]
+      }
+      // 获取该文件的最后一次提交时间
+      const log = await git.log({
+        file: relativeFilePath,
+        '--diff-filter': 'M',
+        '--max-count': '1',
+      })
+      if (log.latest) {
+        const commitDate = new Date(log.latest.date).toISOString().split('T')[0]
+        return commitDate
+      }
+      return new Date().toISOString().split('T')[0]
+    } catch (e) {
+      if (isDev) console.warn(`[git] 获取 ${relativeFilePath} 的提交时间失败:`, e?.message || e)
+      return new Date().toISOString().split('T')[0]
+    }
+  }
+
+  // 批量获取模块文件的最后修改时间，缓存结果以避免重复查询
+  // 考虑：scripts/ 目录 + 模块级 i18n 目录 + 全局 i18n 目录
+  const lastModCache = new Map()
+  async function getModuleLastMod(moduleSlug) {
+    if (lastModCache.has(moduleSlug)) {
+      return lastModCache.get(moduleSlug)
+    }
+
+    try {
+      const git = simpleGit(root)
+      const isRepo = await git.checkIsRepo()
+      if (!isRepo) {
+        const date = new Date().toISOString().split('T')[0]
+        lastModCache.set(moduleSlug, date)
+        return date
+      }
+
+      // 收集该模块的所有相关文件路径
+      const filePaths = [
+        `${config.contentDir}/${moduleSlug}/scripts`, // 脚本目录（递归）
+        `${config.contentDir}/${moduleSlug}/i18n`, // 模块级翻译目录（递归）
+        'src/i18n', // 全局翻译目录（影响所有页面）
+      ]
+
+      let latestDate = null
+
+      // 对每个路径获取最后修改时间
+      for (const filePath of filePaths) {
+        try {
+          // 使用 git log 查询指定路径的最后一次修改
+          const log = await git.log({
+            file: filePath,
+            '--diff-filter': 'M',
+            '--max-count': '1',
+          })
+          if (log.latest) {
+            const commitDate = new Date(log.latest.date)
+            if (!latestDate || commitDate > latestDate) {
+              latestDate = commitDate
+            }
+          }
+        } catch (e) {
+          // 某个路径可能不存在或出错，继续处理其他路径
+          if (isDev) {
+            console.warn(`[git] 获取 ${moduleSlug}/${filePath} 的提交时间失败:`, e?.message || e)
+          }
+        }
+      }
+
+      const dateStr = latestDate
+        ? latestDate.toISOString().split('T')[0]
+        : new Date().toISOString().split('T')[0]
+      lastModCache.set(moduleSlug, dateStr)
+      return dateStr
+    } catch (e) {
+      if (isDev) console.warn(`[git] 获取模块 ${moduleSlug} 的提交时间失败:`, e?.message || e)
+      const date = new Date().toISOString().split('T')[0]
+      lastModCache.set(moduleSlug, date)
+      return date
+    }
+  }
   // copy public
   const publicDir = path.join(root, 'public')
   if (await fs.pathExists(publicDir)) await fs.copy(publicDir, outDir)
@@ -1141,56 +1230,19 @@ async function render(modules, allTags) {
     }
   }
 
-  // 生成根路径自动语言跳转页（需使用本作用域的 basePath）
+  // 生成根路径自动语言跳转页（已抽离为 nunjucks 模板，使用本作用域的 basePath）
   const redirectLocales = JSON.stringify(locales)
-  // 默认语言优先：若存在 zh-cn 则用之，否则第一个
-  const defaultLocale = locales.includes('zh-cn') ? 'zh-cn' : locales[0] || 'en'
-  const redirectHtml = `<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"/>
-<meta http-equiv="Cache-Control" content="no-store"/>
-<meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Redirecting…</title>
-<noscript>
-  <meta http-equiv="refresh" content="0; url=${basePath || ''}/${defaultLocale}/"/>
-  <link rel="canonical" href="${config.baseUrl.replace(/\/$/, '')}/${defaultLocale}/"/>
-  <style>body{font-family:system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif;padding:2rem}</style>
-</noscript>
-</head><body>
-<script>(function(){
-  var base='${basePath || ''}';
-  var locales=${redirectLocales};
-  function pickLocale(browserLangs){
-    if(!Array.isArray(browserLangs)) browserLangs = [navigator.language || ''];
-    var ls = browserLangs.map(function(l){return String(l||'').toLowerCase()});
-    // 优先精确匹配
-    for(var i=0;i<ls.length;i++){
-      if(locales.includes(ls[i])) return ls[i];
-    }
-    // 特殊处理中文简繁体
-    for(var i=0;i<ls.length;i++){
-      var l = ls[i];
-      if(l.startsWith('zh')){
-        if((/-tw|-hk|-mo|hant/).test(l) && locales.includes('zh-tw')) return 'zh-tw';
-        if(locales.includes('zh-cn')) return 'zh-cn';
-        // 回退到任一以 zh- 开头的可用语言
-        var z = locales.find(function(x){return x.toLowerCase().startsWith('zh-')});
-        if(z) return z;
-      }
-    }
-    // 主语言前缀匹配，如 en-US -> en
-    for(var i=0;i<ls.length;i++){
-      var primary = ls[i].split('-')[0];
-      var hit = locales.find(function(x){ return x.split('-')[0] === primary });
-      if(hit) return hit;
-    }
-    return '${defaultLocale}';
-  }
-  var pref=''; try{pref=localStorage.getItem('preferred-locale')||'';}catch(e){}
-  var target = locales.includes(pref) ? pref : pickLocale(navigator.languages||[navigator.language||'']);
-  var dest=(base?base:'') + '/' + target + '/';
-  location.replace(dest);
-})();</script>
-<p>Redirecting…</p>
-</body></html>`
+  // 默认语言优先：若存在 en 则用之，否则第一个
+  const defaultLocale = locales.includes('en') ? 'en' : locales[0] || 'en'
+  const redirectHtml = nunjucks.render('layouts/redirect.njk', {
+    basePath,
+    redirectLocales: redirectLocales,
+    defaultLocale,
+    // 提前规范化 baseUrl 供模板使用
+    configBaseUrl: config.baseUrl.replace(/\/$/, ''),
+    config,
+    lang: langTags[defaultLocale] || defaultLocale,
+  })
   await fs.outputFile(path.join(outDir, 'index.html'), await maybeMinify(redirectHtml), 'utf8')
 
   // sitemap
@@ -1198,15 +1250,48 @@ async function render(modules, allTags) {
     `/${loc}/`,
     ...modules.map((m) => `/${loc}/modules/${m.slug}/`),
   ])
-  // TODO: 用真实文件修改时间(ISO8601)替换
-  const now = new Date().toISOString().split('T')[0]
-  const sitemap = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.map((u) => `  <url><loc>${config.baseUrl.replace(/\/$/, '')}${u}</loc><lastmod>${now}</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>`).join('\n')}\n</urlset>`
-  await fs.writeFile(path.join(outDir, 'sitemap.xml'), sitemap, 'utf8')
-  await fs.writeFile(
-    path.join(outDir, 'robots.txt'),
-    `User-agent: *\nAllow: /\nSitemap: ${config.baseUrl.replace(/\/$/, '')}/sitemap.xml\n`,
-    'utf8'
-  )
+
+  // 生成 sitemap 时为每个 URL 获取对应的最后修改时间
+  // 开发模式下跳过生成以节省时间
+  if (!isDev) {
+    const sitemapUrls = []
+
+    // 首页：使用配置文件 + 全局 i18n 文件的最后修改时间
+    // 两者中较晚的时间
+    const configLastMod = await getFileLastModDate('site.config.js')
+    const globalI18nLastMod = await getFileLastModDate('src/i18n')
+    const indexLastMod = configLastMod >= globalI18nLastMod ? configLastMod : globalI18nLastMod
+    for (const loc of locales) {
+      sitemapUrls.push({
+        loc: `/${loc}/`,
+        lastmod: indexLastMod,
+      })
+    }
+
+    // 模块页面：使用每个模块脚本目录 + 模块级 i18n + 全局 i18n 的最后修改时间
+    for (const m of modules) {
+      const moduleLastMod = await getModuleLastMod(m.slug)
+      for (const loc of locales) {
+        sitemapUrls.push({
+          loc: `/${loc}/modules/${m.slug}/`,
+          lastmod: moduleLastMod,
+        })
+      }
+    }
+
+    const sitemap = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${sitemapUrls.map((u) => `  <url><loc>${config.baseUrl.replace(/\/$/, '')}${u.loc}</loc><lastmod>${u.lastmod}</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>`).join('\n')}\n</urlset>`
+    await fs.writeFile(path.join(outDir, 'sitemap.xml'), sitemap, 'utf8')
+    await fs.writeFile(
+      path.join(outDir, 'robots.txt'),
+      `User-agent: *\nAllow: /\nSitemap: ${config.baseUrl.replace(/\/$/, '')}/sitemap.xml\n`,
+      'utf8'
+    )
+  } else {
+    // 开发模式：跳过 sitemap 和 robots.txt 生成，使用占位符或简单版本
+    if (isDev) {
+      console.log('[dev] 跳过 sitemap 和 robots.txt 生成以节省时间')
+    }
+  }
 
   // 在所有语言与模块页面渲染完成后，再统一生成 issues 页面，确保每个语言目录看到的是全集合
   if (isDev) {
