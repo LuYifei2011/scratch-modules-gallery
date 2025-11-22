@@ -988,6 +988,14 @@ async function render(modules, allTags) {
       if (!isRepo) {
         return new Date().toISOString().split('T')[0]
       }
+
+      // 检测是否为浅层克隆（GitHub Actions 默认行为）
+      const isDeeplyCloned = await git.revparse(['--is-shallow-repository']).catch(() => 'true')
+      if (isDeeplyCloned === 'true' && isDev) {
+        console.warn('[git] ⚠️  检测到浅层克隆（fetch-depth < 完整历史），git 提交时间可能不准确。')
+        console.warn('[git] 对于 GitHub Actions，请在 workflow 中添加：with: { fetch-depth: 0 }')
+      }
+
       // 获取该文件的最后一次提交时间
       const log = await git.log({
         file: relativeFilePath,

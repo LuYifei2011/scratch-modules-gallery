@@ -126,6 +126,32 @@ HTTPS 支持：
 - 构建后检查 `dist/index.html` 中 `<meta name="keywords">` 是否为 `site.config.js` 中 `keywords` 的值。
 - 检查模块页 `dist/modules/<id>/index.html` 中的 keywords（模块页会包含 site 配置 keywords 与模块 tags 的组合）。
 
+## Sitemap 与修改时间
+
+构建过程会自动从 git 提交历史中提取文件修改时间，并生成 `dist/sitemap.xml` 与 `dist/robots.txt`：
+
+- **首页** (`/en/`, `/zh-cn/`, `/zh-tw/`)：使用 `site.config.js` 和 `src/i18n/` 目录的最晚修改时间
+- **模块页面** (`/modules/<id>/`)：使用该模块 `scripts/`、`i18n/` 及全局 `src/i18n/` 的最晚修改时间
+
+### 开发模式优化
+
+在开发服务器运行时（`IS_DEV=1`），sitemap 和 robots.txt 生成会被跳过以加快构建速度：
+
+- 生产构建（带 sitemap）：~6-7 秒
+- 开发构建（跳过 sitemap）：~0.8 秒，**快 8 倍** 🚀
+
+### GitHub Actions 配置
+
+为了在 CI 环境中正确获取 git 提交历史，`.github/workflows/node.js.yml` 中的 `checkout` action 需配置 `fetch-depth: 0`：
+
+```yaml
+- uses: actions/checkout@v4
+  with:
+    fetch-depth: 0 # 拉取完整的 git 历史，以便 build.js 能查询提交时间
+```
+
+⚠️ 如果 CI 中 sitemap 的 `lastmod` 显示为构建当时的日期（而非提交时间），说明 git 历史未拉取。需检查上述配置。
+
 ## 搜索
 
 MiniSearch 字段：`name,id,description,tags`；`storeFields`: `id,name,description,tags,slug,hasDemo`；权重 boost：name 5 > id 4 > tags 3 > description 2。
