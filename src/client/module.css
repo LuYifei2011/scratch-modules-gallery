@@ -6,6 +6,67 @@ pre.scratchblocks {
   border-radius: 8px;
   overflow: auto;
 }
+/* Copy button for script text */
+.sb-block {
+  position: relative;
+}
+.sb-copy {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 6px;
+  background: var(--panel);
+  color: var(--text);
+  border: 1px solid var(--panel-border-strong);
+  border-radius: 8px;
+  cursor: pointer;
+  transition:
+    transform 120ms ease,
+    box-shadow 120ms ease,
+    background 160ms ease,
+    color 160ms ease;
+}
+.sb-copy:hover {
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.08);
+}
+.sb-copy:active {
+  transform: scale(0.98);
+}
+.sb-copy .icon {
+  width: 14px;
+  height: 14px;
+  display: block;
+}
+.sb-copy .icon-check {
+  display: none;
+}
+.sb-copy.copied {
+  background: #2ecc71;
+  color: #fff;
+  border-color: #28b463;
+}
+.sb-copy.copied .icon-copy {
+  display: none;
+}
+.sb-copy.copied .icon-check {
+  display: block;
+}
+.sb-copy.failed {
+  background: #ff6b6b;
+  color: #fff;
+  border-color: #e94b4b;
+}
+.sb-copy.failed .icon-copy {
+  display: none;
+}
+.sb-copy.failed .icon-check {
+  display: block;
+}
 .script-block {
   margin-bottom: 1.25rem;
 }

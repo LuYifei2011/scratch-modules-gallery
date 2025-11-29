@@ -38,6 +38,77 @@ async function initScratchblocks() {
     })
   })
 
+  // Attach copy buttons: find wrapper `.sb-block` and wire to doc.stringify()
+  blocks.forEach((obj) => {
+    try {
+      const wrapper = obj.el.closest('.sb-block')
+      if (!wrapper) return
+      const btn = wrapper.querySelector('.sb-copy')
+      if (!btn) return
+      const label =
+        (window.__I18N && window.__I18N.module && window.__I18N.module.copyScript) || 'Copy'
+      btn.setAttribute('aria-label', label)
+      var origAria = label
+      // click handler copies current text rendition of the doc
+      btn.addEventListener('click', async (ev) => {
+        ev.preventDefault()
+        const text =
+          obj.doc && typeof obj.doc.stringify === 'function'
+            ? obj.doc.stringify()
+            : obj.el.textContent || ''
+        if (!text) return
+        let ok = false
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          try {
+            await navigator.clipboard.writeText(text)
+            ok = true
+          } catch (e) {
+            ok = false
+          }
+        }
+        if (!ok) {
+          // fallback: temporary textarea
+          const ta = document.createElement('textarea')
+          ta.value = text
+          ta.style.position = 'fixed'
+          ta.style.left = '-9999px'
+          document.body.appendChild(ta)
+          ta.select()
+          try {
+            ok = document.execCommand('copy')
+          } catch (e) {
+            ok = false
+          }
+          ta.remove()
+        }
+        if (ok) {
+          btn.classList.remove('failed')
+          btn.classList.add('copied')
+          const succ =
+            (window.__I18N && window.__I18N.module && window.__I18N.module.copySuccess) || 'Copied!'
+          btn.setAttribute('aria-label', succ)
+          setTimeout(() => {
+            btn.classList.remove('copied')
+            btn.setAttribute('aria-label', origAria)
+          }, 1400)
+        } else {
+          btn.classList.remove('copied')
+          btn.classList.add('failed')
+          const fail =
+            (window.__I18N && window.__I18N.module && window.__I18N.module.copyFail) ||
+            'Copy failed'
+          btn.setAttribute('aria-label', fail)
+          setTimeout(() => {
+            btn.classList.remove('failed')
+            btn.setAttribute('aria-label', origAria)
+          }, 1400)
+        }
+      })
+    } catch (e) {
+      console.warn('[sb-copy] init failed:', e?.message || e)
+    }
+  })
+
   function doRender(style) {
     blocks.forEach((obj) => {
       const finalStyle = style || 'scratch3'

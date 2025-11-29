@@ -33,7 +33,10 @@
     "notes": "Notes",
     "demo": "Demo",
     "openInTW": "Open in Turbowarp Editor",
-    "references": "References"
+    "references": "References",
+    "copyScript": "Copy",
+    "copySuccess": "Copied!",
+    "copyFail": "Copy failed"
   },
   "issues": {
     "pageTitle": "Build Issues",

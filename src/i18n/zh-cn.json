@@ -33,7 +33,10 @@
     "notes": "备注",
     "demo": "演示",
     "openInTW": "在 Turbowarp 编辑器中打开",
-    "references": "参考链接"
+    "references": "参考链接",
+    "copyScript": "复制",
+    "copySuccess": "已复制！",
+    "copyFail": "复制失败"
   },
   "issues": {
     "pageTitle": "构建问题",
