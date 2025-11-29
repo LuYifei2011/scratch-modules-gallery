@@ -6,6 +6,5 @@ export default {
   outDir: 'dist',
   contentDir: 'content/modules',
   repoUrl: 'https://github.com/LuYifei2011/scratch-modules-gallery',
-  repoBranch: 'main',
   keywords: 'Scratch,模块库,编程,代码库',
 }
