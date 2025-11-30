@@ -922,11 +922,16 @@ async function translateModulesForLocale(modules, dict, locale, options = {}) {
           }
         }
         if (missingFields.length) {
-            // TODO: 实现国际化
-            const msg = `模块 ${m.id} 在 ${locale} 语言下缺失翻译字段`;
-            console.warn(`[i18n-missing][${locale}] ${m.id}: ` + missingFields.join(', '));
-            reportIssue('warn', msg, { moduleId: m.id, locale, code: 'i18n-missing', fields: missingFields });
-          }
+          // TODO: 实现国际化
+          const msg = `模块 ${m.id} 在 ${locale} 语言下缺失翻译字段`
+          console.warn(`[i18n-missing][${locale}] ${m.id}: ` + missingFields.join(', '))
+          reportIssue('warn', msg, {
+            moduleId: m.id,
+            locale,
+            code: 'i18n-missing',
+            fields: missingFields,
+          })
+        }
       } catch (e) {
         console.warn('[i18n-missing] 检测失败', m.id, e?.message || e)
       }
