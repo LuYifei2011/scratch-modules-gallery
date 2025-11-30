@@ -922,9 +922,10 @@ async function translateModulesForLocale(modules, dict, locale, options = {}) {
           }
         }
         if (missingFields.length) {
-            const msg = `[i18n-missing][${locale}] ${m.id}: ` + missingFields.join(', ')
-            console.warn(msg)
-            reportIssue('warn', msg, { moduleId: m.id, code: 'i18n-missing' })
+            // TODO: 实现国际化
+            const msg = `模块 ${m.id} 在 ${locale} 语言下缺失翻译字段`;
+            console.warn(`[i18n-missing][${locale}] ${m.id}: ` + missingFields.join(', '));
+            reportIssue('warn', msg, { moduleId: m.id, locale, code: 'i18n-missing', fields: missingFields });
           }
       } catch (e) {
         console.warn('[i18n-missing] 检测失败', m.id, e?.message || e)
@@ -1354,15 +1355,14 @@ async function render(modules, allTags) {
 // 收集的结构：{ type: 'error'|'warn', message: string, moduleId?: string, code?: string }
 const collectedIssues = []
 
-function reportIssue(type, message, options = {}) {
+function reportIssue(type, message, details = {}) {
   if (!isDev) return
   try {
     const entry = {
       type,
       message: String(message || ''),
+      details: details || {},
     }
-    if (options.moduleId) entry.moduleId = options.moduleId
-    if (options.code) entry.code = options.code
     collectedIssues.push(entry)
   } catch {
     // 忽略收集失败，避免影响主流程
