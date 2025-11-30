@@ -105,7 +105,6 @@ content/modules/<id>/
 }
 ```
 
-
 ### 变量与列表定义 + 名称翻译
 
 现在支持在模块的 `i18n/<locale>.json` 中分别为“变量名”和“列表名”提供翻译映射。键为原始名称，值为本地化后的展示名称：
@@ -117,11 +116,11 @@ content/modules/<id>/
   "description": "计算与展示 FPS 的通用脚本",
   "variables": {
     "FPS": "帧率",
-    "DELTA": "时间差"
+    "DELTA": "时间差",
   },
   "lists": {
-    "samples": "采样列表"
-  }
+    "samples": "采样列表",
+  },
 }
 ```
 
@@ -211,8 +210,8 @@ content/modules/<id>/
 {
   "variables": [
     { "name": "fps", "type": "variable", "scope": "global" },
-    { "name": "samples", "type": "list", "scope": "global" }
-  ]
+    { "name": "samples", "type": "list", "scope": "global" },
+  ],
 }
 ```
 
@@ -235,8 +234,8 @@ content/modules/<id>/
 {
   "references": [
     { "title": "Scratch Wiki: FPS", "url": "https://...", "type": "wiki" },
-    { "title": "相关帖子", "url": "https://..." }
-  ]
+    { "title": "相关帖子", "url": "https://..." },
+  ],
 }
 ```
 
