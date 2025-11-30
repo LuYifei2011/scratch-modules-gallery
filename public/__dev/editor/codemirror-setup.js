@@ -113,7 +113,7 @@ export function createScratchblocksEditor(container, options = {}) {
       ...completionKeymap,
       indentWithTab,
     ]),
-    EditorView.lineWrapping,
+    // EditorView.lineWrapping,
     EditorState.tabSize.of(2),
   ]
 
@@ -143,6 +143,7 @@ export function createScratchblocksEditor(container, options = {}) {
   const view = new EditorView({
     state,
     parent: container,
+    lineSeparator: '\n',
   })
 
   // 监听系统主题变化

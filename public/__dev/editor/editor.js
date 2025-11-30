@@ -361,6 +361,8 @@ function renderI18nEditor() {
 // ==================== 脚本预览 ====================
 let scratchblocksLoaded = false
 let scratchblocks = null
+let currentPreviewDoc = null
+let currentPreviewStyle = 'scratch3'
 
 async function loadScratchblocks() {
   if (scratchblocksLoaded) return scratchblocks
@@ -399,19 +401,27 @@ async function renderScriptPreview(content) {
 
   try {
     // 参考 module.js 的正确用法
-    const doc = sb.parse(content, { languages: ['en'] })
-    const docView = sb.newView(doc, {
-      style: 'scratch3',
-      scale: 0.675,
-    })
-    const svg = docView.render()
-    svg.classList.add('scratchblocks-style-scratch3')
-    previewContainer.innerHTML = ''
-    previewContainer.appendChild(svg)
+    currentPreviewDoc = sb.parse(content, { languages: ['en'] })
+    doRenderPreview(currentPreviewStyle)
   } catch (error) {
     console.error('Scratchblocks render error:', error)
     previewContainer.innerHTML = `<p style="color: #ff6680;">渲染错误: ${error.message}</p>`
   }
+}
+
+function doRenderPreview(style) {
+  if (!currentPreviewDoc) return
+
+  const previewContainer = document.getElementById('script-preview-content')
+  const finalStyle = style || 'scratch3'
+  const docView = scratchblocks.newView(currentPreviewDoc, {
+    style: finalStyle,
+    scale: /^scratch3($|-)/.test(finalStyle) ? 0.675 : 1,
+  })
+  const svg = docView.render()
+  svg.classList.add('scratchblocks-style-' + finalStyle)
+  previewContainer.innerHTML = ''
+  previewContainer.appendChild(svg)
 }
 
 function debouncedPreview(content) {
@@ -1028,9 +1038,28 @@ function initLayout() {
   })
 }
 
+// ==================== 风格选择器 ====================
+function initStyleSelector() {
+  const styleSelect = document.getElementById('preview-style-select')
+  if (!styleSelect) return
+
+  const STYLE_KEY = 'editor-preview-style'
+  currentPreviewStyle = localStorage.getItem(STYLE_KEY) || 'scratch3'
+  styleSelect.value = currentPreviewStyle
+
+  styleSelect.addEventListener('change', () => {
+    currentPreviewStyle = styleSelect.value
+    localStorage.setItem(STYLE_KEY, currentPreviewStyle)
+    if (currentPreviewDoc) {
+      doRenderPreview(currentPreviewStyle)
+    }
+  })
+}
+
 // ==================== 初始化 ====================
 window.addEventListener('DOMContentLoaded', () => {
   initLayout()
+  initStyleSelector()
   // 侧边栏折叠
   const sidebar = document.getElementById('sidebar')
   const sidebarToggle = document.getElementById('sidebar-toggle')

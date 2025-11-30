@@ -330,6 +330,13 @@ body {
   opacity: 0.7;
 }
 
+/* select 元素不应用只读样式 */
+select.form-control:read-only {
+  background: var(--bg-secondary);
+  cursor: pointer;
+  opacity: 1;
+}
+
 textarea.form-control {
   resize: vertical;
   font-family: monospace;
@@ -548,10 +555,6 @@ textarea.form-control {
   background: var(--bg-color);
   border-bottom: 1px solid var(--border-color);
   flex-shrink: 0;
-}
-
-.script-editor-header .form-control {
-  flex: 1;
 }
 
 .script-actions {
