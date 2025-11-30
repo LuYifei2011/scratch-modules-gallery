@@ -4,6 +4,7 @@ import fg from 'fast-glob'
 import nunjucks from 'nunjucks'
 import MiniSearch from 'minisearch'
 import { buildModuleRecord } from './lib/schema.js'
+import { tokenizeCJK, loadScratchblocksLanguages } from './lib/scratch-utils.js'
 import { pathToFileURL } from 'url'
 import { minify } from 'html-minifier-next'
 import * as scratchblocks from 'scratchblocks/syntax/index.js'
@@ -24,22 +25,8 @@ if (process.env.BASE_URL) {
 }
 
 // 同步加载所有 scratchblocks 语言
-const localesDir = path.join(root, 'node_modules', 'scratchblocks', 'locales')
 try {
-  const files = fs.readdirSync(localesDir)
-  files.forEach((file) => {
-    if (file.endsWith('.json')) {
-      const fullPath = path.join(localesDir, file)
-      const langKey = path.basename(file, '.json').replace('-', '_').toLowerCase()
-      try {
-        const data = fs.readFileSync(fullPath, 'utf8')
-        const obj = JSON.parse(data)
-        scratchblocks.loadLanguages({ [langKey]: obj })
-      } catch (e) {
-        console.warn(`[scratchblocks] 载入语言文件失败，跳过 ${file}:`, e?.message || e)
-      }
-    }
-  })
+  loadScratchblocksLanguages()
 } catch (e) {
   console.warn('[scratchblocks] 读取 locales 目录失败:', e?.message || e)
 }
@@ -210,27 +197,6 @@ async function maybeMinify(html) {
     console.warn('[minify] html-minifier-next 压缩失败，返回原始 HTML:', e?.message || e)
     return html
   }
-}
-
-// 自定义分词：为纯中文连续片段额外生成 单字 + 双字 词，用于支持中文子串搜索 ("排序" 命中 "排序角色")
-function tokenizeCJK(text) {
-  if (!text) return []
-  const baseTokens = text.match(/[\p{L}\p{N}\p{M}\p{Pc}\-']+/gu) || []
-  const out = []
-  for (const tok of baseTokens) {
-    out.push(tok)
-    if (/^[\u4e00-\u9fff]+$/.test(tok) && tok.length > 1) {
-      const chars = Array.from(tok)
-      // 单字
-      for (const c of chars) out.push(c)
-      // 双字滑窗
-      for (let i = 0; i < chars.length - 1; i++) {
-        out.push(chars[i] + chars[i + 1])
-      }
-    }
-  }
-  // 去重
-  return Array.from(new Set(out))
 }
 
 function buildSearchIndex(modules) {
@@ -956,8 +922,10 @@ async function translateModulesForLocale(modules, dict, locale, options = {}) {
           }
         }
         if (missingFields.length) {
-          console.warn(`[i18n-missing][${locale}] ${m.id}: ` + missingFields.join(', '))
-        }
+            const msg = `[i18n-missing][${locale}] ${m.id}: ` + missingFields.join(', ')
+            console.warn(msg)
+            reportIssue('warn', msg, { moduleId: m.id, code: 'i18n-missing' })
+          }
       } catch (e) {
         console.warn('[i18n-missing] 检测失败', m.id, e?.message || e)
       }
@@ -1173,7 +1141,7 @@ async function render(modules, allTags) {
 
   // 搜索与文档列表将按语言分别生成
 
-  // render pages per locale
+  // render pages per locale（对每个 locale 复用翻译结果，避免重复计算）
   const dict = await loadI18n()
   const locales = Object.keys(dict)
   // 每种语言的 hreflang 标记（优先使用 i18n.meta.languageTag）
@@ -1181,12 +1149,18 @@ async function render(modules, allTags) {
     locales.map((loc) => [loc, (dict[loc]?.meta && dict[loc].meta.languageTag) || loc])
   )
   // 预先一次性收集所有语言的缺失翻译警告，确保之后所有页面的 buildIssuesSummary 一致
+  const translatedCache = new Map()
   if (isDev) {
     for (const loc of locales) {
       if (loc === 'en') continue
       try {
-        await translateModulesForLocale(modules, dict, loc, { skipMissingCheck: false })
-      } catch {}
+        const translated = await translateModulesForLocale(modules, dict, loc, {
+          skipMissingCheck: false,
+        })
+        translatedCache.set(loc, translated)
+      } catch {
+        // 失败时不缓存，后续渲染阶段仍可单独重试
+      }
     }
   }
 
@@ -1198,9 +1172,13 @@ async function render(modules, allTags) {
     const pageBase = (basePath ? basePath : '') + '/' + loc
     const $t = dict[loc]
     // 针对当前语言，生成脚本文本与元信息已翻译的模块数据（不影响其他语言）
-    const modulesForLoc = await translateModulesForLocale(modules, dict, loc, {
-      skipMissingCheck: true,
-    })
+    let modulesForLoc = translatedCache.get(loc)
+    if (!modulesForLoc) {
+      modulesForLoc = await translateModulesForLocale(modules, dict, loc, {
+        skipMissingCheck: true,
+      })
+      translatedCache.set(loc, modulesForLoc)
+    }
 
     // 每种语言目录写入搜索数据（使用本地化后的模块）
     const searchIndex = buildSearchIndex(modulesForLoc)
@@ -1373,32 +1351,21 @@ async function render(modules, allTags) {
 }
 
 // --- 开发模式下的构建问题聚合 ---
-// 收集的结构：{ type: 'error'|'warn', message: string }
+// 收集的结构：{ type: 'error'|'warn', message: string, moduleId?: string, code?: string }
 const collectedIssues = []
-if (isDev) {
-  const origWarn = console.warn
-  const origError = console.error
-  const push = (type, args) => {
-    try {
-      const msg = args
-        .map((a) =>
-          a instanceof Error
-            ? a.stack || a.message
-            : typeof a === 'object'
-              ? JSON.stringify(a)
-              : String(a)
-        )
-        .join(' ')
-      collectedIssues.push({ type, message: msg })
-    } catch {}
-  }
-  console.warn = (...args) => {
-    push('warn', args)
-    origWarn.apply(console, args)
-  }
-  console.error = (...args) => {
-    push('error', args)
-    origError.apply(console, args)
+
+function reportIssue(type, message, options = {}) {
+  if (!isDev) return
+  try {
+    const entry = {
+      type,
+      message: String(message || ''),
+    }
+    if (options.moduleId) entry.moduleId = options.moduleId
+    if (options.code) entry.code = options.code
+    collectedIssues.push(entry)
+  } catch {
+    // 忽略收集失败，避免影响主流程
   }
 }
 
@@ -1406,7 +1373,7 @@ if (isDev) {
   console.time('build')
   const { modules, errorsAll, allTags } = await loadModules()
   // 将 loadModules 的结构化错误加入 collectedIssues
-  for (const msg of errorsAll) collectedIssues.push({ type: 'error', message: msg })
+  for (const msg of errorsAll) reportIssue('error', msg)
   // 解析 !import 指令
   resolveImports(modules)
   // 在渲染前把 issues 注入 nunjucks 全局或通过参数传递
@@ -1443,7 +1410,7 @@ if (isDev) {
   }
   await render(modules, allTags)
   console.log(`Built ${modules.length} modules.`)
-  if (collectedIssues.length) {
+  if (isDev && collectedIssues.length) {
     const summary = collectedIssues.reduce(
       (acc, i) => {
         if (i.type === 'error') acc.errors++

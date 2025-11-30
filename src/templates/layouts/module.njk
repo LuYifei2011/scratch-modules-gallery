@@ -159,21 +159,6 @@
                         </div>
                     {% endif %}
                 {% endfor %}
-            {% else %}
-                <div class="sb-block">
-                    <div class="sb-actions">
-                        {% if IS_DEV %}
-                            <a href="/__dev/editor/?module={{ module.id }}&tab=scripts" class="sb-action sb-edit" title="编辑脚本" target="_blank">
-                                {{ icons.iconEdit() }}
-                            </a>
-                        {% endif %}
-                        <button class="sb-action sb-copy" type="button" aria-label="{{ t.module.copyScript }}" title="{{ t.module.copyScript }}">
-                            {{ icons.iconCopy() }}
-                            {{ icons.iconCheck() }}
-                        </button>
-                    </div>
-                    <pre class="scratchblocks">{{ module.script | escape }}</pre>
-                </div>
             {% endif %}
         </section>
         {% if module.variables.length %}

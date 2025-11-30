@@ -7,32 +7,10 @@
 import fs from 'fs-extra'
 import path from 'path'
 import * as scratchblocks from 'scratchblocks/syntax/index.js'
+import { loadScratchblocksLanguages } from './lib/scratch-utils.js'
 import fg from 'fast-glob'
 
 const root = path.resolve('.')
-
-// 同步加载所有 scratchblocks 语言文件
-function loadLanguages() {
-  const localesDir = path.join(root, 'node_modules', 'scratchblocks', 'locales')
-  try {
-    const files = fs.readdirSync(localesDir)
-    files.forEach((file) => {
-      if (file.endsWith('.json')) {
-        const fullPath = path.join(localesDir, file)
-        const langKey = path.basename(file, '.json').replace('-', '_').toLowerCase()
-        try {
-          const data = fs.readFileSync(fullPath, 'utf8')
-          const obj = JSON.parse(data)
-          scratchblocks.loadLanguages({ [langKey]: obj })
-        } catch (e) {
-          // 忽略加载失败
-        }
-      }
-    })
-  } catch (e) {
-    // 忽略目录读取失败
-  }
-}
 
 // 比较两个脚本 AST 是否等价
 function compareAsts(ast1, ast2) {
@@ -104,7 +82,7 @@ function formatScript(raw) {
 
 // 主程序
 async function main() {
-  loadLanguages()
+  loadScratchblocksLanguages()
 
   const modulesDir = path.join(root, 'content', 'modules')
 

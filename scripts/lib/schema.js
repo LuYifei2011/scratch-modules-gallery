@@ -86,24 +86,12 @@ export function buildModuleRecord(meta, extra) {
     name: nameNorm.base,
     description: descNorm.base,
     tags: Array.isArray(tagsNorm.base) ? tagsNorm.base : [],
-    // 保留 i18n 原始映射，供后续按语言本地化
-    name_i18n: nameNorm.map,
-    description_i18n: descNorm.map,
-    tags_i18n: tagsNorm.map,
     // 新增：脚本标题（英文）
     scriptTitles,
     contributors: parseContributors(contributors),
     // keywords field removed - rely on tags for searchability
-    // 兼容旧格式: script 保留第一段脚本内容
-    script:
-      extra.script ||
-      (Array.isArray(extra.scripts) && extra.scripts.length ? extra.scripts[0].content : ''),
-    // 新增: scripts 数组 [{ title, content }]
-    scripts: Array.isArray(extra.scripts)
-      ? extra.scripts
-      : extra.script
-        ? [{ title: '', content: extra.script }]
-        : [],
+    // 统一使用 scripts 数组 [{ id, title, content }]
+    scripts: Array.isArray(extra.scripts) ? extra.scripts : [],
     hasDemo: !!extra.demoFile,
     demoFile: extra.demoFile,
     // variables / references 已合并进 meta.json（不再单独文件）
