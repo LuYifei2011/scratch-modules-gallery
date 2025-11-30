@@ -10,11 +10,11 @@ set [Tween v] to (((Tween) * ((end :: custom-arg) - (start :: custom-arg))) + (s
 
 define circular ease in-out from (start :: custom-arg) to (end :: custom-arg) progress (progress% :: custom-arg)
 set [Tween v] to ((progress% :: custom-arg) / (100))
-if <(Tween) < (0.5)> then 
+if <(Tween) < (0.5)> then
   set [Tween v] to ((2) * (Tween))
   set [Tween v] to ((1) - ([sqrt v] of ((1) - ((Tween) * (Tween)))))
   set [Tween v] to ((Tween) / (2))
-else 
+else
   set [Tween v] to (((-2) * (Tween)) + (2))
   set [Tween v] to ([sqrt v] of ((1) - ((Tween) * (Tween))))
   set [Tween v] to (((Tween) + (1)) / (2))

@@ -1,5 +1,5 @@
 when flag clicked
-forever 
+forever
   set [timer v] to ((timer) + (0.1)) // Maybe it can be done without adding 0.1?
 end
 

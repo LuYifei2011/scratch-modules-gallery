@@ -1,5 +1,5 @@
 when flag clicked
-forever 
+forever
   delete all of [Z ORDER v]
   broadcast [Order Sprites v]
 end
