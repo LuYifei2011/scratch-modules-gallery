@@ -61,6 +61,8 @@ function formatScript(raw) {
   }
 
   try {
+    // 替换 CRLF 为 LF
+    raw = raw.replace(/\r\n?/g, '\n')
     // 第一次解析
     const doc = scratchblocks.parse(raw, { languages: allKeys })
     const formatted = doc.stringify()
