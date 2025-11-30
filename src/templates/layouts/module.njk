@@ -1,3 +1,4 @@
+{% import "partials/icons.njk" as icons %}
 {% extends "layouts/base.njk" %}
 {% block title %}
     {{ module.name }} - {{ config.siteName }}
@@ -16,7 +17,17 @@
 {% endblock %}
 {% block content %}
     <article class="module-detail">
-        <h1>{{ module.name }}</h1>
+        <div style="display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: var(--space-md);">
+            <h1>{{ module.name }}</h1>
+            {% if IS_DEV %}
+                <a
+                    href="/__dev/editor/?module={{ module.id }}"
+                    class="btn btn-sm btn-primary"
+                    style="height: 20px; display:inline-flex; align-items:center; gap:6px;">
+                    {{ icons.iconEdit(14, 14) }} {{ t.module.editModule }}
+                </a>
+            {% endif %}
+        </div>
         <p>{{ module.description }}</p>
         <p class="tags">
             {% for t in module.tags %}
@@ -38,19 +49,19 @@
         {% endif %}
         <section>
             <h2>{{ t.module.scripts }}</h2>
-            <div class="sb-style-switcher" style="margin:0 0 1rem;">
+            <div class="sb-style-switcher" style="margin-bottom: var(--space-lg);">
                 <label for="sb-style">{{ t.module.renderStyle }}
                 </label>
-                <select id="sb-style">
+                <select id="sb-style" class="select-inline">
                     <option value="scratch3" selected>Scratch 3</option>
                     <option value="scratch3-high-contrast">Scratch 3 ({{ t.module.highContrast }})</option>
                     <option value="scratch2">Scratch 2</option>
                 </select>
             </div>
-            <div class="sb-translate-switcher" style="margin:0 0 1rem;">
+            <div class="sb-translate-switcher" style="margin-bottom: var(--space-lg);">
                 <label for="sb-translate">{{ t.module.translateTo }}
                 </label>
-                <select id="sb-translate">
+                <select id="sb-translate" class="select-inline">
                     <option value="no-translate" selected>{{ t.module.noTranslate }}</option>
                     {% for lang in scratchblocksLanguages %}
                         <option value="{{ lang.code }}">{{ lang.name }}</option>
@@ -71,10 +82,21 @@
                                     (#{{ s.fromIndex }}){% endif %}
                             </summary>
                             <div class="sb-block">
-                                <button class="sb-copy" type="button" aria-label="{{ t.module.copyScript }}" title="{{ t.module.copyScript }}">
-                                    <svg class="icon icon-copy" viewBox="0 0 24 24" width="14" height="14" aria-hidden="true" focusable="false"><path fill="currentColor" d="M16 1H4c-1.1 0-2 .9-2 2v12h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"></path></svg>
-                                    <svg class="icon icon-check" viewBox="0 0 24 24" width="14" height="14" aria-hidden="true" focusable="false"><path fill="currentColor" d="M9 16.2l-3.5-3.5L4 14.2l5 5 11-11-1.4-1.4z"></path></svg>
-                                </button>
+                                <div class="sb-actions">
+                                    {% if IS_DEV %}
+                                        <a
+                                            href="/__dev/editor/?module={{ s.fromId }}&script={{ s.fromScriptId }}&tab=scripts"
+                                            class="sb-action sb-edit"
+                                            title="{{ t.module.editScript }}"
+                                            target="_blank">
+                                            {{ icons.iconEdit() }}
+                                        </a>
+                                    {% endif %}
+                                    <button class="sb-action sb-copy" type="button" aria-label="{{ t.module.copyScript }}" title="{{ t.module.copyScript }}">
+                                        {{ icons.iconCopy() }}
+                                        {{ icons.iconCheck() }}
+                                    </button>
+                                </div>
                                 <pre class="scratchblocks">{{ s.content | escape }}</pre>
                             </div>
                         </details>
@@ -96,20 +118,42 @@
                                                 (#{{ imp.fromIndex }}){% endif %}
                                         </summary>
                                         <div class="sb-block">
-                                            <button class="sb-copy" type="button" aria-label="{{ t.module.copyScript }}" title="{{ t.module.copyScript }}">
-                                                <svg class="icon icon-copy" viewBox="0 0 24 24" width="14" height="14" aria-hidden="true" focusable="false"><path fill="currentColor" d="M16 1H4c-1.1 0-2 .9-2 2v12h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"></path></svg>
-                                                <svg class="icon icon-check" viewBox="0 0 24 24" width="14" height="14" aria-hidden="true" focusable="false"><path fill="currentColor" d="M9 16.2l-3.5-3.5L4 14.2l5 5 11-11-1.4-1.4z"></path></svg>
-                                            </button>
+                                            <div class="sb-actions">
+                                                {% if IS_DEV %}
+                                                    <a
+                                                        href="/__dev/editor/?module={{ imp.fromId }}&script={{ imp.fromScriptId }}&tab=scripts"
+                                                        class="sb-action sb-edit"
+                                                        title="编辑脚本"
+                                                        target="_blank">
+                                                        {{ icons.iconEdit() }}
+                                                    </a>
+                                                {% endif %}
+                                                <button class="sb-action sb-copy" type="button" aria-label="{{ t.module.copyScript }}" title="{{ t.module.copyScript }}">
+                                                    {{ icons.iconCopy() }}
+                                                    {{ icons.iconCheck() }}
+                                                </button>
+                                            </div>
                                             <pre class="scratchblocks">{{ imp.content | escape }}</pre>
                                         </div>
                                     </details>
                                 {% endfor %}
                             {% endif %}
                             <div class="sb-block">
-                                <button class="sb-copy" type="button" aria-label="{{ t.module.copyScript }}" title="{{ t.module.copyScript }}">
-                                    <svg class="icon icon-copy" viewBox="0 0 24 24" width="14" height="14" aria-hidden="true" focusable="false"><path fill="currentColor" d="M16 1H4c-1.1 0-2 .9-2 2v12h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"></path></svg>
-                                    <svg class="icon icon-check" viewBox="0 0 24 24" width="14" height="14" aria-hidden="true" focusable="false"><path fill="currentColor" d="M9 16.2l-3.5-3.5L4 14.2l5 5 11-11-1.4-1.4z"></path></svg>
-                                </button>
+                                <div class="sb-actions">
+                                    {% if IS_DEV %}
+                                        <a
+                                            href="/__dev/editor/?module={{ module.id }}&script={{ s.id }}&tab=scripts"
+                                            class="sb-action sb-edit"
+                                            title="编辑脚本"
+                                            target="_blank">
+                                            {{ icons.iconEdit() }}
+                                        </a>
+                                    {% endif %}
+                                    <button class="sb-action sb-copy" type="button" aria-label="{{ t.module.copyScript }}" title="{{ t.module.copyScript }}">
+                                        {{ icons.iconCopy() }}
+                                        {{ icons.iconCheck() }}
+                                    </button>
+                                </div>
                                 <pre class="scratchblocks">{{ s.content | escape }}</pre>
                             </div>
                         </div>
@@ -117,10 +161,17 @@
                 {% endfor %}
             {% else %}
                 <div class="sb-block">
-                    <button class="sb-copy" type="button" aria-label="{{ t.module.copyScript }}" title="{{ t.module.copyScript }}">
-                        <svg class="icon icon-copy" viewBox="0 0 24 24" width="14" height="14" aria-hidden="true" focusable="false"><path fill="currentColor" d="M16 1H4c-1.1 0-2 .9-2 2v12h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"></path></svg>
-                        <svg class="icon icon-check" viewBox="0 0 24 24" width="14" height="14" aria-hidden="true" focusable="false"><path fill="currentColor" d="M9 16.2l-3.5-3.5L4 14.2l5 5 11-11-1.4-1.4z"></path></svg>
-                    </button>
+                    <div class="sb-actions">
+                        {% if IS_DEV %}
+                            <a href="/__dev/editor/?module={{ module.id }}&tab=scripts" class="sb-action sb-edit" title="编辑脚本" target="_blank">
+                                {{ icons.iconEdit() }}
+                            </a>
+                        {% endif %}
+                        <button class="sb-action sb-copy" type="button" aria-label="{{ t.module.copyScript }}" title="{{ t.module.copyScript }}">
+                            {{ icons.iconCopy() }}
+                            {{ icons.iconCheck() }}
+                        </button>
+                    </div>
                     <pre class="scratchblocks">{{ module.script | escape }}</pre>
                 </div>
             {% endif %}
@@ -158,15 +209,13 @@
         {% endif %}
         {% if module.hasDemo %}
             <section>
-                <div style="display:flex;align-items:center;gap:1em;margin-bottom:0.83rem;margin-top:0.83rem;">
+                <div style="display:flex;align-items:center;gap:var(--space-lg);margin-bottom:var(--space-lg);">
                     <h2 style="margin:0;">{{ t.module.demo }}</h2>
                     <a
-                        class="tw-open-btn"
+                        class="btn btn-primary"
                         href="https://turbowarp.org/editor?project_url={{ (config.baseUrl + '/modules/' + module.slug + '/demo.sb3') | urlencode }}"
                         target="_blank"
-                        rel="noopener"
-                        style="display:inline-block;padding:0.5em
-                            1em;background:#4c97ff;color:#fff;border-radius:4px;text-decoration:none;font-weight:bold;font-size:1rem;">
+                        rel="noopener">
                         {{ t.module.openInTW }}</a>
                 </div>
                 <iframe

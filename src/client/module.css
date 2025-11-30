@@ -2,51 +2,56 @@
 pre.scratchblocks {
   background: var(--panel);
   border: 1px solid var(--panel-border-strong);
-  padding: 0.75rem;
-  border-radius: 8px;
+  padding: var(--space-md);
+  border-radius: var(--radius-lg);
   overflow: auto;
 }
 /* Copy button for script text */
 .sb-block {
   position: relative;
 }
-.sb-copy {
+.sb-actions {
   position: absolute;
-  top: 8px;
-  right: 8px;
+  top: var(--space-sm);
+  right: var(--space-sm);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+.sb-copy {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   width: 36px;
   height: 36px;
-  padding: 6px;
+  padding: 0;
   background: var(--panel);
   color: var(--text);
   border: 1px solid var(--panel-border-strong);
-  border-radius: 8px;
+  border-radius: var(--radius-lg);
   cursor: pointer;
   transition:
-    transform 120ms ease,
-    box-shadow 120ms ease,
-    background 160ms ease,
-    color 160ms ease;
+    transform var(--transition-fast),
+    box-shadow var(--transition-fast),
+    background var(--transition-base),
+    color var(--transition-base);
 }
 .sb-copy:hover {
-  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.08);
+  box-shadow: var(--shadow-md);
 }
 .sb-copy:active {
   transform: scale(0.98);
 }
 .sb-copy .icon {
-  width: 14px;
-  height: 14px;
+  width: 16px;
+  height: 16px;
   display: block;
 }
 .sb-copy .icon-check {
   display: none;
 }
 .sb-copy.copied {
-  background: #2ecc71;
+  background: var(--color-success);
   color: #fff;
   border-color: #28b463;
 }
@@ -57,9 +62,9 @@ pre.scratchblocks {
   display: block;
 }
 .sb-copy.failed {
-  background: #ff6b6b;
+  background: var(--color-error);
   color: #fff;
-  border-color: #e94b4b;
+  border-color: #c0392b;
 }
 .sb-copy.failed .icon-copy {
   display: none;
@@ -67,23 +72,48 @@ pre.scratchblocks {
 .sb-copy.failed .icon-check {
   display: block;
 }
+.sb-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  background: var(--panel);
+  color: var(--text);
+  border: 1px solid var(--panel-border-strong);
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  text-decoration: none;
+  transition:
+    transform var(--transition-fast),
+    box-shadow var(--transition-fast),
+    background var(--transition-base),
+    color var(--transition-base);
+}
+.sb-action:hover {
+  box-shadow: var(--shadow-md);
+}
+.sb-action:active {
+  transform: scale(0.98);
+}
 .script-block {
-  margin-bottom: 1.25rem;
+  margin-bottom: var(--space-xl);
 }
 .script-block:last-child {
   margin-bottom: 0;
 }
 .script-title {
-  margin: 0.2rem 0 0.4rem;
-  font-size: 1rem;
-  line-height: 1.2;
+  margin: var(--space-xs) 0 var(--space-sm);
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-medium);
+  line-height: var(--line-height-tight);
 }
 details.imported-script {
-  margin: 1rem 0;
+  margin: var(--space-lg) 0;
   border: 1px solid var(--panel-border);
-  border-radius: 6px;
+  border-radius: var(--radius-md);
   background: var(--panel);
-  padding: 0.5rem 0.75rem;
+  padding: var(--space-sm) var(--space-md);
 }
 details.imported-script[open] {
   background: var(--panel);
@@ -91,12 +121,12 @@ details.imported-script[open] {
 details.imported-script summary {
   cursor: pointer;
   outline: none;
-  font-size: 0.85rem;
-  font-weight: 600;
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold);
   color: var(--accent);
   display: flex;
   flex-wrap: wrap;
-  gap: 0.25rem;
+  gap: var(--space-xs);
   align-items: center;
 }
 details.imported-script summary::-webkit-details-marker {
@@ -108,24 +138,45 @@ details.imported-script summary:focus {
 }
 details.imported-script a {
   color: var(--accent);
+  transition: color var(--transition-fast);
 }
 details.imported-script a:hover {
   color: var(--accent-hover);
 }
+/* 保证脚本块中的 action 按钮不继承 imported 区域的蓝色链接样式 */
+details.imported-script .sb-actions .sb-action {
+  color: var(--text);
+}
+details.imported-script .sb-actions .sb-action:hover {
+  color: var(--text);
+}
 details.imported-script pre {
-  margin-top: 0.5rem;
+  margin-top: var(--space-sm);
 }
 .variables {
   width: 100%;
   border-collapse: collapse;
-  font-size: 0.85rem;
+  font-size: var(--font-size-base);
 }
 .variables th,
 .variables td {
   border: 1px solid var(--panel-border);
-  padding: 4px 6px;
+  padding: var(--space-xs) var(--space-sm);
+  text-align: left;
+}
+.variables th {
+  background: var(--color-bg-primary);
+  font-weight: var(--font-weight-semibold);
 }
 iframe {
   max-width: 100%;
   border: none;
+}
+
+.sb-edit {
+  right: calc(var(--space-sm) + 36px + var(--space-sm));
+}
+.sb-edit .icon {
+  width: 16px;
+  height: 16px;
 }

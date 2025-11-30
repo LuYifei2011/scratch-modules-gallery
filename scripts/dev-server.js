@@ -4,15 +4,18 @@ import fs from 'fs'
 import path from 'path'
 import url from 'url'
 import { spawn } from 'child_process'
+import * as editorApi from './lib/editor-api.js'
 
 // 轻量开发服务器，支持：
 // - 基于 chokidar 监听内容与模板变更 -> 自动执行构建
 // - SSE 自动刷新浏览器
 // - 覆盖 BASE_URL 与 IS_DEV 环境变量
+// - 编辑器 API 端点（仅开发模式）
 
 const PORT = Number(process.env.PORT || 8800)
 const HOST = process.env.HOST || 'localhost'
 const DIST_DIR = path.resolve('dist')
+const NODE_MODULES_DIR = path.resolve('node_modules')
 
 // --- HTTPS 配置 ---
 const HTTPS_ENABLED =
@@ -122,6 +125,9 @@ function runBuild(reason = 'changed') {
     return
   }
   building = true
+  // 清空文件缓存，避免构建后返回过期数据
+  // TODO: 在每次构建时清除整个文件缓存可能会影响大型项目的性能。考虑根据更改的文件实施选择性缓存失效，而不是清除所有缓存文件。
+  fileCache.clear()
   lastBuildStart = Date.now()
   broadcast({ type: 'building', reason, time: lastBuildStart })
   const env = { ...process.env, IS_DEV: '1', BASE_URL: BASE_URL }
@@ -174,6 +180,122 @@ watcher.on('all', (event, file) => {
 const requestHandler = (req, res) => {
   const parsedUrl = url.parse(req.url)
   const pathnameRaw = decodeURIComponent(parsedUrl.pathname || '/')
+  const method = req.method
+
+  // ==================== API 路由 ====================
+  if (pathnameRaw.startsWith('/api/')) {
+    // 解析路由参数
+    const moduleMatch = pathnameRaw.match(/^\/api\/modules\/([^/]+)/)
+    const scriptMatch = pathnameRaw.match(/^\/api\/modules\/([^/]+)\/scripts\/([^/]+)/)
+    const i18nMatch = pathnameRaw.match(/^\/api\/modules\/([^/]+)\/i18n\/([^/]+)/)
+    const assetMatch = pathnameRaw.match(/^\/api\/modules\/([^/]+)\/assets\/([^/]+)/)
+
+    // 构建状态 API
+    if (method === 'GET' && pathnameRaw === '/api/build/status') {
+      return editorApi.getBuildStatus(req, res, { building, pending, lastBuildStart })
+    }
+
+    // 模块列表 API
+    if (method === 'GET' && pathnameRaw === '/api/modules') {
+      return editorApi.getModuleList(req, res)
+    }
+
+    if (method === 'POST' && pathnameRaw === '/api/modules') {
+      return editorApi.createModule(req, res)
+    }
+
+    // 单个模块 API
+    if (moduleMatch) {
+      const moduleId = moduleMatch[1]
+
+      // 脚本 API
+      if (scriptMatch) {
+        const scriptFile = decodeURIComponent(scriptMatch[2])
+        if (method === 'GET' && pathnameRaw === `/api/modules/${moduleId}/scripts`) {
+          return editorApi.getScripts(req, res, moduleId)
+        }
+        if (method === 'PUT') {
+          return editorApi.updateScript(req, res, moduleId, scriptFile)
+        }
+        if (method === 'DELETE') {
+          return editorApi.deleteScript(req, res, moduleId, scriptFile)
+        }
+      }
+
+      // 脚本列表和创建
+      if (pathnameRaw === `/api/modules/${moduleId}/scripts`) {
+        if (method === 'GET') {
+          return editorApi.getScripts(req, res, moduleId)
+        }
+        if (method === 'POST') {
+          return editorApi.createScript(req, res, moduleId)
+        }
+      }
+
+      // i18n API
+      if (i18nMatch) {
+        const locale = i18nMatch[2]
+        if (method === 'GET') {
+          return editorApi.getI18n(req, res, moduleId, locale)
+        }
+        if (method === 'PUT') {
+          return editorApi.updateI18n(req, res, moduleId, locale)
+        }
+        if (method === 'DELETE') {
+          return editorApi.deleteI18n(req, res, moduleId, locale)
+        }
+      }
+
+      // Demo API
+      if (pathnameRaw === `/api/modules/${moduleId}/demo`) {
+        if (method === 'POST') {
+          return editorApi.uploadDemo(req, res, moduleId)
+        }
+        if (method === 'DELETE') {
+          return editorApi.deleteDemo(req, res, moduleId)
+        }
+      }
+
+      // Assets API
+      if (pathnameRaw === `/api/modules/${moduleId}/assets`) {
+        if (method === 'POST') {
+          return editorApi.uploadAsset(req, res, moduleId)
+        }
+      }
+
+      if (assetMatch) {
+        const assetFile = decodeURIComponent(assetMatch[2])
+        if (method === 'DELETE') {
+          return editorApi.deleteAsset(req, res, moduleId, assetFile)
+        }
+      }
+
+      // Meta API
+      if (pathnameRaw === `/api/modules/${moduleId}/meta`) {
+        if (method === 'PUT') {
+          return editorApi.updateModuleMeta(req, res, moduleId)
+        }
+      }
+
+      // 模块详情和删除
+      if (pathnameRaw === `/api/modules/${moduleId}`) {
+        if (method === 'GET') {
+          return editorApi.getModule(req, res, moduleId)
+        }
+        if (method === 'DELETE') {
+          return editorApi.deleteModule(req, res, moduleId)
+        }
+      }
+    }
+
+    // 未匹配的 API 路由
+    res.statusCode = 404
+    res.setHeader('Content-Type', 'application/json')
+    res.end(JSON.stringify({ error: 'API endpoint not found' }))
+    return
+  }
+
+  // ==================== 静态文件服务 ====================
 
   // SSE 端点
   if (pathnameRaw === '/__dev/sse') {
@@ -200,7 +322,16 @@ const requestHandler = (req, res) => {
 
   let pathname = pathnameRaw
   if (pathname === '/') pathname = '/index.html'
-  const requestedPath = path.join(DIST_DIR, pathname)
+
+  // node_modules 静态文件服务（用于开发时加载本地包）
+  if (pathnameRaw.startsWith('/node_modules/')) {
+    const modulePath = pathnameRaw.replace('/node_modules/', '')
+    pathname = modulePath
+  }
+
+  const requestedPath = pathnameRaw.startsWith('/node_modules/')
+    ? path.join(NODE_MODULES_DIR, pathname)
+    : path.join(DIST_DIR, pathname)
 
   const sendFile = (absPath) => {
     fs.stat(absPath, (err, stat) => {
@@ -249,9 +380,13 @@ const requestHandler = (req, res) => {
           }
           if (ext === '.html') {
             let html = buf.toString('utf8')
-            const inject = `\n<script src=\"/__dev/client.js\"></script>\n`
-            if (html.includes('</body>')) html = html.replace('</body>', `${inject}</body>`)
-            else html += inject
+            // 编辑器页面不注入自动刷新脚本（已有自己的 SSE 监听）
+            const isEditorPage = pathname.includes('__dev/editor')
+            if (!isEditorPage) {
+              const inject = `\n<script src=\"/__dev/client.js\"></script>\n`
+              if (html.includes('</body>')) html = html.replace('</body>', `${inject}</body>`)
+              else html += inject
+            }
             setCachedFile(absPath, stat, { data: html, isHTML: true })
             res.end(html)
             return
@@ -271,9 +406,13 @@ const requestHandler = (req, res) => {
             return
           }
           let html = buf.toString('utf8')
-          const inject = `\n<script src=\"/__dev/client.js\"></script>\n`
-          if (html.includes('</body>')) html = html.replace('</body>', `${inject}</body>`)
-          else html += inject
+          // 编辑器页面不注入自动刷新脚本（已有自己的 SSE 监听）
+          const isEditorPage = pathname.includes('__dev/editor')
+          if (!isEditorPage) {
+            const inject = `\n<script src=\"/__dev/client.js\"></script>\n`
+            if (html.includes('</body>')) html = html.replace('</body>', `${inject}</body>`)
+            else html += inject
+          }
           res.end(html)
         })
         return

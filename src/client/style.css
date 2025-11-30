@@ -1,33 +1,141 @@
-/* 主题变量 */
+/* ===== 设计令牌系统 (Design Tokens) ===== */
 :root {
-  --bg: #f7f9fb;
-  --text: #222;
-  --panel: #fff;
-  --panel-border: #e3e7ee;
-  --panel-border-strong: #dfe2e7;
-  --accent: #1747a6;
-  --accent-hover: #0d3180;
-  --tag-bg: #e1ecf4;
-  --tag-text: #0366d6;
-  --badge-bg: #ffb347;
-  --badge-text: #222;
-  --shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
-  color-scheme: light dark; /* hint 浏览器内置组件配色 */
+  /* 基础颜色 */
+  --color-bg-primary: #f7f9fb;
+  --color-bg-secondary: #fff;
+  --color-text-primary: #222;
+  --color-text-secondary: #666;
+  --color-text-tertiary: #999;
+
+  /* 语义颜色 */
+  --color-brand: #1747a6;
+  --color-brand-hover: #0d3180;
+  --color-primary: #4c97ff; /* Scratch 蓝 - 主要操作色 */
+  --color-success: #2ecc71;
+  --color-warning: #d8b200;
+  --color-error: #e33;
+
+  /* 边框 */
+  --color-border-light: #e3e7ee;
+  --color-border-medium: #dfe2e7;
+  --color-border-dark: #ccc;
+
+  /* 组件颜色 */
+  --color-tag-bg: #e1ecf4;
+  --color-tag-text: #0366d6;
+  --color-badge-bg: #ffb347;
+  --color-badge-text: #222;
+  --color-github: #24292f;
+
+  /* 排版系统 */
+  --font-family-base:
+    system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial,
+    sans-serif;
+  --font-family-mono: 'Consolas', 'Monaco', 'Courier New', monospace;
+
+  --font-size-xs: 0.65rem; /* 10.4px */
+  --font-size-sm: 0.75rem; /* 12px */
+  --font-size-base: 0.875rem; /* 14px */
+  --font-size-md: 1rem; /* 16px */
+  --font-size-lg: 1.1rem; /* 17.6px */
+  --font-size-xl: 1.25rem; /* 20px */
+
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+
+  --line-height-tight: 1.2;
+  --line-height-normal: 1.5;
+  --line-height-relaxed: 1.75;
+
+  /* 间距系统 */
+  --space-xs: 0.25rem; /* 4px */
+  --space-sm: 0.5rem; /* 8px */
+  --space-md: 0.75rem; /* 12px */
+  --space-lg: 1rem; /* 16px */
+  --space-xl: 1.5rem; /* 24px */
+  --space-2xl: 2rem; /* 32px */
+  --space-3xl: 3rem; /* 48px */
+
+  /* 圆角系统 */
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-xl: 12px;
+
+  /* 阴影系统 */
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.08);
+  --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 4px 20px rgba(0, 0, 0, 0.15);
+
+  /* 过渡动画 */
+  --transition-fast: 120ms ease;
+  --transition-base: 160ms ease;
+  --transition-slow: 240ms ease;
+
+  /* 层级系统 */
+  --z-dropdown: 100;
+  --z-sticky: 100;
+  --z-modal-backdrop: 1000;
+  --z-modal: 2000;
+
+  /* 响应式断点 (用于文档，CSS变量不能直接用于media query) */
+  --breakpoint-sm: 520px;
+  --breakpoint-md: 768px;
+  --breakpoint-lg: 960px;
+  --breakpoint-xl: 1200px;
+
+  /* TODO 向后兼容的别名 考虑移除？ */
+  --bg: var(--color-bg-primary);
+  --text: var(--color-text-primary);
+  --panel: var(--color-bg-secondary);
+  --panel-border: var(--color-border-light);
+  --panel-border-strong: var(--color-border-medium);
+  --accent: var(--color-brand);
+  --accent-hover: var(--color-brand-hover);
+  --tag-bg: var(--color-tag-bg);
+  --tag-text: var(--color-tag-text);
+  --badge-bg: var(--color-badge-bg);
+  --badge-text: var(--color-badge-text);
+  --shadow: var(--shadow-sm);
+
+  color-scheme: light dark;
 }
+
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg: #0f1722;
-    --text: #e2e8f0;
-    --panel: #182232;
-    --panel-border: #263244;
-    --panel-border-strong: #324156;
-    --accent: #4da3ff;
-    --accent-hover: #79bbff;
-    --tag-bg: #24364b;
-    --tag-text: #8bc3ff;
-    --badge-bg: #ffb347;
-    --badge-text: #222;
-    --shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+    /* 基础颜色 - 深色模式 */
+    --color-bg-primary: #0f1722;
+    --color-bg-secondary: #182232;
+    --color-text-primary: #e2e8f0;
+    --color-text-secondary: #9ca3af;
+    --color-text-tertiary: #6b7280;
+
+    /* 语义颜色 - 深色模式 */
+    --color-brand: #4da3ff;
+    --color-brand-hover: #79bbff;
+    --color-primary: #4c97ff;
+    --color-success: #2ecc71;
+    --color-warning: #ffd54a;
+    --color-error: #ff6666;
+
+    /* 边框 - 深色模式 */
+    --color-border-light: #263244;
+    --color-border-medium: #324156;
+    --color-border-dark: #4a5568;
+
+    /* 组件颜色 - 深色模式 */
+    --color-tag-bg: #24364b;
+    --color-tag-text: #8bc3ff;
+    --color-badge-bg: #ffb347;
+    --color-badge-text: #222;
+    --color-github: #1b1f23;
+
+    /* 阴影 - 深色模式 */
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.4);
+    --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.3);
+    --shadow-lg: 0 4px 20px rgba(0, 0, 0, 0.5);
   }
   img,
   video,
@@ -36,31 +144,33 @@
   } /* 避免 DarkReader 再次处理，配合 lock */
 }
 body {
-  font-family: system-ui, Arial, sans-serif;
+  font-family: var(--font-family-base);
   margin: 0;
   padding: 0;
   background: var(--bg);
   color: var(--text);
+  line-height: var(--line-height-normal);
 }
 header {
   background: var(--panel);
-  padding: 1rem 1.5rem;
+  padding: var(--space-lg) var(--space-xl);
   box-shadow: var(--shadow);
   position: sticky;
   top: 0;
-  z-index: 100;
+  z-index: var(--z-sticky);
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: var(--space-md);
 }
 footer {
   background: var(--panel);
-  padding: 1rem 1.5rem;
+  padding: var(--space-lg) var(--space-xl);
   box-shadow: var(--shadow);
   position: relative;
 }
 header h1 {
-  font-size: 1.25rem;
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-bold);
   margin: 0;
   display: inline-block;
 }
@@ -70,10 +180,10 @@ header a {
 }
 /* 当站点标题在模块页面降级为 .site-title 时，保持与 h1 相同的外观 */
 .site-title {
-  font-size: 1.25rem;
+  font-size: var(--font-size-xl);
   margin: 0;
   display: inline-block;
-  font-weight: 700;
+  font-weight: var(--font-weight-bold);
 }
 /* Ensure the link inside site-title matches header h1 link styling */
 .site-title a {
@@ -84,7 +194,7 @@ header a {
 /* 把操作按钮放在行尾，这样标题与计数可以在同一行 */
 header .top-actions {
   display: flex;
-  gap: 0.6rem;
+  gap: var(--space-sm);
   align-items: center;
   margin-left: auto;
   position: static;
@@ -93,15 +203,16 @@ header .top-actions {
 .gh-btn {
   display: inline-flex;
   align-items: center;
-  gap: 0.35rem;
-  font-size: 0.75rem;
-  background: #24292f;
+  gap: var(--space-xs);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  background: var(--color-github);
   color: #fff;
-  padding: 0.38rem 0.65rem;
-  border-radius: 6px;
+  padding: var(--space-sm) var(--space-md);
+  border-radius: var(--radius-md);
   text-decoration: none;
   line-height: 1;
-  transition: background 0.15s ease;
+  transition: background var(--transition-base);
 }
 .gh-btn:hover,
 .gh-btn:focus {
@@ -120,45 +231,56 @@ header .top-actions {
 }
 main {
   max-width: 960px;
-  margin: 1.5rem auto;
-  padding: 0 1rem;
+  margin: var(--space-xl) auto;
+  padding: 0 var(--space-lg);
 }
 /* 站点模块计数，显示在标题旁边 */
 .site-module-count {
   margin: 0;
-  font-size: 0.95rem;
-  color: var(--text);
-  opacity: 0.85;
+  font-size: var(--font-size-base);
+  color: var(--color-text-secondary);
 }
 input#search {
   display: block;
   min-width: 200px;
-  margin: 0 2rem 1rem 2rem;
-  padding: 0.6rem 0.75rem;
-  font-size: 1rem;
+  margin: 0 var(--space-2xl) var(--space-lg) var(--space-2xl);
+  padding: var(--space-sm) var(--space-md);
+  font-size: var(--font-size-md);
+  font-family: var(--font-family-base);
   border: 1px solid var(--panel-border);
   background: var(--panel);
   color: var(--text);
-  border-radius: 6px;
+  border-radius: var(--radius-md);
+  transition:
+    border-color var(--transition-base),
+    outline var(--transition-fast);
 }
 input#search:focus {
   outline: 2px solid var(--accent);
   outline-offset: 1px;
+  border-color: var(--accent);
 }
 /* 响应式网格：自动填充列，卡片最小宽 240px，空间足够时均匀拉伸 */
 .module-list {
   display: grid;
-  gap: 1rem;
+  gap: var(--space-lg);
   grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
   align-items: stretch;
 }
 .module-item {
   background: var(--panel);
-  padding: 1rem 1.1rem 1.1rem;
-  border-radius: 8px;
+  padding: var(--space-lg) var(--space-lg) var(--space-lg);
+  border-radius: var(--radius-lg);
   border: 1px solid var(--panel-border);
   display: flex;
   flex-direction: column;
+  transition:
+    border-color var(--transition-base),
+    box-shadow var(--transition-base);
+}
+.module-item:hover {
+  border-color: var(--color-border-medium);
+  box-shadow: var(--shadow-md);
 }
 .module-item p {
   margin-top: 0;
@@ -177,46 +299,47 @@ input#search:focus {
   }
 }
 .module-item h2 {
-  margin: 0 0 0.5rem;
-  font-size: 1.1rem;
+  margin: 0 0 var(--space-sm);
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
 }
 .badge {
   background: var(--badge-bg);
   color: var(--badge-text);
-  font-size: 0.65rem;
-  padding: 2px 6px;
-  border-radius: 4px;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  padding: 2px var(--space-sm);
+  border-radius: var(--radius-sm);
   vertical-align: middle;
 }
 .tags {
-  font-size: 0.75rem;
+  font-size: var(--font-size-sm);
 }
 .tag {
   display: inline-block;
   background: var(--tag-bg);
   color: var(--tag-text);
-  padding: 2px 6px;
-  margin: 2px 4px 2px 0;
-  border-radius: 4px;
+  padding: 2px var(--space-sm);
+  margin: 2px var(--space-xs) 2px 0;
+  border-radius: var(--radius-sm);
+  transition: background var(--transition-fast);
+}
+.tag:hover {
+  opacity: 0.8;
 }
 .module-detail h1 {
   margin-top: 0;
 }
 .contributors .contributor {
-  margin-right: 0.5rem;
+  margin-right: var(--space-sm);
 }
 footer {
-  font-size: 0.75rem;
+  font-size: var(--font-size-sm);
   text-align: center;
+  color: var(--color-text-secondary);
 }
 /* GitHub 按钮在深色模式中保持原色，仅微调背景 */
-.gh-btn {
-  background: #24292f;
-}
 @media (prefers-color-scheme: dark) {
-  .gh-btn {
-    background: #1b1f23;
-  }
   .gh-btn:hover,
   .gh-btn:focus {
     background: #040506;

@@ -1,0 +1,398 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>模块编辑器 - Scratch Modules Gallery</title>
+    <link rel="stylesheet" href="/__dev/editor/editor.css" />
+    <style>
+      .script-preview .scratchblocks {
+        margin: 10px 0;
+      }
+    </style>
+    <!-- Import map for CodeMirror -->
+    <script type="importmap">
+      {
+        "imports": {
+          "@codemirror/state": "/node_modules/@codemirror/state/dist/index.js",
+          "@codemirror/view": "/node_modules/@codemirror/view/dist/index.js",
+          "@codemirror/commands": "/node_modules/@codemirror/commands/dist/index.js",
+          "@codemirror/language": "/node_modules/@codemirror/language/dist/index.js",
+          "@codemirror/search": "/node_modules/@codemirror/search/dist/index.js",
+          "@codemirror/autocomplete": "/node_modules/@codemirror/autocomplete/dist/index.js",
+          "@codemirror/lint": "/node_modules/@codemirror/lint/dist/index.js",
+          "@codemirror/lang-javascript": "/node_modules/@codemirror/lang-javascript/dist/index.js",
+          "@lezer/highlight": "/node_modules/@lezer/highlight/dist/index.js",
+          "@lezer/common": "/node_modules/@lezer/common/dist/index.js",
+          "@lezer/lr": "/node_modules/@lezer/lr/dist/index.js",
+          "style-mod": "/node_modules/style-mod/src/style-mod.js",
+          "w3c-keyname": "/node_modules/w3c-keyname/index.js",
+          "crelt": "/node_modules/crelt/index.js",
+          "@marijn/find-cluster-break": "/node_modules/@marijn/find-cluster-break/src/index.js"
+        }
+      }
+    </script>
+  </head>
+  <body>
+    <div id="app">
+      <!-- 侧边栏 -->
+      <aside id="sidebar">
+        <div class="sidebar-header">
+          <div class="header-top">
+            <h1>模块编辑器</h1>
+            <button id="sidebar-toggle" class="btn-icon" title="切换侧边栏">
+              <svg
+                viewBox="0 0 24 24"
+                width="24"
+                height="24"
+                stroke="currentColor"
+                stroke-width="2"
+                fill="none"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <line x1="3" y1="12" x2="21" y2="12"></line>
+                <line x1="3" y1="6" x2="21" y2="6"></line>
+                <line x1="3" y1="18" x2="21" y2="18"></line>
+              </svg>
+            </button>
+          </div>
+          <a href="/" target="_blank" class="btn-link">查看网站</a>
+        </div>
+
+        <div class="search-box">
+          <input type="search" id="module-search" placeholder="搜索模块..." />
+        </div>
+
+        <ul id="module-list" class="module-list">
+          <!-- 动态生成 -->
+        </ul>
+
+        <div class="sidebar-footer">
+          <button id="create-module-btn" class="btn btn-primary">+ 新建模块</button>
+        </div>
+      </aside>
+
+      <!-- 主编辑区 -->
+      <main id="editor-main">
+        <div id="editor-empty" class="empty-state">
+          <p>👈 选择一个模块开始编辑，或创建新模块</p>
+        </div>
+
+        <div id="editor-content" style="display: none">
+          <!-- 标签页导航 -->
+          <nav id="tabs" class="tabs">
+            <button data-tab="meta" class="tab-btn active">元信息</button>
+            <button data-tab="scripts" class="tab-btn">脚本</button>
+            <button data-tab="i18n" class="tab-btn">翻译</button>
+            <button data-tab="assets" class="tab-btn">资源</button>
+            <button id="view-module-btn" class="btn" style="margin-left: auto; background: none">
+              查看模块页
+            </button>
+          </nav>
+
+          <!-- 标签页内容 -->
+          <div id="tab-content" class="tab-content">
+            <!-- Meta 标签页 -->
+            <div id="tab-meta" class="tab-panel active">
+              <form id="meta-form">
+                <div class="form-group">
+                  <label for="meta-id">模块 ID *</label>
+                  <input type="text" id="meta-id" readonly class="form-control" />
+                  <small>模块的唯一标识符，创建后不可修改</small>
+                </div>
+
+                <div class="form-group">
+                  <label for="meta-name">名称 *</label>
+                  <input
+                    type="text"
+                    id="meta-name"
+                    required
+                    class="form-control"
+                    placeholder="例如：FPS"
+                  />
+                </div>
+
+                <div class="form-group">
+                  <label for="meta-description">描述 *</label>
+                  <textarea
+                    id="meta-description"
+                    required
+                    class="form-control"
+                    rows="3"
+                    placeholder="简短描述这个模块的功能"
+                  ></textarea>
+                </div>
+
+                <div class="form-group">
+                  <label for="meta-tags">标签</label>
+                  <input
+                    type="text"
+                    id="meta-tags"
+                    class="form-control"
+                    placeholder="用逗号分隔，例如：performance, utility"
+                  />
+                  <small>用逗号分隔多个标签</small>
+                </div>
+
+                <div class="form-group">
+                  <label for="meta-contributors">贡献者</label>
+                  <input
+                    type="text"
+                    id="meta-contributors"
+                    class="form-control"
+                    placeholder="例如：gh/username, sc/username, 名字"
+                  />
+                  <small>格式：gh/GitHub用户名, sc/Scratch用户名, 或直接输入名字</small>
+                </div>
+
+                <div class="form-actions">
+                  <button type="submit" class="btn btn-primary">保存</button>
+                  <button type="button" id="delete-module-btn" class="btn btn-danger">
+                    删除模块
+                  </button>
+                </div>
+              </form>
+            </div>
+
+            <!-- Scripts 标签页 -->
+            <div
+              id="tab-scripts"
+              class="tab-panel"
+              style="display: none; padding: 0; overflow: hidden"
+            >
+              <div class="scripts-container">
+                <div class="scripts-sidebar" id="scripts-sidebar">
+                  <div class="scripts-sidebar-header">
+                    <button
+                      id="add-script-btn"
+                      class="btn btn-primary btn-icon-text"
+                      title="添加脚本"
+                    >
+                      <span class="icon">+</span> <span class="text">添加脚本</span>
+                    </button>
+                    <button id="toggle-scripts-sidebar" class="btn-icon" title="折叠/展开">
+                      <svg
+                        viewBox="0 0 24 24"
+                        width="18"
+                        height="18"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        fill="none"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                      >
+                        <line x1="3" y1="12" x2="21" y2="12"></line>
+                        <line x1="3" y1="6" x2="21" y2="6"></line>
+                        <line x1="3" y1="18" x2="21" y2="18"></line>
+                      </svg>
+                    </button>
+                  </div>
+                  <div class="scripts-list">
+                    <ul id="script-files-list">
+                      <!-- 动态生成 -->
+                    </ul>
+                  </div>
+                </div>
+
+                <div class="script-editor">
+                  <div id="script-editor-empty" class="empty-state">
+                    <p>选择一个脚本文件开始编辑</p>
+                  </div>
+
+                  <div id="script-editor-content" style="display: none">
+                    <div class="script-editor-header">
+                      <div style="display: flex; gap: 10px; flex: 1">
+                        <input
+                          type="number"
+                          id="script-order"
+                          class="form-control"
+                          placeholder="顺序"
+                          min="1"
+                          style="width: 100px"
+                        />
+                        <input
+                          type="text"
+                          id="script-filename"
+                          class="form-control"
+                          placeholder="脚本 ID"
+                          style="flex: 1"
+                        />
+                      </div>
+                      <div class="script-actions">
+                        <button
+                          id="toggle-layout-btn"
+                          class="btn btn-sm btn-secondary"
+                          title="切换布局"
+                        >
+                          <svg
+                            viewBox="0 0 24 24"
+                            width="16"
+                            height="16"
+                            stroke="currentColor"
+                            stroke-width="2"
+                            fill="none"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                          >
+                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                            <line x1="3" y1="12" x2="21" y2="12"></line>
+                          </svg>
+                        </button>
+                        <button id="save-script-btn" class="btn btn-sm btn-primary">保存</button>
+                        <button id="delete-script-btn" class="btn btn-sm btn-danger">删除</button>
+                      </div>
+                    </div>
+
+                    <div id="script-editor-body" class="layout-horizontal">
+                      <div id="script-content-wrapper" class="script-editor-wrapper"></div>
+                      <div id="editor-splitter" class="splitter"></div>
+                      <div id="script-preview-pane" class="script-preview">
+                        <div id="script-preview-content"></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- i18n 标签页 -->
+            <div id="tab-i18n" class="tab-panel" style="display: none">
+              <div class="i18n-toolbar">
+                <select id="i18n-locale-select" class="form-control">
+                  <option value="">选择语言...</option>
+                  <option value="en">English (en)</option>
+                  <option value="zh-cn">简体中文 (zh-cn)</option>
+                  <option value="zh-tw">繁體中文 (zh-tw)</option>
+                </select>
+                <button id="save-i18n-btn" class="btn btn-primary" disabled>保存翻译</button>
+                <button id="delete-i18n-btn" class="btn btn-danger" disabled>删除翻译</button>
+              </div>
+
+              <div id="i18n-editor-empty" class="empty-state">
+                <p>选择一个语言开始编辑翻译</p>
+              </div>
+
+              <form id="i18n-form" style="display: none">
+                <div class="form-group">
+                  <label for="i18n-name">名称</label>
+                  <input type="text" id="i18n-name" class="form-control" />
+                </div>
+
+                <div class="form-group">
+                  <label for="i18n-description">描述</label>
+                  <textarea id="i18n-description" class="form-control" rows="3"></textarea>
+                </div>
+
+                <div class="form-group">
+                  <label for="i18n-tags">标签</label>
+                  <input type="text" id="i18n-tags" class="form-control" placeholder="用逗号分隔" />
+                </div>
+
+                <div class="form-group">
+                  <label>其他翻译字段（JSON 格式）</label>
+                  <textarea
+                    id="i18n-extra"
+                    class="form-control"
+                    rows="10"
+                    placeholder='{"variables": {"varName": "变量名"}, "lists": {}, "events": {}}'
+                  ></textarea>
+                  <small
+                    >支持 variables, lists, events, scriptTitles, procedures, procedureParams
+                    等字段</small
+                  >
+                </div>
+              </form>
+            </div>
+
+            <!-- Assets 标签页 -->
+            <div id="tab-assets" class="tab-panel" style="display: none">
+              <div class="assets-section">
+                <h3>Demo 项目 (.sb3)</h3>
+                <div id="demo-upload-area" class="upload-area">
+                  <input type="file" id="demo-file-input" accept=".sb3" style="display: none" />
+                  <button id="upload-demo-btn" class="btn btn-primary">上传 Demo</button>
+                  <div id="demo-status"></div>
+                </div>
+              </div>
+
+              <div class="assets-section">
+                <h3>资源文件</h3>
+                <div id="assets-upload-area" class="upload-area">
+                  <input
+                    type="file"
+                    id="asset-file-input"
+                    accept=".png,.jpg,.jpeg,.gif,.svg,.pdf"
+                    style="display: none"
+                  />
+                  <button id="upload-asset-btn" class="btn btn-primary">上传资源</button>
+                </div>
+
+                <ul id="assets-list" class="assets-list">
+                  <!-- 动态生成 -->
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+
+      <!-- 构建状态指示器 -->
+      <div id="build-status" class="build-status">
+        <span id="build-status-text">就绪</span>
+      </div>
+    </div>
+
+    <!-- 模态框：创建模块 -->
+    <div id="create-module-modal" class="modal" style="display: none">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2>创建新模块</h2>
+          <button class="modal-close modal-close-icon">&times;</button>
+        </div>
+        <form id="create-module-form">
+          <div class="form-group">
+            <label for="create-id">模块 ID *</label>
+            <input
+              type="text"
+              id="create-id"
+              required
+              class="form-control"
+              pattern="[a-z0-9-]+"
+              placeholder="例如：my-module"
+            />
+            <small>只允许小写字母、数字和短横线</small>
+          </div>
+
+          <div class="form-group">
+            <label for="create-name">名称 *</label>
+            <input
+              type="text"
+              id="create-name"
+              required
+              class="form-control"
+              placeholder="例如：我的模块"
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="create-description">描述 *</label>
+            <textarea id="create-description" required class="form-control" rows="3"></textarea>
+          </div>
+
+          <div class="form-group">
+            <label for="create-tags">标签</label>
+            <input type="text" id="create-tags" class="form-control" placeholder="用逗号分隔" />
+          </div>
+
+          <div class="modal-actions">
+            <button type="submit" class="btn btn-primary">创建</button>
+            <button type="button" class="btn btn-secondary modal-close">取消</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <script type="module" src="/__dev/editor/editor.js"></script>
+  </body>
+</html>

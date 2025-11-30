@@ -76,6 +76,7 @@ npm run build
 - 路由回退：目录 / 无扩展路径 -> 相对 `index.html`
 - 强制禁用缓存 & `Access-Control-Allow-Origin: *`
 - 支持自签 / 指定 PEM / PFX 证书
+- **模块编辑器**：访问 `http://localhost:8800/__dev/editor/` 可在浏览器中可视化编辑模块（详见下文）
 
 HTTPS 支持：
 
@@ -198,6 +199,17 @@ main.txt      -> id: main
 变量 / 列表 displayName 在构建期计算，不改变原始 name。优先级（示例 zh-cn）：当前语言 > 中文简体/繁体互通 > 英文。
 
 ## 新增模块步骤
+
+### 方法 A：使用可视化编辑器（推荐）
+
+1. 启动开发服务器：`npm run dev`
+2. 在浏览器中访问 `http://localhost:8800/__dev/editor/`
+3. 点击 **"+ 新建模块"** 按钮，填写模块信息
+4. 在编辑器中添加脚本、翻译、资源文件
+5. 编辑器会自动触发构建并实时显示状态
+6. 完整使用指南参见：[`docs/editor-guide.md`](docs/editor-guide.md)
+
+### 方法 B：手动创建文件
 
 1. 新建 `content/modules/<id>/` 并添加 `meta.json` 与 `scripts/*.txt` 至少 1 段。
 2. （可选）在 `meta.json` 中新增 `variables`、`references`，并添加 `demo.sb3`, `notes.md`, `assets/`。

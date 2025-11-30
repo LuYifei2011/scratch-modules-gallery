@@ -36,7 +36,9 @@
     "references": "References",
     "copyScript": "Copy",
     "copySuccess": "Copied!",
-    "copyFail": "Copy failed"
+    "copyFail": "Copy failed",
+    "editScript": "Edit script",
+    "editModule": "Edit module"
   },
   "issues": {
     "pageTitle": "Build Issues",

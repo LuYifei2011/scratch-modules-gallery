@@ -36,7 +36,9 @@
     "references": "参考链接",
     "copyScript": "复制",
     "copySuccess": "已复制！",
-    "copyFail": "复制失败"
+    "copyFail": "复制失败",
+    "editScript": "编辑脚本",
+    "editModule": "编辑模块"
   },
   "issues": {
     "pageTitle": "构建问题",

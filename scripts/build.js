@@ -970,6 +970,22 @@ async function translateModulesForLocale(modules, dict, locale, options = {}) {
 async function render(modules, allTags) {
   const outDir = path.join(root, config.outDir)
   await fs.emptyDir(outDir)
+
+  // 过滤掉无效模块（缺少必需字段），避免后续 path.join 等操作报错
+  const validModules = modules.filter((m) => {
+    if (!m.id || !m.slug) {
+      console.warn(`[render] 跳过无效模块（缺少 id 或 slug）: ${JSON.stringify(m)}`)
+      return false
+    }
+    return true
+  })
+
+  if (validModules.length < modules.length) {
+    console.warn(`[render] 已过滤 ${modules.length - validModules.length} 个无效模块`)
+    // 使用过滤后的模块列表替换原始列表
+    modules = validModules
+  }
+
   // 计算 basePath (用于相对资源路径) —— 例如 https://user.github.io/repo => /repo
   let basePath = ''
   try {

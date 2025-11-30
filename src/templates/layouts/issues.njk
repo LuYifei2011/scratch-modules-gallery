@@ -1,23 +1,20 @@
 {% extends "layouts/base.njk" %}
 {% block title %}
-    {{ t.issues.pageTitle }} - {{ config.siteName }}
+  {{ t.issues.pageTitle }} - {{ config.siteName }}
 {% endblock %}
 {% block content %}
-    <h1>{{ t.issues.heading }}</h1>
-    {% if IS_DEV and buildIssuesSummary and buildIssuesSummary.total > 0 %}
-        <p style="font:13px system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif;color:#666;">{{ buildIssuesSummaryText }}</p>
-        <ul style="list-style:none;padding:0;margin:1rem 0;">
-            {% for it in buildIssues %}
-                <li style="margin:.4rem 0;padding:.5rem .75rem;border:1px solid {% if it.type=='error' %}#e33{% else %}#d8b200{% endif
-                        %};background:{% if it.type=='error' %}#2a1a1a{% else %}#2a2a1a{% endif %};color:#eee;font:12px/1.4
-                        ui-monospace,Consolas,monaco,Menlo,monospace;border-radius:4px;">
-                    <span style="display:inline-block;min-width:52px;font-weight:600;color:{% if it.type=='error' %}#ff8080{% else %}#f5d46b{%
-                        endif %};">{{ it.type | upper }}</span>
-                    <span>{{ it.message }}</span>
-                </li>
-            {% endfor %}
-        </ul>
-    {% else %}
-        <p>{{ t.issues['none'] }}</p>
-    {% endif %}
+  <h1>{{ t.issues.heading }}</h1>
+  {% if IS_DEV and buildIssuesSummary and buildIssuesSummary.total > 0 %}
+    <p class="text-secondary" style="font-size: var(--font-size-sm);">{{ buildIssuesSummaryText }}</p>
+    <ul style="list-style:none;padding:0;margin:var(--space-lg) 0;">
+      {% for it in buildIssues %}
+        <li class="issue-banner {% if it.type=='error' %}issue-banner-error{% else %}issue-banner-warning{% endif %}">
+          <span style="display:inline-block;min-width:52px;font-weight:var(--font-weight-semibold);">{{ it.type | upper }}</span>
+          <span>{{ it.message }}</span>
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p>{{ t.issues['none'] }}</p>
+  {% endif %}
 {% endblock %}

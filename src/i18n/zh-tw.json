@@ -36,7 +36,9 @@
     "references": "參考連結",
     "copyScript": "複製",
     "copySuccess": "已複製！",
-    "copyFail": "複製失敗"
+    "copyFail": "複製失敗",
+    "editScript": "編輯腳本",
+    "editModule": "編輯模組"
   },
   "issues": {
     "pageTitle": "建置問題",

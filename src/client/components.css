@@ -1,0 +1,374 @@
+/* ===== 通用组件样式库 (Component Library) ===== */
+
+/* === 按钮组件 === */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-xs);
+  padding: var(--space-sm) var(--space-lg);
+  font-size: var(--font-size-base);
+  font-family: var(--font-family-base);
+  font-weight: var(--font-weight-medium);
+  line-height: 1;
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  text-decoration: none;
+  transition: all var(--transition-base);
+  white-space: nowrap;
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* 按钮变体 */
+.btn-brand {
+  background: var(--color-brand);
+  color: white;
+  border-color: var(--color-brand);
+}
+
+.btn-brand:hover:not(:disabled) {
+  background: var(--color-brand-hover);
+  border-color: var(--color-brand-hover);
+}
+
+.btn-primary {
+  background: var(--color-primary);
+  color: white;
+  border-color: var(--color-primary);
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: #3d8be6;
+  border-color: #3d8be6;
+}
+
+.btn-success {
+  background: var(--color-success);
+  color: white;
+  border-color: var(--color-success);
+}
+
+.btn-success:hover:not(:disabled) {
+  background: #28b463;
+  border-color: #28b463;
+}
+
+.btn-danger {
+  background: var(--color-error);
+  color: white;
+  border-color: var(--color-error);
+}
+
+.btn-danger:hover:not(:disabled) {
+  background: #c0392b;
+  border-color: #c0392b;
+}
+
+.btn-outline {
+  background: transparent;
+  color: var(--color-brand);
+  border-color: var(--color-border-medium);
+}
+
+.btn-outline:hover:not(:disabled) {
+  background: var(--color-bg-secondary);
+  border-color: var(--color-brand);
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--color-text-primary);
+  border-color: transparent;
+}
+
+.btn-ghost:hover:not(:disabled) {
+  background: var(--color-bg-primary);
+}
+
+/* 按钮尺寸 */
+.btn-sm {
+  padding: var(--space-xs) var(--space-md);
+  font-size: var(--font-size-sm);
+}
+
+.btn-lg {
+  padding: var(--space-md) var(--space-xl);
+  font-size: var(--font-size-lg);
+}
+
+/* === 徽章和标签 === */
+.badge {
+  display: inline-block;
+  padding: 2px var(--space-sm);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  line-height: 1.2;
+  border-radius: var(--radius-sm);
+  vertical-align: middle;
+}
+
+.badge-warning {
+  background: var(--color-badge-bg);
+  color: var(--color-badge-text);
+}
+
+.badge-primary {
+  background: var(--color-primary);
+  color: white;
+}
+
+.badge-success {
+  background: var(--color-success);
+  color: white;
+}
+
+.badge-error {
+  background: var(--color-error);
+  color: white;
+}
+
+.tag {
+  display: inline-block;
+  padding: 2px var(--space-sm);
+  margin: 2px var(--space-xs) 2px 0;
+  font-size: var(--font-size-sm);
+  background: var(--color-tag-bg);
+  color: var(--color-tag-text);
+  border-radius: var(--radius-sm);
+  transition: opacity var(--transition-fast);
+}
+
+.tag:hover {
+  opacity: 0.8;
+}
+
+/* === 卡片组件 === */
+.card {
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius-lg);
+  padding: var(--space-lg);
+  box-shadow: var(--shadow-sm);
+  transition:
+    border-color var(--transition-base),
+    box-shadow var(--transition-base);
+}
+
+.card:hover {
+  border-color: var(--color-border-medium);
+  box-shadow: var(--shadow-md);
+}
+
+.card-header {
+  margin-bottom: var(--space-md);
+  padding-bottom: var(--space-md);
+  border-bottom: 1px solid var(--color-border-light);
+}
+
+.card-title {
+  margin: 0;
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
+}
+
+.card-body {
+  margin: 0;
+}
+
+.card-footer {
+  margin-top: var(--space-md);
+  padding-top: var(--space-md);
+  border-top: 1px solid var(--color-border-light);
+}
+
+/* === 提示条 (Alert/Banner) === */
+.alert {
+  padding: var(--space-md) var(--space-lg);
+  margin-bottom: var(--space-lg);
+  border-radius: var(--radius-md);
+  border: 1px solid transparent;
+}
+
+.alert-primary {
+  background: #e3f2fd;
+  color: #1565c0;
+  border-color: #90caf9;
+}
+
+.alert-success {
+  background: #e8f5e9;
+  color: #2e7d32;
+  border-color: #81c784;
+}
+
+.alert-warning {
+  background: #fff3cd;
+  color: #856404;
+  border-color: #ffc107;
+}
+
+.alert-error {
+  background: #ffebee;
+  color: #c62828;
+  border-color: #ef5350;
+}
+
+@media (prefers-color-scheme: dark) {
+  .alert-primary {
+    background: #1e3a5f;
+    color: #90caf9;
+    border-color: #1976d2;
+  }
+
+  .alert-success {
+    background: #1b5e20;
+    color: #81c784;
+    border-color: #388e3c;
+  }
+
+  .alert-warning {
+    background: #3e2723;
+    color: #ffd54a;
+    border-color: #d8b200;
+  }
+
+  .alert-error {
+    background: #4a1a1a;
+    color: #ff6666;
+    border-color: #e33;
+  }
+}
+
+/* === 输入框组件 === */
+.input {
+  display: block;
+  width: 100%;
+  padding: var(--space-sm) var(--space-md);
+  font-size: var(--font-size-base);
+  font-family: var(--font-family-base);
+  line-height: var(--line-height-normal);
+  color: var(--color-text-primary);
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius-md);
+  transition:
+    border-color var(--transition-base),
+    box-shadow var(--transition-base);
+}
+
+.input:focus {
+  outline: none;
+  border-color: var(--color-brand);
+  box-shadow: 0 0 0 3px rgba(23, 71, 166, 0.1);
+}
+
+.input:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* 内联选择器（用于下拉菜单） */
+.select-inline {
+  display: inline-block;
+  width: auto;
+  padding: var(--space-xs) var(--space-sm);
+  font-size: var(--font-size-sm);
+  font-family: var(--font-family-base);
+  line-height: var(--line-height-normal);
+  color: var(--color-text-primary);
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius-md);
+  transition:
+    border-color var(--transition-base),
+    box-shadow var(--transition-base);
+}
+
+.select-inline:focus {
+  outline: none;
+  border-color: var(--color-brand);
+  box-shadow: 0 0 0 3px rgba(23, 71, 166, 0.1);
+}
+
+/* === 工具类 === */
+.text-primary {
+  color: var(--color-text-primary);
+}
+
+.text-secondary {
+  color: var(--color-text-secondary);
+}
+
+.text-tertiary {
+  color: var(--color-text-tertiary);
+}
+
+.text-brand {
+  color: var(--color-brand);
+}
+
+.text-success {
+  color: var(--color-success);
+}
+
+.text-warning {
+  color: var(--color-warning);
+}
+
+.text-error {
+  color: var(--color-error);
+}
+
+.bg-primary {
+  background-color: var(--color-bg-primary);
+}
+
+.bg-secondary {
+  background-color: var(--color-bg-secondary);
+}
+
+/* === Issue Banner === */
+/**
+ * .issue-banner
+ * Shared component for displaying issue/warning banners.
+ * Referenced in multiple templates: base.njk, issues.njk.
+ * If you modify this style, check all usages to avoid breaking shared layouts.
+ */
+.issue-banner {
+  padding: var(--space-md) var(--space-lg);
+  margin: var(--space-xs) 0;
+  border-radius: var(--radius-sm);
+  border: 1px solid;
+  font-family: var(--font-family-mono);
+  font-size: var(--font-size-xs);
+  line-height: 1.4;
+}
+
+.issue-banner-error {
+  background: #ffebee;
+  border-color: var(--color-error);
+  color: #c62828;
+}
+
+.issue-banner-warning {
+  background: #fff3cd;
+  border-color: var(--color-warning);
+  color: #856404;
+}
+
+@media (prefers-color-scheme: dark) {
+  .issue-banner-error {
+    background: #2a1a1a;
+    color: #ff6666;
+  }
+
+  .issue-banner-warning {
+    background: #2a2410;
+    color: #ffd54a;
+  }
+}
