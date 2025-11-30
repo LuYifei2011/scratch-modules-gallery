@@ -6,8 +6,16 @@ name: Build & Deploy (GitHub Pages)
 on:
   push:
     branches: ['main']
+    paths-ignore:
+      - '!.github/*'
+      - '*.md'
+      - 'LICENSE'
   pull_request:
     branches: ['main']
+    paths-ignore:
+      - '!.github/*'
+      - '*.md'
+      - 'LICENSE'
   workflow_dispatch:
 
 permissions:
