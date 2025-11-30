@@ -270,8 +270,8 @@ function renderScriptEditor() {
     state.editorInstance = createScratchblocksEditor(editorContainer, {
       initialContent: state.currentScript.content,
       onChange: (content) => {
-        // 实时预览（防抖）
-        debouncedPreview(content)
+        // 实时预览
+        renderScriptPreview(content)
       },
     })
   }
@@ -380,8 +380,6 @@ async function loadScratchblocks() {
   }
 }
 
-let previewTimeout = null
-
 async function renderScriptPreview(content) {
   const previewContainer = document.getElementById('script-preview-content')
 
@@ -422,13 +420,6 @@ function doRenderPreview(style) {
   svg.classList.add('scratchblocks-style-' + finalStyle)
   previewContainer.innerHTML = ''
   previewContainer.appendChild(svg)
-}
-
-function debouncedPreview(content) {
-  if (previewTimeout) clearTimeout(previewTimeout)
-  previewTimeout = setTimeout(() => {
-    renderScriptPreview(content)
-  }, 800)
 }
 
 // ==================== 事件处理 ====================
