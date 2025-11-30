@@ -25,13 +25,16 @@ jobs:
       - name: Install
         run: npm ci
 
-      - name: Prettier
+      - name: Format Scratchblocks Scripts
+        run: npm run format:scripts
+
+      - name: Format code with Prettier
         run: npm run format
 
       - name: Commit
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
-          commit_message: "Format code using Prettier"
+          commit_message: "Format code and scratchblocks scripts"
           branch: ${{ github.head_ref }}
           skip_fetch: false
           skip_checkout: false
