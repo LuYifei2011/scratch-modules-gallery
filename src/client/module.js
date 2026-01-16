@@ -1,4 +1,4 @@
-import scratchblocks from './vendor/scratchblocks.min.es.js'
+import scratchblocks from './vendor/scratchblocks-plus.min.es.js'
 
 const pageLangSb = window.__I18N && window.__I18N.meta.languageTag.replace('-', '_').toLowerCase()
 

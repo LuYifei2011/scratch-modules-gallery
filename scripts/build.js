@@ -7,7 +7,7 @@ import { buildModuleRecord } from './lib/schema.js'
 import { tokenizeCJK, loadScratchblocksLanguages } from './lib/scratch-utils.js'
 import { pathToFileURL } from 'url'
 import { minify } from 'html-minifier-next'
-import * as scratchblocks from 'scratchblocks/syntax/index.js'
+import * as scratchblocks from 'scratchblocks-plus/syntax/index.js'
 import simpleGit from 'simple-git'
 
 const root = path.resolve('.')
@@ -1097,12 +1097,12 @@ async function render(modules, allTags) {
     const sbMinEs = path.join(
       root,
       'node_modules',
-      'scratchblocks',
+      'scratchblocks-plus',
       'build',
-      'scratchblocks.min.es.js'
+      'scratchblocks-plus.min.es.js'
     )
     if (await fs.pathExists(sbMinEs)) {
-      await fs.copy(sbMinEs, path.join(vendorDir, 'scratchblocks.min.es.js'))
+      await fs.copy(sbMinEs, path.join(vendorDir, 'scratchblocks-plus.min.es.js'))
     }
   } catch (e) {
     console.warn('[scratchblocks] 复制核心库文件失败:', e?.message || e)
@@ -1110,7 +1110,7 @@ async function render(modules, allTags) {
 
   // 复制 scratchblocks 语言文件到 vendor/sb-langs/
   try {
-    const localesSourceDir = path.join(root, 'node_modules', 'scratchblocks', 'locales')
+    const localesSourceDir = path.join(root, 'node_modules', 'scratchblocks-plus', 'locales')
     const langVendorDir = path.join(vendorDir, 'sb-langs')
     const localeFiles = await fg(['*.json'], { cwd: localesSourceDir, onlyFiles: true })
     if (localeFiles.length > 0) {

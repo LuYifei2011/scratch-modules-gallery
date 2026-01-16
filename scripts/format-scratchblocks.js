@@ -6,7 +6,7 @@
 
 import fs from 'fs-extra'
 import path from 'path'
-import * as scratchblocks from 'scratchblocks/syntax/index.js'
+import * as scratchblocks from 'scratchblocks-plus/syntax/index.js'
 import { loadScratchblocksLanguages } from './lib/scratch-utils.js'
 import fg from 'fast-glob'
 

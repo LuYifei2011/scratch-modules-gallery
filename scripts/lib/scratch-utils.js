@@ -1,6 +1,6 @@
 import fs from 'fs-extra'
 import path from 'path'
-import * as scratchblocks from 'scratchblocks/syntax/index.js'
+import * as scratchblocks from 'scratchblocks-plus/syntax/index.js'
 
 const root = path.resolve('.')
 
@@ -22,7 +22,7 @@ export function tokenizeCJK(text) {
 }
 
 export function loadScratchblocksLanguages() {
-  const localesDir = path.join(root, 'node_modules', 'scratchblocks', 'locales')
+  const localesDir = path.join(root, 'node_modules', 'scratchblocks-plus', 'locales')
   try {
     const files = fs.readdirSync(localesDir)
     files.forEach((file) => {

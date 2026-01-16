@@ -112,15 +112,6 @@ HTTPS 支持：
 构建前准备：
 
 - 请先运行 `npm install`（或 `pnpm install`/`yarn`）以安装 `minisearch` 等依赖；构建脚本会尝试从 `node_modules` 拷贝 MiniSearch 的 UMD 文件到 `dist/vendor/`。
-- scratchblocks 编译文件需手动放在 `public/vendor/`（参见下文）。
-
-### scratchblocks
-
-已作为依赖（`package.json` 指向自定义 release）。构建期：
-
-- 自动加载 `node_modules/scratchblocks/locales/*.json` 供脚本翻译
-- 复制浏览器端 ES 模块文件到 `dist/vendor/`：`scratchblocks.min.es.js`, `scratchblocks-translations-all-es.js`
-  无需手动放置 vendor。
 
 ### 验证 meta keywords
 
@@ -239,9 +230,5 @@ main.txt      -> id: main
 ## 许可
 
 （待补充）
-
-## 许可
-
-自定义后补充。
 
 > 文档与实现不符时，以 `scripts/build.js` 为准；欢迎提交修正。

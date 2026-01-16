@@ -28,7 +28,7 @@
   - 递归展开限深度 20；循环/缺失/越界写入注释 `// 导入失败: <原因>`
   - 导入段结构：`{ imported: true, content, fromId, fromName, fromIndex, fromTitle, fromScriptId }`
 - **scratchblocks 翻译**：构建时调用 `scratchblocks.parse()` → `translate()` → `stringify()`
-  - 加载所有语言文件 `node_modules/scratchblocks/locales/*.json`（启动时同步）
+  - 加载所有语言文件 `node_modules/scratchblocks-plus/locales/*.json`（启动时同步）
   - 英文环境不翻译（脚本源假设为英文）；非英文按 `languageTag` 映射（如 zh-cn → zh_cn）
 
 ### 国际化 (全局 + 模块)
@@ -62,8 +62,7 @@
   - `IS_DEV`：传入模板与前端（`window.IS_DEV`）；开发服务器自动设置
   - `HTTPS=1` + `HTTPS_KEY/HTTPS_CERT` 或 `HTTPS_PFX/HTTPS_PASSPHRASE`：HTTPS 配置
 - **依赖管理**：纯 ESM（`type: "module"`）；CommonJS 依赖用 `createRequire(import.meta.url)`
-  - scratchblocks：自定义 release（`github:LuYifei2011/scratchblocks#release`）
-  - 构建时自动复制 vendor：`minisearch/dist/es/index.js` → `dist/vendor/minisearch.js`；`scratchblocks/build/*.min.es.js` + `locales/*.json` → `dist/vendor/`
+  - 构建时自动复制 vendor：`minisearch/dist/es/index.js` → `dist/vendor/minisearch.js`；`scratchblocks-plus/build/*.min.es.js` + `locales/*.json` → `dist/vendor/`
 
 ### 约束与安全边界
 
