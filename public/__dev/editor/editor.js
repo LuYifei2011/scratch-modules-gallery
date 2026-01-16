@@ -369,7 +369,7 @@ async function loadScratchblocks() {
 
   try {
     // 动态导入 scratchblocks（注意：需要导入 default）
-    const module = await import('/vendor/scratchblocks.min.es.js')
+    const module = await import('/vendor/scratchblocks-plus.min.es.js')
     scratchblocks = module.default
     scratchblocksLoaded = true
     console.log('Scratchblocks loaded successfully')
