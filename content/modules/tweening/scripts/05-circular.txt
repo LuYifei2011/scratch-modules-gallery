@@ -14,7 +14,7 @@ if <(Tween) < (0.5)> then
   set [Tween v] to ((2) * (Tween))
   set [Tween v] to ((1) - ([sqrt v] of ((1) - ((Tween) * (Tween)))))
   set [Tween v] to ((Tween) / (2))
- else
+else
   set [Tween v] to (((-2) * (Tween)) + (2))
   set [Tween v] to ([sqrt v] of ((1) - ((Tween) * (Tween))))
   set [Tween v] to (((Tween) + (1)) / (2))

@@ -1,5 +1,5 @@
 define (a :: custom-arg) ^ (b :: custom-arg)
 set [a^b v] to (1)
-repeat (b :: custom-arg)
+repeat (b :: custom-arg) 
   set [a^b v] to ((a^b) * (a :: custom-arg))
 end

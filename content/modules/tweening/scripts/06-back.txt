@@ -3,13 +3,13 @@ set [Tween v] to ((进度 :: custom-arg) / (100))
 set [Tween v] to ((1) - (Tween))
 if <(Tween) < (0.363636)> then
   set [Tween v] to ((7.5625) * ((Tween) * (Tween)))
- else
+else
   if <(Tween) < (0.727272)> then
     set [Tween v] to (((7.5625) * (((Tween) - (0.545454)) * ((Tween) - (0.545454)))) + (0.75))
-   else
+  else
     if <(Tween) < (0.90909)> then
       set [Tween v] to (((7.5625) * (((Tween) - (0.818181)) * ((Tween) - (0.818181)))) + (0.9375))
-     else
+    else
       set [Tween v] to (((7.5625) * (((Tween) - (0.954545)) * ((Tween) - (0.954545)))) + (0.984375))
     end
   end
@@ -21,13 +21,13 @@ define back ease out from (start :: custom-arg) to (end :: custom-arg) progress 
 set [Tween v] to ((进度 :: custom-arg) / (100))
 if <(Tween) < (0.363636)> then
   set [Tween v] to ((7.5625) * ((Tween) * (Tween)))
- else
+else
   if <(Tween) < (0.727272)> then
     set [Tween v] to (((7.5625) * (((Tween) - (0.545454)) * ((Tween) - (0.545454)))) + (0.75))
-   else
+  else
     if <(Tween) < (0.90909)> then
       set [Tween v] to (((7.5625) * (((Tween) - (0.818181)) * ((Tween) - (0.818181)))) + (0.9375))
-     else
+    else
       set [Tween v] to (((7.5625) * (((Tween) - (0.954545)) * ((Tween) - (0.954545)))) + (0.984375))
     end
   end
@@ -41,17 +41,17 @@ if <(Tween) < (0.5)> then
   set [Tween v] to ((Tween) / (100))
   set [Tween v] to ((Tween) * (100))
   set [Tween v] to ((Tween) / (2))
- else
+else
   set [Tween v] to (((Tween) * (2)) - (1))
   if <(Tween) < (0.363636)> then
     set [Tween v] to ((7.5625) * ((Tween) * (Tween)))
-   else
+  else
     if <(Tween) < (0.727272)> then
       set [Tween v] to (((7.5625) * (((Tween) - (0.545454)) * ((Tween) - (0.545454)))) + (0.75))
-     else
+    else
       if <(Tween) < (0.90909)> then
         set [Tween v] to (((7.5625) * (((Tween) - (0.818181)) * ((Tween) - (0.818181)))) + (0.9375))
-       else
+      else
         set [Tween v] to (((7.5625) * (((Tween) - (0.954545)) * ((Tween) - (0.954545)))) + (0.984375))
       end
     end

@@ -1,7 +1,7 @@
 when flag clicked
 set [DELTA v] to (1)
 set [tick30 v] to (0)
-forever
+forever 
   FPS (tick30) :: custom
 end
 

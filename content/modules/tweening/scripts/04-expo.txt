@@ -4,7 +4,7 @@ define expo ease in from (start :: custom-arg) to (end :: custom-arg) progress (
 set [Tween v] to ((progress% :: custom-arg) / (100))
 if <(Tween) = (0)> then
   set [Tween v] to (0)
- else
+else
   (2) ^ (((10) * (Tween)) - (10)) :: custom
   set [Tween v] to (a^b)
 end
@@ -14,7 +14,7 @@ define expo ease out from (start :: custom-arg) to (end :: custom-arg) progress 
 set [Tween v] to ((progress% :: custom-arg) / (100))
 if <(Tween) = (1)> then
   set [Tween v] to (1)
- else
+else
   (2) ^ ((-10) * (Tween)) :: custom
   set [Tween v] to ((1) - (a^b))
 end
@@ -24,14 +24,14 @@ define expo ease in-out from (start :: custom-arg) to (end :: custom-arg) progre
 set [Tween v] to ((progress% :: custom-arg) / (100))
 if <(Tween) = (0)> then
   set [Tween v] to (0)
- else
+else
   if <(Tween) = (1)> then
     set [Tween v] to (1)
-   else
+  else
     if <(Tween) < (0.5)> then
       (2) ^ (((20) * (Tween)) - (10)) :: custom
       set [Tween v] to ((a^b) / (2))
-     else
+    else
       (2) ^ (((-20) * (Tween)) + (10)) :: custom
       set [Tween v] to (((2) - (a^b)) / (2))
     end
