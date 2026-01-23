@@ -37,18 +37,28 @@ content/modules/fps/
 }
 ```
 
+可选字段：
+
+```json
+{
+  "keywords": ["frame rate", "rendering", "performance"],
+  "variables": [...],
+  "references": [...]
+}
+```
+
 字段说明：
 
 - `id`：与目录同名；仅小写字母/数字/短横线。
 - `tags`：数组；用于搜索与分类徽章。
-- `keywords` 与 tags：站点级 `site.config.js` 中的 `keywords` 控制首页的 meta keywords；模块的 tags 会用于模块页的 meta keywords（构建会合并 site 关键字与模块 tags）。
+- `keywords`：数组；SEO 关键词，可在主页搜索中被匹配。与 tags 一起在模块页 meta keywords 中去重合并。
 - `contributors`：字符串或数组；支持 `gh/` 与 `sc/` 前缀自动生成链接。
 
-### 多语言支持（name/description/tags）
+### 多语言支持（name/description/tags/keywords）
 
 现在推荐的做法是：
 
-- `meta.json` 只写一份“基线语言”（建议英文）的 `name` / `description` / `tags`；
+- `meta.json` 只写一份"基线语言"（建议英文）的 `name` / `description` / `tags` / `keywords`；
 - 所有其他语言都通过模块内的 `i18n/<locale>.json` 提供。
 
 #### 独立翻译文件（推荐，亦为当前唯一多语言方式）

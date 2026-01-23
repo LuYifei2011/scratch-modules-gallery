@@ -25,7 +25,7 @@ npm run dev:https
 
 ```
 content/modules/<module-id>/
-  meta.json              # 必填: id,name,description,tags,contributors[,scriptTitles,variables,references]
+  meta.json              # 必填: id,name,description,tags,contributors[,keywords,scriptTitles,variables,references]
   scripts/               # 必填: 至少 1 个 *.txt；文件名可含排序前缀
     01-main.txt          # 文件名 -> 脚本 id: 去掉开头的 <数字><分隔符> 后剩余部分
     02-extra.txt         # 无序号则整个去 .txt 的部分为脚本 id
@@ -44,6 +44,7 @@ content/modules/<module-id>/
 
 - `id` (slug 同步使用)
 - `name`, `description`, `tags`：可为字符串 / 数组或多语言映射对象 `{ "en": "...", "zh-cn": "..." }`
+- `keywords`：可选，数组格式；SEO 关键词，用于搜索和 meta keywords（与 tags 合并后去重）
 - `contributors`：数组或逗号分隔字符串；支持 `gh/<user>` 与 `sc/<user>` 自动转链接
 - `scriptTitles`：可选，英文基准脚本标题映射 `{ "main": "Intro", "extra": "Advanced" }`（脚本 id 来自文件名解析）。
 - `variables`：数组，原 `variables.json` 已合并；形如 `[{"name":"FPS","type":"variable","scope":"global"}]`。

@@ -104,3 +104,5 @@
 `scripts/build.js` → `scripts/lib/schema.js` → `src/templates/layouts/*.njk` → `src/client/*.js` → 示例模块 `content/modules/fps/`。
 
 若新增特性（如：额外资源类型、本地化维度、搜索字段）请在提交中同步更新此文件并列出回归验证步骤。
+
+NOTE: When performing a code review, respond in Chinese.
