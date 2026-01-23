@@ -49,6 +49,19 @@ function updateURLParams(params) {
   window.history.replaceState({}, '', url)
 }
 
+// ==================== 工具函数 ====================
+/**
+ * 解析逗号分隔的输入值为数组
+ * @param {string} value - 逗号分隔的字符串
+ * @returns {string[]} 去重和去空的数组
+ */
+function parseCommaSeparatedInput(value) {
+  return value
+    .split(',')
+    .map((item) => item.trim())
+    .filter((item) => item)
+}
+
 // ==================== API 请求封装 ====================
 async function apiRequest(url, options = {}) {
   try {
@@ -174,6 +187,7 @@ function renderModuleEditor() {
   document.getElementById('meta-name').value = meta.name || ''
   document.getElementById('meta-description').value = meta.description || ''
   document.getElementById('meta-tags').value = Array.isArray(meta.tags) ? meta.tags.join(', ') : ''
+  document.getElementById('meta-keywords').value = Array.isArray(meta.keywords) ? meta.keywords.join(', ') : ''
 
   // 处理 contributors
   let contributorsStr = ''
@@ -428,16 +442,14 @@ function doRenderPreview(style) {
 document.getElementById('meta-form').addEventListener('submit', async (e) => {
   e.preventDefault()
 
-  const tags = document
-    .getElementById('meta-tags')
-    .value.split(',')
-    .map((t) => t.trim())
-    .filter((t) => t)
+  const tags = parseCommaSeparatedInput(document.getElementById('meta-tags').value)
+  const keywords = parseCommaSeparatedInput(document.getElementById('meta-keywords').value)
 
   const meta = {
     name: document.getElementById('meta-name').value,
     description: document.getElementById('meta-description').value,
     tags,
+    keywords,
     contributors: document.getElementById('meta-contributors').value,
   }
 
@@ -497,18 +509,14 @@ document.getElementById('create-module-form').addEventListener('submit', async (
   const id = document.getElementById('create-id').value
   const name = document.getElementById('create-name').value
   const description = document.getElementById('create-description').value
-  const tags = document
-    .getElementById('create-tags')
-    .value.split(',')
-    .map((t) => t.trim())
-    .filter((t) => t)
+  const tags = parseCommaSeparatedInput(document.getElementById('create-tags').value)
 
   try {
     await apiRequest('/api/modules', {
       method: 'POST',
       body: JSON.stringify({
         id,
-        meta: { name, description, tags },
+        meta: { name, description, tags, keywords: [] },
       }),
     })
     showToast('模块创建成功')
@@ -695,15 +703,19 @@ document.getElementById('i18n-locale-select').addEventListener('change', async (
     document.getElementById('i18n-tags').value = Array.isArray(data.tags)
       ? data.tags.join(', ')
       : ''
+    document.getElementById('i18n-keywords').value = Array.isArray(data.keywords)
+      ? data.keywords.join(', ')
+      : ''
 
     // 提取其他字段
-    const { name, description, tags, ...extra } = data
+    const { name, description, tags, keywords, ...extra } = data
     document.getElementById('i18n-extra').value = JSON.stringify(extra, null, 2)
   } catch (error) {
     // 翻译不存在，清空表单
     document.getElementById('i18n-name').value = ''
     document.getElementById('i18n-description').value = ''
     document.getElementById('i18n-tags').value = ''
+    document.getElementById('i18n-keywords').value = ''
     document.getElementById('i18n-extra').value = '{}'
   }
 
@@ -720,11 +732,8 @@ document.getElementById('save-i18n-btn').addEventListener('click', async () => {
   try {
     const name = document.getElementById('i18n-name').value
     const description = document.getElementById('i18n-description').value
-    const tags = document
-      .getElementById('i18n-tags')
-      .value.split(',')
-      .map((t) => t.trim())
-      .filter((t) => t)
+    const tags = parseCommaSeparatedInput(document.getElementById('i18n-tags').value)
+    const keywords = parseCommaSeparatedInput(document.getElementById('i18n-keywords').value)
 
     const extraStr = document.getElementById('i18n-extra').value
     let extra = {}
@@ -739,6 +748,7 @@ document.getElementById('save-i18n-btn').addEventListener('click', async () => {
     if (name) data.name = name
     if (description) data.description = description
     if (tags.length > 0) data.tags = tags
+    if (keywords.length > 0) data.keywords = keywords
 
     await apiRequest(`/api/modules/${state.currentModule.id}/i18n/${state.currentLocale}`, {
       method: 'PUT',

@@ -245,6 +245,14 @@ export async function createModule(req, res) {
       meta.tags = []
     }
 
+    // 确保 keywords 是数组（如果提供了的话）
+    if (meta.keywords && !Array.isArray(meta.keywords)) {
+      return sendError(res, 400, 'keywords must be an array')
+    }
+    if (!meta.keywords) {
+      meta.keywords = []
+    }
+
     // 创建目录和文件
     await fs.ensureDir(moduleDir)
     await fs.ensureDir(path.join(moduleDir, 'scripts'))
@@ -300,6 +308,11 @@ export async function updateModuleMeta(req, res, moduleId) {
     // 验证必填字段
     if (!updatedMeta.name || !updatedMeta.description) {
       return sendError(res, 400, 'Missing required fields: name, description')
+    }
+
+    // 验证 keywords 是数组（如果提供了的话）
+    if (updatedMeta.keywords && !Array.isArray(updatedMeta.keywords)) {
+      return sendError(res, 400, 'keywords must be an array')
     }
 
     // 写入 meta.json
