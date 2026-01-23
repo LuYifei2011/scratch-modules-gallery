@@ -35,7 +35,12 @@
 
 - **全局语言**：`src/i18n/*.json` 控制站点 UI、元信息 (siteName, description, keywords, languageTag)
   - 模板中通过 `t` 对象访问；前端通过 `window.__I18N` 访问
-- **模块局部**：`content/modules/<id>/i18n/<locale>.json` 可覆盖：name, description, tags, variables, lists, events, scriptTitles, procedures, procedureParams
+- **全局 Tags 翻译**：`src/i18n/tags.json` 集中管理所有 tags 的多语言翻译
+  - 结构：`{ tagId: { en: "...", zh-cn: "...", zh-tw: "..." }, ... }`
+  - 构建时自动应用，模块 i18n 文件无需包含 `tags` 字段
+  - 新增 tag：仅需在 `tags.json` 中添加一次翻译，所有使用该 tag 的模块自动获得本地化
+- **模块局部**：`content/modules/<id>/i18n/<locale>.json` 可覆盖：name, description, variables, lists, events, scriptTitles, procedures, procedureParams
+  - **不再需要翻译 tags**：直接在全局 tags.json 中维护
   - 变量/列表/事件：构建时计算 `displayName`（不改变原始 name），优先级（示例 zh-cn）：当前语言 > 同类中文变体 > 英文
   - 示例：`fps` 模块的 `zh-cn.json` 将 `FPS` 变量映射为 "帧率"
 - **自定义块本地化（方案A）**：
@@ -79,6 +84,7 @@
 | 新增模块             | `content/modules/<id>/`      | 至少 1 个脚本；补齐 meta 与（可选）i18n      |
 | 扩展数据字段         | `schema.js`                  | 同步模板 & 搜索 & 前端依赖字段               |
 | 新语言               | 复制一份 `src/i18n/en.json`  | 如果需要模块级翻译，新增对应 i18n JSON       |
+| 新增 tag             | `src/i18n/tags.json`         | 添加所有支持语言的翻译，所有模块自动获得     |
 | 自定义块新增 pattern | 模块 i18n `procedures`       | 保持英文源脚本同步；`_` 数量需与参数个数一致 |
 | SEO 调整             | `site.config.js` + 模板 head | 确保 `hreflang`、canonical 含语言段          |
 
@@ -88,8 +94,9 @@
 2. 任意模块页 `<head>`：canonical 正确、全量 hreflang + `x-default`。
 3. 导入展开无意外 `// 导入失败`（除演示）。
 4. 自定义块：英文源含 `define ...`；目标语言出现本地化标题 + 参数名称替换。
-5. 首页搜索：中文子串命中（CJK 分词生效）。
-6. 根 `index.html` 按浏览器语言/LocalStorage 跳转期望语言。
+5. Tags 显示正确的多语言翻译（从 `src/i18n/tags.json` 应用）。
+6. 首页搜索：中文子串命中（CJK 分词生效）。
+7. 根 `index.html` 按浏览器语言/LocalStorage 跳转期望语言。
 
 ### 易踩坑 & 提示
 
@@ -98,6 +105,7 @@
 - 变量/列表英文名如果与局部 i18n 键不一致不会显示本地化 displayName。
 - 文件名排序混用（`1-` vs `01-`）会引发顺序意外；统一使用两位或不加前导零。
 - 忘记使用 `assetBase` 加载搜索 JSON 会导致跨语言路径 404。
+- **新增 tag 必须在 `src/i18n/tags.json` 中定义翻译，才能在非英文版本正确显示。**
 
 ### 推荐阅读顺序
 

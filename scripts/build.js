@@ -417,9 +417,9 @@ function resolveImports(modules) {
 // 加载 i18n 词典（自动扫描 src/i18n/*.json）
 async function loadI18n() {
   const i18nDir = path.join(root, 'src', 'i18n')
-  const files = (await fg(['*.json'], { cwd: i18nDir, onlyFiles: true })).sort((a, b) =>
-    a.localeCompare(b, 'en', { numeric: true })
-  )
+  const files = (await fg(['*.json'], { cwd: i18nDir, onlyFiles: true }))
+    .filter((f) => f !== 'tags.json') // 排除全局 tags 字典，只加载语言文件
+    .sort((a, b) => a.localeCompare(b, 'en', { numeric: true }))
   const dict = {}
   for (const f of files) {
     const loc = path.basename(f, '.json')
@@ -430,6 +430,19 @@ async function loadI18n() {
     }
   }
   return dict
+}
+
+// 加载全局 tags 翻译字典（src/i18n/tags.json）
+async function loadGlobalTags() {
+  const tagsFile = path.join(root, 'src', 'i18n', 'tags.json')
+  try {
+    if (await fs.pathExists(tagsFile)) {
+      return JSON.parse(await fs.readFile(tagsFile, 'utf8'))
+    }
+  } catch (e) {
+    console.warn(`[tags] 加载全局 tags 字典失败:`, e?.message || e)
+  }
+  return {}
 }
 
 function pickConfigForLocale(baseConfig, locale, dict) {
@@ -492,7 +505,7 @@ function translateScriptText(raw, targetLangKey, nameMaps) {
 }
 
 // 针对某语言，返回带有已翻译脚本内容与元信息本地化的 modules 副本
-async function translateModulesForLocale(modules, dict, locale, options = {}) {
+async function translateModulesForLocale(modules, dict, locale, globalTags = {}, options = {}) {
   const languageTag = (dict[locale]?.meta?.languageTag || locale || 'en')
     .replace('-', '_')
     .toLowerCase()
@@ -683,7 +696,15 @@ async function translateModulesForLocale(modules, dict, locale, options = {}) {
       nm.description = pickStr('description', m.description_i18n)
     }
     const tv = pickArr('tags', m.tags_i18n)
-    if (Array.isArray(tv)) nm.tags = tv
+    if (Array.isArray(tv)) {
+      // 使用全局 tags 字典翻译 tags
+      nm.tags = tv.map((tag) => {
+        if (globalTags[tag] && globalTags[tag][locale]) {
+          return globalTags[tag][locale]
+        }
+        return tag
+      })
+    }
     const kw = pickKeywords('keywords', m.keywords_i18n)
     if (Array.isArray(kw)) nm.keywords = kw
 
@@ -821,7 +842,7 @@ async function translateModulesForLocale(modules, dict, locale, options = {}) {
         const locTrans = per[locale] || {}
         if (!('name' in locTrans)) missingFields.push('name')
         if (!('description' in locTrans)) missingFields.push('description')
-        if (!('tags' in locTrans)) missingFields.push('tags')
+        // tags 由全局 tags.json 管理，不需检查模块级翻译
         // 脚本标题
         const scriptIds = Array.isArray(m.scripts) ? m.scripts.map((x) => x.id).filter(Boolean) : []
         if (scriptIds.length) {
@@ -1169,6 +1190,7 @@ async function render(modules, allTags) {
 
   // render pages per locale（对每个 locale 复用翻译结果，避免重复计算）
   const dict = await loadI18n()
+  const globalTags = await loadGlobalTags()
   const locales = Object.keys(dict)
   // 每种语言的 hreflang 标记（优先使用 i18n.meta.languageTag）
   const langTags = Object.fromEntries(
@@ -1180,7 +1202,7 @@ async function render(modules, allTags) {
     for (const loc of locales) {
       if (loc === 'en') continue
       try {
-        const translated = await translateModulesForLocale(modules, dict, loc, {
+        const translated = await translateModulesForLocale(modules, dict, loc, globalTags, {
           skipMissingCheck: false,
         })
         translatedCache.set(loc, translated)
@@ -1200,7 +1222,7 @@ async function render(modules, allTags) {
     // 针对当前语言，生成脚本文本与元信息已翻译的模块数据（不影响其他语言）
     let modulesForLoc = translatedCache.get(loc)
     if (!modulesForLoc) {
-      modulesForLoc = await translateModulesForLocale(modules, dict, loc, {
+      modulesForLoc = await translateModulesForLocale(modules, dict, loc, globalTags, {
         skipMissingCheck: true,
       })
       translatedCache.set(loc, modulesForLoc)
