@@ -3,6 +3,7 @@
   "name": "FPS",
   "description": "Calculate FPS.",
   "tags": ["performance", "fps"],
+  "keywords": ["frame rate", "rendering", "delta time"],
   "scriptTitles": {
     "main": "Main"
   },

@@ -3,6 +3,7 @@
   "name": "When project stopped",
   "description": "Event triggered when the project stops.",
   "tags": ["event"],
+  "keywords": ["stop", "project end", "trigger"],
   "scriptTitles": {
     "main": "Main"
   },

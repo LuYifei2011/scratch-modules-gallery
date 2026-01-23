@@ -3,6 +3,7 @@
   "name": "Round to n decimals",
   "description": "Round a number to n decimal places.",
   "tags": ["math", "round"],
+  "keywords": ["decimal", "precision", "rounding"],
   "scriptTitles": {
     "main": "Main"
   },

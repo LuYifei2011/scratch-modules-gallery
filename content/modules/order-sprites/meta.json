@@ -3,6 +3,7 @@
   "name": "Order Sprites",
   "description": "Sort sprites by layer/index.",
   "tags": ["layer", "sort"],
+  "keywords": ["z-order", "layering", "sprite sorting"],
   "scriptTitles": {
     "order": "Ordering",
     "main": "Main loop"

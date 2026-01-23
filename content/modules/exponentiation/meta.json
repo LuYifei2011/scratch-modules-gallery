@@ -3,6 +3,7 @@
   "name": "Exponentiation",
   "description": "Compute a to the power of b.",
   "tags": ["math", "exponentiation"],
+  "keywords": ["power", "exponential", "calculation"],
   "scriptTitles": {
     "main": "Main"
   },
