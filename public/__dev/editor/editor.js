@@ -187,7 +187,9 @@ function renderModuleEditor() {
   document.getElementById('meta-name').value = meta.name || ''
   document.getElementById('meta-description').value = meta.description || ''
   document.getElementById('meta-tags').value = Array.isArray(meta.tags) ? meta.tags.join(', ') : ''
-  document.getElementById('meta-keywords').value = Array.isArray(meta.keywords) ? meta.keywords.join(', ') : ''
+  document.getElementById('meta-keywords').value = Array.isArray(meta.keywords)
+    ? meta.keywords.join(', ')
+    : ''
 
   // 处理 contributors
   let contributorsStr = ''
