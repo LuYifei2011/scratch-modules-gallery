@@ -1,7 +1,6 @@
 {
   "name": "冪 (乘方)",
   "description": "計算 a 的 b 次冪",
-  "tags": ["數學", "冪"],
   "scriptTitles": {
     "main": "主腳本"
   }

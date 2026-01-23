@@ -1,7 +1,6 @@
 {
   "name": "補間",
   "description": "使用補間/插值實現平滑動畫。",
-  "tags": ["動畫", "補間"],
   "variables": {
     "Tween": "補間"
   },

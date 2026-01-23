@@ -1,7 +1,6 @@
 {
   "name": "排序角色",
   "description": "對角色進行排序。",
-  "tags": ["層", "排序"],
   "events": {
     "Order Sprites": "排序角色"
   },

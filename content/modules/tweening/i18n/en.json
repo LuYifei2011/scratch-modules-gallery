@@ -1,7 +1,6 @@
 {
   "name": "Tweening",
   "description": "Use tweening/interpolation for smooth animation.",
-  "tags": ["animation", "tween"],
   "scriptTitles": {
     "linear": "Linear",
     "sine": "Sine",

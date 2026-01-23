@@ -1,0 +1,62 @@
+{
+  "math": {
+    "en": "math",
+    "zh-cn": "数学",
+    "zh-tw": "數學"
+  },
+  "exponentiation": {
+    "en": "exponentiation",
+    "zh-cn": "幂",
+    "zh-tw": "冪"
+  },
+  "performance": {
+    "en": "performance",
+    "zh-cn": "性能",
+    "zh-tw": "效能"
+  },
+  "fps": {
+    "en": "fps",
+    "zh-cn": "fps",
+    "zh-tw": "fps"
+  },
+  "layer": {
+    "en": "layer",
+    "zh-cn": "层",
+    "zh-tw": "層"
+  },
+  "sort": {
+    "en": "sort",
+    "zh-cn": "排序",
+    "zh-tw": "排序"
+  },
+  "motion": {
+    "en": "motion",
+    "zh-cn": "运动",
+    "zh-tw": "運動"
+  },
+  "rotate": {
+    "en": "rotate",
+    "zh-cn": "旋转",
+    "zh-tw": "旋轉"
+  },
+  "animation": {
+    "en": "animation",
+    "zh-cn": "动画",
+    "zh-tw": "動畫"
+  },
+  "tween": {
+    "en": "tween",
+    "zh-cn": "补间",
+    "zh-tw": "補間"
+  },
+  "round": {
+    "en": "round",
+    "zh-cn": "四舍五入",
+    "zh-tw": "四捨五入"
+  },
+  "event": {
+    "en": "event",
+    "zh-cn": "事件",
+    "zh-tw": "事件"
+  }
+}
