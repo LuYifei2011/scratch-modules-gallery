@@ -7,12 +7,11 @@
 {% block meta_description %}
     {{ module.description }}
 {% endblock %}
-{% block meta_keywords %}<meta name="keywords" content="{{ config.keywords }}{% if module.tags.length %},{{ module.tags | join(',') }}{% endif %}"/>{% endblock %}
+{% block meta_keywords %}<meta name="keywords" content="{{ module.keywordsFinalStr }}"/>{% endblock %}
 {% block head_extra %}
     <script type="application/ld+json">{ "@context": "https://schema.org", "@type": "SoftwareSourceCode", "name": "{{ module.name | replace('"','\"') }}",
                         "description": "{{ module.description | replace('"','\"') }} ", "programmingLanguage": "Scratch",
-        {# 合并 tags 与 keywords，确保都是数组 #}
-        {% set tags_str = module.tags | join(',') %} "keywords": "{{ tags_str }}", "url": "{{ config.baseUrl }} /{{ locale }}
+        "keywords": "{{ module.keywordsFinalStr }}", "url": "{{ config.baseUrl }} /{{ locale }}
         /modules/{{ module.slug }}/" }</script>
 {% endblock %}
 {% block content %}

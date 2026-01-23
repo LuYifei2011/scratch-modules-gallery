@@ -46,11 +46,23 @@ function pickDefaultFromMap(map) {
 function normalizeI18nStringOrMap(v) {
   if (v == null) return { base: undefined, map: undefined }
   if (typeof v === 'string') return { base: v, map: undefined }
+
   if (typeof v === 'object') {
     const base = pickDefaultFromMap(v)
     return { base, map: v }
   }
   return { base: String(v), map: undefined }
+}
+
+function normalizeI18nKeywords(v) {
+  if (v == null) return { base: [], map: undefined }
+  if (Array.isArray(v)) return { base: v, map: undefined }
+  if (typeof v === 'object') {
+    const base = pickDefaultFromMap(v)
+    if (Array.isArray(base)) return { base, map: v }
+    return { base: [], map: v }
+  }
+  return { base: [], map: undefined }
 }
 
 function normalizeI18nTags(v) {
@@ -63,7 +75,7 @@ function normalizeI18nTags(v) {
 }
 
 export function buildModuleRecord(meta, extra) {
-  const { id, name, description, tags, contributors } = meta
+  const { id, name, description, tags, keywords, contributors } = meta
   const errors = []
   if (!id) errors.push('missing id')
   if (!name) errors.push('missing name')
@@ -74,6 +86,7 @@ export function buildModuleRecord(meta, extra) {
   const nameNorm = normalizeI18nStringOrMap(name)
   const descNorm = normalizeI18nStringOrMap(description)
   const tagsNorm = normalizeI18nTags(tags)
+  const keywordsNorm = normalizeI18nKeywords(keywords)
   // 脚本标题（英文，按脚本 id -> 标题）
   const scriptTitles =
     meta && typeof meta.scriptTitles === 'object' && !Array.isArray(meta.scriptTitles)
@@ -86,10 +99,10 @@ export function buildModuleRecord(meta, extra) {
     name: nameNorm.base,
     description: descNorm.base,
     tags: Array.isArray(tagsNorm.base) ? tagsNorm.base : [],
+    keywords: Array.isArray(keywordsNorm.base) ? keywordsNorm.base : [],
     // 新增：脚本标题（英文）
     scriptTitles,
     contributors: parseContributors(contributors),
-    // keywords field removed - rely on tags for searchability
     // 统一使用 scripts 数组 [{ id, title, content }]
     scripts: Array.isArray(extra.scripts) ? extra.scripts : [],
     hasDemo: !!extra.demoFile,

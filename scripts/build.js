@@ -201,10 +201,10 @@ async function maybeMinify(html) {
 
 function buildSearchIndex(modules) {
   const mini = new MiniSearch({
-    fields: ['name', 'id', 'description', 'tags'],
-    storeFields: ['id', 'name', 'description', 'tags', 'slug', 'hasDemo'],
+    fields: ['name', 'id', 'description', 'tags', 'keywords'],
+    storeFields: ['id', 'name', 'description', 'tags', 'keywords', 'slug', 'hasDemo'],
     idField: 'id',
-    searchOptions: { boost: { name: 5, id: 4, tags: 3, description: 2 } },
+    searchOptions: { boost: { name: 5, id: 4, tags: 3, keywords: 2, description: 2 } },
     tokenize: tokenizeCJK,
   })
   mini.addAll(modules)
@@ -661,6 +661,10 @@ async function translateModulesForLocale(modules, dict, locale, options = {}) {
       }
       return nm[base]
     }
+    function pickKeywords(base, map) {
+      const val = pickArr(base, map)
+      return Array.isArray(val) ? val : []
+    }
     function pickTitleForScript(scriptId, index1) {
       // 按优先级查找脚本标题
       for (const loc of localePriority) {
@@ -678,10 +682,10 @@ async function translateModulesForLocale(modules, dict, locale, options = {}) {
     if (m.description_i18n || per[locale] || per['en'] || per['zh-cn'] || per['zh-tw']) {
       nm.description = pickStr('description', m.description_i18n)
     }
-    if (m.tags_i18n || per[locale] || per['en'] || per['zh-cn'] || per['zh-tw']) {
-      const tv = pickArr('tags', m.tags_i18n)
-      if (Array.isArray(tv)) nm.tags = tv
-    }
+    const tv = pickArr('tags', m.tags_i18n)
+    if (Array.isArray(tv)) nm.tags = tv
+    const kw = pickKeywords('keywords', m.keywords_i18n)
+    if (Array.isArray(kw)) nm.keywords = kw
 
     const ownNameMaps = buildNameMapsForModule(m)
     // 为“变量 / 列表”表格计算本地化显示名称（模块级，始终执行）
@@ -936,6 +940,22 @@ async function translateModulesForLocale(modules, dict, locale, options = {}) {
         console.warn('[i18n-missing] 检测失败', m.id, e?.message || e)
       }
     }
+    // 计算去重后的 keywords 和 tags 合并
+    {
+      const seen = new Set()
+      const final = []
+      const kws = Array.isArray(nm.keywords) ? nm.keywords : []
+      const tgs = Array.isArray(nm.tags) ? nm.tags : []
+      for (const item of kws.concat(tgs)) {
+        if (item && !seen.has(item)) {
+          seen.add(item)
+          final.push(item)
+        }
+      }
+      nm.keywordsFinal = final
+      // 计算最终的 keywords 字符串（用于模板，避免模板逻辑重复）
+      nm.keywordsFinalStr = final.join(',')
+    }
     out.push(nm)
   }
   return out
@@ -1188,14 +1208,18 @@ async function render(modules, allTags) {
 
     // 每种语言目录写入搜索数据（使用本地化后的模块）
     const searchIndex = buildSearchIndex(modulesForLoc)
-    const docs = modulesForLoc.map((m) => ({
-      id: m.id,
-      name: m.name,
-      description: m.description,
-      tags: m.tags,
-      slug: m.slug,
-      hasDemo: m.hasDemo,
-    }))
+    const docs = modulesForLoc.map((m) => {
+      return {
+        id: m.id,
+        name: m.name,
+        description: m.description,
+        tags: m.tags,
+        // 使用在 schema 中已预先去重计算好的 keywordsFinal，避免重复 Set 操作
+        keywords: m.keywordsFinal,
+        slug: m.slug,
+        hasDemo: m.hasDemo,
+      }
+    })
     await fs.writeJson(path.join(locOut, 'search-index.json'), searchIndex)
     await fs.writeJson(path.join(locOut, 'search-docs.json'), docs)
 

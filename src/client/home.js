@@ -34,10 +34,10 @@ async function initSearch() {
     return Array.from(new Set(out))
   }
   const opts = {
-    fields: ['name', 'id', 'description', 'tags'],
-    storeFields: ['id', 'name', 'description', 'tags', 'slug', 'hasDemo'],
+    fields: ['name', 'id', 'description', 'tags', 'keywords'],
+    storeFields: ['id', 'name', 'description', 'tags', 'keywords', 'slug', 'hasDemo'],
     idField: 'id',
-    searchOptions: { boost: { name: 5, id: 4, tags: 3, description: 2 } },
+    searchOptions: { boost: { name: 5, id: 4, tags: 3, keywords: 2, description: 2 } },
     tokenize: tokenizeCJK,
   }
   mini = MiniSearch.loadJS(idxJson, opts)
