@@ -9,7 +9,9 @@
   "base": {
     "moduleCount": "{count} modules on site",
     "githubAriaLabel": "GitHub repository",
-    "languageSwitchTitle": "Language"
+    "languageSwitchTitle": "Language",
+    "rememberLanguage": "Remember my language",
+    "rememberLanguageTooltip": "Auto redirect to your preferred language"
   },
   "home": {
     "searchPlaceholder": "Search modules...",

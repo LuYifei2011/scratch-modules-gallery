@@ -87,13 +87,33 @@
                     </a>
                 {% endif %}
                 <div class="lang-switch">
-                    <select id="lang-select"
+                    <button id="lang-btn"
+                            class="lang-btn"
                             aria-label="{{ t.base.languageSwitchTitle }}"
-                            class="select-inline">
+                            aria-expanded="false">
+                        {{ icons.iconLanguage() }}
+                        <span class="lang-current">{{ i18n[locale].meta.languageName or locale }}</span>
+                        <svg class="lang-arrow"
+                             viewBox="0 0 24 24"
+                             width="16"
+                             height="16">
+                            <path fill="currentColor" d="M7 10l5 5 5-5z" />
+                        </svg>
+                    </button>
+                    <div id="lang-menu" class="lang-menu" hidden>
                         {% for loc in locales %}
-                            <option value="{{ loc }}" {% if locale==loc %}selected{% endif %}>{{ i18n[loc].meta.languageName or loc }}</option>
+                            <button class="lang-option {% if locale==loc %}lang-option-active{% endif %}"
+                                    data-locale="{{ loc }}">
+                                {{ i18n[loc].meta.languageName or loc }}
+                            </button>
                         {% endfor %}
-                    </select>
+                        <div class="lang-divider"></div>
+                        <label class="lang-remember">
+                            <input type="checkbox" id="lang-remember-checkbox" />
+                            <span>{{ t.base.rememberLanguage }}</span>
+                            <span class="lang-remember-tooltip" title="{{ t.base.rememberLanguageTooltip }}">?</span>
+                        </label>
+                    </div>
                 </div>
             </nav>
         </header>
@@ -111,24 +131,88 @@
                 window.IS_DEV = {{ IS_DEV and true or false }};
                 window.PAGE_BASE = '{{ pageBase or assetBase }}';
                 window.ASSET_BASE = '{{ assetBase }}';
+                window.LOCALES = {{ locales | dump | safe }};
+                window.CURRENT_LOCALE = '{{ locale }}';
+                window.LOCALE_NAMES = {{ i18n | dump | safe }};
+                // 检查是否需要重定向到偏好语言
                 (function () {
-                    var sel = document.getElementById('lang-select');
-                    if (! sel) 
+                    try {
+                        var rememberLang = localStorage.getItem('remember-language') === 'true';
+                        var preferredLocale = localStorage.getItem('preferred-locale');
+                        var currentLocale = '{{ locale }}';
+                        if (rememberLang && preferredLocale && preferredLocale !== currentLocale) {
+                            var locales = {{ locales | dump | safe }};
+                            if (locales.includes(preferredLocale)) {
+                                var base = ('{{ pageBase or assetBase }}').replace(/\/$/, '').replace(/\/[A-Za-z0-9_-]+$/, '');
+                                var to = base + '/' + preferredLocale + '/';
+                                var localesPattern ='{{ locales | join('|') }}';
+                                var m = location.pathname.match(new RegExp('/(' + localesPattern + ')/(.*)$'));
+                                var rest = m && m[2]
+                                    ? m[2]
+                                    : '';
+                                location.replace(to + rest);
+                                return;
+                            }
+                        }
+                    } catch (e) {}
+                })();
+                (function () {
+                    var btn = document.getElementById('lang-btn');
+                    var menu = document.getElementById('lang-menu');
+                    var remember = document.getElementById('lang-remember-checkbox');
+                    if (! btn || ! menu) 
                         return;
                     
-                    sel.addEventListener('change', function () {
-                        var loc = sel.value;
-                        try {
-                            localStorage.setItem('preferred-locale', loc);
-                        } catch (e) {}
-                        var base = ('{{ pageBase or assetBase }}').replace(/\/$/, '').replace(/\/[A-Za-z0-9_-]+$/, '');
-                        var to = base + '/' + loc + '/';
-                        var localesPattern ='{{ locales | join('|') }}';
-                        var m = location.pathname.match(new RegExp('/(' + localesPattern + ')/(.*)$'));
-                        var rest = m && m[2]
-                            ? m[2]
-                            : '';
-                        location.href = to + rest;
+                    // 读取记住语言状态
+                    try {
+                        var rememberPref = localStorage.getItem('remember-language') === 'true';
+                        if (remember) 
+                            remember.checked = rememberPref;
+                        
+                    } catch (e) {}
+                    // 展开/收起菜单
+                    btn.addEventListener('click', function (e) {
+                        e.stopPropagation();
+                        var isExpanded = btn.getAttribute('aria-expanded') === 'true';
+                        btn.setAttribute('aria-expanded', ! isExpanded);
+                        menu.hidden = isExpanded;
+                    });
+                    // 点击外部关闭菜单
+                    document.addEventListener('click', function () {
+                        btn.setAttribute('aria-expanded', 'false');
+                        menu.hidden = true;
+                    });
+                    menu.addEventListener('click', function (e) {
+                        e.stopPropagation();
+                    });
+                    // 记住语言复选框
+                    if (remember) {
+                        remember.addEventListener('change', function () {
+                            try {
+                                localStorage.setItem('remember-language', remember.checked);
+                                if (remember.checked) {
+                                    localStorage.setItem('preferred-locale', '{{ locale }}');
+                                }
+                            } catch (e) {}
+                        });
+                    }
+                    // 点击语言选项切换语言
+                    var options = menu.querySelectorAll('.lang-option');
+                    options.forEach(function (opt) {
+                        opt.addEventListener('click', function () {
+                            var loc = opt.getAttribute('data-locale');
+                            try {
+                                localStorage.setItem('preferred-locale', loc);
+                            } catch (e) {}
+                            var base = ('{{ pageBase or assetBase }}').replace(/\/$/, '').replace(/\/[A-Za-z0-9_-]+$/, '');
+                            var to = base + '/' + loc + '/';
+                            var localesPattern ='{{ locales | join('|') }}';
+                            var m = location.pathname.match(new RegExp('/(' + localesPattern + ')/(.*)$'));
+                            var rest = m && m[2]
+                                ? m[2]
+                                : '';
+                            location.href = to + rest;
+                        });
                     });
                 })();
         </script>

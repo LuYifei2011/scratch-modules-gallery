@@ -65,12 +65,17 @@
                 return '{{ defaultLocale }}';
             }
             var pref = '';
+            var rememberLang = false;
             try {
                 pref = localStorage.getItem('preferred-locale') || '';
+                rememberLang = localStorage.getItem('remember-language') === 'true';
             } catch (e) {}
-            var target = locales.includes(pref)
+            var target = (rememberLang && locales.includes(pref))
                 ? pref
-                : pickLocale(navigator.languages || [navigator.language || '']);
+                : (
+                    locales.includes(pref)
+                    ? pref
+                    : pickLocale(navigator.languages || [navigator.language || '']));
             var dest = (
                 base
                 ? base

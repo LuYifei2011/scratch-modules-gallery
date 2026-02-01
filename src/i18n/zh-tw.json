@@ -9,7 +9,9 @@
   "base": {
     "moduleCount": "站點共有 {count} 個模組",
     "githubAriaLabel": "GitHub 倉庫",
-    "languageSwitchTitle": "語言"
+    "languageSwitchTitle": "語言",
+    "rememberLanguage": "記住我的語言",
+    "rememberLanguageTooltip": "自動重新導向到您偏好的語言"
   },
   "home": {
     "searchPlaceholder": "搜尋模組...",
