@@ -9,10 +9,17 @@
 {% endblock %}
 {% block meta_keywords %}<meta name="keywords" content="{{ module.keywordsFinalStr }}"/>{% endblock %}
 {% block head_extra %}
-    <script type="application/ld+json">{ "@context": "https://schema.org", "@type": "SoftwareSourceCode", "name": "{{ module.name | replace('"','\"') }}",
-                        "description": "{{ module.description | replace('"','\"') }} ", "programmingLanguage": "Scratch",
-        "keywords": "{{ module.keywordsFinalStr }}", "url": "{{ config.baseUrl }} /{{ locale }}
-        /modules/{{ module.slug }}/" }</script>
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org", 
+        "@type": "SoftwareSourceCode", 
+        "name": "{{ module.name | replace('"','\"') }}",
+        "description": "{{ module.description | replace('"','\"') }} ", 
+        "programmingLanguage": "Scratch", 
+        "keywords": "{{ module.keywordsFinalStr }}", 
+        "url": "{{ config.baseUrl }}/{{ locale }}/modules/{{ module.slug }}/"
+    }
+    </script>
 {% endblock %}
 {% block content %}
     <article class="module-detail">
@@ -23,7 +30,8 @@
                     href="/__dev/editor/?module={{ module.id }}"
                     class="btn btn-sm btn-primary"
                     style="height: 20px; display:inline-flex; align-items:center; gap:6px;">
-                    {{ icons.iconEdit(14, 14) }} {{ t.module.editModule }}
+                    {{ icons.iconEdit(14, 14) }}
+                    {{ t.module.editModule }}
                 </a>
             {% endif %}
         </div>
@@ -89,11 +97,7 @@
                             <div class="sb-block">
                                 <div class="sb-actions">
                                     {% if IS_DEV %}
-                                        <a
-                                            href="/__dev/editor/?module={{ s.fromId }}&script={{ s.fromScriptId }}&tab=scripts"
-                                            class="sb-action sb-edit"
-                                            title="{{ t.module.editScript }}"
-                                            target="_blank">
+                                        <a href="/__dev/editor/?module={{ s.fromId }}&script={{ s.fromScriptId }}&tab=scripts" class="sb-action sb-edit" title="{{ t.module.editScript }}" target="_blank">
                                             {{ icons.iconEdit() }}
                                         </a>
                                     {% endif %}
