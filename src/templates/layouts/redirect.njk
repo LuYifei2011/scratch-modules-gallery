@@ -1,12 +1,14 @@
 <!DOCTYPE html>
-<html lang="{{ lang | default('en') }}">
-    <head><meta charset="utf-8"/>
-        <meta http-equiv="Cache-Control" content="no-store"/>
-        <meta name="viewport" content="width=device-width,initial-scale=1"/>
+<html lang="{{ lang | default("en") }}">
+    <head>
+        <meta charset="utf-8" />
+        <meta http-equiv="Cache-Control" content="no-store" />
+        <meta name="viewport" content="width=device-width,initial-scale=1" />
         <title>Redirecting…</title>
         <noscript>
-            <meta http-equiv="refresh" content="0; url={{ basePath or '' }}/{{ defaultLocale }}/"/>
-            <link rel="canonical" href="{{ configBaseUrl }}/{{ defaultLocale }}/"/>
+            <meta http-equiv="refresh"
+                  content="0; url={{ basePath or '' }}/{{ defaultLocale }}/" />
+            <link rel="canonical" href="{{ configBaseUrl }}/{{ defaultLocale }}/" />
             <style>
                 body {
                     font-family: system-ui, Segoe UI, Roboto, Helvetica, Arial, sans-serif;

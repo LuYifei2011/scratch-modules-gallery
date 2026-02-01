@@ -1,7 +1,5 @@
 {% extends "layouts/base.njk" %}
-{% block title %}
-  {{ t.issues.pageTitle }} - {{ config.siteName }}
-{% endblock %}
+{% block title %}{{ t.issues.pageTitle }} - {{ config.siteName }}{% endblock %}
 {% block content %}
   <h1>{{ t.issues.heading }}</h1>
   {% if IS_DEV and buildIssuesSummary and buildIssuesSummary.total > 0 %}
@@ -9,7 +7,9 @@
     <ul style="list-style:none;padding:0;margin:var(--space-lg) 0;">
       {% for it in buildIssues %}
         <li class="issue-banner {% if it.type=='error' %}issue-banner-error{% else %}issue-banner-warning{% endif %}">
-          <span style="display:inline-block;min-width:52px;font-weight:var(--font-weight-semibold);">{{ it.type | upper }}</span>
+          <span style="display:inline-block;
+                       min-width:52px;
+                       font-weight:var(--font-weight-semibold)">{{ it.type | upper }}</span>
           <span>{{ it.message }}</span>
         </li>
       {% endfor %}

@@ -1,12 +1,12 @@
 <!DOCTYPE html>
-<html lang="{{ lang | default('en') }}">
+<html lang="{{ lang | default("en") }}">
     <head>
-        <meta charset="utf-8"/>
-        <meta http-equiv="Cache-Control" content="no-store"/>
-        <meta name="viewport" content="width=device-width,initial-scale=1"/>
-        <meta name="darkreader-lock" content="true"/>
+        <meta charset="utf-8" />
+        <meta http-equiv="Cache-Control" content="no-store" />
+        <meta name="viewport" content="width=device-width,initial-scale=1" />
+        <meta name="darkreader-lock" content="true" />
         <title>404 - Page Not Found</title>
-        <link rel="stylesheet" href="{{ basePath or '' }}/style.css"/>
+        <link rel="stylesheet" href="{{ basePath or '' }}/style.css" />
         <style>
             :root {
                 --color-bg-primary: #f7f9fb;
@@ -109,8 +109,13 @@
             <div class="error-code">404</div>
             <p class="error-message" id="error-msg">Page Not Found</p>
             <div class="actions">
-                <a href="{{ basePath or '' }}/{{ defaultLocale }}/" class="button" id="home-link">Back to Home</a>
-                <a href="{{ basePath or '' }}/{{ defaultLocale }}/" class="button button-secondary" id="search-link" style="display:none;">Search</a>
+                <a href="{{ basePath or '' }}/{{ defaultLocale }}/"
+                   class="button"
+                   id="home-link">Back to Home</a>
+                <a href="{{ basePath or '' }}/{{ defaultLocale }}/"
+                   class="button button-secondary"
+                   id="search-link"
+                   style="display:none">Search</a>
             </div>
             <div class="lang-list">
                 <div class="lang-links">

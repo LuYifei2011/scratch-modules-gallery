@@ -1,13 +1,9 @@
 {% import "partials/icons.njk" as icons %}
 {% extends "layouts/base.njk" %}
-{% block title %}
-    {{ module.name }} - {{ config.siteName }}
-{% endblock %}
+{% block title %}{{ module.name }} - {{ config.siteName }}{% endblock %}
 {% set canonical = '/' + locale + '/modules/' + module.slug + '/' %}
-{% block meta_description %}
-    {{ module.description }}
-{% endblock %}
-{% block meta_keywords %}<meta name="keywords" content="{{ module.keywordsFinalStr }}"/>{% endblock %}
+{% block meta_description %}{{ module.description }}{% endblock %}
+{% block meta_keywords %}<meta name="keywords" content="{{ module.keywordsFinalStr }}" />{% endblock %}
 {% block head_extra %}
     <script type="application/ld+json">
     {
@@ -23,13 +19,19 @@
 {% endblock %}
 {% block content %}
     <article class="module-detail">
-        <div style="display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: var(--space-md);">
+        <div style="display: flex;
+                    justify-content: space-between;
+                    align-items: baseline;
+                    flex-wrap: wrap;
+                    gap: var(--space-md)">
             <h1>{{ module.name }}</h1>
             {% if IS_DEV %}
-                <a
-                    href="/__dev/editor/?module={{ module.id }}"
-                    class="btn btn-sm btn-primary"
-                    style="height: 20px; display:inline-flex; align-items:center; gap:6px;">
+                <a href="/__dev/editor/?module={{ module.id }}"
+                   class="btn btn-sm btn-primary"
+                   style="height: 20px;
+                          display:inline-flex;
+                          align-items:center;
+                          gap:6px">
                     {{ icons.iconEdit(14, 14) }}
                     {{ t.module.editModule }}
                 </a>
@@ -37,18 +39,21 @@
         </div>
         <p>{{ module.description }}</p>
         <p class="tags">
-            {% for t in module.tags %}
-                <span class="tag">{{ t }}</span>
-            {% endfor %}
+            {% for t in module.tags %}<span class="tag">{{ t }}</span>{% endfor %}
         </p>
         {% if IS_DEV and module.keywordsStr %}
-            <p style="display: flex; align-items: center; gap: 8px; margin: var(--space-md) 0 0 0; font-size: 0.9em;">
+            <p style="display: flex;
+                      align-items: center;
+                      gap: 8px;
+                      margin: var(--space-md) 0 0 0;
+                      font-size: 0.9em">
                 {{ icons.iconDebug(16, 16) }} Keywords:
                 <span>{{ module.keywordsStr }}</span>
             </p>
         {% endif %}
         {% if module.contributors.length %}
-            <p class="contributors">{{ t.module.contributors }}:
+            <p class="contributors">
+                {{ t.module.contributors }}:
                 {% for c in module.contributors %}
                     <span class="contributor">
                         {% if c.url %}
@@ -63,8 +68,7 @@
         <section>
             <h2>{{ t.module.scripts }}</h2>
             <div class="sb-style-switcher" style="margin-bottom: var(--space-lg);">
-                <label for="sb-style">{{ t.module.renderStyle }}
-                </label>
+                <label for="sb-style">{{ t.module.renderStyle }}</label>
                 <select id="sb-style" class="select-inline">
                     <option value="scratch3" selected>Scratch 3</option>
                     <option value="scratch3-high-contrast">Scratch 3 ({{ t.module.highContrast }})</option>
@@ -72,13 +76,10 @@
                 </select>
             </div>
             <div class="sb-translate-switcher" style="margin-bottom: var(--space-lg);">
-                <label for="sb-translate">{{ t.module.translateTo }}
-                </label>
+                <label for="sb-translate">{{ t.module.translateTo }}</label>
                 <select id="sb-translate" class="select-inline">
                     <option value="no-translate" selected>{{ t.module.noTranslate }}</option>
-                    {% for lang in scratchblocksLanguages %}
-                        <option value="{{ lang.code }}">{{ lang.name }}</option>
-                    {% endfor %}
+                    {% for lang in scratchblocksLanguages %}<option value="{{ lang.code }}">{{ lang.name }}</option>{% endfor %}
                 </select>
             </div>
             {% if module.scripts and module.scripts.length %}
@@ -88,20 +89,21 @@
                             <summary>
                                 {{ t.module.importedFrom }}
                                 <a href="{{ pageBase }}/modules/{{ s.fromId }}/">{{ s.fromName }}</a>
-                                {% if s.fromTitle %}
-                                    · {{ s.fromTitle }}
-                                {% endif %}
-                                {% if s.fromIndex %}
-                                    (#{{ s.fromIndex }}){% endif %}
+                                {% if s.fromTitle %}· {{ s.fromTitle }}{% endif %}
+                                {% if s.fromIndex %}(#{{ s.fromIndex }}){% endif %}
                             </summary>
                             <div class="sb-block">
                                 <div class="sb-actions">
                                     {% if IS_DEV %}
-                                        <a href="/__dev/editor/?module={{ s.fromId }}&script={{ s.fromScriptId }}&tab=scripts" class="sb-action sb-edit" title="{{ t.module.editScript }}" target="_blank">
-                                            {{ icons.iconEdit() }}
-                                        </a>
+                                        <a href="/__dev/editor/?module={{ s.fromId }}&script={{ s.fromScriptId }}&tab=scripts"
+                                           class="sb-action sb-edit"
+                                           title="{{ t.module.editScript }}"
+                                           target="_blank">{{ icons.iconEdit() }}</a>
                                     {% endif %}
-                                    <button class="sb-action sb-copy" type="button" aria-label="{{ t.module.copyScript }}" title="{{ t.module.copyScript }}">
+                                    <button class="sb-action sb-copy"
+                                            type="button"
+                                            aria-label="{{ t.module.copyScript }}"
+                                            title="{{ t.module.copyScript }}">
                                         {{ icons.iconCopy() }}
                                         {{ icons.iconCheck() }}
                                     </button>
@@ -111,33 +113,28 @@
                         </details>
                     {% else %}
                         <div class="script-block">
-                            {% if s.title %}
-                                <h3 class="script-title">{{ s.title }}</h3>
-                            {% endif %}
+                            {% if s.title %}<h3 class="script-title">{{ s.title }}</h3>{% endif %}
                             {% if s.leadingImports %}
                                 {% for imp in s.leadingImports %}
                                     <details class="imported-script">
                                         <summary>
                                             {{ t.module.importedFrom }}
                                             <a href="{{ pageBase }}/modules/{{ imp.fromId }}/">{{ imp.fromName }}</a>
-                                            {% if imp.fromTitle %}
-                                                · {{ imp.fromTitle }}
-                                            {% endif %}
-                                            {% if imp.fromIndex %}
-                                                (#{{ imp.fromIndex }}){% endif %}
+                                            {% if imp.fromTitle %}· {{ imp.fromTitle }}{% endif %}
+                                            {% if imp.fromIndex %}(#{{ imp.fromIndex }}){% endif %}
                                         </summary>
                                         <div class="sb-block">
                                             <div class="sb-actions">
                                                 {% if IS_DEV %}
-                                                    <a
-                                                        href="/__dev/editor/?module={{ imp.fromId }}&script={{ imp.fromScriptId }}&tab=scripts"
-                                                        class="sb-action sb-edit"
-                                                        title="编辑脚本"
-                                                        target="_blank">
-                                                        {{ icons.iconEdit() }}
-                                                    </a>
+                                                    <a href="/__dev/editor/?module={{ imp.fromId }}&script={{ imp.fromScriptId }}&tab=scripts"
+                                                       class="sb-action sb-edit"
+                                                       title="编辑脚本"
+                                                       target="_blank">{{ icons.iconEdit() }}</a>
                                                 {% endif %}
-                                                <button class="sb-action sb-copy" type="button" aria-label="{{ t.module.copyScript }}" title="{{ t.module.copyScript }}">
+                                                <button class="sb-action sb-copy"
+                                                        type="button"
+                                                        aria-label="{{ t.module.copyScript }}"
+                                                        title="{{ t.module.copyScript }}">
                                                     {{ icons.iconCopy() }}
                                                     {{ icons.iconCheck() }}
                                                 </button>
@@ -150,15 +147,15 @@
                             <div class="sb-block">
                                 <div class="sb-actions">
                                     {% if IS_DEV %}
-                                        <a
-                                            href="/__dev/editor/?module={{ module.id }}&script={{ s.id }}&tab=scripts"
-                                            class="sb-action sb-edit"
-                                            title="编辑脚本"
-                                            target="_blank">
-                                            {{ icons.iconEdit() }}
-                                        </a>
+                                        <a href="/__dev/editor/?module={{ module.id }}&script={{ s.id }}&tab=scripts"
+                                           class="sb-action sb-edit"
+                                           title="编辑脚本"
+                                           target="_blank">{{ icons.iconEdit() }}</a>
                                     {% endif %}
-                                    <button class="sb-action sb-copy" type="button" aria-label="{{ t.module.copyScript }}" title="{{ t.module.copyScript }}">
+                                    <button class="sb-action sb-copy"
+                                            type="button"
+                                            aria-label="{{ t.module.copyScript }}"
+                                            title="{{ t.module.copyScript }}">
                                         {{ icons.iconCopy() }}
                                         {{ icons.iconCheck() }}
                                     </button>
@@ -203,24 +200,24 @@
         {% endif %}
         {% if module.hasDemo %}
             <section>
-                <div style="display:flex;align-items:center;gap:var(--space-lg);margin-bottom:var(--space-lg);">
+                <div style="display:flex;
+                            align-items:center;
+                            gap:var(--space-lg);
+                            margin-bottom:var(--space-lg)">
                     <h2 style="margin:0;">{{ t.module.demo }}</h2>
-                    <a
-                        class="btn btn-primary"
-                        href="https://turbowarp.org/editor?project_url={{ (config.baseUrl + '/modules/' + module.slug + '/demo.sb3') | urlencode }}"
-                        target="_blank"
-                        rel="noopener">
-                        {{ t.module.openInTW }}</a>
+                    <a class="btn btn-primary"
+                       href="https://turbowarp.org/editor?project_url={{ (config.baseUrl + '/modules/' + module.slug + '/demo.sb3') | urlencode }}"
+                       target="_blank"
+                       rel="noopener">{{ t.module.openInTW }}</a>
                 </div>
-                <iframe
-                    src="https://turbowarp.org/embed?project_url={{ (config.baseUrl + '/modules/' + module.slug + '/demo.sb3') | urlencode }}&settings-button&addons=pause,clones"
-                    width="482"
-                    height="412"
-                    allowtransparency="true"
-                    frameborder="0"
-                    scrolling="no"
-                    allowfullscreen
-                    loading="lazy"></iframe>
+                <iframe src="https://turbowarp.org/embed?project_url={{ (config.baseUrl + '/modules/' + module.slug + '/demo.sb3') | urlencode }}&settings-button&addons=pause,clones"
+                        width="482"
+                        height="412"
+                        allowtransparency="true"
+                        frameborder="0"
+                        scrolling="no"
+                        allowfullscreen
+                        loading="lazy"></iframe>
             </section>
         {% endif %}
         {% if module.references.length %}
@@ -230,9 +227,7 @@
                     {% for r in module.references %}
                         <li>
                             <a href="{{ r.url }}" target="_blank" rel="noopener">{{ r.title }}</a>
-                            {% if r.type %}
-                                <em>({{ r.type }})</em>
-                            {% endif %}
+                            {% if r.type %}<em>({{ r.type }})</em>{% endif %}
                         </li>
                     {% endfor %}
                 </ul>
@@ -241,6 +236,6 @@
     </article>
 {% endblock %}
 {% block page_scripts %}
-    <link rel="stylesheet" href="{{ assetBase }}/module.css"/>
+    <link rel="stylesheet" href="{{ assetBase }}/module.css" />
     <script type="module" src="{{ assetBase }}/module.js"></script>
 {% endblock %}

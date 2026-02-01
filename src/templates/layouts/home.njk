@@ -1,21 +1,17 @@
 {% extends "layouts/base.njk" %}
 {# home页不需要重写 title 块：base 已提供默认站点名，若需要可保留此块 #}
-{% block title %}
-    {{ config.siteName }}
-{% endblock %}
+{% block title %}{{ config.siteName }}{% endblock %}
 {# Nunjucks 无 unique 过滤器，直接拼接所有 tags，可能有重复 #}
-{% block meta_keywords %}<meta name="keywords" content="{{ config.keywords }}"/>{% endblock %}
+{% block meta_keywords %}<meta name="keywords" content="{{ config.keywords }}" />{% endblock %}
 {% block content %}
     <section style="display:flex;flex-direction:column">
-        <input id="search" type="text" placeholder="{{ t.home.searchPlaceholder }}"/>
+        <input id="search" type="text" placeholder="{{ t.home.searchPlaceholder }}" />
         <div id="results" class="module-list">
             {% for m in modules %}
                 <article class="module-item">
                     <h2>
                         <a href="{{ pageBase }}/modules/{{ m.slug }}/">{{ m.name }}</a>
-                        {% if m.hasDemo %}
-                            <span class="badge">{{ t.home.onlineDemoBadge }}</span>
-                        {% endif %}
+                        {% if m.hasDemo %}<span class="badge">{{ t.home.onlineDemoBadge }}</span>{% endif %}
                     </h2>
                     <p>{{ m.description }}</p>
                     <p class="tags">
@@ -28,6 +24,4 @@
         </div>
     </section>
 {% endblock %}
-{% block page_scripts %}
-    <script type="module" src="{{ assetBase }}/home.js"></script>
-{% endblock %}
+{% block page_scripts %}<script type="module" src="{{ assetBase }}/home.js"></script>{% endblock %}

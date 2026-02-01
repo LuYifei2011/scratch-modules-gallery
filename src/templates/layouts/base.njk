@@ -2,55 +2,67 @@
 <!DOCTYPE html>
 <html lang="{{ config.language }}">
     <head>
-        <meta charset="utf-8"/>
-        <meta name="viewport" content="width=device-width,initial-scale=1"/>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width,initial-scale=1" />
         <title>
-            {% block title %}
-                {{ config.siteName }}
-            {% endblock %}
+            {% block title %}{{ config.siteName }}{% endblock %}
         </title>
-        <meta name="description" content="{% block meta_description %}{{ config.description }}{% endblock %}"/>
-        {% block meta_keywords %}<meta name="keywords" content="{{ config.keywords or '' }}"/>{% endblock %}
-        <meta name="darkreader-lock" content="true"/>
-        <meta name="theme-color" content="#1747a6" media="(prefers-color-scheme: light)">
-        <meta name="theme-color" content="#0d1e33" media="(prefers-color-scheme: dark)">
-        <link rel="canonical" href="{{ config.baseUrl }}{{ canonical or '/' }}"/>
+        <meta name="description"
+              content="{% block meta_description %}{{ config.description }}{% endblock %}" />
+        {% block meta_keywords %}<meta name="keywords" content="{{ config.keywords or '' }}" />{% endblock %}
+        <meta name="darkreader-lock" content="true" />
+        <meta name="theme-color"
+              content="#1747a6"
+              media="(prefers-color-scheme: light)">
+        <meta name="theme-color"
+              content="#0d1e33"
+              media="(prefers-color-scheme: dark)">
+        <link rel="canonical" href="{{ config.baseUrl }}{{ canonical or '/' }}" />
         {% if locales and locale and pagePath %}
             {% for loc in locales %}
-                <link rel="alternate" href="{{ config.baseUrl }}{{ '/' + loc + pagePath }}" hreflang="{{ (langTags and langTags[loc]) or loc }}"/>
+                <link rel="alternate"
+                      href="{{ config.baseUrl }}{{ '/' + loc + pagePath }}"
+                      hreflang="{{ (langTags and langTags[loc]) or loc }}" />
             {% endfor %}
-            <link rel="alternate" href="{{ config.baseUrl }}{{ '/' + locale + pagePath }}" hreflang="x-default"/>
+            <link rel="alternate"
+                  href="{{ config.baseUrl }}{{ '/' + locale + pagePath }}"
+                  hreflang="x-default" />
         {% endif %}
-        <link rel="stylesheet" href="{{ assetBase }}/style.css"/>
-        <link rel="stylesheet" href="{{ assetBase }}/components.css"/> {% block head_extra %}{% endblock %}
-        </head>
-        <body>
-            <header>
-                <div class="site-title">
-                    <a href="{{ pageBase or basePath }}/">{{ config.siteName }}</a>
-                </div>
-                {% if modules is defined and not module %}
-                    <p class="site-module-count">{{ t.base.moduleCount | replace('{count}', modules | length) }}</p>
-                {% endif %}
-                <nav class="top-actions">
-                    {% if IS_DEV and buildIssuesSummary and buildIssuesSummary.total > 0 %}
-                        <div
-                            id="__issues-banner"
-                            class="issue-banner {% if buildIssuesSummary.errors>0 %}issue-banner-error{% else %}issue-banner-warning{% endif %}"
-                            style="padding:var(--space-xs) var(--space-md);font-size:var(--font-size-xs);margin:0;">
-                            <strong style="font-weight:var(--font-weight-semibold);">
-                                {% if buildIssuesSummary.errors>0 %}
-                                    {{ t.issues.bannerErrors }}
-                                {% else %}
-                                    {{ t.issues.bannerWarnings }}
-                                {% endif %}
-                            </strong>
-                            <span style="opacity:.8;">{{ t.issues.bannerCounts | replace('{errors}', buildIssuesSummary.errors) | replace('{warnings}', buildIssuesSummary.warnings) }}</span>
-                            <a href="{{ pageBase }}/issues/" style="color:var(--color-primary);margin-left:var(--space-md);">{{ t.issues.bannerView }}</a>
-                            <button id="__issues-banner-close" style="margin-left:var(--space-sm);cursor:pointer;">
-                                ×</button>
-                        </div>
-                        <script>
+        <link rel="stylesheet" href="{{ assetBase }}/style.css" />
+        <link rel="stylesheet" href="{{ assetBase }}/components.css" />
+        {% block head_extra %}{% endblock %}
+    </head>
+    <body>
+        <header>
+            <div class="site-title">
+                <a href="{{ pageBase or basePath }}/">{{ config.siteName }}</a>
+            </div>
+            {% if modules is defined and not module %}
+                <p class="site-module-count">{{ t.base.moduleCount | replace('{count}', modules | length) }}</p>
+            {% endif %}
+            <nav class="top-actions">
+                {% if IS_DEV and buildIssuesSummary and buildIssuesSummary.total > 0 %}
+                    <div id="__issues-banner"
+                         class="issue-banner {% if buildIssuesSummary.errors>0 %}issue-banner-error{% else %}issue-banner-warning{% endif %}"
+                         style="padding:var(--space-xs) var(--space-md);
+                                font-size:var(--font-size-xs);
+                                margin:0">
+                        <strong style="font-weight:var(--font-weight-semibold);">
+                            {% if buildIssuesSummary.errors>0 %}
+                                {{ t.issues.bannerErrors }}
+                            {% else %}
+                                {{ t.issues.bannerWarnings }}
+                            {% endif %}
+                        </strong>
+                        <span style="opacity:.8;">{{ t.issues.bannerCounts | replace('{errors}', buildIssuesSummary.errors) | replace('{warnings}', buildIssuesSummary.warnings) }}</span>
+                        <a href="{{ pageBase }}/issues/"
+                           style="color:var(--color-primary);
+                                  margin-left:var(--space-md)">{{ t.issues.bannerView }}</a>
+                        <button id="__issues-banner-close"
+                                style="margin-left:var(--space-sm);
+                                       cursor:pointer">×</button>
+                    </div>
+                    <script>
                             (function () {
                                 var b = document.getElementById('__issues-banner');
                                 var c = document.getElementById('__issues-banner-close');
@@ -62,32 +74,39 @@
                                     });
                                 }
                             })();
-                        </script>
-                    {% endif %}
-                    {% if config.repoUrl %}
-                        <a class="gh-btn" href="{{ config.repoUrl }}" target="_blank" rel="noopener" aria-label="{{ t.base.githubAriaLabel }}">
-                            {{ icons.iconGitHub() }}
-                            <span class="label">GitHub</span>
-                        </a>
-                    {% endif %}
-                    <div class="lang-switch">
-                        <select id="lang-select" aria-label="{{ t.base.languageSwitchTitle }}" class="select-inline">
-                            {% for loc in locales %}
-                                <option value="{{ loc }}" {% if locale==loc %} selected {% endif %}>{{ i18n[loc].meta.languageName or loc }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                </nav>
-            </header>
-            <main>
-                {% block content %}{% endblock %}
-            </main>
-            <footer>
-                <p>&copy; 2025-2026
-                    <a href="https://github.com/LuYifei2011" target="_blank">Lu Yifei</a>
-                </p>
-            </footer>
-            <script>
+                    </script>
+                {% endif %}
+                {% if config.repoUrl %}
+                    <a class="gh-btn"
+                       href="{{ config.repoUrl }}"
+                       target="_blank"
+                       rel="noopener"
+                       aria-label="{{ t.base.githubAriaLabel }}">
+                        {{ icons.iconGitHub() }}
+                        <span class="label">GitHub</span>
+                    </a>
+                {% endif %}
+                <div class="lang-switch">
+                    <select id="lang-select"
+                            aria-label="{{ t.base.languageSwitchTitle }}"
+                            class="select-inline">
+                        {% for loc in locales %}
+                            <option value="{{ loc }}" {% if locale==loc %}selected{% endif %}>{{ i18n[loc].meta.languageName or loc }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </nav>
+        </header>
+        <main>
+            {% block content %}{% endblock %}
+        </main>
+        <footer>
+            <p>
+                &copy; 2025-2026
+                <a href="https://github.com/LuYifei2011" target="_blank">Lu Yifei</a>
+            </p>
+        </footer>
+        <script>
                 window.__I18N = {{ (t or {}) | dump | safe }};
                 window.IS_DEV = {{ IS_DEV and true or false }};
                 window.PAGE_BASE = '{{ pageBase or assetBase }}';
@@ -112,7 +131,8 @@
                         location.href = to + rest;
                     });
                 })();
-            </script>
-            {% block page_scripts %}{% endblock %}
-        </body>
-    </html>
+        </script>
+        {% block page_scripts %}
+        {% endblock %}
+    </body>
+</html>
