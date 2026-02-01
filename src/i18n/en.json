@@ -34,7 +34,7 @@
     "scopeMap": { "global": "Global", "sprite": "Sprite", "choose": "Choose as needed" },
     "notes": "Notes",
     "demo": "Demo",
-    "openInTW": "Open in Turbowarp Editor",
+    "openInTW": "Open in TurboWarp Editor",
     "references": "References",
     "copyScript": "Copy",
     "copySuccess": "Copied!",

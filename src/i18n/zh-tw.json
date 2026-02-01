@@ -34,7 +34,7 @@
     "scopeMap": { "global": "全域", "sprite": "角色", "choose": "按需自選" },
     "notes": "備註",
     "demo": "演示",
-    "openInTW": "在 Turbowarp 編輯器中開啟",
+    "openInTW": "在 TurboWarp 編輯器中開啟",
     "references": "參考連結",
     "copyScript": "複製",
     "copySuccess": "已複製！",

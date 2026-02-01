@@ -8,7 +8,7 @@
 
 启动开发服务器后，在浏览器中访问：
 
-```
+```plain
 http://localhost:8800/__dev/editor/
 ```
 
