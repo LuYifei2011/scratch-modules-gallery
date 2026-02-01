@@ -77,31 +77,46 @@ function renderList(docs) {
 if (searchInput) {
   await initSearch()
   let timer = null
-  searchInput.addEventListener('input', () => {
-    if (timer) clearTimeout(timer)
-    timer = setTimeout(() => {
-      const q = searchInput.value.trim()
-      if (!q) {
-        renderList(allDocs)
-        return
-      }
-      const exactHits = mini.search(q, { prefix: true, fuzzy: false })
-      const fuzzyHits = mini.search(q, { fuzzy: 0.2 })
-      const merged = []
-      const seen = new Set()
-      function pushList(list) {
-        for (const h of list) {
-          if (!seen.has(h.id)) {
-            seen.add(h.id)
-            merged.push(h)
-          }
+  
+  function performSearch() {
+    const q = searchInput.value.trim()
+    if (!q) {
+      renderList(allDocs)
+      return
+    }
+    const exactHits = mini.search(q, { prefix: true, fuzzy: false })
+    const fuzzyHits = mini.search(q, { fuzzy: 0.2 })
+    const merged = []
+    const seen = new Set()
+    function pushList(list) {
+      for (const h of list) {
+        if (!seen.has(h.id)) {
+          seen.add(h.id)
+          merged.push(h)
         }
       }
-      pushList(exactHits)
-      pushList(fuzzyHits)
-      const docs = merged.map((h) => allDocs.find((d) => d.id === h.id)).filter(Boolean)
-      renderList(docs)
-    }, 120)
+    }
+    pushList(exactHits)
+    pushList(fuzzyHits)
+    const docs = merged.map((h) => allDocs.find((d) => d.id === h.id)).filter(Boolean)
+    renderList(docs)
+  }
+  
+  searchInput.addEventListener('input', () => {
+    if (timer) clearTimeout(timer)
+    timer = setTimeout(performSearch, 120)
   })
-  renderList(allDocs)
+  
+  // 检查 URL 参数是否有搜索关键词
+  const urlParams = new URLSearchParams(window.location.search)
+  const queryParam = urlParams.get('q')
+  if (queryParam) {
+    searchInput.value = queryParam
+    performSearch()
+    // 聚焦搜索框并滚动到视图
+    searchInput.focus()
+    searchInput.scrollIntoView({ behavior: 'smooth', block: 'center' })
+  } else {
+    renderList(allDocs)
+  }
 }

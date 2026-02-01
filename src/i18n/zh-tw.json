@@ -40,6 +40,11 @@
     "editScript": "編輯腳本",
     "editModule": "編輯模組"
   },
+  "404": {
+    "title": "頁面未找到",
+    "text": "您訪問的頁面不存在。",
+    "home": "返回首頁"
+  },
   "issues": {
     "pageTitle": "建置問題",
     "heading": "建置問題報告",

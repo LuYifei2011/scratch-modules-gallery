@@ -1299,6 +1299,23 @@ async function render(modules, allTags) {
   })
   await fs.outputFile(path.join(outDir, 'index.html'), await maybeMinify(redirectHtml), 'utf8')
 
+  // 生成根目录的 404 页面（GitHub Pages 使用）
+  // 包含所有语言的 i18n 数据，通过 JS 动态切换
+  const languageNames = {}
+  for (const loc of locales) {
+    languageNames[loc] = (dict[loc]?.meta && dict[loc].meta.languageName) || loc
+  }
+  const notFound404Html = nunjucks.render('layouts/404.njk', {
+    basePath,
+    redirectLocales: redirectLocales,
+    defaultLocale,
+    locales,
+    languageNames,
+    i18nJSON: JSON.stringify(dict),
+    lang: langTags[defaultLocale] || defaultLocale,
+  })
+  await fs.outputFile(path.join(outDir, '404.html'), await maybeMinify(notFound404Html), 'utf8')
+
   // sitemap
   const urls = locales.flatMap((loc) => [
     `/${loc}/`,

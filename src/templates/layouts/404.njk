@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="{{ lang | default('en') }}">
+    <head>
+        <meta charset="utf-8"/>
+        <meta http-equiv="Cache-Control" content="no-store"/>
+        <meta name="viewport" content="width=device-width,initial-scale=1"/>
+        <meta name="darkreader-lock" content="true"/>
+        <title>404 - Page Not Found</title>
+        <link rel="stylesheet" href="{{ basePath or '' }}/style.css"/>
+        <style>
+            :root {
+                --color-bg-primary: #f7f9fb;
+                --color-bg-secondary: #fff;
+                --color-text-primary: #222;
+                --color-text-secondary: #666;
+                --color-text-tertiary: #999;
+                --color-brand: #1747a6;
+                --color-brand-hover: #0d3180;
+                --color-border-light: #e3e7ee;
+                color-scheme: light dark;
+            }
+            
+            @media (prefers-color-scheme: dark) {
+                :root {
+                    --color-bg-primary: #0f1722;
+                    --color-bg-secondary: #182232;
+                    --color-text-primary: #e2e8f0;
+                    --color-text-secondary: #9ca3af;
+                    --color-text-tertiary: #6b7280;
+                    --color-brand: #4da3ff;
+                    --color-brand-hover: #79bbff;
+                    --color-border-light: #263244;
+                }
+            }
+            
+            body {
+                font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+                margin: 0;
+                padding: 2rem;
+                background: var(--color-bg-primary);
+                color: var(--color-text-primary);
+            }
+            .container {
+                max-width: 600px;
+                margin: 10vh auto;
+                text-align: center;
+            }
+            .error-code {
+                font-size: 6rem;
+                font-weight: 700;
+                color: var(--color-text-tertiary);
+                margin: 0;
+                line-height: 1;
+            }
+            .error-message {
+                font-size: 1.5rem;
+                margin: 1rem 0 2rem;
+                color: var(--color-text-secondary);
+            }
+            .actions {
+                display: flex;
+                gap: 1rem;
+                justify-content: center;
+                flex-wrap: wrap;
+            }
+            .button {
+                padding: 0.75rem 1.5rem;
+                background: var(--color-brand);
+                color: white;
+                text-decoration: none;
+                border-radius: 4px;
+                font-weight: 600;
+                transition: background 0.2s;
+            }
+            .button:hover {
+                background: var(--color-brand-hover);
+            }
+            .button-secondary {
+                background: var(--color-bg-secondary);
+                color: var(--color-brand);
+                border: 2px solid var(--color-brand);
+            }
+            .button-secondary:hover {
+                background: var(--color-brand);
+                color: white;
+            }
+            .lang-list {
+                margin-top: 2rem;
+                padding-top: 2rem;
+                border-top: 1px solid var(--color-border-light);
+            }
+            .lang-links {
+                display: flex;
+                gap: 1rem;
+                justify-content: center;
+                flex-wrap: wrap;
+            }
+            .lang-links a {
+                color: var(--color-brand);
+                text-decoration: none;
+            }
+            .lang-links a:hover {
+                text-decoration: underline;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="error-code">404</div>
+            <p class="error-message" id="error-msg">Page Not Found</p>
+            <div class="actions">
+                <a href="{{ basePath or '' }}/{{ defaultLocale }}/" class="button" id="home-link">Back to Home</a>
+                <a href="{{ basePath or '' }}/{{ defaultLocale }}/" class="button button-secondary" id="search-link" style="display:none;">Search</a>
+            </div>
+            <div class="lang-list">
+                <div class="lang-links">
+                    {% for locale in locales %}
+                        <a href="{{ basePath or '' }}/{{ locale }}/" data-locale="{{ locale }}">{{ languageNames[locale] }}</a>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        <script>
+            var base = '{{ basePath or '' }}';
+            var locales = {{ redirectLocales | safe }};
+            var i18nData = {{ i18nJSON | safe }};
+            
+            function pickLocale(browserLangs) {
+                if (!Array.isArray(browserLangs)) 
+                    browserLangs = [navigator.language || ''];
+                
+                var ls = browserLangs.map(function (l) {
+                    return String(l || '').toLowerCase()
+                });
+                
+                // 优先精确匹配
+                for (var i = 0; i < ls.length; i++) {
+                    if (locales.includes(ls[i])) 
+                        return ls[i];
+                }
+                
+                // 特殊处理中文简繁体
+                for (var i = 0; i < ls.length; i++) {
+                    var l = ls[i];
+                    if (l.startsWith('zh')) {
+                        if ((/-tw|-hk|-mo|hant/).test(l) && locales.includes('zh-tw')) 
+                            return 'zh-tw';
+                        if (locales.includes('zh-cn')) 
+                            return 'zh-cn';
+                        var z = locales.find(function (x) {
+                            return x.toLowerCase().startsWith('zh-')
+                        });
+                        if (z) 
+                            return z;
+                    }
+                }
+                
+                // 前缀匹配
+                for (var i = 0; i < ls.length; i++) {
+                    var prefix = ls[i].split('-')[0];
+                    var match = locales.find(function (loc) {
+                        return loc.toLowerCase().startsWith(prefix)
+                    });
+                    if (match) 
+                        return match;
+                }
+                
+                return '{{ defaultLocale }}';
+            }
+            
+            function detectLocale() {
+                // 1. 读取 localStorage
+                try {
+                    var stored = localStorage.getItem('preferred-locale');
+                    if (stored && locales.includes(stored)) 
+                        return stored;
+                } catch (e) {}
+                
+                // 2. 检测浏览器语言
+                var langs = [];
+                if (navigator.languages) 
+                    langs = Array.from(navigator.languages);
+                else if (navigator.language) 
+                    langs = [navigator.language];
+                
+                return pickLocale(langs);
+            }
+            
+            function extractSearchTerm() {
+                var path = location.pathname;
+                // 移除基础路径
+                if (base) path = path.replace(base, '');
+                // 移除语言前缀 /en/ /zh-cn/ 等
+                path = path.replace(/^\/(en|zh-cn|zh-tw)(\/|$)/, '');
+                // 获取路径段
+                var segments = path.split('/').filter(function(s) { return s && s !== 'index.html'; });
+                if (segments.length === 0) return null;
+                // 取最后一段，去除扩展名
+                var lastSegment = segments[segments.length - 1];
+                return lastSegment.replace(/\.(html|htm)$/, '');
+            }
+            
+            function updateContent(locale) {
+                var t = i18nData[locale];
+                if (!t || !t['404']) return;
+                
+                var errorMsg = document.getElementById('error-msg');
+                var homeLink = document.getElementById('home-link');
+                var searchLink = document.getElementById('search-link');
+                
+                if (errorMsg && t['404'].text) 
+                    errorMsg.textContent = t['404'].text;
+                
+                if (homeLink) {
+                    if (t['404'].home) 
+                        homeLink.textContent = t['404'].home;
+                    homeLink.href = base + '/' + locale + '/';
+                }
+                
+                // 尝试提取搜索词并显示搜索按钮
+                var searchTerm = extractSearchTerm();
+                if (searchLink && searchTerm) {
+                    searchLink.href = base + '/' + locale + '/?q=' + encodeURIComponent(searchTerm);
+                    searchLink.style.display = 'inline-block';
+                    // 根据语言设置按钮文本
+                    if (locale === 'zh-cn') {
+                        searchLink.textContent = '搜索 "' + searchTerm + '"';
+                    } else if (locale === 'zh-tw') {
+                        searchLink.textContent = '搜尋 "' + searchTerm + '"';
+                    } else {
+                        searchLink.textContent = 'Search "' + searchTerm + '"';
+                    }
+                }
+            }
+            
+            // 检测并更新内容
+            var detectedLocale = detectLocale();
+            updateContent(detectedLocale);
+            
+            // 保存偏好（如果从浏览器检测到）
+            try {
+                if (!localStorage.getItem('preferred-locale')) {
+                    localStorage.setItem('preferred-locale', detectedLocale);
+                }
+            } catch (e) {}
+        </script>
+    </body>
+</html>

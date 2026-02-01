@@ -40,6 +40,11 @@
     "editScript": "编辑脚本",
     "editModule": "编辑模块"
   },
+  "404": {
+    "title": "页面未找到",
+    "text": "您访问的页面不存在。",
+    "home": "返回首页"
+  },
   "issues": {
     "pageTitle": "构建问题",
     "heading": "构建问题报告",

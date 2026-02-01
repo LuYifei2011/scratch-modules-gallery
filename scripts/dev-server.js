@@ -177,6 +177,26 @@ watcher.on('all', (event, file) => {
   }, DEBOUNCE_MS)
 })
 
+function serve404(res) {
+  const notFoundPage = path.join(DIST_DIR, '404.html')
+  fs.readFile(notFoundPage, (err, buf) => {
+    res.statusCode = 404
+    if (!err) {
+      res.setHeader('Content-Type', 'text/html')
+      let html = buf.toString('utf8')
+      // 注入自动刷新脚本
+      const inject = `\n<script src="/__dev/client.js"></script>\n`
+      if (html.includes('</body>')) html = html.replace('</body>', `${inject}</body>`)
+      else html += inject
+      res.end(html)
+    } else {
+      // 如果404.html不存在（构建失败），返回简单消息
+      res.setHeader('Content-Type', 'text/plain; charset=utf-8')
+      res.end('404 Not Found')
+    }
+  })
+}
+
 const requestHandler = (req, res) => {
   const parsedUrl = url.parse(req.url)
   const pathnameRaw = decodeURIComponent(parsedUrl.pathname || '/')
@@ -336,8 +356,7 @@ const requestHandler = (req, res) => {
   const sendFile = (absPath) => {
     fs.stat(absPath, (err, stat) => {
       if (err || !stat.isFile()) {
-        res.statusCode = 404
-        res.end('404 Not Found')
+        serve404(res)
         if (!err?.code || err.code !== 'ENOENT') console.warn(`[dev] 404: ${absPath}`)
         return
       }
@@ -374,8 +393,7 @@ const requestHandler = (req, res) => {
         }
         fs.readFile(absPath, (er2, buf) => {
           if (er2) {
-            res.statusCode = 404
-            res.end('404 Not Found')
+            serve404(res)
             return
           }
           if (ext === '.html') {
@@ -401,8 +419,7 @@ const requestHandler = (req, res) => {
       if (ext === '.html') {
         fs.readFile(absPath, (er2, buf) => {
           if (er2) {
-            res.statusCode = 404
-            res.end('404 Not Found')
+            serve404(res)
             return
           }
           let html = buf.toString('utf8')
@@ -419,8 +436,7 @@ const requestHandler = (req, res) => {
       }
       const stream = fs.createReadStream(absPath)
       stream.on('error', () => {
-        res.statusCode = 404
-        res.end('404 Not Found')
+        serve404(res)
       })
       stream.pipe(res)
     })
@@ -432,8 +448,7 @@ const requestHandler = (req, res) => {
       return sendFile(requestedPath)
     }
     if (!path.extname(requestedPath)) return sendFile(path.join(requestedPath, 'index.html'))
-    res.statusCode = 404
-    res.end('404 Not Found')
+    serve404(res)
   })
 }
 
