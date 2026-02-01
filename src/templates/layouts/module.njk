@@ -33,6 +33,12 @@
                 <span class="tag">{{ t }}</span>
             {% endfor %}
         </p>
+        {% if IS_DEV and module.keywordsStr %}
+            <p style="display: flex; align-items: center; gap: 8px; margin: var(--space-md) 0 0 0; font-size: 0.9em;">
+                {{ icons.iconDebug(16, 16) }} Keywords:
+                <span>{{ module.keywordsStr }}</span>
+            </p>
+        {% endif %}
         {% if module.contributors.length %}
             <p class="contributors">{{ t.module.contributors }}:
                 {% for c in module.contributors %}

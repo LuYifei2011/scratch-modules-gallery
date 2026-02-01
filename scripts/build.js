@@ -976,6 +976,8 @@ async function translateModulesForLocale(modules, dict, locale, globalTags = {},
       nm.keywordsFinal = final
       // 计算最终的 keywords 字符串（用于模板，避免模板逻辑重复）
       nm.keywordsFinalStr = final.join(',')
+      // 仅 keywords 字符串（不含 tags）
+      nm.keywordsStr = kws.join(',')
     }
     out.push(nm)
   }
