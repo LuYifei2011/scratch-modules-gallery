@@ -77,7 +77,7 @@ function renderList(docs) {
 if (searchInput) {
   await initSearch()
   let timer = null
-  
+
   function performSearch() {
     const q = searchInput.value.trim()
     if (!q) {
@@ -101,12 +101,12 @@ if (searchInput) {
     const docs = merged.map((h) => allDocs.find((d) => d.id === h.id)).filter(Boolean)
     renderList(docs)
   }
-  
+
   searchInput.addEventListener('input', () => {
     if (timer) clearTimeout(timer)
     timer = setTimeout(performSearch, 120)
   })
-  
+
   // 检查 URL 参数是否有搜索关键词
   const urlParams = new URLSearchParams(window.location.search)
   const queryParam = urlParams.get('q')
