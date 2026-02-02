@@ -1110,6 +1110,9 @@ async function render(modules, allTags) {
   // copy public
   const publicDir = path.join(root, 'public')
   if (await fs.pathExists(publicDir)) await fs.copy(publicDir, outDir)
+  // copy thirdparty
+  const thirdpartyDir = path.join(root, 'thirdparty')
+  if (await fs.pathExists(thirdpartyDir)) await fs.copy(thirdpartyDir, path.join(outDir, 'thirdparty'))
   // copy client resources (app.js, style.css) - 使用 glob 一次性选择
   const clientFiles = await fg(['*.{js,css}'], {
     cwd: path.join(root, 'src', 'client'),
@@ -1264,6 +1267,25 @@ async function render(modules, allTags) {
     })
     await fs.outputFile(path.join(locOut, 'index.html'), await maybeMinify(indexHtml), 'utf8')
 
+    // 生成关于页面
+    const aboutHtml = nunjucks.render('layouts/about.njk', {
+      config: locConfig,
+      basePath,
+      assetBase,
+      pageBase,
+      pagePath: '/about/',
+      IS_DEV: isDev,
+      t: $t,
+      locale: loc,
+      canonical: '/' + loc + '/about/',
+      locales,
+      langTags,
+      i18n: dict,
+    })
+    const aboutDir = path.join(locOut, 'about')
+    await fs.ensureDir(aboutDir)
+    await fs.writeFile(path.join(aboutDir, 'index.html'), await maybeMinify(aboutHtml), 'utf8')
+
     for (const m of modules) {
       const html = nunjucks.render('layouts/module.njk', {
         module: modulesForLoc.find((x) => x.id === m.id) || m,
@@ -1321,6 +1343,7 @@ async function render(modules, allTags) {
   // sitemap
   const urls = locales.flatMap((loc) => [
     `/${loc}/`,
+    `/${loc}/about/`,
     ...modules.map((m) => `/${loc}/modules/${m.slug}/`),
   ])
 
@@ -1338,6 +1361,16 @@ async function render(modules, allTags) {
       sitemapUrls.push({
         loc: `/${loc}/`,
         lastmod: indexLastMod,
+      })
+    }
+
+    // 关于页面：使用模板文件和全局 i18n 的最后修改时间
+    const aboutTemplateLastMod = await getFileLastModDate('src/templates/layouts/about.njk')
+    const aboutLastMod = aboutTemplateLastMod >= globalI18nLastMod ? aboutTemplateLastMod : globalI18nLastMod
+    for (const loc of locales) {
+      sitemapUrls.push({
+        loc: `/${loc}/about/`,
+        lastmod: aboutLastMod,
       })
     }
 

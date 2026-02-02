@@ -11,7 +11,8 @@
     "githubAriaLabel": "GitHub 仓库",
     "languageSwitchTitle": "语言",
     "rememberLanguage": "记住我的语言",
-    "rememberLanguageTooltip": "自动重定向到您偏好的语言"
+    "rememberLanguageTooltip": "自动重定向到您偏好的语言",
+    "aboutLink": "关于"
   },
   "home": {
     "searchPlaceholder": "搜索模块...",
@@ -56,5 +57,27 @@
     "bannerCounts": "( {errors} 错误 / {warnings} 警告 )",
     "bannerView": "查看报告",
     "summaryPrefix": "共 {total} 条：{errors} 错误 / {warnings} 警告"
+  },
+  "about": {
+    "title": "关于",
+    "description": "了解更多关于 Scratch 模块库",
+    "whatIsThis": "这是什么？",
+    "whatIsThisContent": "Scratch 模块库是一个可搜索的 Scratch 代码模块集合。它帮助 Scratchers 查找和使用常见的编程模式、工具和功能，以增强他们的项目。",
+    "howToUse": "如何使用",
+    "howToUseContent": "使用本库中的模块很简单：",
+    "step1": "使用首页的搜索栏搜索您需要的模块",
+    "step2": "点击模块以查看其详细信息、脚本和文档",
+    "step3": "复制脚本代码并粘贴到您的 Scratch 项目中（待实现）",
+    "contribute": "贡献",
+    "contributeContent": "本项目是开源的，欢迎贡献。您可以添加新模块、改进文档、修复错误或提出新功能建议。",
+    "viewOnGitHub": "在 GitHub 上查看",
+    "license": "许可证",
+    "licenseContent": {
+      "sourceCode": "本项目使用 GNU 通用公共许可证 v3.0 开源，具体条款请参见仓库中的 LICENSE 文件。",
+      "modules": "模块内容的版权归各自的贡献者所有，如果无特别声明，默认遵循 CC-BY-SA 4.0 许可证。如果有参考链接，则遵循参考链接的许可协议。一些模块来自网络，如有版权问题，请联系我删除。"
+    },
+    "thirdPartyLicenses": "第三方许可证",
+    "thirdPartyLicensesContent": "本项目使用了第三方开源库，查看它们的许可证：",
+    "backToHome": "返回首页"
   }
 }

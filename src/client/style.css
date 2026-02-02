@@ -178,6 +178,14 @@ header a {
   text-decoration: none;
   color: var(--accent);
 }
+/* 图标基础样式 */
+.icon {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
 /* 当站点标题在模块页面降级为 .site-title 时，保持与 h1 相同的外观 */
 .site-title {
   font-size: var(--font-size-xl);
@@ -263,8 +271,8 @@ header .top-actions {
 .lang-current {
   white-space: nowrap;
 }
-.lang-arrow {
-  display: block;
+.lang-arrow.icon {
+  color: var(--color-text-secondary);
   transition: transform var(--transition-base);
 }
 .lang-btn[aria-expanded='true'] .lang-arrow {
@@ -327,15 +335,6 @@ header .top-actions {
 }
 .lang-remember-tooltip {
   display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 14px;
-  height: 14px;
-  font-size: 10px;
-  font-weight: var(--font-weight-bold);
-  border-radius: 50%;
-  background: var(--color-text-tertiary);
-  color: var(--color-bg-secondary);
   margin-left: auto;
   cursor: help;
 }

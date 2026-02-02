@@ -90,12 +90,7 @@
                             aria-expanded="false">
                         {{ icons.iconLanguage() }}
                         <span class="lang-current">{{ i18n[locale].meta.languageName or locale }}</span>
-                        <svg class="lang-arrow"
-                             viewBox="0 0 24 24"
-                             width="16"
-                             height="16">
-                            <path fill="currentColor" d="M7 10l5 5 5-5z" />
-                        </svg>
+                        {{ icons.iconChevronDown(16, 16, "lang-arrow") }}
                     </button>
                     <div id="lang-menu" class="lang-menu" hidden>
                         {% for loc in locales %}
@@ -108,7 +103,9 @@
                         <label class="lang-remember">
                             <input type="checkbox" id="lang-remember-checkbox" />
                             <span>{{ t.base.rememberLanguage }}</span>
-                            <span class="lang-remember-tooltip" title="{{ t.base.rememberLanguageTooltip }}">?</span>
+                            <span class="lang-remember-tooltip" title="{{ t.base.rememberLanguageTooltip }}">
+                                {{ icons.iconCircleQuestionMark(14, 14, "icon-tooltip") }}
+                            </span>
                         </label>
                     </div>
                 </div>
@@ -121,6 +118,7 @@
             {% if modules is defined and not module %}
                 <p class="site-module-count">{{ t.base.moduleCount | replace('{count}', modules | length) }}</p>
             {% endif %}
+            <a class="nav-link" href="{{ pageBase }}/about/">{{ t.base.aboutLink }}</a>
             <p>
                 &copy; 2025-2026
                 <a href="https://github.com/LuYifei2011" target="_blank">Lu Yifei</a>

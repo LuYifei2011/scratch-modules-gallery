@@ -11,7 +11,8 @@
     "githubAriaLabel": "GitHub 倉庫",
     "languageSwitchTitle": "語言",
     "rememberLanguage": "記住我的語言",
-    "rememberLanguageTooltip": "自動重新導向到您偏好的語言"
+    "rememberLanguageTooltip": "自動重新導向到您偏好的語言",
+    "aboutLink": "關於"
   },
   "home": {
     "searchPlaceholder": "搜尋模組...",
@@ -56,5 +57,27 @@
     "bannerCounts": "( {errors} 錯誤 / {warnings} 警告 )",
     "bannerView": "查看報告",
     "summaryPrefix": "共 {total} 筆：{errors} 錯誤 / {warnings} 警告"
+  },
+  "about": {
+    "title": "關於",
+    "description": "了解更多關於 Scratch 模組庫",
+    "whatIsThis": "這是什麼？",
+    "whatIsThisContent": "Scratch 模組庫是一個可搜尋的 Scratch 程式碼模組集合。它幫助 Scratchers 查找和使用常見的程式設計模式、工具和功能，以增強他們的專案。",
+    "howToUse": "如何使用",
+    "howToUseContent": "使用本庫中的模組很簡單：",
+    "step1": "使用首頁的搜尋欄搜尋您需要的模組",
+    "step2": "點擊模組以檢視其詳細資訊、腳本和文件",
+    "step3": "複製腳本程式碼並貼上到您的 Scratch 專案中（待實現）",
+    "contribute": "貢獻",
+    "contributeContent": "本專案是開源的，歡迎貢獻。您可以新增新模組、改進文件、修復錯誤或提出新功能建議。",
+    "viewOnGitHub": "在 GitHub 上檢視",
+    "license": "授權",
+    "licenseContent": {
+      "sourceCode": "本專案使用 GNU 通用公共授權 v3.0 開源，具體條款請參見倉庫中的 LICENSE 檔案。",
+      "modules": "模組內容的版權歸各自的貢獻者所有，如果無特別聲明，預設遵循 CC-BY-SA 4.0 授權。如果有參考連結，則遵循參考連結的授權協議。一些模組來自網路，如有版權問題，請聯繫我刪除。"
+    },
+    "thirdPartyLicenses": "第三方授權",
+    "thirdPartyLicensesContent": "本專案使用了第三方開源函式庫，查看它們的授權：",
+    "backToHome": "返回首頁"
   }
 }

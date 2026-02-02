@@ -1,0 +1,122 @@
+{% extends "layouts/base.njk" %}
+
+{% block title %}{{ t.about.title }} - {{ config.siteName }}{% endblock %}
+{% block meta_description %}{{ t.about.description }}{% endblock %}
+
+{% block head_extra %}
+<link rel="stylesheet" href="{{ assetBase }}/components.css" />
+{% endblock %}
+
+{% block content %}
+<main class="container">
+    <article class="about-content">
+        <h1>{{ t.about.title }}</h1>
+        
+        <section class="about-section">
+            <h2>{{ t.about.whatIsThis }}</h2>
+            <p>{{ t.about.whatIsThisContent }}</p>
+        </section>
+
+        <section class="about-section">
+            <h2>{{ t.about.howToUse }}</h2>
+            <p>{{ t.about.howToUseContent }}</p>
+            <ol>
+                <li>{{ t.about.step1 }}</li>
+                <li>{{ t.about.step2 }}</li>
+                <li>{{ t.about.step3 }}</li>
+            </ol>
+        </section>
+
+        <section class="about-section">
+            <h2>{{ t.about.contribute }}</h2>
+            <p>{{ t.about.contributeContent }}</p>
+            {% if config.repoUrl %}
+            <p>
+                <a href="{{ config.repoUrl }}" target="_blank" rel="noopener" class="btn-link">
+                    {{ t.about.viewOnGitHub }}
+                </a>
+            </p>
+            {% endif %}
+        </section>
+
+        <section class="about-section">
+            <h2>{{ t.about.license }}</h2>
+            <p>{{ t.about.licenseContent.sourceCode }}</p>
+            <p>{{ t.about.licenseContent.modules }}</p>
+        </section>
+
+        <section class="about-section">
+            <h2>{{ t.about.thirdPartyLicenses }}</h2>
+            <p>{{ t.about.thirdPartyLicensesContent }}</p>
+            <ul>
+                <li><a href="{{ assetBase }}/thirdparty/lucide.txt" target="_blank" rel="noopener">Lucide Icons</a></li>
+            </ul>
+        </section>
+
+        <div class="back-link">
+            <a href="{{ pageBase }}/">← {{ t.about.backToHome }}</a>
+        </div>
+    </article>
+</main>
+
+<style>
+.about-content {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: var(--space-lg) var(--space-md);
+}
+
+.about-section {
+    margin-bottom: var(--space-xl);
+}
+
+.about-section h2 {
+    color: var(--color-primary);
+    margin-bottom: var(--space-md);
+    font-size: var(--font-size-lg);
+}
+
+.about-section p {
+    line-height: 1.6;
+    margin-bottom: var(--space-md);
+}
+
+.about-section ol {
+    line-height: 1.8;
+    padding-left: var(--space-lg);
+}
+
+.about-section ol li {
+    margin-bottom: var(--space-sm);
+}
+
+.btn-link {
+    display: inline-block;
+    padding: var(--space-sm) var(--space-lg);
+    background: var(--color-primary);
+    color: white;
+    text-decoration: none;
+    border-radius: 4px;
+    transition: background 0.2s;
+}
+
+.btn-link:hover {
+    background: var(--color-primary-dark, #0d47a1);
+}
+
+.back-link {
+    margin-top: var(--space-xl);
+    padding-top: var(--space-lg);
+    border-top: 1px solid var(--color-border, #e0e0e0);
+}
+
+.back-link a {
+    color: var(--color-primary);
+    text-decoration: none;
+}
+
+.back-link a:hover {
+    text-decoration: underline;
+}
+</style>
+{% endblock %}

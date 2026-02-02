@@ -11,7 +11,8 @@
     "githubAriaLabel": "GitHub repository",
     "languageSwitchTitle": "Language",
     "rememberLanguage": "Remember my language",
-    "rememberLanguageTooltip": "Auto redirect to your preferred language"
+    "rememberLanguageTooltip": "Auto redirect to your preferred language",
+    "aboutLink": "About"
   },
   "home": {
     "searchPlaceholder": "Search modules...",
@@ -56,5 +57,27 @@
     "bannerCounts": "( {errors} errors / {warnings} warnings )",
     "bannerView": "View report",
     "summaryPrefix": "Total {total}: {errors} errors / {warnings} warnings"
+  },
+  "about": {
+    "title": "About",
+    "description": "Learn more about Scratch Modules Gallery",
+    "whatIsThis": "What is this?",
+    "whatIsThisContent": "Scratch Modules Gallery is a searchable collection of reusable Scratch code modules. It helps Scratchers find and use common programming patterns, utilities, and features to enhance their projects.",
+    "howToUse": "How to use",
+    "howToUseContent": "Using modules from this gallery is easy:",
+    "step1": "Search for the module you need using the search bar on the home page",
+    "step2": "Click on a module to view its details, scripts, and documentation",
+    "step3": "Copy the script code and paste it into your Scratch project (to be implemented)",
+    "contribute": "Contribute",
+    "contributeContent": "This project is open source and welcomes contributions. You can add new modules, improve documentation, fix bugs, or suggest new features.",
+    "viewOnGitHub": "View on GitHub",
+    "license": "License",
+    "licenseContent": {
+      "sourceCode": "This project is open source under the GNU General Public License v3.0. See the LICENSE file in the repository for details.",
+      "modules": "The module contents are copyrighted by their respective contributors. Unless otherwise stated, they are licensed under CC-BY-SA 4.0. If reference links are provided, they follow the license terms of those links. Some modules are sourced from the web; if there are any copyright issues, please contact me for removal."
+    },
+    "thirdPartyLicenses": "Third-Party Licenses",
+    "thirdPartyLicensesContent": "This project uses third-party open source libraries. View their licenses:",
+    "backToHome": "Back to Home"
   }
 }
