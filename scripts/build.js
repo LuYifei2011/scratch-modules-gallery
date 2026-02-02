@@ -1112,7 +1112,8 @@ async function render(modules, allTags) {
   if (await fs.pathExists(publicDir)) await fs.copy(publicDir, outDir)
   // copy thirdparty
   const thirdpartyDir = path.join(root, 'thirdparty')
-  if (await fs.pathExists(thirdpartyDir)) await fs.copy(thirdpartyDir, path.join(outDir, 'thirdparty'))
+  if (await fs.pathExists(thirdpartyDir))
+    await fs.copy(thirdpartyDir, path.join(outDir, 'thirdparty'))
   // copy client resources (app.js, style.css) - 使用 glob 一次性选择
   const clientFiles = await fg(['*.{js,css}'], {
     cwd: path.join(root, 'src', 'client'),
@@ -1366,7 +1367,8 @@ async function render(modules, allTags) {
 
     // 关于页面：使用模板文件和全局 i18n 的最后修改时间
     const aboutTemplateLastMod = await getFileLastModDate('src/templates/layouts/about.njk')
-    const aboutLastMod = aboutTemplateLastMod >= globalI18nLastMod ? aboutTemplateLastMod : globalI18nLastMod
+    const aboutLastMod =
+      aboutTemplateLastMod >= globalI18nLastMod ? aboutTemplateLastMod : globalI18nLastMod
     for (const loc of locales) {
       sitemapUrls.push({
         loc: `/${loc}/about/`,
