@@ -37,9 +37,6 @@
             <div class="site-title">
                 <a href="{{ pageBase or basePath }}/">{{ config.siteName }}</a>
             </div>
-            {% if modules is defined and not module %}
-                <p class="site-module-count">{{ t.base.moduleCount | replace('{count}', modules | length) }}</p>
-            {% endif %}
             <nav class="top-actions">
                 {% if IS_DEV and buildIssuesSummary and buildIssuesSummary.total > 0 %}
                     <div id="__issues-banner"
@@ -121,6 +118,9 @@
             {% block content %}{% endblock %}
         </main>
         <footer>
+            {% if modules is defined and not module %}
+                <p class="site-module-count">{{ t.base.moduleCount | replace('{count}', modules | length) }}</p>
+            {% endif %}
             <p>
                 &copy; 2025-2026
                 <a href="https://github.com/LuYifei2011" target="_blank">Lu Yifei</a>

@@ -344,12 +344,6 @@ main {
   margin: var(--space-xl) auto;
   padding: 0 var(--space-lg);
 }
-/* 站点模块计数，显示在标题旁边 */
-.site-module-count {
-  margin: 0;
-  font-size: var(--font-size-base);
-  color: var(--color-text-secondary);
-}
 input#search {
   display: block;
   min-width: 200px;
