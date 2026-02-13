@@ -1,0 +1,12 @@
+{
+  "name": "FPS",
+  "description": "Calculate FPS.",
+  "variables": {
+    "FPS": "FPS",
+    "DELTA": "DELTA",
+    "tick30": "tick30"
+  },
+  "scriptTitles": {
+    "main": "Main"
+  }
+}

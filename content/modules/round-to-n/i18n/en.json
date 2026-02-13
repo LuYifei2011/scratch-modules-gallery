@@ -1,0 +1,7 @@
+{
+  "name": "Round to n decimals",
+  "description": "Round a number to n decimal places.",
+  "scriptTitles": {
+    "main": "Main"
+  }
+}

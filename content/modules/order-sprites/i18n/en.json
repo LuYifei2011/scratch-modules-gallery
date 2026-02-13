@@ -1,0 +1,11 @@
+{
+  "name": "Order Sprites",
+  "description": "Sort sprites by layer/index.",
+  "events": {
+    "Order Sprites": "Order Sprites"
+  },
+  "scriptTitles": {
+    "order": "Ordering",
+    "main": "Main loop"
+  }
+}
