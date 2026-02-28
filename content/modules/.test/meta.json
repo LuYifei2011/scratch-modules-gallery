@@ -1,0 +1,25 @@
+{
+  "id": ".test",
+  "name": "Test",
+  "description": "A test module for development and testing purposes.",
+  "tags": ["test-content"],
+  "keywords": ["test", "development", "example"],
+  "scriptTitles": {
+    "main": "Main"
+  },
+  "contributors": "gh/LuYifei2011",
+  "variables": [
+    { "name": "Global Test Variable", "scope": "global", "type": "variable" },
+    { "name": "Sprite Test Variable", "scope": "sprite", "type": "variable" },
+    { "name": "Cloud Test Variable", "scope": "global", "type": "cloud" },
+    { "name": "Global Test List", "scope": "global", "type": "list" },
+    { "name": "Sprite Test List", "scope": "sprite", "type": "list" }
+  ],
+  "references": [
+    {
+      "title": "Example Reference",
+      "url": "https://example.com",
+      "type": "other"
+    }
+  ]
+}

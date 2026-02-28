@@ -44,11 +44,13 @@ nunjucks.configure(templatesPath, { autoescape: true })
 
 async function loadModules() {
   const baseDir = path.join(root, config.contentDir)
-  const dirs = await fg(['*'], { cwd: baseDir, onlyDirectories: true })
+  const dirs = await fg(['*'], { cwd: baseDir, onlyDirectories: true, dot: true })
   const modules = []
   const errorsAll = []
   for (const dir of dirs) {
     try {
+      // 生产环境下跳过以 . 开头的模块（用于开发/测试）
+      if (!isDev && dir.startsWith('.')) continue
       const moduleDir = path.join(baseDir, dir)
       const metaFile = path.join(moduleDir, 'meta.json')
       if (!(await fs.pathExists(metaFile))) continue // skip
