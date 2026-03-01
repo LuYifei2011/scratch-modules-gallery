@@ -53,7 +53,8 @@ async function copyTextToClipboard(text) {
 
 function showCopyResult(btn, ok, originalLabel) {
   if (!btn) return
-  const succ = (window.__I18N && window.__I18N.module && window.__I18N.module.copySuccess) || 'Copied!'
+  const succ =
+    (window.__I18N && window.__I18N.module && window.__I18N.module.copySuccess) || 'Copied!'
   const fail =
     (window.__I18N && window.__I18N.module && window.__I18N.module.copyFail) || 'Copy failed'
 
