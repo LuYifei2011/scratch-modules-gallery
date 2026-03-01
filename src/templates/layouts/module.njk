@@ -182,8 +182,21 @@
                         {% for v in module.variables %}
                             {% set typeMap = t.module.typeMap %}
                             {% set scopeMap = t.module.scopeMap %}
-                            <tr>
-                                <td>{{ v.displayName or v.name }}</td>
+                            <tr data-display-name="{{ v.displayName or v.name }}"
+                                data-type="{{ v.type }}"
+                                data-scope="{{ v.scope }}">
+                                <td class="var-name-cell">
+                                    <div class="var-name-wrap">
+                                        <span class="var-name-block">{{ v.displayName or v.name }}</span>
+                                        <button class="sb-action sb-copy var-copy"
+                                                type="button"
+                                                aria-label="{{ t.module.copyScript }}"
+                                                title="{{ t.module.copyScript }}">
+                                            {{ icons.iconCopy() }}
+                                            {{ icons.iconCheck() }}
+                                        </button>
+                                    </div>
+                                </td>
                                 <td>{{ typeMap[v.type] or v.type }}</td>
                                 <td>{{ scopeMap[v.scope] or v.scope }}</td>
                             </tr>

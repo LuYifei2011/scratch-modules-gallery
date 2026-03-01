@@ -168,6 +168,24 @@ details.imported-script pre {
   background: var(--color-bg-primary);
   font-weight: var(--font-weight-semibold);
 }
+.var-name-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+.var-name-block {
+  display: inline-flex;
+  min-height: 24px;
+}
+.var-copy {
+  width: 28px;
+  height: 28px;
+  flex: 0 0 auto;
+}
+.var-copy .icon {
+  width: 14px;
+  height: 14px;
+}
 iframe {
   max-width: 100%;
   border: none;

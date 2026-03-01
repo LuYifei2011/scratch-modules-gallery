@@ -23,6 +23,64 @@ async function loadLanguage(langCode) {
   }
 }
 
+async function copyTextToClipboard(text) {
+  if (!text) return false
+  let ok = false
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    try {
+      await navigator.clipboard.writeText(text)
+      ok = true
+    } catch (e) {
+      ok = false
+    }
+  }
+  if (!ok) {
+    const ta = document.createElement('textarea')
+    ta.value = text
+    ta.style.position = 'fixed'
+    ta.style.left = '-9999px'
+    document.body.appendChild(ta)
+    ta.select()
+    try {
+      ok = document.execCommand('copy')
+    } catch (e) {
+      ok = false
+    }
+    ta.remove()
+  }
+  return ok
+}
+
+function showCopyResult(btn, ok, originalLabel) {
+  if (!btn) return
+  const succ = (window.__I18N && window.__I18N.module && window.__I18N.module.copySuccess) || 'Copied!'
+  const fail =
+    (window.__I18N && window.__I18N.module && window.__I18N.module.copyFail) || 'Copy failed'
+
+  if (ok) {
+    btn.classList.remove('failed')
+    btn.classList.add('copied')
+    btn.setAttribute('aria-label', succ)
+    btn.setAttribute('title', succ)
+    setTimeout(() => {
+      btn.classList.remove('copied')
+      btn.setAttribute('aria-label', originalLabel)
+      btn.setAttribute('title', originalLabel)
+    }, 1400)
+    return
+  }
+
+  btn.classList.remove('copied')
+  btn.classList.add('failed')
+  btn.setAttribute('aria-label', fail)
+  btn.setAttribute('title', fail)
+  setTimeout(() => {
+    btn.classList.remove('failed')
+    btn.setAttribute('aria-label', originalLabel)
+    btn.setAttribute('title', originalLabel)
+  }, 1400)
+}
+
 // 初始化脚本渲染：先加载语言，再 parse
 async function initScratchblocks() {
   // 先加载页面语言（非英语时）
@@ -48,7 +106,8 @@ async function initScratchblocks() {
       const label =
         (window.__I18N && window.__I18N.module && window.__I18N.module.copyScript) || 'Copy'
       btn.setAttribute('aria-label', label)
-      var origAria = label
+      btn.setAttribute('title', label)
+      const originalLabel = label
       // click handler copies current text rendition of the doc
       btn.addEventListener('click', async (ev) => {
         ev.preventDefault()
@@ -56,53 +115,8 @@ async function initScratchblocks() {
           obj.doc && typeof obj.doc.stringify === 'function'
             ? obj.doc.stringify()
             : obj.el.textContent || ''
-        if (!text) return
-        let ok = false
-        if (navigator.clipboard && navigator.clipboard.writeText) {
-          try {
-            await navigator.clipboard.writeText(text)
-            ok = true
-          } catch (e) {
-            ok = false
-          }
-        }
-        if (!ok) {
-          // fallback: temporary textarea
-          const ta = document.createElement('textarea')
-          ta.value = text
-          ta.style.position = 'fixed'
-          ta.style.left = '-9999px'
-          document.body.appendChild(ta)
-          ta.select()
-          try {
-            ok = document.execCommand('copy')
-          } catch (e) {
-            ok = false
-          }
-          ta.remove()
-        }
-        if (ok) {
-          btn.classList.remove('failed')
-          btn.classList.add('copied')
-          const succ =
-            (window.__I18N && window.__I18N.module && window.__I18N.module.copySuccess) || 'Copied!'
-          btn.setAttribute('aria-label', succ)
-          setTimeout(() => {
-            btn.classList.remove('copied')
-            btn.setAttribute('aria-label', origAria)
-          }, 1400)
-        } else {
-          btn.classList.remove('copied')
-          btn.classList.add('failed')
-          const fail =
-            (window.__I18N && window.__I18N.module && window.__I18N.module.copyFail) ||
-            'Copy failed'
-          btn.setAttribute('aria-label', fail)
-          setTimeout(() => {
-            btn.classList.remove('failed')
-            btn.setAttribute('aria-label', origAria)
-          }, 1400)
-        }
+        const ok = await copyTextToClipboard(text)
+        showCopyResult(btn, ok, originalLabel)
       })
     } catch (e) {
       console.warn('[sb-copy] init failed:', e?.message || e)
@@ -168,5 +182,48 @@ async function initScratchblocks() {
   }
 }
 
+// 将变量和列表的名称渲染为积木块
+function initVariablesAndLists() {
+  document.querySelectorAll('table.variables > tbody > tr').forEach((row) => {
+    const nameCell = row.querySelector('td.var-name-cell') || row.querySelector('td')
+    if (!nameCell) return
+    const displayName = row.dataset.displayName
+    const type = row.dataset.type
+    // const scope = row.dataset.scope
+    if (!displayName) return
+
+    const blockContainer = nameCell.querySelector('.var-name-block') || nameCell
+    const doc = new scratchblocks.Document()
+    doc.scripts = [
+      new scratchblocks.Block(
+        {
+          shape: 'reporter',
+          category: type === 'list' ? 'list' : 'variables',
+        },
+        [new scratchblocks.Label(type === 'cloud' ? '☁ ' + displayName : displayName)]
+      ),
+    ]
+    const view = new scratchblocks.newView(doc, { style: 'scratch3', scale: 0.675 })
+    const svg = view.render()
+    svg.classList.add('scratchblocks-style-scratch3')
+    blockContainer.innerHTML = ''
+    blockContainer.appendChild(svg)
+
+    const copyBtn = row.querySelector('.var-copy')
+    if (copyBtn) {
+      const label =
+        (window.__I18N && window.__I18N.module && window.__I18N.module.copyScript) || 'Copy'
+      copyBtn.setAttribute('aria-label', label)
+      copyBtn.setAttribute('title', label)
+      copyBtn.addEventListener('click', async (ev) => {
+        ev.preventDefault()
+        const ok = await copyTextToClipboard(type === 'cloud' ? '☁ ' + displayName : displayName)
+        showCopyResult(copyBtn, ok, label)
+      })
+    }
+  })
+}
+
 // 启动初始化
 initScratchblocks()
+initVariablesAndLists()
