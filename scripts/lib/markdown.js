@@ -58,7 +58,7 @@ const goToBlockExtension = {
     const rule = /^<go-to-block ([\s\S]+?)>([\s\S]+?)<\/go-to-block>/
     const match = rule.exec(src)
     if (match) {
-      const [scriptId, blockPath] = match[1].split(':').map(s => s.trim())
+      const [scriptId, blockPath] = match[1].split(':').map((s) => s.trim())
       return {
         type: 'go-to-block',
         raw: match[0],

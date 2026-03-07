@@ -163,7 +163,8 @@ table {
   border-collapse: collapse;
   font-size: var(--font-size-base);
 }
-th, td {
+th,
+td {
   border: 1px solid var(--panel-border);
   padding: var(--space-xs) var(--space-sm);
   text-align: left;
