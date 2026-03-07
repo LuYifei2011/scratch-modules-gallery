@@ -167,6 +167,9 @@ th,
 td {
   border: 1px solid var(--panel-border);
   padding: var(--space-xs) var(--space-sm);
+}
+.variables th,
+.variables td {
   text-align: left;
 }
 th {

@@ -16,11 +16,11 @@
 
 ## 2. Text Styles
 
-**Bold**　**Bold too**
+**Bold**
 
-*Italic*　*Italic too*
+*Italic*
 
-**_Bold Italic_**　**_Bold Italic too_**
+**_Bold Italic_**
 
 ~~Strikethrough~~
 
@@ -94,10 +94,6 @@ config lines
 ```
 
 ## 6. Horizontal Rules
-
----
-
----
 
 ---
 
