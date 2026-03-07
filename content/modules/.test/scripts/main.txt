@@ -1,1 +1,6 @@
+when flag clicked
 say [Hello!]
+forever
+  move (10) steps
+  if on edge, bounce
+end

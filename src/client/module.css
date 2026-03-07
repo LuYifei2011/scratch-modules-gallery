@@ -6,6 +6,9 @@ pre.scratchblocks {
   border-radius: var(--radius-lg);
   overflow: auto;
 }
+code.scratchblocks {
+  vertical-align: middle;
+}
 /* Copy button for script text */
 .sb-block {
   position: relative;
@@ -153,21 +156,23 @@ details.imported-script .sb-actions .sb-action:hover {
 details.imported-script pre {
   margin-top: var(--space-sm);
 }
-.variables {
+
+/* 表格样式用于变量和备注 */
+table {
   width: 100%;
   border-collapse: collapse;
   font-size: var(--font-size-base);
 }
-.variables th,
-.variables td {
+th, td {
   border: 1px solid var(--panel-border);
   padding: var(--space-xs) var(--space-sm);
   text-align: left;
 }
-.variables th {
+th {
   background: var(--color-bg-primary);
   font-weight: var(--font-weight-semibold);
 }
+
 .var-name-wrap {
   display: inline-flex;
   align-items: center;

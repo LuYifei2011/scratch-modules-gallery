@@ -94,6 +94,15 @@ async function initScratchblocks() {
     blocks.push({
       el: pre,
       doc: scratchblocks.parse(pre.textContent, { languages: [pageLangSb, 'en'] }),
+      inline: false,
+      scriptId: pre.getAttribute('data-script-id'),
+    })
+  })
+  document.querySelectorAll('code.scratchblocks').forEach((code) => {
+    blocks.push({
+      el: code,
+      doc: scratchblocks.parse(code.textContent, { languages: [pageLangSb, 'en'] }),
+      inline: true,
     })
   })
 
@@ -124,17 +133,23 @@ async function initScratchblocks() {
     }
   })
 
+  const scriptIdToViewMap = {}
   function doRender(style) {
     blocks.forEach((obj) => {
       const finalStyle = style || 'scratch3'
       const docView = scratchblocks.newView(obj.doc, {
         style: finalStyle,
         scale: /^scratch3($|-)/.test(finalStyle) ? 0.675 : 1,
+        inline: obj.inline,
       })
       const svg = docView.render()
       svg.classList.add('scratchblocks-style-' + finalStyle)
       obj.el.innerHTML = ''
       obj.el.appendChild(svg)
+
+      if (obj.scriptId) {
+        scriptIdToViewMap[obj.scriptId] = docView
+      }
     })
   }
 
@@ -181,6 +196,32 @@ async function initScratchblocks() {
     // 异步初始化翻译
     doTranslate()
   }
+
+  // 初始化备注中的跳转积木链接
+  document.querySelectorAll('a.go-to-block').forEach((el) => {
+    el.addEventListener('click', (ev) => {
+      ev.preventDefault()
+      const scriptId = el.getAttribute('data-script-id')
+      const blockPath = el.getAttribute('data-block-path')
+      const view = scriptIdToViewMap[scriptId]
+      if (view) {
+        const observer = new IntersectionObserver(
+          (entries, obs) => {
+            entries.forEach((entry) => {
+              if (entry.isIntersecting) {
+                view.highlightBlock(blockPath, { blink: true }) // 进入视口时高亮积木
+                obs.disconnect() // 立即停止监听
+              }
+            })
+          },
+          { threshold: 0.5 }
+        )
+        const targetEl = view.getElementByPath(blockPath)
+        observer.observe(targetEl)
+        targetEl?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      }
+    })
+  })
 }
 
 // 将变量和列表的名称渲染为积木块

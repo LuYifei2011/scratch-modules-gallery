@@ -9,6 +9,7 @@ import { pathToFileURL } from 'url'
 import { minify } from 'html-minifier-next'
 import * as scratchblocks from 'scratchblocks-plus/syntax/index.js'
 import simpleGit from 'simple-git'
+import { markdownToHtml } from './lib/markdown.js'
 
 const root = path.resolve('.')
 // 动态 ESM 导入配置
@@ -101,15 +102,7 @@ async function loadModules() {
       if (notesFiles.length > 0) {
         const raw = await fs.readFile(path.join(moduleDir, notesFiles[0]), 'utf8')
         // 极简 markdown 转换（仅支持换行->段落、**粗体**、`行内代码`）
-        notesHtml = raw
-          .split(/\n{2,}/)
-          .map(
-            (block) =>
-              `<p>${escapeHtml(block)
-                .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-                .replace(/`([^`]+)`/g, '<code>$1</code>')}</p>`
-          )
-          .join('\n')
+        notesHtml = markdownToHtml(raw)
       }
 
       // references.json 已废弃：引用应直接写入 meta.json 的 references 字段
