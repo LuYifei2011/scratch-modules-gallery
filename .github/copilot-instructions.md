@@ -86,7 +86,7 @@
 | 扩展数据字段         | `schema.js`                  | 同步模板 & 搜索 & 前端依赖字段               |
 | 新语言               | 复制一份 `src/i18n/en.json`  | 如果需要模块级翻译，新增对应 i18n JSON       |
 | 新增 tag             | `src/i18n/tags.json`         | 添加所有支持语言的翻译，所有模块自动获得     |
-| 添加或更新备注       | `notes/<lang-code>.md`       | 每个语言独立文件；构建时按语言优先级选取 |
+| 添加或更新备注       | `notes/<lang-code>.md`       | 每个语言独立文件；构建时按语言优先级选取     |
 | 自定义块新增 pattern | 模块 i18n `procedures`       | 保持英文源脚本同步；`_` 数量需与参数个数一致 |
 | SEO 调整             | `site.config.js` + 模板 head | 确保 `hreflang`、canonical 含语言段          |
 

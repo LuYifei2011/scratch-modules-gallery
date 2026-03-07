@@ -3,19 +3,24 @@
 ## 1. Headings
 
 # H1 Heading
+
 ## H2 Heading
+
 ### H3 Heading
+
 #### H4 Heading
+
 ##### H5 Heading
+
 ###### H6 Heading
 
 ## 2. Text Styles
 
-**Bold**　__Bold too__
+**Bold**　**Bold too**
 
-*Italic*　_Italic too_
+*Italic*　*Italic too*
 
-***Bold Italic***　___Bold Italic too___
+**_Bold Italic_**　**_Bold Italic too_**
 
 ~~Strikethrough~~
 
@@ -28,13 +33,15 @@ Text with <sup>superscript</sup> and <sub>subscript</sub>
 ## 3. Lists
 
 ### Unordered
-* Item 1
-* Item 2
-  * Sub A
-  * Sub B
-* Item 3
+
+- Item 1
+- Item 2
+  - Sub A
+  - Sub B
+- Item 3
 
 ### Ordered
+
 1. First
 2. Second
    1. Sub 2.1
@@ -42,6 +49,7 @@ Text with <sup>superscript</sup> and <sub>subscript</sub>
 3. Third
 
 ### Task List
+
 - [x] Done task
 - [ ] Pending task
 - [x] ~~Canceled task~~
@@ -50,8 +58,9 @@ Text with <sup>superscript</sup> and <sub>subscript</sub>
 
 > Life is like a box of chocolates. You never know what you're gonna get.
 >
->> Nested quote
->>> Deep nested quote
+> > Nested quote
+> >
+> > > Deep nested quote
 
 ## 5. Code
 
@@ -67,7 +76,7 @@ Fenced:
 
 ```javascript
 function greet(name) {
-  return `Hello, ${name}!`;
+  return `Hello, ${name}!`
 }
 ```
 
@@ -88,19 +97,19 @@ config lines
 
 ---
 
-***
+---
 
-___
+---
 
 ## 7. Links & Images
 
 [Example](https://example.com)
 
-[With title](https://example.com "Tooltip")
+[With title](https://example.com 'Tooltip')
 
 Auto: https://github.com
 
-Image: ![Markdown](https://markdown-here.com/img/icon256.png "Markdown Here")
+Image: ![Markdown](https://markdown-here.com/img/icon256.png 'Markdown Here')
 
 Reference: ![Kitten][kitten]
 
@@ -108,12 +117,12 @@ Reference: ![Kitten][kitten]
 
 ## 8. Table
 
-| Fruit    | Price  | Rating    | Align     |
-|:---------|:------:|----------:|-----------|
-| Apple    | $1.99  | Excellent | Left      |
-| Banana   | $0.99  | Good      | Center    |
-| Orange   | $1.49  | Great     | Right     |
-| Grape    | $2.99  | Sweet     | Default   |
+| Fruit  | Price |    Rating | Align   |
+| :----- | :---: | --------: | ------- |
+| Apple  | $1.99 | Excellent | Left    |
+| Banana | $0.99 |      Good | Center  |
+| Orange | $1.49 |     Great | Right   |
+| Grape  | $2.99 |     Sweet | Default |
 
 ## 9. Footnote (some platforms)
 

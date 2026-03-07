@@ -710,7 +710,10 @@ async function translateModulesForLocale(modules, dict, locale, globalTags = {},
     if (m.notesMap && typeof m.notesMap === 'object' && Object.keys(m.notesMap).length) {
       let rawNotes = null
       for (const loc of localePriority) {
-        if (m.notesMap[loc]) { rawNotes = m.notesMap[loc]; break }
+        if (m.notesMap[loc]) {
+          rawNotes = m.notesMap[loc]
+          break
+        }
       }
       nm.notesHtml = rawNotes ? markdownToHtml(rawNotes) : ''
     } else {
