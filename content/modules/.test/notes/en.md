@@ -18,7 +18,7 @@
 
 **Bold**
 
-*Italic*
+_Italic_
 
 **_Bold Italic_**
 
