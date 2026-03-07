@@ -1,0 +1,20 @@
+{
+  "name": "测试",
+  "description": "用于开发和测试目的的测试模块。",
+  "variables": {
+    "Global Test Variable": "全局测试变量",
+    "Sprite Test Variable": "角色测试变量",
+    "Cloud Test Variable": "云测试变量"
+  },
+  "lists": {
+    "Global Test List": "全局测试列表",
+    "Sprite Test List": "角色测试列表"
+  },
+  "scriptTitles": {
+    "main": "主脚本",
+    "import": "导入测试"
+  },
+  "references": {
+    "Example Reference": "示例参考"
+  }
+}

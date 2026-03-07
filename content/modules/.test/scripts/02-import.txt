@@ -1,0 +1,4 @@
+!import exponentiation:1
+
+(1) ^ (2) :: custom
+say [Testing import of exponentiation module!]

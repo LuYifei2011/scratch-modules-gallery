@@ -1,4 +1,9 @@
 {
+  "test-content": {
+    "en": "test content",
+    "zh-cn": "测试内容",
+    "zh-tw": "測試內容"
+  },
   "math": {
     "en": "math",
     "zh-cn": "数学",
