@@ -17,7 +17,9 @@ content/modules/fps/
   scripts/
     01-初始化.txt
     02-计时逻辑.txt
-  notes.md
+  notes/
+    en.md              # 英文备注（可选）
+    zh-cn.md           # 中文简体备注（可选）
   demo.sb3
   assets/
     cover.png
@@ -165,7 +167,7 @@ content/modules/<id>/
 - 把可被复用的逻辑拆到目标模块较独立的一段脚本中（保持标题语义清晰）。
 - 避免长链式导入（>3 层）—— 可考虑抽象为新的公共模块。
 - 不要依赖导入块中宣告的变量名一定存在；最好在当前模块也显式创建重要变量（或在文档 notes 中声明前置依赖）。
-- 若只想概念引用而不需要展开代码，可在 `notes.md` 写文字链接即可，不必使用 `!import`。
+- 若只想概念引用而不需要展开代码，可在 `notes/en.md` 写文字链接即可，不必使用 `!import`。
 
 限制：
 
@@ -192,14 +194,23 @@ content/modules/<id>/
 
 字段同旧版：`name`, `type` (`variable|list|cloud`), `scope` (`global|sprite|choose`)。
 
-## notes.md / notes.txt
+## 备注文件（notes/）
 
-支持极简 Markdown：
+在模块目录下创建 `notes/` 子目录，以语言代码为文件名放置 Markdown 文件：
 
-- 段落：空行分隔
-- **粗体**：`**text**`
-- 行内代码：`` `code` ``
-  其余语法不解析，保持简单。
+```
+content/modules/<id>/
+  notes/
+    en.md          # 英文备注
+    zh-cn.md       # 中文简体备注（可选）
+    zh-tw.md       # 中文繁体备注（可选）
+```
+
+构建时按当前语言优先级自动选取对应文件；若当前语言缺失，则按回退规则（当前语言 → 中文变体 → 英文）依次尝试。
+
+支持标准 Markdown 语法，由 `scripts/lib/markdown.js` 解析。
+
+> 注意：不再支持 `notes.md` / `notes.txt`（扁平文件），无需向后兼容。
 
 ### 在 meta.json 中定义 references
 

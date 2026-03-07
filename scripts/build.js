@@ -96,13 +96,16 @@ async function loadModules() {
       // optional variables.json
       // variables.json 已废弃：变量应直接写入 meta.json 的 variables 字段
 
-      // optional notes (md or txt)
-      let notesHtml = ''
-      const notesFiles = await fg(['notes.{md,txt}'], { cwd: moduleDir, onlyFiles: true })
-      if (notesFiles.length > 0) {
-        const raw = await fs.readFile(path.join(moduleDir, notesFiles[0]), 'utf8')
-        // 极简 markdown 转换（仅支持换行->段落、**粗体**、`行内代码`）
-        notesHtml = markdownToHtml(raw)
+      // optional notes: notes/<lang-code>.md（按语言国际化）
+      const notesMap = {}
+      const notesDirPath = path.join(moduleDir, 'notes')
+      if (await fs.pathExists(notesDirPath)) {
+        const noteFiles = await fg(['*.md'], { cwd: notesDirPath, onlyFiles: true })
+        for (const f of noteFiles) {
+          const loc = path.basename(f, '.md')
+          const raw = await fs.readFile(path.join(notesDirPath, f), 'utf8')
+          notesMap[loc] = raw
+        }
       }
 
       // references.json 已废弃：引用应直接写入 meta.json 的 references 字段
@@ -149,7 +152,7 @@ async function loadModules() {
         script,
         scripts,
         demoFile,
-        notesHtml,
+        notesMap,
         translations,
       })
       if (errors.length) errorsAll.push(`${dir}: ${errors.join(', ')}`)
@@ -702,6 +705,17 @@ async function translateModulesForLocale(modules, dict, locale, globalTags = {},
     }
     const kw = pickKeywords('keywords', m.keywords_i18n)
     if (Array.isArray(kw)) nm.keywords = kw
+
+    // notes: 按语言优先级从 notesMap 中选取，实时转换为 HTML
+    if (m.notesMap && typeof m.notesMap === 'object' && Object.keys(m.notesMap).length) {
+      let rawNotes = null
+      for (const loc of localePriority) {
+        if (m.notesMap[loc]) { rawNotes = m.notesMap[loc]; break }
+      }
+      nm.notesHtml = rawNotes ? markdownToHtml(rawNotes) : ''
+    } else {
+      nm.notesHtml = ''
+    }
 
     const ownNameMaps = buildNameMapsForModule(m)
     // 为“变量 / 列表”表格计算本地化显示名称（模块级，始终执行）
