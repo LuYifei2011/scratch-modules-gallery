@@ -107,8 +107,6 @@ code.scratchblocks {
 }
 .script-title {
   margin: var(--space-xs) 0 var(--space-sm);
-  font-size: var(--font-size-md);
-  font-weight: var(--font-weight-medium);
   line-height: var(--line-height-tight);
 }
 details.imported-script {
