@@ -123,6 +123,18 @@
                 &copy; 2025-2026
                 <a href="https://github.com/LuYifei2011" target="_blank">Lu Yifei</a>
             </p>
+            {% if pagePath != '/about/' %}
+                <div class="support-section">
+                    <script type='text/javascript' src='https://storage.ko-fi.com/cdn/widget/Widget_2.js'></script>
+                    <script type='text/javascript'>
+                        kofiwidget2.init('{{ t.base.supportKoFi }}', '#72a4f2', 'H2H21ME5VO');
+                        kofiwidget2.draw();
+                    </script>
+                    <a href="{{ pageBase }}/about/#support" class="support-more">
+                        {{ t.base.supportMore }}
+                    </a>
+                </div>
+            {% endif %}
         </footer>
         <script>
                 window.__I18N = {{ (t or {}) | dump | safe }};

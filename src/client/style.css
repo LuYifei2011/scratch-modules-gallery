@@ -441,6 +441,24 @@ footer {
   text-align: center;
   color: var(--color-text-secondary);
 }
+.support-section {
+  margin-top: var(--space-lg);
+  gap: 16px;
+  display: inline-flex;
+  align-items: center;
+}
+.support-more {
+  height: 36px;
+  padding: 0 var(--space-md);
+  font-size: 14px;
+  font-weight: 400;
+  display: inline-flex;
+  align-items: center;
+  border: 2px solid var(--color-text-primary);
+  border-radius: 7px;
+  text-decoration: none;
+  color: var(--color-text-primary);
+}
 /* GitHub 按钮在深色模式中保持原色，仅微调背景 */
 @media (prefers-color-scheme: dark) {
   .gh-btn:hover,

@@ -45,6 +45,33 @@
             <p>{{ t.about.licenseContent.modules }}</p>
         </section>
 
+        <section class="about-section" id="support">
+            <h2>{{ t.about.support }}</h2>
+            <p>{{ t.about.supportContent }}</p>
+            <script type='text/javascript' src='https://storage.ko-fi.com/cdn/widget/Widget_2.js'></script>
+            <script type='text/javascript'>
+                kofiwidget2.init('{{ t.base.supportKoFi }}', '#72a4f2', 'H2H21ME5VO');
+                kofiwidget2.draw();
+            </script>
+            <div class="donate-images">
+                <div class="donate-item">
+                    <img src="{{ assetBase }}/assets/donate/alipay.jpg" />
+                    <hr class="donate-divider" />
+                    <span class="donate-label">{{ t.about.donateAlipay }}</span>
+                </div>
+                <div class="donate-item">
+                    <img src="{{ assetBase }}/assets/donate/wechatpay.png" />
+                    <hr class="donate-divider" />
+                    <span class="donate-label">{{ t.about.donateWeChatPay }}</span>
+                </div>
+                <div class="donate-item">
+                    <img src="{{ assetBase }}/assets/donate/qqwallet.png" />
+                    <hr class="donate-divider" />
+                    <span class="donate-label">{{ t.about.donateQQWallet }}</span>
+                </div>
+            </div>
+        </section>
+
         <section class="about-section">
             <h2>{{ t.about.thirdPartyLicenses }}</h2>
             <p>{{ t.about.thirdPartyLicensesContent }}</p>
@@ -88,6 +115,51 @@
 
 .about-section ol li {
     margin-bottom: var(--space-sm);
+}
+
+.donate-images {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-md);
+    margin-top: var(--space-md);
+}
+
+.donate-item {
+    flex: 1 1 0;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.donate-item img {
+    width: 100%;
+    height: auto;
+    object-fit: contain;
+}
+
+.donate-divider {
+    width: 40%;
+    border: none;
+    border-top: 2px solid var(--color-border-light);
+    margin: var(--space-sm) 0;
+}
+
+.donate-label {
+    font-size: var(--font-size-sm);
+    color: var(--color-text-secondary);
+    text-align: center;
+}
+
+@media (max-width: 600px) {
+    .donate-images {
+        flex-direction: column;
+    }
+
+    .donate-item {
+        flex: none;
+        width: 100%;
+    }
 }
 
 .btn-link {

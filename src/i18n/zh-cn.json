@@ -12,7 +12,9 @@
     "languageSwitchTitle": "语言",
     "rememberLanguage": "记住我的语言",
     "rememberLanguageTooltip": "自动重定向到您偏好的语言",
-    "aboutLink": "关于"
+    "aboutLink": "关于",
+    "supportKoFi": "在 Ko-fi 上支持我",
+    "supportMore": "更多支持方式"
   },
   "home": {
     "searchPlaceholder": "搜索模块...",
@@ -76,6 +78,11 @@
       "sourceCode": "本项目使用 GNU 通用公共许可证 v3.0 开源，具体条款请参见仓库中的 LICENSE 文件。",
       "modules": "模块内容的版权归各自的贡献者所有，如果无特别声明，默认遵循 CC-BY-SA 4.0 许可证。如果有参考链接，则遵循参考链接的许可协议。一些模块来自网络，如有版权问题，请联系我删除。"
     },
+    "support": "支持",
+    "supportContent": "如果您喜欢这个项目并想支持它的发展，您可以通过以下方式支持我：",
+    "donateAlipay": "支付宝",
+    "donateWeChatPay": "微信支付",
+    "donateQQWallet": "QQ 钱包",
     "thirdPartyLicenses": "第三方许可证",
     "thirdPartyLicensesContent": "本项目使用了第三方开源库，查看它们的许可证：",
     "backToHome": "返回首页"

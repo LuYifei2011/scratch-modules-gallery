@@ -12,7 +12,9 @@
     "languageSwitchTitle": "語言",
     "rememberLanguage": "記住我的語言",
     "rememberLanguageTooltip": "自動重新導向到您偏好的語言",
-    "aboutLink": "關於"
+    "aboutLink": "關於",
+    "supportKoFi": "在 Ko-fi 上支持我",
+    "supportMore": "更多支持方式"
   },
   "home": {
     "searchPlaceholder": "搜尋模組...",
@@ -76,6 +78,11 @@
       "sourceCode": "本專案使用 GNU 通用公共授權 v3.0 開源，具體條款請參見倉庫中的 LICENSE 檔案。",
       "modules": "模組內容的版權歸各自的貢獻者所有，如果無特別聲明，預設遵循 CC-BY-SA 4.0 授權。如果有參考連結，則遵循參考連結的授權協議。一些模組來自網路，如有版權問題，請聯繫我刪除。"
     },
+    "support": "支持",
+    "supportContent": "如果您喜歡這個專案並想支持它的發展，您可以通過以下方式支持我：",
+    "donateAlipay": "支付宝",
+    "donateWeChatPay": "微信支付",
+    "donateQQWallet": "QQ 钱包",
     "thirdPartyLicenses": "第三方授權",
     "thirdPartyLicensesContent": "本專案使用了第三方開源函式庫，查看它們的授權：",
     "backToHome": "返回首頁"
