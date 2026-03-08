@@ -10,8 +10,11 @@ import { minify } from 'html-minifier-next'
 import * as scratchblocks from 'scratchblocks-plus/syntax/index.js'
 import simpleGit from 'simple-git'
 import { markdownToHtml } from './lib/markdown.js'
+import { favicons as generateFavicons } from 'favicons'
 
 const root = path.resolve('.')
+// 模块级 favicon HTML 片段，由 render() 生成后供 nunjucks.render monkey-patch 注入
+let _faviconHtml = ''
 // 动态 ESM 导入配置
 const configModule = await import(pathToFileURL(path.join(root, 'site.config.js')).href)
 const config = configModule.default || configModule
@@ -1182,6 +1185,45 @@ async function render(modules, allTags) {
     console.warn('[scratchblocks] 复制语言文件失败:', e?.message || e)
   }
 
+  // 生成 favicons（来源：src/favicon.svg）
+  const faviconSvgPath = path.join(root, 'src', 'favicon.svg')
+  if (await fs.pathExists(faviconSvgPath)) {
+    try {
+      const faviconIconsDir = path.join(outDir, 'icons')
+      await fs.ensureDir(faviconIconsDir)
+      const faviconResponse = await generateFavicons(faviconSvgPath, {
+        path: (basePath || '') + '/icons/',
+        appName: config.siteName,
+        appDescription: config.description || '',
+        background: '#1747a6',
+        theme_color: '#1747a6',
+        icons: {
+          android: true,
+          appleIcon: true,
+          appleStartup: false,
+          favicons: true,
+          windows: false,
+          yandex: false,
+        },
+      })
+      for (const img of faviconResponse.images) {
+        await fs.writeFile(path.join(faviconIconsDir, img.name), img.contents)
+      }
+      for (const file of faviconResponse.files) {
+        await fs.writeFile(path.join(faviconIconsDir, file.name), file.contents)
+      }
+      // 同时复制源 SVG 供现代浏览器直接使用
+      await fs.copy(faviconSvgPath, path.join(faviconIconsDir, 'favicon.svg'))
+      const svgLink = `<link rel="icon" type="image/svg+xml" href="${(basePath || '')}/icons/favicon.svg">`
+      _faviconHtml = svgLink + faviconResponse.html.join('')
+      console.log(`[favicons] 已生成 ${faviconResponse.images.length} 张图片, ${faviconResponse.files.length} 个配置文件 (含 SVG)`)
+    } catch (e) {
+      console.warn('[favicons] 生成失败:', e?.message || e)
+    }
+  } else {
+    console.warn('[favicons] 未找到源文件 src/favicon.svg，跳过图标生成')
+  }
+
   // copy demo & assets
   for (const m of modules) {
     const srcDir = path.join(root, config.contentDir, m.slug)
@@ -1499,6 +1541,7 @@ function reportIssue(type, message, details = {}) {
   const origRender = nunjucks.render
   nunjucks.render = function (...args) {
     if (typeof args[1] === 'object' && args[1] !== null) {
+      args[1].faviconHtml = _faviconHtml
       args[1].buildIssues = collectedIssues
       const summary = collectedIssues.reduce(
         (acc, i) => {

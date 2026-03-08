@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "fast-glob": "^3.3.2",
+    "favicons": "^7.2.0",
     "formidable": "^3.5.4",
     "fs-extra": "^11.2.0",
     "html-minifier-next": "^4.1.1",

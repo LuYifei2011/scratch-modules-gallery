@@ -28,6 +28,7 @@
                   href="{{ config.baseUrl }}{{ '/' + locale + pagePath }}"
                   hreflang="x-default" />
         {% endif %}
+        {% if faviconHtml %}{{ faviconHtml | safe }}{% endif %}
         <link rel="stylesheet" href="{{ assetBase }}/style.css" />
         <link rel="stylesheet" href="{{ assetBase }}/components.css" />
         {% block head_extra %}{% endblock %}
@@ -35,7 +36,10 @@
     <body>
         <header>
             <div class="site-title">
-                <a href="{{ pageBase or basePath }}/">{{ config.siteName }}</a>
+                <a href="{{ pageBase or basePath }}/">
+                    <img src="{{ assetBase }}/icons/favicon.svg" alt="" width="24" height="24" class="site-logo" aria-hidden="true" />
+                    {{ config.siteName }}
+                </a>
             </div>
             <nav class="top-actions">
                 {% if IS_DEV and buildIssuesSummary and buildIssuesSummary.total > 0 %}

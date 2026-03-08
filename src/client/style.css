@@ -198,6 +198,14 @@ header a {
   text-decoration: none;
   color: var(--accent);
   font-weight: inherit;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+}
+.site-logo {
+  display: block;
+  flex-shrink: 0;
+  border-radius: 4px;
 }
 /* 把操作按钮放在行尾，这样标题与计数可以在同一行 */
 header .top-actions {
