@@ -29,6 +29,15 @@
                   hreflang="x-default" />
         {% endif %}
         {% if faviconHtml %}{{ faviconHtml | safe }}{% endif %}
+        {% if config.mirrors and pagePath %}
+            {% for mirror in config.mirrors %}
+                {% if not mirror.isCurrent %}
+                    <link rel="alternate"
+                          href="{{ mirror.url }}{{ '/' + locale + pagePath }}"
+                          title="{{ mirror.label }}" />
+                {% endif %}
+            {% endfor %}
+        {% endif %}
         <link rel="stylesheet" href="{{ assetBase }}/style.css" />
         <link rel="stylesheet" href="{{ assetBase }}/components.css" />
         {% block head_extra %}{% endblock %}
@@ -134,7 +143,7 @@
                         {% if mirror.isCurrent %}
                             <span class="mirror-item mirror-current">{{ mirror.label }}<span class="mirror-badge"> ({{ t.base.mirrorCurrent }})</span></span>
                         {% else %}
-                            <a href="{{ mirror.url }}" class="mirror-item" target="_blank" rel="noopener">{{ mirror.label }}</a>
+                            <a href="{{ mirror.url }}{{ ('/' + locale + pagePath) if (locale and pagePath) else '' }}" class="mirror-item" target="_blank" rel="noopener">{{ mirror.label }}</a>
                         {% endif %}
                         {% if not loop.last %}<span class="mirror-sep">|</span>{% endif %}
                     {% endfor %}
