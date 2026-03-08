@@ -1,6 +1,10 @@
 {% import "partials/icons.njk" as icons %}
 {% extends "layouts/base.njk" %}
 {% block title %}{{ module.name }} - {{ config.siteName }}{% endblock %}
+{% block og_title %}{{ module.name }} - {{ config.siteName }}{% endblock %}
+{% block og_description %}{{ module.description }}{% endblock %}
+{% block twitter_title %}{{ module.name }} - {{ config.siteName }}{% endblock %}
+{% block twitter_description %}{{ module.description }}{% endblock %}
 {% set canonical = '/' + locale + '/modules/' + module.slug + '/' %}
 {% block meta_description %}{{ module.description }}{% endblock %}
 {% block meta_keywords %}<meta name="keywords" content="{{ module.keywordsFinalStr }}" />{% endblock %}

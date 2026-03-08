@@ -11,6 +11,8 @@
     "format:scripts": "node ./scripts/format-scratchblocks.js --all"
   },
   "dependencies": {
+    "@fontsource/noto-sans": "^5.2.10",
+    "@resvg/resvg-js": "^2.6.2",
     "fast-glob": "^3.3.2",
     "favicons": "^7.2.0",
     "formidable": "^3.5.4",
