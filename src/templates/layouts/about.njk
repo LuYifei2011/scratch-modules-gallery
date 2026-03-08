@@ -67,9 +67,13 @@
             <p>{{ t.about.supportContent }}</p>
             <div style="display: flex; align-items: center; gap: var(--space-md); flex-wrap: wrap;">
                 <script type='text/javascript' src='https://storage.ko-fi.com/cdn/widget/Widget_2.js'></script>
+                <!-- ko-fi widget fallback button -->
+                <a id="support-ko-fi-fallback" class="btn" href="https://ko-fi.com/H2H21ME5VO" target="_blank" 
+                    style="height: 22px; background-color: #ff6433; color: white;">{{ t.base.supportKoFi }}</a>
                 <script type='text/javascript'>
                     kofiwidget2.init('{{ t.base.supportKoFi }}', '#ff6433', 'H2H21ME5VO');
                     kofiwidget2.draw();
+                    document.getElementById('support-ko-fi-fallback').style.display = 'none';
                 </script>
                 <button class="btn btn-primary" style="height: 40px;" onclick="openShareModal()">
                     {{ icons.iconShare() }}
