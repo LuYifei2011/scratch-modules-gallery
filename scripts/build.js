@@ -1331,7 +1331,11 @@ async function render(modules, allTags) {
       try {
         const resvgOpts = { fitTo: { mode: 'width', value: 1200 } }
         const fontDirPath = path.join(root, 'src', 'fonts')
-        resvgOpts.font = { fontDirs: [fontDirPath], loadSystemFonts: false, sansSerifFamily: 'Noto Sans' }
+        resvgOpts.font = {
+          fontDirs: [fontDirPath],
+          loadSystemFonts: false,
+          sansSerifFamily: 'Noto Sans',
+        }
         const resvg = new Resvg(coverSvg, resvgOpts)
         const pngData = resvg.render()
         await fs.writeFile(path.join(locOut, 'cover.png'), pngData.asPng())
