@@ -75,6 +75,18 @@
         <path d="M12 17h.01" />
     </svg>
 {% endmacro %}
+{# X/关闭图标 - x #}
+{% macro iconX(width=16, height=16, className="") %}
+    <svg class="icon {{ className }}"
+         viewBox="0 0 24 24"
+         width="{{ width }}"
+         height="{{ height }}"
+         aria-hidden="true"
+         focusable="false">
+        <path d="M18 6 6 18"/>
+        <path d="m6 6 12 12"/>
+    </svg>
+{% endmacro %}
 {# 下拉箭头图标 - chevron-down #}
 {% macro iconChevronDown(width=16, height=16, className="") %}
     <svg class="icon {{ className }}"
@@ -84,6 +96,21 @@
          aria-hidden="true"
          focusable="false">
         <path d="m6 9 6 6 6-6" />
+    </svg>
+{% endmacro %}
+{# 分享图标 - share-2 #}
+{% macro iconShare(width=16, height=16, className="") %}
+    <svg class="icon {{ className }}"
+         viewBox="0 0 24 24"
+         width="{{ width }}"
+         height="{{ height }}"
+         aria-hidden="true"
+         focusable="false">
+        <circle cx="18" cy="5" r="3"/>
+        <circle cx="6" cy="12" r="3"/>
+        <circle cx="18" cy="19" r="3"/>
+        <line x1="8.59" x2="15.42" y1="13.51" y2="17.49"/>
+        <line x1="15.41" x2="8.59" y1="6.51" y2="10.49"/>
     </svg>
 {% endmacro %}
 {# Debug 图标 - bug - 特殊样式 - 仅在开发环境使用 #}

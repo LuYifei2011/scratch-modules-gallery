@@ -145,11 +145,14 @@
             {% if modules is defined and not module %}
                 <p class="site-module-count">{{ t.base.moduleCount | replace('{count}', modules | length) }}</p>
             {% endif %}
-            <a class="nav-link" href="{{ pageBase }}/about/">{{ t.base.aboutLink }}</a>
-            <p>
-                &copy; 2025-2026
-                <a href="https://github.com/LuYifei2011" target="_blank">Lu Yifei</a>
-            </p>
+            <div class="footer-links">
+                <a class="nav-link" href="{{ pageBase }}/about/">{{ t.base.aboutLink }}</a>
+                |
+                <p>
+                    &copy; 2025-2026
+                    <a href="https://github.com/LuYifei2011" target="_blank">Lu Yifei</a>
+                </p>
+            </div>
             {% if config.mirrors and config.mirrors.length > 0 %}
                 <div class="mirror-sites">
                     <span class="mirror-label">{{ t.base.mirrorSites }}:</span>
@@ -165,9 +168,13 @@
             {% endif %}
             {% if pagePath != '/about/' %}
                 <div class="support-section">
+                    <button class="btn btn-primary" style="height: 40px;" onclick="openShareModal()">
+                        {{ icons.iconShare() }}
+                        {{ t.base.sharePage }}
+                    </button>
                     <script type='text/javascript' src='https://storage.ko-fi.com/cdn/widget/Widget_2.js'></script>
                     <script type='text/javascript'>
-                        kofiwidget2.init('{{ t.base.supportKoFi }}', '#72a4f2', 'H2H21ME5VO');
+                        kofiwidget2.init('{{ t.base.supportKoFi }}', '#ff6433', 'H2H21ME5VO');
                         kofiwidget2.draw();
                     </script>
                     <a href="{{ pageBase }}/about/#support" class="support-more">
@@ -181,6 +188,7 @@
                 window.IS_DEV = {{ IS_DEV and true or false }};
                 window.PAGE_BASE = '{{ pageBase or assetBase }}';
                 window.ASSET_BASE = '{{ assetBase }}';
+                window.PAGE_PATH = '{{ pagePath }}';
                 window.LOCALES = {{ locales | dump | safe }};
                 window.CURRENT_LOCALE = '{{ locale }}';
                 window.LOCALE_NAMES = {{ i18n | dump | safe }};
@@ -268,5 +276,89 @@
         </script>
         {% block page_scripts %}
         {% endblock %}
+        <dialog id="share-modal" class="share-dialog" aria-labelledby="share-modal-title">
+            <div class="share-dialog-header">
+                <h2 id="share-modal-title" class="share-dialog-title">{{ t.base.shareTitle }}</h2>
+                <button type="button" class="btn btn-ghost btn-sm share-dialog-close" aria-label="{{ t.base.shareClose }}">
+                    {{ icons.iconX() }}
+                </button>
+            </div>
+            <div class="share-dialog-body">
+                <div class="share-url-row">
+                    <input type="text" readonly id="share-url-input" class="input share-url-input" />
+                    <button type="button" class="btn btn-outline btn-sm" id="share-copy-btn">
+                        {{ icons.iconCopy() }}
+                        <span id="share-copy-label">{{ t.base.shareCopyUrl }}</span>
+                    </button>
+                </div>
+                <div id="share-native-row" hidden>
+                    <button type="button" class="btn btn-primary share-native-btn" id="share-native-btn">
+                        {{ icons.iconShare() }}
+                        {{ t.base.shareNative }}
+                    </button>
+                </div>
+            </div>
+        </dialog>
+        <script>
+            function openShareModal() {
+                var modal = document.getElementById('share-modal');
+                var urlInput = document.getElementById('share-url-input');
+                var copyBtn = document.getElementById('share-copy-btn');
+                var copyLabel = document.getElementById('share-copy-label');
+                var nativeRow = document.getElementById('share-native-row');
+                var nativeBtn = document.getElementById('share-native-btn');
+                if (!modal) return;
+                if (window.PAGE_PATH === '/about/') {
+                    urlInput.value = location.origin + window.PAGE_BASE;
+                } else {
+                    urlInput.value = location.href;
+                }
+                var i18n = window.__I18N || {};
+                var copyUrlText = (i18n.base && i18n.base.shareCopyUrl) || '{{ t.base.shareCopyUrl }}';
+                var copyOkText = (i18n.module && i18n.module.copySuccess) || '{{ t.module.copySuccess }}';
+                copyLabel.textContent = copyUrlText;
+                copyBtn.classList.remove('btn-success', 'btn-outline-success');
+                if (navigator.share) {
+                    nativeRow.hidden = false;
+                    nativeBtn.onclick = function () {
+                        navigator.share({ title: document.title, url: location.href }).catch(function () {});
+                    };
+                } else {
+                    nativeRow.hidden = true;
+                }
+                copyBtn.onclick = function () {
+                    var url = urlInput.value;
+                    function onCopied() {
+                        copyLabel.textContent = copyOkText;
+                        copyBtn.classList.add('btn-success');
+                        copyBtn.classList.remove('btn-outline');
+                        setTimeout(function () {
+                            copyLabel.textContent = copyUrlText;
+                            copyBtn.classList.remove('btn-success');
+                            copyBtn.classList.add('btn-outline');
+                        }, 2000);
+                    }
+                    if (navigator.clipboard && navigator.clipboard.writeText) {
+                        navigator.clipboard.writeText(url).then(onCopied).catch(function () {
+                            urlInput.select();
+                            document.execCommand('copy');
+                            onCopied();
+                        });
+                    } else {
+                        urlInput.select();
+                        document.execCommand('copy');
+                        onCopied();
+                    }
+                };
+                modal.showModal();
+                // urlInput.select();
+            }
+            (function () {
+                var modal = document.getElementById('share-modal');
+                if (!modal) return;
+                modal.querySelector('.share-dialog-close').addEventListener('click', function () { modal.close(); });
+                modal.addEventListener('click', function (e) { if (e.target === modal) modal.close(); });
+            })();
+        </script>
     </body>
 </html>

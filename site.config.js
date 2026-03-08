@@ -13,4 +13,5 @@ export default {
     { url: 'https://luyifei2011.github.io/scratch-modules-gallery', label: 'GitHub Pages' },
     { url: 'https://scratch-modules-gallery.pages.dev', label: 'Cloudflare Pages' },
   ],
+  contactEmail: 'luyifei2011-dev@outlook.com',
 }

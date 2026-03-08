@@ -167,6 +167,15 @@ footer {
   padding: var(--space-lg) var(--space-xl);
   box-shadow: var(--shadow);
   position: relative;
+  font-size: var(--font-size-sm);
+  text-align: center;
+  color: var(--color-text-secondary);
+}
+.footer-links {
+  display: inline-flex;
+  gap: var(--space-sm);
+  align-items: center;
+  flex-direction: row;
 }
 header h1 {
   font-size: var(--font-size-xl);
@@ -451,16 +460,13 @@ input#search:focus {
 .contributors .contributor {
   margin-right: var(--space-sm);
 }
-footer {
-  font-size: var(--font-size-sm);
-  text-align: center;
-  color: var(--color-text-secondary);
-}
 .support-section {
   margin-top: var(--space-lg);
   gap: 16px;
   display: inline-flex;
   align-items: center;
+  flex-wrap: wrap;
+  justify-content: center;
 }
 .support-more {
   height: 36px;

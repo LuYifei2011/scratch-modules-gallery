@@ -332,6 +332,75 @@
   background-color: var(--color-bg-secondary);
 }
 
+/* === 分享对话框 === */
+.share-dialog {
+  border: none;
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-lg);
+  background: var(--color-bg-secondary);
+  color: var(--color-text-primary);
+  padding: var(--space-xl);
+  width: min(480px, calc(100vw - var(--space-2xl)));
+  max-height: 90vh;
+  overflow: auto;
+}
+
+.share-dialog::backdrop {
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(2px);
+}
+
+.share-dialog-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-lg);
+}
+
+.share-dialog-title {
+  margin: 0;
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
+}
+
+.share-dialog-close {
+  color: var(--color-text-secondary);
+  padding: var(--space-xs);
+  flex-shrink: 0;
+}
+
+.share-url-row {
+  display: flex;
+  gap: var(--space-sm);
+  align-items: stretch;
+}
+
+.share-url-input {
+  flex: 1;
+  min-width: 0;
+  font-family: var(--font-family-mono);
+  font-size: var(--font-size-sm);
+  background: var(--color-bg-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+#share-native-row {
+  margin-top: var(--space-md);
+}
+
+.share-native-btn {
+  width: 100%;
+  justify-content: center;
+}
+
+@media (prefers-color-scheme: dark) {
+  .share-dialog::backdrop {
+    background: rgba(0, 0, 0, 0.7);
+  }
+}
+
 /* === Issue Banner === */
 /**
  * .issue-banner

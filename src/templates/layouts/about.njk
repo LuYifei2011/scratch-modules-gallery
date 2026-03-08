@@ -1,3 +1,4 @@
+{% import "partials/icons.njk" as icons %}
 {% extends "layouts/base.njk" %}
 
 {% block title %}{{ t.about.title }} - {{ config.siteName }}{% endblock %}
@@ -32,7 +33,7 @@
             <p>{{ t.about.contributeContent }}</p>
             {% if config.repoUrl %}
             <p>
-                <a href="{{ config.repoUrl }}" target="_blank" rel="noopener" class="btn-link">
+                <a href="{{ config.repoUrl }}" target="_blank" rel="noopener" class="btn btn-primary">
                     {{ t.about.viewOnGitHub }}
                 </a>
             </p>
@@ -45,39 +46,58 @@
             <p>{{ t.about.licenseContent.modules }}</p>
         </section>
 
-        <section class="about-section" id="support">
-            <h2>{{ t.about.support }}</h2>
-            <p>{{ t.about.supportContent }}</p>
-            <script type='text/javascript' src='https://storage.ko-fi.com/cdn/widget/Widget_2.js'></script>
-            <script type='text/javascript'>
-                kofiwidget2.init('{{ t.base.supportKoFi }}', '#72a4f2', 'H2H21ME5VO');
-                kofiwidget2.draw();
-            </script>
-            <div class="donate-images">
-                <div class="donate-item">
-                    <img src="{{ assetBase }}/assets/donate/alipay.jpg" />
-                    <hr class="donate-divider" />
-                    <span class="donate-label">{{ t.about.donateAlipay }}</span>
-                </div>
-                <div class="donate-item">
-                    <img src="{{ assetBase }}/assets/donate/wechatpay.png" />
-                    <hr class="donate-divider" />
-                    <span class="donate-label">{{ t.about.donateWeChatPay }}</span>
-                </div>
-                <div class="donate-item">
-                    <img src="{{ assetBase }}/assets/donate/qqwallet.png" />
-                    <hr class="donate-divider" />
-                    <span class="donate-label">{{ t.about.donateQQWallet }}</span>
-                </div>
-            </div>
-        </section>
-
         <section class="about-section">
             <h2>{{ t.about.thirdPartyLicenses }}</h2>
             <p>{{ t.about.thirdPartyLicensesContent }}</p>
             <ul>
                 <li><a href="{{ assetBase }}/thirdparty/lucide.txt" target="_blank" rel="noopener">Lucide Icons</a></li>
             </ul>
+        </section>
+
+        <section class="about-section">
+            <h2>{{ t.about.contact }}</h2>
+            <p>{{ t.about.contactContent }}</p>
+            <ul>
+                <li>Email: <a href="mailto:{{ config.contactEmail }}">{{ config.contactEmail }}</a></li>
+            </ul>
+        </section>
+
+        <section class="about-section" id="support">
+            <h2>{{ t.about.support }}</h2>
+            <p>{{ t.about.supportContent }}</p>
+            <div style="display: flex; align-items: center; gap: var(--space-md); flex-wrap: wrap;">
+                <script type='text/javascript' src='https://storage.ko-fi.com/cdn/widget/Widget_2.js'></script>
+                <script type='text/javascript'>
+                    kofiwidget2.init('{{ t.base.supportKoFi }}', '#ff6433', 'H2H21ME5VO');
+                    kofiwidget2.draw();
+                </script>
+                <button class="btn btn-primary" style="height: 40px;" onclick="openShareModal()">
+                    {{ icons.iconShare() }}
+                    {{ t.about.supportPromotion }}
+                </button>
+            </div>
+            <details style="margin-top: var(--space-md);" open>
+                <summary style="cursor: pointer; font-weight: 500;">
+                    {{ t.about.donateOthers }}
+                </summary>
+                <div class="donate-images">
+                    <div class="donate-item">
+                        <img src="{{ assetBase }}/assets/donate/alipay.jpg" />
+                        <hr class="donate-divider" />
+                        <span class="donate-label">{{ t.about.donateAlipay }}</span>
+                    </div>
+                    <div class="donate-item">
+                        <img src="{{ assetBase }}/assets/donate/wechatpay.png" />
+                        <hr class="donate-divider" />
+                        <span class="donate-label">{{ t.about.donateWeChatPay }}</span>
+                    </div>
+                    <div class="donate-item">
+                        <img src="{{ assetBase }}/assets/donate/qqwallet.png" />
+                        <hr class="donate-divider" />
+                        <span class="donate-label">{{ t.about.donateQQWallet }}</span>
+                    </div>
+                </div>
+            </details>
         </section>
 
         <div class="back-link">
@@ -160,20 +180,6 @@
         flex: none;
         width: 100%;
     }
-}
-
-.btn-link {
-    display: inline-block;
-    padding: var(--space-sm) var(--space-lg);
-    background: var(--color-brand);
-    color: white;
-    text-decoration: none;
-    border-radius: var(--radius-sm);
-    transition: background var(--transition-base);
-}
-
-.btn-link:hover {
-    background: var(--color-brand-hover);
 }
 
 .back-link {
