@@ -27,6 +27,13 @@ if (process.env.BASE_URL) {
     config.baseUrl = process.env.BASE_URL
   } catch {}
 }
+// 为每个镜像站计算 isCurrent，供模板区分当前站与外链
+if (Array.isArray(config.mirrors)) {
+  const currentUrl = (config.baseUrl || '').replace(/\/$/, '').toLowerCase()
+  for (const mirror of config.mirrors) {
+    mirror.isCurrent = (mirror.url || '').replace(/\/$/, '').toLowerCase() === currentUrl
+  }
+}
 
 // 同步加载所有 scratchblocks 语言
 try {

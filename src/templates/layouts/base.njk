@@ -127,6 +127,19 @@
                 &copy; 2025-2026
                 <a href="https://github.com/LuYifei2011" target="_blank">Lu Yifei</a>
             </p>
+            {% if config.mirrors and config.mirrors.length > 0 %}
+                <div class="mirror-sites">
+                    <span class="mirror-label">{{ t.base.mirrorSites }}:</span>
+                    {% for mirror in config.mirrors %}
+                        {% if mirror.isCurrent %}
+                            <span class="mirror-item mirror-current">{{ mirror.label }}<span class="mirror-badge"> ({{ t.base.mirrorCurrent }})</span></span>
+                        {% else %}
+                            <a href="{{ mirror.url }}" class="mirror-item" target="_blank" rel="noopener">{{ mirror.label }}</a>
+                        {% endif %}
+                        {% if not loop.last %}<span class="mirror-sep">|</span>{% endif %}
+                    {% endfor %}
+                </div>
+            {% endif %}
             {% if pagePath != '/about/' %}
                 <div class="support-section">
                     <script type='text/javascript' src='https://storage.ko-fi.com/cdn/widget/Widget_2.js'></script>

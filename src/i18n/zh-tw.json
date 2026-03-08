@@ -14,7 +14,9 @@
     "rememberLanguageTooltip": "自動重新導向到您偏好的語言",
     "aboutLink": "關於",
     "supportKoFi": "在 Ko-fi 上支持我",
-    "supportMore": "更多支持方式"
+    "supportMore": "更多支持方式",
+    "mirrorSites": "鏡像站點",
+    "mirrorCurrent": "目前"
   },
   "home": {
     "searchPlaceholder": "搜尋模組...",

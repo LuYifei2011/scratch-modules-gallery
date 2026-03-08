@@ -14,7 +14,9 @@
     "rememberLanguageTooltip": "Auto redirect to your preferred language",
     "aboutLink": "About",
     "supportKoFi": "Support me on Ko-fi",
-    "supportMore": "More ways to support"
+    "supportMore": "More ways to support",
+    "mirrorSites": "Mirror Sites",
+    "mirrorCurrent": "current"
   },
   "home": {
     "searchPlaceholder": "Search modules...",

@@ -123,3 +123,44 @@ git push
 - 格式化脚本：`scripts/format-scratchblocks.js`
 - 工作流配置：`.github/workflows/format.yml` 和 `.github/workflows/deploy.yml`
 - npm 脚本：`package.json` 中的 `format:scripts`
+- 镜像站点列表：`site.config.js` 中的 `mirrors` 数组
+
+---
+
+## Cloudflare Pages 部署
+
+本项目同时支持部署到 Cloudflare Pages，通过 `BASE_URL` 环境变量切换构建目标。
+
+### 配置步骤
+
+1. 在 Cloudflare Pages 控制台连接 GitHub 仓库。
+2. 设置如下构建选项：
+
+   | 选项 | 值 |
+   |------|----|
+   | **Build command** | `npm run build` |
+   | **Build output directory** | `dist` |
+   | **Node.js version** | `20` |
+
+3. 在 **Environment variables** 中添加：
+
+   ```
+   BASE_URL = https://scratch-modules-gallery.pages.dev
+   ```
+
+   这会覆盖 `site.config.js` 中的 `baseUrl`，使生成的 canonical URL、sitemap 和页脚镜像标注均指向 CF Pages 地址。
+
+4. 保存并触发首次部署。
+
+### 镜像站点切换原理
+
+`site.config.js` 中的 `mirrors` 数组声明了所有已知站点：
+
+```js
+mirrors: [
+  { url: 'https://luyifei2011.github.io/scratch-modules-gallery', label: 'GitHub Pages' },
+  { url: 'https://scratch-modules-gallery.pages.dev', label: 'Cloudflare Pages' },
+]
+```
+
+构建脚本将当前 `baseUrl`（可由 `BASE_URL` 环境变量覆盖）与各条目进行比对，匹配的条目打上 `isCurrent: true`，模板在页脚高亮显示当前站，其余站点渲染为外链。
