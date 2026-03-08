@@ -1482,9 +1482,13 @@ async function render(modules, allTags) {
 
     const sitemap = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${sitemapUrls.map((u) => `  <url><loc>${config.baseUrl.replace(/\/$/, '')}${u.loc}</loc><lastmod>${u.lastmod}</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>`).join('\n')}\n</urlset>`
     await fs.writeFile(path.join(outDir, 'sitemap.xml'), sitemap, 'utf8')
+    // robots.txt 中禁止爬虫访问 /thirdparty/：
+    // - 该目录用于存放构建时复制的第三方库的许可证文件
+    // - 这些静态内容本身不会作为独立内容页面展示，允许抓取只会产生噪音和重复内容
+    // - 因此通过 Disallow: /thirdparty/ 提示搜索引擎忽略该路径，避免污染索引结果
     await fs.writeFile(
       path.join(outDir, 'robots.txt'),
-      `User-agent: *\nAllow: /\nSitemap: ${config.baseUrl.replace(/\/$/, '')}/sitemap.xml\n`,
+      `User-agent: *\nAllow: /\nDisallow: /thirdparty/\nSitemap: ${config.baseUrl.replace(/\/$/, '')}/sitemap.xml\n`,
       'utf8'
     )
   } else {
