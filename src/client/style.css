@@ -385,6 +385,8 @@ input#search:focus {
   border: 1px solid var(--panel-border);
   display: flex;
   flex-direction: column;
+  position: relative;
+  cursor: pointer;
   transition:
     border-color var(--transition-base),
     box-shadow var(--transition-base);
@@ -400,7 +402,12 @@ input#search:focus {
   color: var(--accent);
   text-decoration: none;
 }
-.module-item h2 a:hover {
+.module-item h2 a::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+}
+.module-item:hover h2 a {
   text-decoration: underline;
   color: var(--accent-hover);
 }
