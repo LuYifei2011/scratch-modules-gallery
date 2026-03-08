@@ -1214,9 +1214,11 @@ async function render(modules, allTags) {
       }
       // 同时复制源 SVG 供现代浏览器直接使用
       await fs.copy(faviconSvgPath, path.join(faviconIconsDir, 'favicon.svg'))
-      const svgLink = `<link rel="icon" type="image/svg+xml" href="${(basePath || '')}/icons/favicon.svg">`
+      const svgLink = `<link rel="icon" type="image/svg+xml" href="${basePath || ''}/icons/favicon.svg">`
       _faviconHtml = svgLink + faviconResponse.html.join('')
-      console.log(`[favicons] 已生成 ${faviconResponse.images.length} 张图片, ${faviconResponse.files.length} 个配置文件 (含 SVG)`)
+      console.log(
+        `[favicons] 已生成 ${faviconResponse.images.length} 张图片, ${faviconResponse.files.length} 个配置文件 (含 SVG)`
+      )
     } catch (e) {
       console.warn('[favicons] 生成失败:', e?.message || e)
     }
