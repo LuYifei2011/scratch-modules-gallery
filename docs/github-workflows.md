@@ -136,11 +136,11 @@ git push
 1. 在 Cloudflare Pages 控制台连接 GitHub 仓库。
 2. 设置如下构建选项：
 
-   | 选项 | 值 |
-   |------|----|
-   | **Build command** | `npm run build` |
-   | **Build output directory** | `dist` |
-   | **Node.js version** | `20` |
+   | 选项                       | 值              |
+   | -------------------------- | --------------- |
+   | **Build command**          | `npm run build` |
+   | **Build output directory** | `dist`          |
+   | **Node.js version**        | `20`            |
 
 3. 在 **Environment variables** 中添加：
 
