@@ -400,16 +400,36 @@
   color: white;
 }
 
-.share-btn-twitter  { background-color: #000; }
-.share-btn-twitter:hover  { background-color: #333; }
-.share-btn-facebook { background-color: #0866ff; }
-.share-btn-facebook:hover { background-color: #0550cc; }
-.share-btn-reddit   { background-color: #ff4500; }
-.share-btn-reddit:hover   { background-color: #d93b00; }
-.share-btn-weibo    { background-color: #e6162d; }
-.share-btn-weibo:hover    { background-color: #c01020; }
-.share-btn-email    { background-color: #5c6569; }
-.share-btn-email:hover    { background-color: #3c4245; }
+.share-btn-twitter {
+  background-color: #000;
+}
+.share-btn-twitter:hover {
+  background-color: #333;
+}
+.share-btn-facebook {
+  background-color: #0866ff;
+}
+.share-btn-facebook:hover {
+  background-color: #0550cc;
+}
+.share-btn-reddit {
+  background-color: #ff4500;
+}
+.share-btn-reddit:hover {
+  background-color: #d93b00;
+}
+.share-btn-weibo {
+  background-color: #e6162d;
+}
+.share-btn-weibo:hover {
+  background-color: #c01020;
+}
+.share-btn-email {
+  background-color: #5c6569;
+}
+.share-btn-email:hover {
+  background-color: #3c4245;
+}
 
 #share-native-row {
   margin-top: var(--space-md);
