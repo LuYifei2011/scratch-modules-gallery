@@ -195,6 +195,10 @@ header a {
   stroke-linecap: round;
   stroke-linejoin: round;
 }
+.icon-fill {
+  fill: currentColor;
+  stroke: none;
+}
 /* 当站点标题在模块页面降级为 .site-title 时，保持与 h1 相同的外观 */
 .site-title {
   font-size: var(--font-size-xl);

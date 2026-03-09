@@ -295,6 +295,29 @@
                         <span id="share-copy-label">{{ t.base.shareCopyUrl }}</span>
                     </button>
                 </div>
+                <div class="share-buttons">
+                    <a id="share-btn-twitter" href="#" target="_blank" rel="noopener"
+                        class="btn share-btn-twitter" aria-label="Twitter / X">
+                        {{ icons.iconTwitter() }}
+                    </a>
+                    <a id="share-btn-facebook" href="#" target="_blank" rel="noopener"
+                        class="btn share-btn-facebook" aria-label="Facebook">
+                        {{ icons.iconFacebook() }}
+                    </a>
+                    <a id="share-btn-reddit" href="#" target="_blank" rel="noopener"
+                        class="btn share-btn-reddit" aria-label="Reddit">
+                        {{ icons.iconReddit() }}
+                    </a>
+                    <a id="share-btn-weibo" href="#" target="_blank" rel="noopener"
+                        class="btn share-btn-weibo" aria-label="Weibo">
+                        {{ icons.iconWeibo() }}
+                    </a>
+                    <a id="share-btn-email" href="#"
+                        class="btn share-btn-email" aria-label="Email">
+                        {{ icons.iconEmail() }}
+                    </a>
+                    <!-- TODO: LinkedIn, Whatsapp, QQ, Weixin -->
+                </div>
                 <div id="share-native-row" hidden>
                     <button type="button" class="btn btn-primary share-native-btn" id="share-native-btn">
                         {{ icons.iconShare() }}
@@ -312,11 +335,24 @@
                 var nativeRow = document.getElementById('share-native-row');
                 var nativeBtn = document.getElementById('share-native-btn');
                 if (!modal) return;
-                if (window.PAGE_PATH === '/about/') {
-                    urlInput.value = location.origin + window.PAGE_BASE;
-                } else {
-                    urlInput.value = location.href;
-                }
+                var url = window.PAGE_PATH === "/about/" ? window.location.origin + window.PAGE_BASE : location.href;
+                urlInput.value = url;
+                var title = window.PAGE_PATH === "/about/" ? '{{ config.siteName }}' : document.title;
+                var eu = encodeURIComponent(url);
+                var et = encodeURIComponent(
+                    title + 
+                    (window.PAGE_PATH.startsWith('/modules/') ? '\n{{ module.description }}' : '') + 
+                    '\n#Scratch #ScratchModulesGallery');
+                var btnX = document.getElementById('share-btn-twitter');
+                var btnFb = document.getElementById('share-btn-facebook');
+                var btnRd = document.getElementById('share-btn-reddit');
+                var btnWb = document.getElementById('share-btn-weibo');
+                var btnMail = document.getElementById('share-btn-email');
+                if (btnX) btnX.href = 'https://x.com/intent/tweet?url=' + eu + '&text=' + et;
+                if (btnFb) btnFb.href = 'https://www.facebook.com/sharer/sharer.php?u=' + eu;
+                if (btnRd) btnRd.href = 'https://www.reddit.com/submit?url=' + eu + '&title=' + et;
+                if (btnWb) btnWb.href = 'https://service.weibo.com/share/share.php?url=' + eu + '&title=' + et;
+                if (btnMail) btnMail.href = 'mailto:?subject=' + et + '&body=' + eu;
                 var i18n = window.__I18N || {};
                 var copyUrlText = (i18n.base && i18n.base.shareCopyUrl) || '{{ t.base.shareCopyUrl }}';
                 var copyOkText = (i18n.module && i18n.module.copySuccess) || '{{ t.module.copySuccess }}';
