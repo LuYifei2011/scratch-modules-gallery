@@ -102,6 +102,10 @@ function localizeProcedures(raw, procMaps) {
     // 先按 key 长度降序，避免前缀冲突
     const entries = Object.entries(procMap).sort((a, b) => b[0].length - a[0].length)
     for (const [englishPattern, localizedPattern] of entries) {
+      // 本地化文案缺失时，保留原始英文 pattern
+      if (typeof localizedPattern !== 'string' || !localizedPattern.trim()) {
+        continue
+      }
       // 拆分英文 pattern 获取占位符数量（_ 表示一个参数括号）
       const parts = englishPattern.split('_')
       const slotCount = parts.length - 1
@@ -111,6 +115,8 @@ function localizeProcedures(raw, procMaps) {
         console.warn(
           `[procedures] 本地化占位符数量不匹配: pattern="${englishPattern}" slots=${slotCount} localizedSlots=${localizedSlots}`
         )
+        // 占位符数量不匹配会破坏脚本结构，回退到原始内容
+        continue
       }
       // placeholder 捕获一个 custom-arg 括号，允许内部出现 :: custom-arg 及任意非换行内容
       const placeholder = '\\s*(\\([^\n]*?\\))\\s*'
@@ -216,11 +222,13 @@ export async function translateModulesForLocale(
     .toLowerCase()
   const isEnglishLocale = locale === 'en' || languageTag.startsWith('en')
 
-  // 生成语言优先级顺序（避免重复判断）
+  // 生成语言优先级顺序：CJK 语言之间互相回退；非 CJK 语言只查自身（+ en），
+  // 最终兜底永远是 meta.json 原始值（pickStr / pickArr 末尾的 nm[base]）。
   const getLocalePriority = () => {
-    if (locale === 'zh-tw') return [locale, 'zh-tw', 'zh-cn', 'en']
-    if (locale === 'zh-cn') return [locale, 'zh-cn', 'zh-tw', 'en']
-    return [locale, 'en', 'zh-cn', 'zh-tw']
+    if (locale === 'zh-tw') return ['zh-tw', 'zh-cn', 'en']
+    if (locale === 'zh-cn') return ['zh-cn', 'zh-tw', 'en']
+    if (locale === 'en') return ['en']
+    return [locale, 'en']
   }
   const localePriority = getLocalePriority()
 
@@ -333,9 +341,14 @@ export async function translateModulesForLocale(
             // 先做过程标题文本替换（基于英文模式），避免后续 scratchblocks 翻译改变关键字导致匹配失败
             const preLocalized = localizeProcedures(s.content, procMaps)
             // 再进行 AST 翻译与参数本地化（参数由 translateScriptFields 处理）
-            ns.content = translateScriptText
-              ? translateScriptText(preLocalized, languageTag, mapsForThis)
-              : preLocalized
+            if (translateScriptText) {
+              const translated = translateScriptText(preLocalized, languageTag, mapsForThis)
+              // 若翻译阶段未匹配到有效结果，回退到预处理后的原文
+              ns.content =
+                typeof translated === 'string' && translated.trim() ? translated : preLocalized
+            } else {
+              ns.content = preLocalized
+            }
           }
         } catch (e) {
           console.warn(`[translate] error ${m.id} "${s.title}":`, e?.message || e)
@@ -383,6 +396,9 @@ export async function translateModulesForLocale(
                     const translated = translateScriptText
                       ? translateScriptText(preLocalized, languageTag, mf)
                       : preLocalized
+                    if (typeof translated !== 'string' || !translated.trim()) {
+                      return preLocalized
+                    }
                     return translated
                   })(),
               fromName: localizedFromName,
