@@ -22,7 +22,7 @@
     "minisearch": "^7.1.2",
     "nunjucks": "^3.2.4",
     "scratchblocks-plus": "^1.1.0",
-    "simple-git": "^3.22.0"
+    "simple-git": "^3.32.3"
   },
   "devDependencies": {
     "@codemirror/autocomplete": "^6.20.0",
