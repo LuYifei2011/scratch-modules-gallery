@@ -11,8 +11,9 @@
     "format:scripts": "node ./scripts/format-scratchblocks.js --all"
   },
   "dependencies": {
-    "@fontsource/noto-sans": "^5.2.10",
+    "@napi-rs/canvas": "^0.1.96",
     "@resvg/resvg-js": "^2.6.2",
+    "@xmldom/xmldom": "^0.8.11",
     "fast-glob": "^3.3.2",
     "favicons": "^7.2.0",
     "formidable": "^3.5.4",
@@ -21,7 +22,7 @@
     "marked": "^17.0.4",
     "minisearch": "^7.1.2",
     "nunjucks": "^3.2.4",
-    "scratchblocks-plus": "^1.1.0",
+    "scratchblocks-plus": "^1.1.1",
     "simple-git": "^3.32.3"
   },
   "devDependencies": {

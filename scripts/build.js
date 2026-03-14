@@ -2,7 +2,6 @@ import fs from 'fs-extra'
 import path from 'path'
 import fg from 'fast-glob'
 import nunjucks from 'nunjucks'
-import { Resvg } from '@resvg/resvg-js'
 import { loadScratchblocksLanguages } from './lib/scratch-utils.js'
 import { pathToFileURL } from 'url'
 import * as scratchblocks from 'scratchblocks-plus/syntax/index.js'
@@ -15,6 +14,7 @@ import { resolveImports } from './lib/import-resolver.js'
 import { loadModules } from './lib/module-loader.js'
 import { translateScriptText } from './lib/script-translator.js'
 import { loadI18n, loadGlobalTags, pickConfigForLocale } from './lib/i18n-loader.js'
+import { loadSiteCoverTemplate, generateSiteCover, generateModuleCover } from './lib/cover-generator.js'
 
 const root = path.resolve('.')
 // 模块级 favicon HTML 片段，由 render() 生成后供 nunjucks.render monkey-patch 注入
@@ -185,13 +185,7 @@ async function render(modules, allTags) {
   if (await fs.pathExists(publicDir)) await fs.copy(publicDir, outDir)
 
   // 读取 cover SVG 模板（用于生成各语言社交预览图）
-  const coverSvgSrc = path.join(root, 'src', 'cover.svg')
-  let coverSvgTemplate = null
-  if (await fs.pathExists(coverSvgSrc)) {
-    coverSvgTemplate = await fs.readFile(coverSvgSrc, 'utf8')
-  } else {
-    console.warn('[cover] 未找到 src/cover.svg，跳过社交预览图生成')
-  }
+  const coverSvgTemplate = await loadSiteCoverTemplate()
 
   // copy thirdparty
   const thirdpartyDir = path.join(root, 'thirdparty')
@@ -389,23 +383,16 @@ async function render(modules, allTags) {
     await fs.writeJson(path.join(locOut, 'search-index.json'), searchIndex)
     await fs.writeJson(path.join(locOut, 'search-docs.json'), docs)
 
-    // 生成本地化 cover.png（社交预览图）到各语言目录
+    // 生成本地化 cover.png（站点级社交预览图）
     if (coverSvgTemplate) {
-      const coverSvg = coverSvgTemplate.replace('__SITE_TITLE__', escapeHtml(locConfig.siteName))
-      try {
-        const resvgOpts = { fitTo: { mode: 'width', value: 1200 } }
-        const fontDirPath = path.join(root, 'src', 'fonts')
-        resvgOpts.font = {
-          fontDirs: [fontDirPath],
-          loadSystemFonts: false,
-          sansSerifFamily: 'Noto Sans',
-        }
-        const resvg = new Resvg(coverSvg, resvgOpts)
-        const pngData = resvg.render()
-        await fs.writeFile(path.join(locOut, 'cover.png'), pngData.asPng())
-      } catch (e) {
-        console.warn(`[cover] ${loc} PNG 渲染失败:`, e?.message || e)
-      }
+      await generateSiteCover(coverSvgTemplate, locConfig.siteName, path.join(locOut, 'cover.png'))
+    }
+
+    // 生成模块级封面图
+    const langTag = ($t?.meta?.languageTag || loc).replace('-', '_').toLowerCase()
+    for (const m of modulesForLoc) {
+      const moduleOutDir = path.join(locOut, 'modules', m.slug)
+      await generateModuleCover(m, langTag, path.join(moduleOutDir, 'cover.png'))
     }
 
     const indexHtml = nunjucks.render('layouts/home.njk', {
