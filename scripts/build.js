@@ -332,9 +332,16 @@ async function render(modules, allTags) {
     for (const loc of locales) {
       if (loc === 'en') continue
       try {
-        const translated = await translateModulesForLocale(modules, dict, loc, globalTags, {
-          skipMissingCheck: false,
-        }, { translateScriptText, reportIssue })
+        const translated = await translateModulesForLocale(
+          modules,
+          dict,
+          loc,
+          globalTags,
+          {
+            skipMissingCheck: false,
+          },
+          { translateScriptText, reportIssue }
+        )
         translatedCache.set(loc, translated)
       } catch {
         // 失败时不缓存，后续渲染阶段仍可单独重试
@@ -352,9 +359,16 @@ async function render(modules, allTags) {
     // 针对当前语言，生成脚本文本与元信息已翻译的模块数据（不影响其他语言）
     let modulesForLoc = translatedCache.get(loc)
     if (!modulesForLoc) {
-      modulesForLoc = await translateModulesForLocale(modules, dict, loc, globalTags, {
-        skipMissingCheck: true,
-      }, { translateScriptText })
+      modulesForLoc = await translateModulesForLocale(
+        modules,
+        dict,
+        loc,
+        globalTags,
+        {
+          skipMissingCheck: true,
+        },
+        { translateScriptText }
+      )
       translatedCache.set(loc, modulesForLoc)
     }
 

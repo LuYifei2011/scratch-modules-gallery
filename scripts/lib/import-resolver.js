@@ -54,10 +54,7 @@ function fullyExpandContent(idMap, moduleId, rawContent, stack) {
       out.push(`// 导入失败: ${error}`)
       continue
     }
-    const nested = fullyExpandContent(idMap, targetModule.id, targetScript.content, [
-      ...stack,
-      key,
-    ])
+    const nested = fullyExpandContent(idMap, targetModule.id, targetScript.content, [...stack, key])
     out.push(nested.trimEnd())
   }
   return out.join('\n')
