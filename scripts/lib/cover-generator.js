@@ -147,14 +147,14 @@ const TAG_BG = '#e8e8f0'
 const TAG_TEXT = '#555570'
 
 /** 标题字体大小：单行 / 双行 */
-const TITLE_SIZE_1LINE = 46
-const TITLE_SIZE_2LINE = 38
-const DESC_FONT_SIZE = 22
-const DESC_LINE_HEIGHT = 32
-const TAG_FONT_SIZE = 16
-const TAG_H = 30
-const TAG_PAD_X = 14
-const TAG_GAP = 10
+const TITLE_SIZE_1LINE = 60
+const TITLE_SIZE_2LINE = 45
+const DESC_FONT_SIZE = 26
+const DESC_LINE_HEIGHT = 38
+const TAG_FONT_SIZE = 19
+const TAG_H = 36
+const TAG_PAD_X = 17
+const TAG_GAP = 12
 
 /**
  * 判断字符是否为 CJK 字符
@@ -166,23 +166,34 @@ function isCJK(ch) {
 }
 
 /**
+ * 检查换行结果是否每行都不超宽（处理单词不可拆分导致单行溢出的情况）。
+ */
+function allLinesFit(lines, font, maxWidth) {
+  return lines.every(line => measureText(line, font) <= maxWidth)
+}
+
+/**
  * 确定标题字号和行数。
- * 优先使用大字号单行；若溢出则尝试大字号两行；若仍溢出则用小字号两行。
+ * 优先使用大字号单行；若溢出则尝试大字号两行且每行不超宽；否则用小字号两行。
  */
 function computeTitleLayout(name, maxWidth) {
   const font1 = `bold ${TITLE_SIZE_1LINE}px ${FONT_FAMILY}`
   const font2 = `bold ${TITLE_SIZE_2LINE}px ${FONT_FAMILY}`
 
   // 尝试单行大字
-  const w1 = measureText(name, font1)
-  if (w1 <= maxWidth) {
+  if (measureText(name, font1) <= maxWidth) {
     return { fontSize: TITLE_SIZE_1LINE, lines: [name] }
   }
 
-  // 尝试大字号两行
+  // 尝试大字号两行（每行都不能超宽）
   const lines1 = wrapTextByWidth(name, font1, maxWidth)
-  if (lines1.length <= 2) {
+  if (lines1.length <= 2 && allLinesFit(lines1, font1, maxWidth)) {
     return { fontSize: TITLE_SIZE_1LINE, lines: lines1.slice(0, 2) }
+  }
+
+  // 小字号：先看能否单行
+  if (measureText(name, font2) <= maxWidth) {
+    return { fontSize: TITLE_SIZE_2LINE, lines: [name] }
   }
 
   // 小字号两行
