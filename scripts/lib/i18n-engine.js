@@ -433,9 +433,7 @@ export async function translateModulesForLocale(
         if (!('description' in locTrans)) missingFields.push('description')
         // tags 由全局 tags.json 管理，不需检查模块级翻译
         // 脚本标题
-        const scriptIds = Array.isArray(m.scripts)
-          ? m.scripts.map((x) => x.id).filter(Boolean)
-          : []
+        const scriptIds = Array.isArray(m.scripts) ? m.scripts.map((x) => x.id).filter(Boolean) : []
         if (scriptIds.length) {
           const locTitles = locTrans.scriptTitles || {}
           const missingTitleIds = scriptIds.filter((id) => !(id in locTitles))
@@ -461,17 +459,11 @@ export async function translateModulesForLocale(
           const missLists = listNames.filter((n) => !(n in locListMap))
           if (missVars.length)
             missingFields.push(
-              'variables(' +
-                missVars.slice(0, 5).join(',') +
-                (missVars.length > 5 ? '…' : '') +
-                ')'
+              'variables(' + missVars.slice(0, 5).join(',') + (missVars.length > 5 ? '…' : '') + ')'
             )
           if (missLists.length)
             missingFields.push(
-              'lists(' +
-                missLists.slice(0, 5).join(',') +
-                (missLists.length > 5 ? '…' : '') +
-                ')'
+              'lists(' + missLists.slice(0, 5).join(',') + (missLists.length > 5 ? '…' : '') + ')'
             )
         }
         // 自定义块 pattern 与参数
