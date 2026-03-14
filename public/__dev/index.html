@@ -1,0 +1,271 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dev Tools - Scratch 模块库</title>
+    <style>
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      body {
+        font-family: system-ui, -apple-system, sans-serif;
+        background: #0f172a;
+        color: #e2e8f0;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+      }
+      header {
+        background: #1e293b;
+        border-bottom: 1px solid #334155;
+        padding: 20px 32px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        flex-wrap: wrap;
+      }
+      .header-title {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .header-title h1 {
+        font-size: 20px;
+        font-weight: 700;
+        color: #f1f5f9;
+      }
+      .header-badge {
+        font-size: 11px;
+        font-weight: 600;
+        background: #facc15;
+        color: #1e293b;
+        border-radius: 4px;
+        padding: 2px 6px;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+      }
+      .header-links {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+      }
+      .header-links a {
+        color: #94a3b8;
+        text-decoration: none;
+        font-size: 13px;
+        transition: color 0.15s;
+      }
+      .header-links a:hover { color: #60a5fa; }
+      main {
+        flex: 1;
+        padding: 32px;
+        max-width: 900px;
+        width: 100%;
+        margin: 0 auto;
+      }
+      .section-title {
+        font-size: 12px;
+        font-weight: 600;
+        color: #64748b;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        margin-bottom: 14px;
+      }
+      .tools-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+        gap: 14px;
+        margin-bottom: 36px;
+      }
+      .tool-card {
+        background: #1e293b;
+        border: 1px solid #334155;
+        border-radius: 10px;
+        padding: 20px;
+        text-decoration: none;
+        color: inherit;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        transition: border-color 0.15s, background 0.15s;
+        position: relative;
+        overflow: hidden;
+      }
+      .tool-card:hover {
+        border-color: #3b82f6;
+        background: #1e3a5f;
+      }
+      .tool-card::before {
+        content: '';
+        position: absolute;
+        left: 0; top: 0; bottom: 0;
+        width: 3px;
+        background: var(--accent, #3b82f6);
+        border-radius: 3px 0 0 3px;
+        opacity: 0;
+        transition: opacity 0.15s;
+      }
+      .tool-card:hover::before { opacity: 1; }
+      .tool-icon {
+        font-size: 28px;
+        line-height: 1;
+      }
+      .tool-name {
+        font-size: 15px;
+        font-weight: 600;
+        color: #f1f5f9;
+      }
+      .tool-desc {
+        font-size: 13px;
+        color: #94a3b8;
+        line-height: 1.5;
+      }
+      .tool-tag {
+        display: inline-block;
+        font-size: 10px;
+        font-weight: 500;
+        padding: 2px 7px;
+        border-radius: 3px;
+        margin-top: 4px;
+        width: fit-content;
+      }
+      .tag-dev { background: #1d4ed8; color: #bfdbfe; }
+      .tag-build { background: #065f46; color: #6ee7b7; }
+      .build-status {
+        background: #1e293b;
+        border: 1px solid #334155;
+        border-radius: 10px;
+        padding: 16px 20px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-size: 13px;
+        margin-bottom: 36px;
+      }
+      .status-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: #64748b;
+        flex-shrink: 0;
+      }
+      .status-dot.ready { background: #22c55e; }
+      .status-dot.building {
+        background: #facc15;
+        animation: pulse 1s infinite;
+      }
+      .status-dot.error { background: #ef4444; }
+      @keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.4; }
+      }
+      .status-text { color: #cbd5e1; }
+      .status-time { color: #64748b; margin-left: auto; }
+      footer {
+        padding: 20px 32px;
+        border-top: 1px solid #334155;
+        font-size: 12px;
+        color: #475569;
+        text-align: center;
+      }
+      footer a { color: #64748b; text-decoration: none; }
+      footer a:hover { color: #94a3b8; }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div class="header-title">
+        <span style="font-size:22px">🛠</span>
+        <h1>Dev Tools</h1>
+        <span class="header-badge">DEV</span>
+      </div>
+      <div class="header-links">
+        <a href="/" target="_blank">← 回到站点首页</a>
+        <a href="/zh-cn/issues/" target="_blank">构建问题</a>
+        <a href="https://github.com/LuYifei2011/scratch-modules-gallery" target="_blank" rel="noopener">GitHub</a>
+      </div>
+    </header>
+
+    <main>
+      <div class="build-status" id="build-status">
+        <span class="status-dot" id="status-dot"></span>
+        <span class="status-text" id="status-text">正在获取构建状态…</span>
+        <span class="status-time" id="status-time"></span>
+      </div>
+
+      <p class="section-title">开发工具</p>
+      <div class="tools-grid">
+        <a class="tool-card" href="/__dev/editor/" style="--accent:#3b82f6">
+          <span class="tool-icon">✏️</span>
+          <span class="tool-name">模块编辑器</span>
+          <span class="tool-desc">可视化创建和编辑模块内容，包括脚本、元数据和多语言翻译。</span>
+          <span class="tool-tag tag-dev">Editor</span>
+        </a>
+        <a class="tool-card" href="/__dev/covers/" style="--accent:#a855f7">
+          <span class="tool-icon">🖼</span>
+          <span class="tool-name">封面图预览</span>
+          <span class="tool-desc">浏览所有模块的 OG 封面图，按语言切换预览，快速检查生成结果。</span>
+          <span class="tool-tag tag-dev">Preview</span>
+        </a>
+      </div>
+
+      <p class="section-title">构建与调试</p>
+      <div class="tools-grid">
+        <a class="tool-card" href="/zh-cn/issues/" style="--accent:#f59e0b">
+          <span class="tool-icon">⚠️</span>
+          <span class="tool-name">构建问题</span>
+          <span class="tool-desc">查看上次构建产生的警告和错误，定位内容缺失或配置异常。</span>
+          <span class="tool-tag tag-build">Build</span>
+        </a>
+        <a class="tool-card" href="/en/search-index.json" target="_blank" style="--accent:#10b981">
+          <span class="tool-icon">🔍</span>
+          <span class="tool-name">搜索索引 (en)</span>
+          <span class="tool-desc">查看英文版搜索索引 JSON，验证模块数据是否正确写入。</span>
+          <span class="tool-tag tag-build">Data</span>
+        </a>
+        <a class="tool-card" href="/zh-cn/search-index.json" target="_blank" style="--accent:#10b981">
+          <span class="tool-icon">🔍</span>
+          <span class="tool-name">搜索索引 (zh-cn)</span>
+          <span class="tool-desc">查看简体中文版搜索索引 JSON，验证本地化数据是否正确写入。</span>
+          <span class="tool-tag tag-build">Data</span>
+        </a>
+      </div>
+    </main>
+
+    <footer>
+      Dev Tools &mdash; Scratch 模块库 &middot;
+      仅在 <code>IS_DEV=1</code> 构建下可用 &middot;
+      <a href="/">返回站点</a>
+    </footer>
+
+    <script>
+      async function fetchBuildStatus() {
+        const dot = document.getElementById('status-dot')
+        const text = document.getElementById('status-text')
+        const timeEl = document.getElementById('status-time')
+        try {
+          const res = await fetch('/api/build/status')
+          if (!res.ok) throw new Error(`HTTP ${res.status}`)
+          const data = await res.json()
+          if (data.building || data.pending) {
+            dot.className = 'status-dot building'
+            text.textContent = data.building ? '构建中…' : '等待构建…'
+          } else {
+            dot.className = 'status-dot ready'
+            text.textContent = '构建完成，服务已就绪'
+          }
+          if (data.lastBuildStart) {
+            const d = new Date(data.lastBuildStart)
+            timeEl.textContent = `上次构建：${d.toLocaleTimeString('zh-CN')}`
+          }
+        } catch (e) {
+          dot.className = 'status-dot error'
+          text.textContent = '无法获取构建状态（开发服务器是否已启动？）'
+        }
+      }
+
+      fetchBuildStatus()
+      setInterval(fetchBuildStatus, 5000)
+    </script>
+  </body>
+</html>
