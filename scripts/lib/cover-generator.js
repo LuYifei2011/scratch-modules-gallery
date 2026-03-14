@@ -71,12 +71,18 @@ function tokenize(text) {
   let buf = ''
   for (const ch of text) {
     if (isCJK(ch)) {
-      if (buf) { tokens.push(buf); buf = '' }
+      if (buf) {
+        tokens.push(buf)
+        buf = ''
+      }
       tokens.push(ch)
     } else {
       buf += ch
       // 到空格时切断，保留空格在 token 末尾
-      if (ch === ' ') { tokens.push(buf); buf = '' }
+      if (ch === ' ') {
+        tokens.push(buf)
+        buf = ''
+      }
     }
   }
   if (buf) tokens.push(buf)
@@ -161,15 +167,19 @@ const TAG_GAP = 12
  */
 function isCJK(ch) {
   const c = ch.charCodeAt(0)
-  return (c >= 0x4e00 && c <= 0x9fff) || (c >= 0x3400 && c <= 0x4dbf) ||
-    (c >= 0x3000 && c <= 0x303f) || (c >= 0xff00 && c <= 0xffef)
+  return (
+    (c >= 0x4e00 && c <= 0x9fff) ||
+    (c >= 0x3400 && c <= 0x4dbf) ||
+    (c >= 0x3000 && c <= 0x303f) ||
+    (c >= 0xff00 && c <= 0xffef)
+  )
 }
 
 /**
  * 检查换行结果是否每行都不超宽（处理单词不可拆分导致单行溢出的情况）。
  */
 function allLinesFit(lines, font, maxWidth) {
-  return lines.every(line => measureText(line, font) <= maxWidth)
+  return lines.every((line) => measureText(line, font) <= maxWidth)
 }
 
 /**
@@ -211,7 +221,7 @@ function buildModuleCoverSVG({ name, description, tags, firstScript, allScripts,
   const title = computeTitleLayout(name || 'Module', leftMaxW)
   const titleFont = `bold ${title.fontSize}px ${FONT_FAMILY}`
   const titleLineHeight = Math.round(title.fontSize * 1.25)
-  const titleStartY = PAD_TOP + title.fontSize  // baseline of first line
+  const titleStartY = PAD_TOP + title.fontSize // baseline of first line
   let titleSvg = ''
   for (let i = 0; i < title.lines.length; i++) {
     const y = titleStartY + i * titleLineHeight
@@ -224,7 +234,10 @@ function buildModuleCoverSVG({ name, description, tags, firstScript, allScripts,
   const descY = titleBottomY + 44
   const descLines = wrapTextByWidth(description || '', descFont, leftMaxW).slice(0, 5)
   const descTspans = descLines
-    .map((line, i) => `<tspan x="${PAD_X}" dy="${i === 0 ? 0 : DESC_LINE_HEIGHT}">${escapeHtml(line)}</tspan>`)
+    .map(
+      (line, i) =>
+        `<tspan x="${PAD_X}" dy="${i === 0 ? 0 : DESC_LINE_HEIGHT}">${escapeHtml(line)}</tspan>`
+    )
     .join('')
   const descBottomY = descY + (descLines.length - 1) * DESC_LINE_HEIGHT
 
@@ -266,9 +279,7 @@ function buildModuleCoverSVG({ name, description, tags, firstScript, allScripts,
       const renderH = origH * scale
       const ox = RIGHT_X + (RIGHT_W - renderW) / 2
       const oy = PAD_TOP + (availH - renderH) / 2
-      const innerSvg = raw
-        .replace(/<svg[^>]*>/, '')
-        .replace(/<\/svg>\s*$/, '')
+      const innerSvg = raw.replace(/<svg[^>]*>/, '').replace(/<\/svg>\s*$/, '')
       blocksSvg = `
         <defs>
           <clipPath id="blocks-clip">
@@ -325,13 +336,13 @@ function buildModuleCoverSVG({ name, description, tags, firstScript, allScripts,
 export async function generateModuleCover(module, langTag, outputPath) {
   // 提取第一个非导入脚本的文本
   const scripts = module.scripts || []
-  const firstNonImport = scripts.find(s => !s.imported)
+  const firstNonImport = scripts.find((s) => !s.imported)
   const firstScript = firstNonImport?.content || scripts[0]?.content || ''
 
   // 收集所有脚本文本（用于类别统计）
   const allScripts = scripts
-    .filter(s => !s.imported)
-    .map(s => s.content)
+    .filter((s) => !s.imported)
+    .map((s) => s.content)
     .filter(Boolean)
 
   const svg = buildModuleCoverSVG({

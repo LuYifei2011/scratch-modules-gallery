@@ -5,9 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>封面图预览 - Dev Tools</title>
     <style>
-      * { box-sizing: border-box; margin: 0; padding: 0; }
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
       body {
-        font-family: system-ui, -apple-system, sans-serif;
+        font-family:
+          system-ui,
+          -apple-system,
+          sans-serif;
         background: #0f172a;
         color: #e2e8f0;
         min-height: 100vh;
@@ -35,14 +42,19 @@
         text-decoration: none;
         font-size: 13px;
       }
-      .toolbar a:hover { color: #60a5fa; }
+      .toolbar a:hover {
+        color: #60a5fa;
+      }
       .locale-group {
         display: flex;
         align-items: center;
         gap: 8px;
         margin-left: auto;
       }
-      .locale-group label { font-size: 13px; color: #94a3b8; }
+      .locale-group label {
+        font-size: 13px;
+        color: #94a3b8;
+      }
       .locale-select {
         background: #334155;
         color: #e2e8f0;
@@ -52,7 +64,10 @@
         font-size: 13px;
         cursor: pointer;
       }
-      .locale-select:focus { outline: 2px solid #3b82f6; outline-offset: 1px; }
+      .locale-select:focus {
+        outline: 2px solid #3b82f6;
+        outline-offset: 1px;
+      }
       .stats {
         font-size: 13px;
         color: #64748b;
@@ -71,7 +86,9 @@
         border: 1px solid #334155;
         transition: border-color 0.15s;
       }
-      .card:hover { border-color: #3b82f6; }
+      .card:hover {
+        border-color: #3b82f6;
+      }
       .cover-wrap {
         position: relative;
         width: 100%;
@@ -95,7 +112,9 @@
         color: #64748b;
         font-size: 13px;
       }
-      .cover-error svg { opacity: 0.4; }
+      .cover-error svg {
+        opacity: 0.4;
+      }
       .cover-placeholder {
         position: absolute;
         inset: 0;
@@ -166,7 +185,11 @@
         border-radius: 50%;
         animation: spin 0.7s linear infinite;
       }
-      @keyframes spin { to { transform: rotate(360deg); } }
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
       .error-msg {
         background: #450a0a;
         color: #fca5a5;
@@ -238,11 +261,13 @@
           return
         }
 
-        const cards = modules.map(mod => {
-          const coverUrl = `/${locale}/modules/${mod.id}/cover.png`
-          const moduleUrl = `/${locale}/modules/${mod.id}/`
-          const name = typeof mod.name === 'object' ? (mod.name[locale] || mod.name['en'] || mod.id) : mod.name
-          return `
+        const cards = modules
+          .map((mod) => {
+            const coverUrl = `/${locale}/modules/${mod.id}/cover.png`
+            const moduleUrl = `/${locale}/modules/${mod.id}/`
+            const name =
+              typeof mod.name === 'object' ? mod.name[locale] || mod.name['en'] || mod.id : mod.name
+            return `
             <div class="card" data-id="${mod.id}">
               <div class="cover-wrap">
                 <div class="cover-placeholder">加载中…</div>
@@ -272,7 +297,8 @@
               </div>
             </div>
           `
-        }).join('')
+          })
+          .join('')
 
         content.innerHTML = `<div class="grid">${cards}</div>`
         loadImages()
@@ -280,7 +306,7 @@
 
       function loadImages() {
         const imgs = content.querySelectorAll('img[data-src]')
-        imgs.forEach(img => {
+        imgs.forEach((img) => {
           const src = img.dataset.src
           const wrap = img.closest('.cover-wrap')
           const placeholder = wrap.querySelector('.cover-placeholder')

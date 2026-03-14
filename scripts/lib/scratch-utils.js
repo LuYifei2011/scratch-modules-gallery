@@ -87,7 +87,7 @@ export function analyzeBlockCategories(scriptTexts) {
       count,
       color: CATEGORY_COLORS[category],
     }))
-    .filter(c => c.color) // 排除没有定义颜色的类别
+    .filter((c) => c.color) // 排除没有定义颜色的类别
 }
 
 export function loadScratchblocksLanguages() {

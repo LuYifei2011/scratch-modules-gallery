@@ -14,7 +14,11 @@ import { resolveImports } from './lib/import-resolver.js'
 import { loadModules } from './lib/module-loader.js'
 import { translateScriptText } from './lib/script-translator.js'
 import { loadI18n, loadGlobalTags, pickConfigForLocale } from './lib/i18n-loader.js'
-import { loadSiteCoverTemplate, generateSiteCover, generateModuleCover } from './lib/cover-generator.js'
+import {
+  loadSiteCoverTemplate,
+  generateSiteCover,
+  generateModuleCover,
+} from './lib/cover-generator.js'
 
 const root = path.resolve('.')
 // 模块级 favicon HTML 片段，由 render() 生成后供 nunjucks.render monkey-patch 注入
