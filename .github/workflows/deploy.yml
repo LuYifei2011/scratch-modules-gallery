@@ -34,6 +34,7 @@ jobs:
         with:
           node-version: 20.x
           cache: npm
+      - run: apt-get update && apt-get install -y fonts-noto fonts-noto fonts-noto-cjk
       - run: npm ci
       - run: npm run build
       - name: Upload Pages artifact
