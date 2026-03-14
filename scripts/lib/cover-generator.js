@@ -9,7 +9,7 @@
 
 import fs from 'fs-extra'
 import path from 'path'
-import { createCanvas, GlobalFonts } from '@napi-rs/canvas'
+import { createCanvas, registerFont } from 'canvas'
 import { Resvg } from '@resvg/resvg-js'
 import { renderToSVGString } from 'scratchblocks-plus/node-ssr.js'
 import { escapeHtml } from './html-utils.js'
@@ -18,7 +18,10 @@ import { analyzeBlockCategories } from './scratch-utils.js'
 const root = path.resolve('.')
 const fontDirPath = path.join(root, 'src', 'fonts')
 
-GlobalFonts.loadFontsFromDir(fontDirPath)
+// 注册字体
+registerFont(path.join(fontDirPath, 'NotoSans-Medium.ttf'), { family: 'Noto Sans' })
+registerFont(path.join(fontDirPath, 'NotoSansSC-Medium.ttf'), { family: 'Noto Sans SC' })
+registerFont(path.join(fontDirPath, 'NotoSansTC-Medium.ttf'), { family: 'Noto Sans TC' })
 
 // 用于文本宽度精确测量的 canvas 上下文（复用单一实例）
 const _measureCanvas = createCanvas(1, 1)
