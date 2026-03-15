@@ -30,8 +30,6 @@ function _shouldLog(level) {
   return true
 }
 
-
-
 // ── ANSI 转义辅助 ──────────────────────────────────────────────────────────────
 const RESET = IS_TTY ? '\x1b[0m' : ''
 

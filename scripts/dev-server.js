@@ -493,7 +493,8 @@ function setupKeyboard() {
     switch (key.name?.toLowerCase()) {
       case 'f':
         fastBuild = !fastBuild
-        log.info('dev', 
+        log.info(
+          'dev',
           paint(c.cyan, '快速构建') +
             paint(c.dim, ' → ') +
             (fastBuild ? paint(c.cyan + c.bold, 'ON') : paint(c.dim, 'OFF'))
@@ -503,7 +504,8 @@ function setupKeyboard() {
       case 'l':
         verboseMode = !verboseMode
         setLogMode(verboseMode ? 'v' : 's')
-        log.info('dev',
+        log.info(
+          'dev',
           paint(c.cyan, '日志模式') +
             paint(c.dim, ' → ') +
             paint(c.cyan + c.bold, verboseMode ? '详细' : '简略')
