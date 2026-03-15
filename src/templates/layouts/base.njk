@@ -341,7 +341,8 @@
                 var nativeBtn = document.getElementById('share-native-btn');
                 var coverPreview = document.getElementById('share-cover-preview');
                 if (!modal) return;
-                var url = window.PAGE_PATH === "/about/" ? window.location.origin + window.PAGE_BASE : location.href;
+                var url = window.location.origin + window.PAGE_BASE;
+                url += window.PAGE_PATH === "/about/" ? '/' : window.PAGE_PATH;
                 urlInput.value = url;
                 coverPreview.src = url + 'cover.png';
                 var title = window.PAGE_PATH === "/about/" ? '{{ config.siteName }}' : document.title;

@@ -340,7 +340,7 @@
   background: var(--color-bg-secondary);
   color: var(--color-text-primary);
   padding: var(--space-xl);
-  width: min(480px, calc(100vw - var(--space-2xl)));
+  width: min(480px, calc(100vw - var(--space-3xl) * 2));
   max-height: 90vh;
   overflow: auto;
 }
@@ -382,8 +382,6 @@
   font-size: var(--font-size-sm);
   background: var(--color-bg-primary);
   white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
 .share-buttons {
