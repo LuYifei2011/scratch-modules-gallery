@@ -193,8 +193,11 @@ th {
   width: 14px;
   height: 14px;
 }
-iframe {
+.demo-iframe {
   max-width: 100%;
+  width: 482px;
+  aspect-ratio: 482 / 412;
+  height: auto;
   border: none;
 }
 
