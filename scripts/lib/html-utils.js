@@ -7,8 +7,8 @@ export function escapeHtml(str = '') {
   )
 }
 
-export async function maybeMinify(html) {
-  if (!html) return html
+export async function maybeMinify(html, skip = false) {
+  if (!html || skip) return html
   try {
     return minify(html, {
       collapseWhitespace: true,

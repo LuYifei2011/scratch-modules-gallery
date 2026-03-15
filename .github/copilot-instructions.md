@@ -55,17 +55,21 @@
 ### 构建/开发
 
 - **构建**：`npm run build` → 输出到 `dist/`（按语言子目录）
-  - 生产构建（~6-7 秒）：包含完整 sitemap 与 robots.txt
-  - 开发构建（`IS_DEV=1`，~0.8 秒）：跳过 sitemap，生成 `/issues/` 调试页面
+  - 生产构建（~6-7 秒）：包含完整 sitemap、robots.txt、favicon PNG、封面图、HTML 压缩
+  - 开发构建（`IS_DEV=1`，~0.8 秒）：跳过 sitemap，生成 `/issues/` 调试页面；**仍执行封面图/favicon PNG/HTML 压缩**（适合测试完整构建产物）
+  - **快速构建**（`npm run build:fast` 或 `FAST_BUILD=1`）：额外跳过 favicon PNG 生成（仅保留 SVG）、站点+模块封面图、HTML 压缩；无 issues 页面
+  - `IS_DEV=1 npm run build`：开发调试页 + 完整压缩产物（两者可叠加）
 - **开发服务器**：`npm run dev` / `dev:https`
   - 监听：`content/**`, `src/**`, `public/**`, `site.config.js`, `scripts/lib/**`, `scripts/build.js`
   - 自动刷新：SSE 推送 `{type:'reload'}`；注入 `<script>` 到所有 HTML
+  - 重建自动启用快速模式（同时设置 `IS_DEV=1` + `FAST_BUILD=1`），速度最快
   - HTTPS 支持：自动生成自签证书（`.cert/`），或指定 PEM/PFX（环境变量）
   - **模块编辑器**：`/__dev/editor/` 可视化编辑模块（`scripts/lib/editor-api.js` 处理 API）
   - 路由回退：无扩展名路径 → 相对 `index.html`；目录 → `index.html`
 - **环境变量**：
   - `BASE_URL`：覆盖 `site.config.js` baseUrl（影响 canonical / sitemap）
-  - `IS_DEV`：传入模板与前端（`window.IS_DEV`）；开发服务器自动设置
+  - `IS_DEV`：传入模板与前端（`window.IS_DEV`）；开发服务器自动设置；控制 issues 页面与 sitemap 跳过
+  - `FAST_BUILD`：控制耗时资源跳过（favicon PNG、封面图、HTML 压缩）；开发服务器自动设置；与 `IS_DEV` 独立
   - `HTTPS=1` + `HTTPS_KEY/HTTPS_CERT` 或 `HTTPS_PFX/HTTPS_PASSPHRASE`：HTTPS 配置
 - **依赖管理**：纯 ESM（`type: "module"`）；CommonJS 依赖用 `createRequire(import.meta.url)`
   - 构建时自动复制 vendor：`minisearch/dist/es/index.js` → `dist/vendor/minisearch.js`；`scratchblocks-plus/build/*.min.es.js` + `locales/*.json` → `dist/vendor/`

@@ -29,6 +29,12 @@ const config = configModule.default || configModule
 // 覆盖 baseUrl 与开发模式标记
 const isDev =
   String(process.env.IS_DEV || '').toLowerCase() === 'true' || process.env.IS_DEV === '1'
+// 快速构建模式：跳过耗时的资源生成（favicon PNG、封面图、HTML 压缩），与 IS_DEV 独立
+// 触发方式：FAST_BUILD=1 或 --fast 命令行参数
+const isFast =
+  String(process.env.FAST_BUILD || '').toLowerCase() === 'true' ||
+  process.env.FAST_BUILD === '1' ||
+  process.argv.includes('--fast')
 if (process.env.BASE_URL) {
   try {
     // 只替换 baseUrl 字段，不引入额外复杂度
@@ -188,8 +194,8 @@ async function render(modules, allTags) {
   const publicDir = path.join(root, 'public')
   if (await fs.pathExists(publicDir)) await fs.copy(publicDir, outDir)
 
-  // 读取 cover SVG 模板（用于生成各语言社交预览图）
-  const coverSvgTemplate = await loadSiteCoverTemplate()
+  // 读取 cover SVG 模板（用于生成各语言社交预览图）；快速构建模式下跳过
+  const coverSvgTemplate = isFast ? null : await loadSiteCoverTemplate()
 
   // copy thirdparty
   const thirdpartyDir = path.join(root, 'thirdparty')
@@ -252,41 +258,48 @@ async function render(modules, allTags) {
   }
 
   // 生成 favicons（来源：src/favicon.svg）
+  // 快速构建模式：仅复制 SVG，跳过 PNG 与 manifest 生成
   const faviconSvgPath = path.join(root, 'src', 'favicon.svg')
   if (await fs.pathExists(faviconSvgPath)) {
-    try {
-      const faviconIconsDir = path.join(outDir, 'icons')
-      await fs.ensureDir(faviconIconsDir)
-      const faviconResponse = await generateFavicons(faviconSvgPath, {
-        path: (basePath || '') + '/icons/',
-        appName: config.siteName,
-        appDescription: config.description || '',
-        background: '#1747a6',
-        theme_color: '#1747a6',
-        icons: {
-          android: true,
-          appleIcon: true,
-          appleStartup: false,
-          favicons: true,
-          windows: false,
-          yandex: false,
-        },
-      })
-      for (const img of faviconResponse.images) {
-        await fs.writeFile(path.join(faviconIconsDir, img.name), img.contents)
-      }
-      for (const file of faviconResponse.files) {
-        await fs.writeFile(path.join(faviconIconsDir, file.name), file.contents)
-      }
-      // 同时复制源 SVG 供现代浏览器直接使用
+    const faviconIconsDir = path.join(outDir, 'icons')
+    await fs.ensureDir(faviconIconsDir)
+    if (isFast) {
       await fs.copy(faviconSvgPath, path.join(faviconIconsDir, 'favicon.svg'))
-      const svgLink = `<link rel="icon" type="image/svg+xml" href="${basePath || ''}/icons/favicon.svg">`
-      _faviconHtml = svgLink + faviconResponse.html.join('')
-      console.log(
-        `[favicons] 已生成 ${faviconResponse.images.length} 张图片, ${faviconResponse.files.length} 个配置文件 (含 SVG)`
-      )
-    } catch (e) {
-      console.warn('[favicons] 生成失败:', e?.message || e)
+      _faviconHtml = `<link rel="icon" type="image/svg+xml" href="${basePath || ''}/icons/favicon.svg">`
+      console.log('[favicons] 快速模式：仅保留 SVG，跳过 PNG 生成')
+    } else {
+      try {
+        const faviconResponse = await generateFavicons(faviconSvgPath, {
+          path: (basePath || '') + '/icons/',
+          appName: config.siteName,
+          appDescription: config.description || '',
+          background: '#1747a6',
+          theme_color: '#1747a6',
+          icons: {
+            android: true,
+            appleIcon: true,
+            appleStartup: false,
+            favicons: true,
+            windows: false,
+            yandex: false,
+          },
+        })
+        for (const img of faviconResponse.images) {
+          await fs.writeFile(path.join(faviconIconsDir, img.name), img.contents)
+        }
+        for (const file of faviconResponse.files) {
+          await fs.writeFile(path.join(faviconIconsDir, file.name), file.contents)
+        }
+        // 同时复制源 SVG 供现代浏览器直接使用
+        await fs.copy(faviconSvgPath, path.join(faviconIconsDir, 'favicon.svg'))
+        const svgLink = `<link rel="icon" type="image/svg+xml" href="${basePath || ''}/icons/favicon.svg">`
+        _faviconHtml = svgLink + faviconResponse.html.join('')
+        console.log(
+          `[favicons] 已生成 ${faviconResponse.images.length} 张图片, ${faviconResponse.files.length} 个配置文件 (含 SVG)`
+        )
+      } catch (e) {
+        console.warn('[favicons] 生成失败:', e?.message || e)
+      }
     }
   } else {
     console.warn('[favicons] 未找到源文件 src/favicon.svg，跳过图标生成')
@@ -397,16 +410,18 @@ async function render(modules, allTags) {
       )
     }
 
-    // 生成模块级封面图
+    // 生成模块级封面图（快速构建模式下跳过）
     const langTag = ($t?.meta?.languageTag || loc).replace('-', '_').toLowerCase()
-    for (const m of modulesForLoc) {
-      const moduleOutDir = path.join(locOut, 'modules', m.slug)
-      await generateModuleCover(
-        m,
-        langTag,
-        path.join(moduleOutDir, 'cover.png'),
-        locConfig.siteName
-      )
+    if (!isFast) {
+      for (const m of modulesForLoc) {
+        const moduleOutDir = path.join(locOut, 'modules', m.slug)
+        await generateModuleCover(
+          m,
+          langTag,
+          path.join(moduleOutDir, 'cover.png'),
+          locConfig.siteName
+        )
+      }
     }
 
     const indexHtml = nunjucks.render('layouts/home.njk', {
@@ -424,7 +439,7 @@ async function render(modules, allTags) {
       langTags,
       i18n: dict,
     })
-    await fs.outputFile(path.join(locOut, 'index.html'), await maybeMinify(indexHtml), 'utf8')
+    await fs.outputFile(path.join(locOut, 'index.html'), await maybeMinify(indexHtml, isFast), 'utf8')
 
     // 生成关于页面
     const aboutHtml = nunjucks.render('layouts/about.njk', {
@@ -443,7 +458,7 @@ async function render(modules, allTags) {
     })
     const aboutDir = path.join(locOut, 'about')
     await fs.ensureDir(aboutDir)
-    await fs.writeFile(path.join(aboutDir, 'index.html'), await maybeMinify(aboutHtml), 'utf8')
+    await fs.writeFile(path.join(aboutDir, 'index.html'), await maybeMinify(aboutHtml, isFast), 'utf8')
 
     for (const m of modules) {
       const html = nunjucks.render('layouts/module.njk', {
@@ -463,7 +478,7 @@ async function render(modules, allTags) {
       })
       const moduleDir = path.join(locOut, 'modules', m.slug)
       await fs.ensureDir(moduleDir)
-      await fs.writeFile(path.join(moduleDir, 'index.html'), await maybeMinify(html), 'utf8')
+      await fs.writeFile(path.join(moduleDir, 'index.html'), await maybeMinify(html, isFast), 'utf8')
     }
   }
 
@@ -480,7 +495,7 @@ async function render(modules, allTags) {
     config,
     lang: langTags[defaultLocale] || defaultLocale,
   })
-  await fs.outputFile(path.join(outDir, 'index.html'), await maybeMinify(redirectHtml), 'utf8')
+  await fs.outputFile(path.join(outDir, 'index.html'), await maybeMinify(redirectHtml, isFast), 'utf8')
 
   // 生成根目录的 404 页面（GitHub Pages 使用）
   // 包含所有语言的 i18n 数据，通过 JS 动态切换
@@ -497,7 +512,7 @@ async function render(modules, allTags) {
     i18nJSON: JSON.stringify(dict),
     lang: langTags[defaultLocale] || defaultLocale,
   })
-  await fs.outputFile(path.join(outDir, '404.html'), await maybeMinify(notFound404Html), 'utf8')
+  await fs.outputFile(path.join(outDir, '404.html'), await maybeMinify(notFound404Html, isFast), 'utf8')
 
   // sitemap
   const urls = locales.flatMap((loc) => [
@@ -613,7 +628,7 @@ async function render(modules, allTags) {
       const locOut = path.join(outDir, loc)
       const issuesDir = path.join(locOut, 'issues')
       await fs.ensureDir(issuesDir)
-      await fs.writeFile(path.join(issuesDir, 'index.html'), await maybeMinify(issuesHtml), 'utf8')
+      await fs.writeFile(path.join(issuesDir, 'index.html'), await maybeMinify(issuesHtml, isFast), 'utf8')
     }
   }
 }

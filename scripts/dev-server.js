@@ -130,7 +130,7 @@ function runBuild(reason = 'changed') {
   fileCache.clear()
   lastBuildStart = Date.now()
   broadcast({ type: 'building', reason, time: lastBuildStart })
-  const env = { ...process.env, IS_DEV: '1', BASE_URL: BASE_URL }
+  const env = { ...process.env, IS_DEV: '1', FAST_BUILD: '1', BASE_URL: BASE_URL }
   const p = spawn(process.execPath, [path.resolve('scripts', 'build.js')], {
     stdio: 'inherit',
     env,
