@@ -9,7 +9,7 @@
 
 import fs from 'fs-extra'
 import path from 'path'
-import { createCanvas, registerFont } from 'canvas'
+import { createCanvas, GlobalFonts } from '@napi-rs/canvas'
 import { Resvg } from '@resvg/resvg-js'
 import { renderToSVGString } from 'scratchblocks-plus/node-ssr.js'
 import { escapeHtml } from './html-utils.js'
@@ -18,15 +18,25 @@ import { analyzeBlockCategories } from './scratch-utils.js'
 const root = path.resolve('.')
 const fontDirPath = path.join(root, 'src', 'fonts')
 
-// 注册字体
-registerFont(path.join(fontDirPath, 'NotoSans-Medium.ttf'), { family: 'Noto Sans' })
-registerFont(path.join(fontDirPath, 'NotoSansSC-Medium.ttf'), { family: 'Noto Sans SC' })
-registerFont(path.join(fontDirPath, 'NotoSansTC-Medium.ttf'), { family: 'Noto Sans TC' })
-
 // 用于文本宽度精确测量的 canvas 上下文（复用单一实例）
 const _measureCanvas = createCanvas(1, 1)
 const _measureCtx = _measureCanvas.getContext('2d')
-const FONT_FAMILY = 'Noto Sans SC, Noto Sans TC, Noto Sans, sans-serif'
+/** 字体后缀 → CSS 字体族名称 */
+const FONT_SUFFIX_NAME = { SC: 'Noto Sans SC', TC: 'Noto Sans TC', '': 'Noto Sans' }
+
+/**
+ * 根据语言标签返回 CSS font-family 字符串（优先显示当前语言字体）。
+ * @param {string} langTag
+ * @returns {string}
+ */
+function getFontFamily(langTag) {
+  const normalized = (langTag || '').toLowerCase().replace('_', '-')
+  let order
+  if (normalized === 'zh-cn') order = ['SC', 'TC', '']
+  else if (normalized === 'zh-tw') order = ['TC', 'SC', '']
+  else order = ['', 'SC', 'TC']
+  return order.map(s => FONT_SUFFIX_NAME[s]).join(', ') + ', sans-serif'
+}
 
 /**
  * 使用 canvas 精确测量文本宽度。
@@ -92,12 +102,30 @@ function tokenize(text) {
   return tokens
 }
 
+/**
+ * 根据语言标签返回 Noto Sans 字体后缀的优先级顺序。
+ * zh-cn: SC → TC → （基础）
+ * zh-tw: TC → SC → （基础）
+ * 其他:  （基础）→ SC → TC
+ * @param {string} langTag
+ * @returns {string[]}
+ */
+function getFontOrder(langTag) {
+  const normalized = (langTag || '').toLowerCase().replace('_', '-')
+  if (normalized === 'zh-cn') return ['SC', 'TC', '']
+  if (normalized === 'zh-tw') return ['TC', 'SC', '']
+  return ['', 'SC', 'TC']
+}
+
 /** Resvg 共用选项 */
-function resvgOpts() {
+function resvgOpts(langTag) {
+  const fontFiles = getFontOrder(langTag)
+    .map(suffix => path.join(fontDirPath, `NotoSans${suffix}-Medium.ttf`))
+    .filter(f => fs.existsSync(f))
   return {
     fitTo: { mode: 'width', value: 1200 },
     font: {
-      fontDirs: [fontDirPath],
+      fontFiles,
       loadSystemFonts: false,
       sansSerifFamily: 'Noto Sans',
     },
@@ -124,11 +152,12 @@ export async function loadSiteCoverTemplate() {
  * @param {string} template    cover.svg 模板字符串
  * @param {string} siteName    当前语言的站点名称
  * @param {string} outputPath  输出 PNG 的绝对路径
+ * @param {string} langTag     当前语言的标签
  */
-export async function generateSiteCover(template, siteName, outputPath) {
+export async function generateSiteCover(template, siteName, outputPath, langTag) {
   const svg = template.replace('__SITE_TITLE__', escapeHtml(siteName))
   try {
-    const resvg = new Resvg(svg, resvgOpts())
+    const resvg = new Resvg(svg, resvgOpts(langTag))
     const pngData = resvg.render()
     await fs.writeFile(outputPath, pngData.asPng())
   } catch (e) {
@@ -189,9 +218,9 @@ function allLinesFit(lines, font, maxWidth) {
  * 确定标题字号和行数。
  * 优先使用大字号单行；若溢出则尝试大字号两行且每行不超宽；否则用小字号两行。
  */
-function computeTitleLayout(name, maxWidth) {
-  const font1 = `bold ${TITLE_SIZE_1LINE}px ${FONT_FAMILY}`
-  const font2 = `bold ${TITLE_SIZE_2LINE}px ${FONT_FAMILY}`
+function computeTitleLayout(name, maxWidth, fontFamily) {
+  const font1 = `bold ${TITLE_SIZE_1LINE}px ${fontFamily}`
+  const font2 = `bold ${TITLE_SIZE_2LINE}px ${fontFamily}`
 
   // 尝试单行大字
   if (measureText(name, font1) <= maxWidth) {
@@ -219,21 +248,21 @@ function computeTitleLayout(name, maxWidth) {
  */
 function buildModuleCoverSVG({ name, description, tags, firstScript, allScripts, langTag }) {
   const leftMaxW = LEFT_W
+  const fontFamily = getFontFamily(langTag)
 
   // ── 标题布局 ──
-  const title = computeTitleLayout(name || 'Module', leftMaxW)
-  const titleFont = `bold ${title.fontSize}px ${FONT_FAMILY}`
+  const title = computeTitleLayout(name || 'Module', leftMaxW, fontFamily)
   const titleLineHeight = Math.round(title.fontSize * 1.25)
   const titleStartY = PAD_TOP + title.fontSize // baseline of first line
   let titleSvg = ''
   for (let i = 0; i < title.lines.length; i++) {
     const y = titleStartY + i * titleLineHeight
-    titleSvg += `<text x="${PAD_X}" y="${y}" font-family="${FONT_FAMILY}" font-size="${title.fontSize}" font-weight="700" fill="${TEXT_PRIMARY}">${escapeHtml(title.lines[i])}</text>\n  `
+    titleSvg += `<text x="${PAD_X}" y="${y}" font-family="${fontFamily}" font-size="${title.fontSize}" font-weight="700" fill="${TEXT_PRIMARY}">${escapeHtml(title.lines[i])}</text>\n  `
   }
   const titleBottomY = titleStartY + (title.lines.length - 1) * titleLineHeight
 
   // ── 描述布局 ──
-  const descFont = `${DESC_FONT_SIZE}px ${FONT_FAMILY}`
+  const descFont = `${DESC_FONT_SIZE}px ${fontFamily}`
   const descY = titleBottomY + 44
   const descLines = wrapTextByWidth(description || '', descFont, leftMaxW).slice(0, 5)
   const descTspans = descLines
@@ -245,7 +274,7 @@ function buildModuleCoverSVG({ name, description, tags, firstScript, allScripts,
   const descBottomY = descY + (descLines.length - 1) * DESC_LINE_HEIGHT
 
   // ── 标签布局 ──
-  const tagFont = `${TAG_FONT_SIZE}px ${FONT_FAMILY}`
+  const tagFont = `${TAG_FONT_SIZE}px ${fontFamily}`
   // 标签位置：紧跟描述下方，但不超过底部安全区域
   const tagsIdealY = descBottomY + 40
   const tagsMaxY = BAR_Y - PAD_BOTTOM - TAG_H
@@ -257,7 +286,7 @@ function buildModuleCoverSVG({ name, description, tags, firstScript, allScripts,
     const rectW = tw + TAG_PAD_X * 2
     if (tagX + rectW > PAD_X + leftMaxW) break
     tagsSvg += `<rect x="${tagX}" y="${tagsStartY}" width="${rectW}" height="${TAG_H}" rx="${TAG_H / 2}" fill="${TAG_BG}" />`
-    tagsSvg += `<text x="${tagX + TAG_PAD_X}" y="${tagsStartY + TAG_H / 2 + TAG_FONT_SIZE * 0.36}" font-family="${FONT_FAMILY}" font-size="${TAG_FONT_SIZE}" fill="${TAG_TEXT}">${escapeHtml(tag)}</text>`
+    tagsSvg += `<text x="${tagX + TAG_PAD_X}" y="${tagsStartY + TAG_H / 2 + TAG_FONT_SIZE * 0.36}" font-family="${fontFamily}" font-size="${TAG_FONT_SIZE}" fill="${TAG_TEXT}">${escapeHtml(tag)}</text>`
     tagX += rectW + TAG_GAP
   }
 
@@ -322,11 +351,32 @@ function buildModuleCoverSVG({ name, description, tags, firstScript, allScripts,
   <rect width="${W}" height="${H}" fill="${BG}" />
   ${divider}
   ${titleSvg}
-  <text x="${PAD_X}" y="${descY}" font-family="${FONT_FAMILY}" font-size="${DESC_FONT_SIZE}" fill="${TEXT_SECONDARY}">${descTspans}</text>
+  <text x="${PAD_X}" y="${descY}" font-family="${fontFamily}" font-size="${DESC_FONT_SIZE}" fill="${TEXT_SECONDARY}">${descTspans}</text>
   ${tagsSvg}
   ${blocksSvg}
   ${barRects}
 </svg>`
+}
+
+/** 当前已注册字体对应的语言（用于按需重新注册） */
+let _registeredFontLang = null
+
+/**
+ * 按语言优先级为 canvas 注册字体（仅在语言变化时重新注册）。
+ * 保证 canvas 文本测量使用正确的字体回退顺序。
+ * @param {string} langTag
+ */
+function ensureFontsRegistered(langTag) {
+  const normalized = (langTag || '').toLowerCase().replace('_', '-')
+  if (_registeredFontLang === normalized) return
+  GlobalFonts.removeAll()
+  for (const suffix of getFontOrder(normalized)) {
+    const filepath = path.join(fontDirPath, `NotoSans${suffix}-Medium.ttf`)
+    if (fs.existsSync(filepath)) {
+      GlobalFonts.registerFromPath(filepath, 'Helvetica Neue')
+    }
+  }
+  _registeredFontLang = normalized
 }
 
 /**
@@ -348,6 +398,8 @@ export async function generateModuleCover(module, langTag, outputPath) {
     .map((s) => s.content)
     .filter(Boolean)
 
+  ensureFontsRegistered(langTag)
+
   const svg = buildModuleCoverSVG({
     name: module.name,
     description: module.description,
@@ -358,7 +410,7 @@ export async function generateModuleCover(module, langTag, outputPath) {
   })
 
   try {
-    const resvg = new Resvg(svg, resvgOpts())
+    const resvg = new Resvg(svg, resvgOpts(langTag))
     const pngData = resvg.render()
     await fs.ensureDir(path.dirname(outputPath))
     await fs.writeFile(outputPath, pngData.asPng())

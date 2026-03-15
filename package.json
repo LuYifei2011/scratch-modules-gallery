@@ -11,9 +11,9 @@
     "format:scripts": "node ./scripts/format-scratchblocks.js --all"
   },
   "dependencies": {
+    "@napi-rs/canvas": "^0.1.96",
     "@resvg/resvg-js": "^2.6.2",
     "@xmldom/xmldom": "^0.8.11",
-    "canvas": "^3.2.1",
     "fast-glob": "^3.3.2",
     "favicons": "^7.2.0",
     "formidable": "^3.5.4",
