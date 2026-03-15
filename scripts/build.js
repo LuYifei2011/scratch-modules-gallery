@@ -295,7 +295,10 @@ async function render(modules, allTags) {
         await fs.copy(faviconSvgPath, path.join(faviconIconsDir, 'favicon.svg'))
         const svgLink = `<link rel="icon" type="image/svg+xml" href="${basePath || ''}/icons/favicon.svg">`
         _faviconHtml = svgLink + faviconResponse.html.join('')
-        log.success('favicons', `已生成 ${faviconResponse.images.length} 张图片, ${faviconResponse.files.length} 个配置文件 (含 SVG)`)
+        log.success(
+          'favicons',
+          `已生成 ${faviconResponse.images.length} 张图片, ${faviconResponse.files.length} 个配置文件 (含 SVG)`
+        )
       } catch (e) {
         log.warn('favicons', `生成失败: ${e?.message || e}`)
       }
@@ -438,7 +441,11 @@ async function render(modules, allTags) {
       langTags,
       i18n: dict,
     })
-    await fs.outputFile(path.join(locOut, 'index.html'), await maybeMinify(indexHtml, isFast), 'utf8')
+    await fs.outputFile(
+      path.join(locOut, 'index.html'),
+      await maybeMinify(indexHtml, isFast),
+      'utf8'
+    )
 
     // 生成关于页面
     const aboutHtml = nunjucks.render('layouts/about.njk', {
@@ -457,7 +464,11 @@ async function render(modules, allTags) {
     })
     const aboutDir = path.join(locOut, 'about')
     await fs.ensureDir(aboutDir)
-    await fs.writeFile(path.join(aboutDir, 'index.html'), await maybeMinify(aboutHtml, isFast), 'utf8')
+    await fs.writeFile(
+      path.join(aboutDir, 'index.html'),
+      await maybeMinify(aboutHtml, isFast),
+      'utf8'
+    )
 
     for (const m of modules) {
       const html = nunjucks.render('layouts/module.njk', {
@@ -477,7 +488,11 @@ async function render(modules, allTags) {
       })
       const moduleDir = path.join(locOut, 'modules', m.slug)
       await fs.ensureDir(moduleDir)
-      await fs.writeFile(path.join(moduleDir, 'index.html'), await maybeMinify(html, isFast), 'utf8')
+      await fs.writeFile(
+        path.join(moduleDir, 'index.html'),
+        await maybeMinify(html, isFast),
+        'utf8'
+      )
     }
   }
 
@@ -494,7 +509,11 @@ async function render(modules, allTags) {
     config,
     lang: langTags[defaultLocale] || defaultLocale,
   })
-  await fs.outputFile(path.join(outDir, 'index.html'), await maybeMinify(redirectHtml, isFast), 'utf8')
+  await fs.outputFile(
+    path.join(outDir, 'index.html'),
+    await maybeMinify(redirectHtml, isFast),
+    'utf8'
+  )
 
   // 生成根目录的 404 页面（GitHub Pages 使用）
   // 包含所有语言的 i18n 数据，通过 JS 动态切换
@@ -511,7 +530,11 @@ async function render(modules, allTags) {
     i18nJSON: JSON.stringify(dict),
     lang: langTags[defaultLocale] || defaultLocale,
   })
-  await fs.outputFile(path.join(outDir, '404.html'), await maybeMinify(notFound404Html, isFast), 'utf8')
+  await fs.outputFile(
+    path.join(outDir, '404.html'),
+    await maybeMinify(notFound404Html, isFast),
+    'utf8'
+  )
 
   // sitemap
   const urls = locales.flatMap((loc) => [
@@ -627,7 +650,11 @@ async function render(modules, allTags) {
       const locOut = path.join(outDir, loc)
       const issuesDir = path.join(locOut, 'issues')
       await fs.ensureDir(issuesDir)
-      await fs.writeFile(path.join(issuesDir, 'index.html'), await maybeMinify(issuesHtml, isFast), 'utf8')
+      await fs.writeFile(
+        path.join(issuesDir, 'index.html'),
+        await maybeMinify(issuesHtml, isFast),
+        'utf8'
+      )
     }
   }
 }
@@ -653,7 +680,10 @@ function reportIssue(type, message, details = {}) {
 ;(async () => {
   const buildStart = Date.now()
   const modeFlags = [isDev && 'dev', isFast && 'fast'].filter(Boolean)
-  log.info('build', `开始构建${modeFlags.length ? paint(c.dim, ` (${modeFlags.join(', ')})`) : ''}…`)
+  log.info(
+    'build',
+    `开始构建${modeFlags.length ? paint(c.dim, ` (${modeFlags.join(', ')})`) : ''}…`
+  )
   const { modules, errorsAll, allTags } = await loadModules({ root, config, isDev })
   // 将 loadModules 的结构化错误加入 collectedIssues
   for (const msg of errorsAll) reportIssue('error', msg)
@@ -692,10 +722,16 @@ function reportIssue(type, message, details = {}) {
     }
     return origRender.apply(this, args)
   }
-  const { locales } = await (async () => { const d = await loadI18n(); return { locales: Object.keys(d) } })()
+  const { locales } = await (async () => {
+    const d = await loadI18n()
+    return { locales: Object.keys(d) }
+  })()
   await render(modules, allTags)
   const buildDuration = Date.now() - buildStart
-  log.success('build', `✓ Built ${modules.length} modules across ${locales.length} locale(s) in ${paint(c.bold, formatDuration(buildDuration))}`)
+  log.success(
+    'build',
+    `✓ Built ${modules.length} modules across ${locales.length} locale(s) in ${paint(c.bold, formatDuration(buildDuration))}`
+  )
   if (isDev && collectedIssues.length) {
     const summary = collectedIssues.reduce(
       (acc, i) => {

@@ -543,7 +543,9 @@ function shutdown() {
   console.log('')
   log.info('dev', '正在关闭…')
   if (process.stdin.isTTY) {
-    try { process.stdin.setRawMode(false) } catch {}
+    try {
+      process.stdin.setRawMode(false)
+    } catch {}
   }
   server.close()
   watcher.close()
@@ -567,10 +569,18 @@ server.listen(PORT, HOST, () => {
     paint(c.dim, '  快速构建  ') + (fastBuild ? paint(c.cyan, 'ON') : paint(c.dim, 'OFF')),
     paint(c.dim, '  日志级别  ') + paint(c.cyan, LOG_LEVELS[logLevelIdx].toUpperCase()),
     '',
-    paint(c.dim, '  [') + paint(c.cyan, 'f') + paint(c.dim, '] 切换快速构建   ') +
-    paint(c.dim, '[') + paint(c.cyan, 'l') + paint(c.dim, '] 切换日志级别   ') +
-    paint(c.dim, '[') + paint(c.cyan, 'r') + paint(c.dim, '] 立即构建   ') +
-    paint(c.dim, '[') + paint(c.cyan, 'q') + paint(c.dim, '] 退出'),
+    paint(c.dim, '  [') +
+      paint(c.cyan, 'f') +
+      paint(c.dim, '] 切换快速构建   ') +
+      paint(c.dim, '[') +
+      paint(c.cyan, 'l') +
+      paint(c.dim, '] 切换日志级别   ') +
+      paint(c.dim, '[') +
+      paint(c.cyan, 'r') +
+      paint(c.dim, '] 立即构建   ') +
+      paint(c.dim, '[') +
+      paint(c.cyan, 'q') +
+      paint(c.dim, '] 退出'),
   ])
   setupKeyboard()
   // 启动后自动触发首次构建

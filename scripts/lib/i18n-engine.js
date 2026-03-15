@@ -113,7 +113,10 @@ function localizeProcedures(raw, procMaps) {
       if (slotCount <= 0) continue
       const localizedSlots = (localizedPattern.match(/_/g) || []).length
       if (localizedSlots !== slotCount) {
-        log.warn('procedures', `本地化占位符数量不匹配: pattern="${englishPattern}" slots=${slotCount} localizedSlots=${localizedSlots}`)
+        log.warn(
+          'procedures',
+          `本地化占位符数量不匹配: pattern="${englishPattern}" slots=${slotCount} localizedSlots=${localizedSlots}`
+        )
         // 占位符数量不匹配会破坏脚本结构，回退到原始内容
         continue
       }

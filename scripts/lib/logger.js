@@ -188,10 +188,7 @@ export function dim(msg) {
  */
 export function banner(lines) {
   const width = termWidth()
-  const maxContent = Math.min(
-    Math.max(...lines.map((l) => visLen(l))) + 4,
-    width - 2
-  )
+  const maxContent = Math.min(Math.max(...lines.map((l) => visLen(l))) + 4, width - 2)
 
   const topBorder = IS_TTY
     ? `${c.blue}╭${'─'.repeat(maxContent)}╮${RESET}`
@@ -230,12 +227,8 @@ export function statusLine(state, withHints = true) {
   const w = termWidth()
   const sep = paint(c.dim, hr('─', w))
 
-  const readyDot = state.ready
-    ? paint(c.green + c.bold, '●')
-    : paint(c.yellow + c.bold, '◌')
-  const readyText = state.ready
-    ? paint(c.green + c.bold, 'Ready')
-    : paint(c.yellow, 'Building…')
+  const readyDot = state.ready ? paint(c.green + c.bold, '●') : paint(c.yellow + c.bold, '◌')
+  const readyText = state.ready ? paint(c.green + c.bold, 'Ready') : paint(c.yellow, 'Building…')
 
   const fastLabel = state.fastBuild
     ? paint(c.cyan, 'Fast Build: ON ')
@@ -268,4 +261,17 @@ export function statusLine(state, withHints = true) {
   console.log(sep)
 }
 
-export default { info, success, warn, error, dim, banner, statusLine, paint, c, truncate, formatDuration, timeNow }
+export default {
+  info,
+  success,
+  warn,
+  error,
+  dim,
+  banner,
+  statusLine,
+  paint,
+  c,
+  truncate,
+  formatDuration,
+  timeNow,
+}
