@@ -253,7 +253,16 @@ function computeTitleLayout(name, maxWidth, fontFamily) {
 /**
  * 生成模块封面 SVG 字符串。
  */
-function buildModuleCoverSVG({ name, description, tags, firstScript, allScripts, langTag, siteName, faviconInnerContent }) {
+function buildModuleCoverSVG({
+  name,
+  description,
+  tags,
+  firstScript,
+  allScripts,
+  langTag,
+  siteName,
+  faviconInnerContent,
+}) {
   const leftMaxW = LEFT_W
   const fontFamily = getFontFamily(langTag)
 
