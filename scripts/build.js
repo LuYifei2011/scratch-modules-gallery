@@ -82,7 +82,7 @@ async function render(modules, allTags) {
   })
 
   if (validModules.length < modules.length) {
-    console.warn(`[render] 已过滤 ${modules.length - validModules.length} 个无效模块`)
+    log.warn('render', `已过滤 ${modules.length - validModules.length} 个无效模块`)
     // 使用过滤后的模块列表替换原始列表
     modules = validModules
   }
@@ -174,7 +174,7 @@ async function render(modules, allTags) {
         } catch (e) {
           // 某个路径可能不存在或出错，继续处理其他路径
           if (isDev) {
-            console.warn(`[git] 获取 ${moduleSlug}/${filePath} 的提交时间失败:`, e?.message || e)
+            log.warn('git', `获取 ${moduleSlug}/${filePath} 的提交时间失败: ${e?.message || e}`)
           }
         }
       }
@@ -185,7 +185,7 @@ async function render(modules, allTags) {
       lastModCache.set(moduleSlug, dateStr)
       return dateStr
     } catch (e) {
-      if (isDev) console.warn(`[git] 获取模块 ${moduleSlug} 的提交时间失败:`, e?.message || e)
+      if (isDev) log.warn('git', `获取模块 ${moduleSlug} 的提交时间失败: ${e?.message || e}`)
       const date = new Date().toISOString().split('T')[0]
       lastModCache.set(moduleSlug, date)
       return date
@@ -221,10 +221,10 @@ async function render(modules, allTags) {
     if (await fs.pathExists(miniEs)) {
       await fs.copy(miniEs, path.join(vendorDir, 'minisearch.js'))
     } else {
-      console.warn('minisearch ES 文件未找到:', miniEs)
+      log.warn('vendor', `minisearch ES 文件未找到: ${miniEs}`)
     }
   } catch (e) {
-    console.error('Error copying minisearch:', e)
+    log.error('vendor', `复制 minisearch 失败: ${e?.message || e}`)
   }
 
   // 复制 scratchblocks 核心库
@@ -240,7 +240,7 @@ async function render(modules, allTags) {
       await fs.copy(sbMinEs, path.join(vendorDir, 'scratchblocks-plus.min.es.js'))
     }
   } catch (e) {
-    console.warn('[scratchblocks] 复制核心库文件失败:', e?.message || e)
+    log.warn('scratchblocks', `复制核心库文件失败: ${e?.message || e}`)
   }
 
   // 复制 scratchblocks 语言文件到 vendor/sb-langs/
@@ -255,7 +255,7 @@ async function render(modules, allTags) {
       }
     }
   } catch (e) {
-    console.warn('[scratchblocks] 复制语言文件失败:', e?.message || e)
+    log.warn('scratchblocks', `复制语言文件失败: ${e?.message || e}`)
   }
 
   // 生成 favicons（来源：src/favicon.svg）
@@ -744,7 +744,7 @@ function reportIssue(type, message, details = {}) {
     const errPart = summary.errors > 0 ? paint(c.red + c.bold, `${summary.errors} 个错误`) : null
     const warnPart = summary.warnings > 0 ? paint(c.yellow, `${summary.warnings} 个警告`) : null
     const parts = [errPart, warnPart].filter(Boolean).join(paint(c.dim, ', '))
-    console.log(`  ${paint(c.dim, '└─')} ${parts}`)
+    log.info('build', `${paint(c.dim, '└─')} ${parts}`)
   }
   // 开发模式：即使有错误也不以非零码退出
   if (!isDev && collectedIssues.some((x) => x.type === 'error')) {

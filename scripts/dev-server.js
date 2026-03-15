@@ -6,7 +6,7 @@ import url from 'url'
 import { spawn } from 'child_process'
 import readline from 'readline'
 import * as editorApi from './lib/editor-api.js'
-import log, { c, paint, formatDuration, timeNow } from './lib/logger.js'
+import log, { c, paint, formatDuration, timeNow, setLogMode } from './lib/logger.js'
 
 // 轻量开发服务器，支持：
 // - 基于 chokidar 监听内容与模板变更 -> 自动执行构建
@@ -91,9 +91,8 @@ const sseClients = new Set()
 // 快速构建模式（运行时可通过按键切换）
 let fastBuild = true
 
-// 日志级别（运行时可通过按键切换）: error | warn | info | verbose
-const LOG_LEVELS = ['error', 'warn', 'info', 'verbose']
-let logLevelIdx = 0 // 默认 error
+// 日志模式（运行时可通过按键切换）: simple | verbose
+let verboseMode = false // 默认简略模式
 
 // 记录最近一次构建触发时间与结果，用于状态行展示
 let lastBuildStart = 0
@@ -139,15 +138,11 @@ function runBuild(reason = 'changed') {
   // TODO: 在每次构建时清除整个文件缓存可能会影响大型项目的性能。考虑根据更改的文件实施选择性缓存失效，而不是清除所有缓存文件。
   fileCache.clear()
   lastBuildStart = Date.now()
-  const modeTag = fastBuild ? paint(c.cyan, 'fast') : paint(c.dim, 'full')
-  log.info('build', `构建中… ${paint(c.dim, `[${reason}]`)} ${modeTag}`)
   broadcast({ type: 'building', reason, time: lastBuildStart })
   const env = { ...process.env, IS_DEV: '1', BASE_URL: BASE_URL }
   if (fastBuild) env.FAST_BUILD = '1'
-  // 传递日志级别到子进程
-  env.LOG_LEVEL = LOG_LEVELS[logLevelIdx]
-  // 传递日志级别到子进程
-  env.LOG_LEVEL = LOG_LEVELS[logLevelIdx]
+  // 传递日志模式到子进程
+  if (verboseMode) env.LOG_MODE = 'v'
   const p = spawn(process.execPath, [path.resolve('scripts', 'build.js')], {
     stdio: ['ignore', 'inherit', 'inherit'],
     env,
@@ -196,8 +191,8 @@ watcher.on('all', (event, file) => {
       .slice(0, 3)
       .map((r) => paint(c.dim, `  • `) + paint(c.gray, r.replace(/\\/g, '/').slice(0, 60)))
     log.info('watch', `${uniq.length} 个文件变更`)
-    for (const p of preview) console.log(p)
-    if (uniq.length > 3) console.log(paint(c.dim, `  … 及其他 ${uniq.length - 3} 个`))
+    for (const p of preview) log.dim('watch', p)
+    if (uniq.length > 3) log.dim('watch', `  … 及其他 ${uniq.length - 3} 个`)
     runBuild(uniq.slice(0, 5).join(','))
   }, DEBOUNCE_MS)
 })
@@ -474,10 +469,11 @@ const server = HTTPS_ENABLED
 
 // ── 状态行打印 ────────────────────────────────────────────────────────────────
 function printStatusLine() {
+  const logLevel = verboseMode ? '详细' : '简略'
   log.statusLine({
     ready: !building,
     fastBuild,
-    logLevel: LOG_LEVELS[logLevelIdx],
+    logLevel,
     lastBuild: lastBuildResult,
   })
 }
@@ -497,28 +493,20 @@ function setupKeyboard() {
     switch (key.name?.toLowerCase()) {
       case 'f':
         fastBuild = !fastBuild
-        console.log(
-          paint(c.cyan, '  快速构建模式') +
+        log.info('dev', 
+          paint(c.cyan, '快速构建') +
             paint(c.dim, ' → ') +
             (fastBuild ? paint(c.cyan + c.bold, 'ON') : paint(c.dim, 'OFF'))
         )
         printStatusLine()
         break
       case 'l':
-        logLevelIdx = (logLevelIdx + 1) % LOG_LEVELS.length
-        console.log(
-          paint(c.cyan, '  日志级别') +
+        verboseMode = !verboseMode
+        setLogMode(verboseMode ? 'v' : 's')
+        log.info('dev',
+          paint(c.cyan, '日志模式') +
             paint(c.dim, ' → ') +
-            paint(c.cyan + c.bold, LOG_LEVELS[logLevelIdx].toUpperCase())
-        )
-        printStatusLine()
-        break
-      case 'l':
-        logLevelIdx = (logLevelIdx + 1) % LOG_LEVELS.length
-        console.log(
-          paint(c.cyan, '  日志级别') +
-            paint(c.dim, ' → ') +
-            paint(c.cyan + c.bold, LOG_LEVELS[logLevelIdx].toUpperCase())
+            paint(c.cyan + c.bold, verboseMode ? '详细' : '简略')
         )
         printStatusLine()
         break
@@ -540,7 +528,6 @@ function setupKeyboard() {
 }
 
 function shutdown() {
-  console.log('')
   log.info('dev', '正在关闭…')
   if (process.stdin.isTTY) {
     try {
@@ -567,7 +554,7 @@ server.listen(PORT, HOST, () => {
     '',
     paint(c.dim, '  IS_DEV    ') + paint(c.green, 'ON'),
     paint(c.dim, '  快速构建  ') + (fastBuild ? paint(c.cyan, 'ON') : paint(c.dim, 'OFF')),
-    paint(c.dim, '  日志级别  ') + paint(c.cyan, LOG_LEVELS[logLevelIdx].toUpperCase()),
+    paint(c.dim, '  日志模式  ') + (verboseMode ? paint(c.cyan, '详细') : paint(c.dim, '简略')),
     '',
     paint(c.dim, '  [') +
       paint(c.cyan, 'f') +

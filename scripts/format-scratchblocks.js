@@ -9,6 +9,7 @@ import path from 'path'
 import * as scratchblocks from 'scratchblocks-plus/syntax/index.js'
 import { loadScratchblocksLanguages } from './lib/scratch-utils.js'
 import fg from 'fast-glob'
+import log from './lib/logger.js'
 
 const root = path.resolve('.')
 
@@ -72,7 +73,7 @@ function formatScript(raw) {
 
     // 比较两个 AST
     if (!compareAsts(doc, docReparse)) {
-      console.warn('⚠️  AST 校验失败，返回原始内容')
+      log.warn('validate', 'AST 校验失败，返回原始内容')
       return raw
     }
 
@@ -89,7 +90,7 @@ async function main() {
   const modulesDir = path.join(root, 'content', 'modules')
 
   if (!(await fs.pathExists(modulesDir))) {
-    console.error(`error: 模块目录不存在: ${modulesDir}`)
+    log.error('init', `模块目录不存在: ${modulesDir}`)
     process.exit(1)
   }
 
@@ -100,7 +101,7 @@ async function main() {
     })
 
     if (!modules.length) {
-      console.log('no files matching the given patterns')
+      log.info('format', '没有与给定模式匹配的文件')
       return
     }
 
@@ -139,33 +140,33 @@ async function main() {
 
         if (originalContent !== formatted) {
           await fs.writeFile(scriptPath, formatted, 'utf8')
-          console.log(scriptRelPath)
+          log.info('format', scriptRelPath)
           changedCount++
         }
       } catch (error) {
-        console.error(`error: 处理 ${scriptRelPath} 失败`)
+        log.error('format', `处理 ${scriptRelPath} 失败`)
       }
     }
 
     if (changedCount === 0 && validationFailed.length === 0) {
-      console.log('all matched files are already formatted')
+      log.info('format', '所有匹配的文件都已格式化')
     }
 
     // 报告校验失败的文件
     if (validationFailed.length > 0) {
-      console.error(`\nerror: AST validation failed for ${validationFailed.length} file(s):`)
+      log.error('validate', `AST validation failed for ${validationFailed.length} file(s):`)
       validationFailed.forEach((file) => {
-        console.error(`  ${file}`)
+        log.error('validate', `  ${file}`)
       })
       process.exit(1)
     }
   } catch (error) {
-    console.error(`error: ${error.message}`)
+    log.error('format', error.message)
     process.exit(1)
   }
 }
 
 main().catch((error) => {
-  console.error(`error: ${error.message}`)
+  log.error('format', error.message)
   process.exit(1)
 })

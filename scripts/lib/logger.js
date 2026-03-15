@@ -2,22 +2,35 @@
  * 轻量控制台日志工具
  * - 原生 ANSI 转义码，零外部依赖
  * - TTY 检测：非 TTY 环境（CI / 管道）自动降级为纯文字，不输出乱码
- * - 日志级别：LOG_LEVEL=error(默认)|warn|info|verbose
- *   - error/success → 始终显示
- *   - warn  → LOG_LEVEL=warn 及以上
- *   - info  → LOG_LEVEL=info 及以上
- *   - verbose (dim) → LOG_LEVEL=verbose
+ * - 日志模式：简略(默认)|详细
+ *   - 简略：只显示 error, success, info（隐藏 warn, verbose）
+ *   - 详细：显示所有，包括 warn 和 verbose 调试信息
  */
 
 const IS_TTY = process.stdout.isTTY === true
 
-// ── 日志级别 ──────────────────────────────────────────────────────────────────
+// ── 日志模式 ──────────────────────────────────────────────────────────────────
+// 模式字符：simple(s) → 简略, verbose(v) → 详细
+const _MODE_MAP = { simple: 's', verbose: 'v' }
+let _currentMode = (process.env.LOG_MODE || 's').toLowerCase() === 'v' ? 'v' : 's'
 const _LEVEL_MAP = { error: 0, warn: 1, info: 2, verbose: 3 }
-const _currentLevel = _LEVEL_MAP[(process.env.LOG_LEVEL || '').toLowerCase()] ?? 0
+
+export function setLogMode(mode) {
+  _currentMode = mode === 'v' || mode === 'verbose' ? 'v' : 's'
+}
 
 function _shouldLog(level) {
-  return (_LEVEL_MAP[level] ?? 0) <= _currentLevel
+  const levelNum = _LEVEL_MAP[level] ?? 0
+  // 简略模式：只显示 info(2)、success、error(0)
+  // 详细模式：显示所有（包括 warn 和 verbose）
+  if (_currentMode === 's') {
+    return levelNum === 0 || levelNum === 2 // error(0) 和 info(2) 均可见
+  }
+  // 详细模式：全部可见
+  return true
 }
+
+
 
 // ── ANSI 转义辅助 ──────────────────────────────────────────────────────────────
 const RESET = IS_TTY ? '\x1b[0m' : ''
@@ -235,7 +248,7 @@ export function statusLine(state, withHints = true) {
     : paint(c.dim, 'Fast Build: OFF')
 
   const logLevelLabel = state.logLevel
-    ? `${paint(c.dim, '│')}  Log: ${paint(c.cyan, state.logLevel.toUpperCase())}`
+    ? `${paint(c.dim, '│')}  ${paint(c.dim, '日志:')} ${paint(c.cyan, state.logLevel)}`
     : ''
 
   let lastInfo = ''
