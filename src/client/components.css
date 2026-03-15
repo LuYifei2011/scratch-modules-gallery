@@ -431,6 +431,13 @@
   background-color: #3c4245;
 }
 
+#share-cover-preview {
+  width: 100%;
+  border-radius: var(--radius-md);
+  object-fit: cover;
+  margin-top: var(--space-md);
+}
+
 #share-native-row {
   margin-top: var(--space-md);
 }

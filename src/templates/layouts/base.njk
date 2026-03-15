@@ -322,6 +322,7 @@
                     </a>
                     <!-- TODO: LinkedIn, Whatsapp, QQ, Weixin -->
                 </div>
+                <img id="share-cover-preview" alt="Cover Preview" />
                 <div id="share-native-row" hidden>
                     <button type="button" class="btn btn-primary share-native-btn" id="share-native-btn">
                         {{ icons.iconShare() }}
@@ -338,9 +339,11 @@
                 var copyLabel = document.getElementById('share-copy-label');
                 var nativeRow = document.getElementById('share-native-row');
                 var nativeBtn = document.getElementById('share-native-btn');
+                var coverPreview = document.getElementById('share-cover-preview');
                 if (!modal) return;
                 var url = window.PAGE_PATH === "/about/" ? window.location.origin + window.PAGE_BASE : location.href;
                 urlInput.value = url;
+                coverPreview.src = url + 'cover.png';
                 var title = window.PAGE_PATH === "/about/" ? '{{ config.siteName }}' : document.title;
                 var eu = encodeURIComponent(url);
                 var et = encodeURIComponent(
