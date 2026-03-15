@@ -331,15 +331,6 @@ const requestHandler = (req, res) => {
     return
   }
 
-  // 开发客户端脚本
-  if (pathnameRaw === '/__dev/client.js') {
-    res.setHeader('Content-Type', 'application/javascript')
-    const js = `(() => {\n  const es = new EventSource('/__dev/sse');\n  es.onmessage = (e) => {\n    try { const msg = JSON.parse(e.data); if (msg.type === 'reload') location.reload(); } catch {}\n  };\n  es.onerror = () => {\n    // 尝试重连
-    setTimeout(() => { location.reload(); }, 2000);\n  };\n})();`
-    res.end(js)
-    return
-  }
-
   let pathname = pathnameRaw
   if (pathname === '/') pathname = '/index.html'
 
