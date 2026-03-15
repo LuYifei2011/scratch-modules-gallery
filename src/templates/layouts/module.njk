@@ -219,16 +219,23 @@
         {% endif %}
         {% if module.hasDemo %}
             <section>
-                <div style="display:flex;
-                            align-items:center;
-                            gap:var(--space-lg);
-                            margin-bottom:var(--space-lg);
-                            margin-top:var(--space-lg);">
+                <div class="demo-header">
                     <h2 style="margin:0;">{{ t.module.demo }}</h2>
-                    <a class="btn btn-primary"
-                       href="https://turbowarp.org/editor?project_url={{ (config.baseUrl + '/modules/' + module.slug + '/demo.sb3') | urlencode }}"
-                       target="_blank"
-                       rel="noopener">{{ t.module.openInTW }}</a>
+                    <div class="demo-actions">
+                        <a class="btn btn-primary demo-btn"
+                           href="https://turbowarp.org/editor?project_url={{ (config.baseUrl + '/modules/' + module.slug + '/demo.sb3') | urlencode }}"
+                           target="_blank"
+                           rel="noopener">
+                            <span class="btn-icon">{{ icons.iconEdit(18, 18) }}</span>
+                            <span class="btn-text">{{ t.module.openInTW }}</span>
+                        </a>
+                        <a class="btn demo-btn"
+                           href="{{ config.baseUrl }}/modules/{{ module.slug }}/demo.sb3"
+                           download="{{ module.slug }}-demo.sb3">
+                            <span class="btn-icon">{{ icons.iconDownload(18, 18) }}</span>
+                            <span class="btn-text">{{ t.module.downloadDemo }}</span>
+                        </a>
+                    </div>
                 </div>
                 <iframe src="https://turbowarp.org/embed?project_url={{ (config.baseUrl + '/modules/' + module.slug + '/demo.sb3') | urlencode }}&settings-button&addons=pause,clones"
                         class="demo-iframe"

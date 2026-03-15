@@ -193,12 +193,47 @@ th {
   width: 14px;
   height: 14px;
 }
+.demo-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-lg);
+  margin-bottom: var(--space-lg);
+  margin-top: var(--space-lg);
+  flex-wrap: wrap;
+}
+.demo-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  flex-wrap: wrap;
+}
+.demo-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  height: 40px;
+  padding: 0 var(--space-lg);
+}
+.demo-btn .btn-icon {
+  display: flex;
+  align-items: center;
+}
+
+@media (max-width: 600px) {
+  .demo-btn .btn-text {
+    display: none;
+  }
+}
+
 .demo-iframe {
   max-width: 100%;
   width: 482px;
   aspect-ratio: 482 / 412;
   height: auto;
   border: none;
+  background: var(--panel);
+  border-radius: var(--radius-lg);
 }
 
 .sb-edit {
