@@ -1,4 +1,5 @@
 import { minify } from 'html-minifier-next'
+import log from './logger.js'
 
 export function escapeHtml(str = '') {
   return str.replace(
@@ -22,7 +23,7 @@ export async function maybeMinify(html, skip = false) {
       minifyJS: true,
     })
   } catch (e) {
-    console.warn('[minify] html-minifier-next 压缩失败，返回原始 HTML:', e?.message || e)
+    log.warn('minify', `html-minifier-next 压缩失败，返回原始 HTML: ${e?.message || e}`)
     return html
   }
 }

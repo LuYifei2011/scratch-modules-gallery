@@ -19,6 +19,7 @@ import {
   generateSiteCover,
   generateModuleCover,
 } from './lib/cover-generator.js'
+import log, { c, paint, formatDuration, timeNow } from './lib/logger.js'
 
 const root = path.resolve('.')
 // 模块级 favicon HTML 片段，由 render() 生成后供 nunjucks.render monkey-patch 注入
@@ -53,7 +54,7 @@ if (Array.isArray(config.mirrors)) {
 try {
   loadScratchblocksLanguages()
 } catch (e) {
-  console.warn('[scratchblocks] 读取 locales 目录失败:', e?.message || e)
+  log.warn('scratchblocks', `读取 locales 目录失败: ${e?.message || e}`)
 }
 
 // 构建所有可用的 scratchblocks 语言列表
@@ -74,7 +75,7 @@ async function render(modules, allTags) {
   // 过滤掉无效模块（缺少必需字段），避免后续 path.join 等操作报错
   const validModules = modules.filter((m) => {
     if (!m.id || !m.slug) {
-      console.warn(`[render] 跳过无效模块（缺少 id 或 slug）: ${JSON.stringify(m)}`)
+      log.warn('render', `跳过无效模块（缺少 id 或 slug）: ${JSON.stringify(m)}`)
       return false
     }
     return true
@@ -108,8 +109,8 @@ async function render(modules, allTags) {
       // 检测是否为浅层克隆（GitHub Actions 默认行为）
       const isDeeplyCloned = await git.revparse(['--is-shallow-repository']).catch(() => 'true')
       if (isDeeplyCloned === 'true' && isDev) {
-        console.warn('[git] ⚠️  检测到浅层克隆（fetch-depth < 完整历史），git 提交时间可能不准确。')
-        console.warn('[git] 对于 GitHub Actions，请在 workflow 中添加：with: { fetch-depth: 0 }')
+        log.warn('git', '检测到浅层克隆（fetch-depth < 完整历史），git 提交时间可能不准确。')
+        log.warn('git', '对于 GitHub Actions，请在 workflow 中添加：with: { fetch-depth: 0 }')
       }
 
       // 获取该文件的最后一次提交时间
@@ -124,7 +125,7 @@ async function render(modules, allTags) {
       }
       return new Date().toISOString().split('T')[0]
     } catch (e) {
-      if (isDev) console.warn(`[git] 获取 ${relativeFilePath} 的提交时间失败:`, e?.message || e)
+      if (isDev) log.warn('git', `获取 ${relativeFilePath} 的提交时间失败: ${e?.message || e}`)
       return new Date().toISOString().split('T')[0]
     }
   }
@@ -266,7 +267,7 @@ async function render(modules, allTags) {
     if (isFast) {
       await fs.copy(faviconSvgPath, path.join(faviconIconsDir, 'favicon.svg'))
       _faviconHtml = `<link rel="icon" type="image/svg+xml" href="${basePath || ''}/icons/favicon.svg">`
-      console.log('[favicons] 快速模式：仅保留 SVG，跳过 PNG 生成')
+      log.dim('  [favicons] 快速模式：仅保留 SVG，跳过 PNG 生成')
     } else {
       try {
         const faviconResponse = await generateFavicons(faviconSvgPath, {
@@ -294,15 +295,13 @@ async function render(modules, allTags) {
         await fs.copy(faviconSvgPath, path.join(faviconIconsDir, 'favicon.svg'))
         const svgLink = `<link rel="icon" type="image/svg+xml" href="${basePath || ''}/icons/favicon.svg">`
         _faviconHtml = svgLink + faviconResponse.html.join('')
-        console.log(
-          `[favicons] 已生成 ${faviconResponse.images.length} 张图片, ${faviconResponse.files.length} 个配置文件 (含 SVG)`
-        )
+        log.success('favicons', `已生成 ${faviconResponse.images.length} 张图片, ${faviconResponse.files.length} 个配置文件 (含 SVG)`)
       } catch (e) {
-        console.warn('[favicons] 生成失败:', e?.message || e)
+        log.warn('favicons', `生成失败: ${e?.message || e}`)
       }
     }
   } else {
-    console.warn('[favicons] 未找到源文件 src/favicon.svg，跳过图标生成')
+    log.warn('favicons', '未找到源文件 src/favicon.svg，跳过图标生成')
   }
 
   // copy demo & assets
@@ -574,7 +573,7 @@ async function render(modules, allTags) {
   } else {
     // 开发模式：跳过 sitemap 和 robots.txt 生成，使用占位符或简单版本
     if (isDev) {
-      console.log('[dev] 跳过 sitemap 和 robots.txt 生成以节省时间')
+      log.dim('  [dev] 跳过 sitemap 和 robots.txt 生成以节省时间')
     }
   }
 
@@ -652,7 +651,9 @@ function reportIssue(type, message, details = {}) {
 }
 
 ;(async () => {
-  console.time('build')
+  const buildStart = Date.now()
+  const modeFlags = [isDev && 'dev', isFast && 'fast'].filter(Boolean)
+  log.info('build', `开始构建${modeFlags.length ? paint(c.dim, ` (${modeFlags.join(', ')})`) : ''}…`)
   const { modules, errorsAll, allTags } = await loadModules({ root, config, isDev })
   // 将 loadModules 的结构化错误加入 collectedIssues
   for (const msg of errorsAll) reportIssue('error', msg)
@@ -691,8 +692,10 @@ function reportIssue(type, message, details = {}) {
     }
     return origRender.apply(this, args)
   }
+  const { locales } = await (async () => { const d = await loadI18n(); return { locales: Object.keys(d) } })()
   await render(modules, allTags)
-  console.log(`Built ${modules.length} modules.`)
+  const buildDuration = Date.now() - buildStart
+  log.success('build', `✓ Built ${modules.length} modules across ${locales.length} locale(s) in ${paint(c.bold, formatDuration(buildDuration))}`)
   if (isDev && collectedIssues.length) {
     const summary = collectedIssues.reduce(
       (acc, i) => {
@@ -702,9 +705,11 @@ function reportIssue(type, message, details = {}) {
       },
       { errors: 0, warnings: 0 }
     )
-    console.log(`[build] Issues collected: ${summary.errors} errors, ${summary.warnings} warnings`)
+    const errPart = summary.errors > 0 ? paint(c.red + c.bold, `${summary.errors} 个错误`) : null
+    const warnPart = summary.warnings > 0 ? paint(c.yellow, `${summary.warnings} 个警告`) : null
+    const parts = [errPart, warnPart].filter(Boolean).join(paint(c.dim, ', '))
+    console.log(`  ${paint(c.dim, '└─')} ${parts}`)
   }
-  console.timeEnd('build')
   // 开发模式：即使有错误也不以非零码退出
   if (!isDev && collectedIssues.some((x) => x.type === 'error')) {
     process.exitCode = 1

@@ -4,7 +4,9 @@ import fs from 'fs'
 import path from 'path'
 import url from 'url'
 import { spawn } from 'child_process'
+import readline from 'readline'
 import * as editorApi from './lib/editor-api.js'
+import log, { c, paint, formatDuration, timeNow } from './lib/logger.js'
 
 // 轻量开发服务器，支持：
 // - 基于 chokidar 监听内容与模板变更 -> 自动执行构建
@@ -59,13 +61,13 @@ if (HTTPS_ENABLED) {
         fs.mkdirSync(certDir, { recursive: true })
         fs.writeFileSync(keyFile, keyStr)
         fs.writeFileSync(certFile, certStr)
-        console.log(`[dev] 已生成自签名证书: ${certFile}`)
+        log.info('dev', `已生成自签名证书: ${certFile}`)
       }
       httpsOptions = { key: keyStr, cert: certStr }
     }
     protocol = 'https'
   } catch (e) {
-    console.error('[dev] 准备 HTTPS 失败:', e?.message || e)
+    log.error('dev', `准备 HTTPS 失败: ${e?.message || e}`)
     process.exit(1)
   }
 }
@@ -77,7 +79,7 @@ let chokidar
 try {
   chokidar = (await import('chokidar')).default
 } catch (e) {
-  console.error('缺少依赖 chokidar，请先安装: npm i -D chokidar')
+  log.error('dev', '缺少依赖 chokidar，请先安装: npm i -D chokidar')
   process.exit(1)
 }
 
@@ -86,8 +88,16 @@ let building = false
 let pending = false
 const sseClients = new Set()
 
-// 记录最近一次构建触发时间，用于简单节流分析
+// 快速构建模式（运行时可通过按键切换）
+let fastBuild = true
+
+// 日志级别（运行时可通过按键切换）: error | warn | info | verbose
+const LOG_LEVELS = ['error', 'warn', 'info', 'verbose']
+let logLevelIdx = 0 // 默认 error
+
+// 记录最近一次构建触发时间与结果，用于状态行展示
 let lastBuildStart = 0
+let lastBuildResult = null // { time: string, duration: number, success: boolean }
 
 // --- 简易小文件缓存 (仅开发，用于减少频繁磁盘 IO) ---
 // 策略：< 256KB 且命中 mtime 不变则复用；超过阈值走流式读取
@@ -129,21 +139,32 @@ function runBuild(reason = 'changed') {
   // TODO: 在每次构建时清除整个文件缓存可能会影响大型项目的性能。考虑根据更改的文件实施选择性缓存失效，而不是清除所有缓存文件。
   fileCache.clear()
   lastBuildStart = Date.now()
+  const modeTag = fastBuild ? paint(c.cyan, 'fast') : paint(c.dim, 'full')
+  log.info('build', `构建中… ${paint(c.dim, `[${reason}]`)} ${modeTag}`)
   broadcast({ type: 'building', reason, time: lastBuildStart })
-  const env = { ...process.env, IS_DEV: '1', FAST_BUILD: '1', BASE_URL: BASE_URL }
+  const env = { ...process.env, IS_DEV: '1', BASE_URL: BASE_URL }
+  if (fastBuild) env.FAST_BUILD = '1'
+  // 传递日志级别到子进程
+  env.LOG_LEVEL = LOG_LEVELS[logLevelIdx]
+  // 传递日志级别到子进程
+  env.LOG_LEVEL = LOG_LEVELS[logLevelIdx]
   const p = spawn(process.execPath, [path.resolve('scripts', 'build.js')], {
-    stdio: 'inherit',
+    stdio: ['ignore', 'inherit', 'inherit'],
     env,
   })
   p.on('exit', (code) => {
     building = false
     const duration = Date.now() - lastBuildStart
     if (code === 0) {
+      lastBuildResult = { time: timeNow(), duration, success: true }
       broadcast({ type: 'reload', reason, time: Date.now(), duration })
-      console.log(`[dev] build finished in ${duration}ms.`)
+      log.success('build', `✓ 完成，耗时 ${paint(c.bold, formatDuration(duration))}`)
+      printStatusLine()
     } else {
+      lastBuildResult = { time: timeNow(), duration, success: false }
       broadcast({ type: 'build-error', code, time: Date.now(), duration })
-      console.error('[dev] build failed with code', code)
+      log.error('build', `构建失败，退出码 ${code}`)
+      printStatusLine()
     }
     if (pending) {
       pending = false
@@ -152,8 +173,7 @@ function runBuild(reason = 'changed') {
   })
 }
 
-// 初次构建
-runBuild('startup')
+// 初次构建在 server.listen 回调中发起，确保 banner 先于构建输出显示
 
 // 文件监听
 const watcher = chokidar.watch(
@@ -172,7 +192,12 @@ watcher.on('all', (event, file) => {
   debounceTimer = setTimeout(() => {
     const uniq = Array.from(new Set(aggregatedReasons))
     aggregatedReasons = []
-    console.log(`[watch] ${uniq.length} change(s):\n - ${uniq.join('\n - ')}`)
+    const preview = uniq
+      .slice(0, 3)
+      .map((r) => paint(c.dim, `  • `) + paint(c.gray, r.replace(/\\/g, '/').slice(0, 60)))
+    log.info('watch', `${uniq.length} 个文件变更`)
+    for (const p of preview) console.log(p)
+    if (uniq.length > 3) console.log(paint(c.dim, `  … 及其他 ${uniq.length - 3} 个`))
     runBuild(uniq.slice(0, 5).join(','))
   }, DEBOUNCE_MS)
 })
@@ -348,7 +373,7 @@ const requestHandler = (req, res) => {
     fs.stat(absPath, (err, stat) => {
       if (err || !stat.isFile()) {
         serve404(res)
-        if (!err?.code || err.code !== 'ENOENT') console.warn(`[dev] 404: ${absPath}`)
+        if (!err?.code || err.code !== 'ENOENT') log.warn('dev', `404: ${absPath}`)
         return
       }
       const ext = path.extname(absPath).toLowerCase()
@@ -446,8 +471,110 @@ const requestHandler = (req, res) => {
 const server = HTTPS_ENABLED
   ? https.createServer(httpsOptions, requestHandler)
   : http.createServer(requestHandler)
+
+// ── 状态行打印 ────────────────────────────────────────────────────────────────
+function printStatusLine() {
+  log.statusLine({
+    ready: !building,
+    fastBuild,
+    logLevel: LOG_LEVELS[logLevelIdx],
+    lastBuild: lastBuildResult,
+  })
+}
+
+// ── 键盘交互（仅 TTY 模式）────────────────────────────────────────────────────
+function setupKeyboard() {
+  if (!process.stdin.isTTY) return
+  readline.emitKeypressEvents(process.stdin)
+  process.stdin.setRawMode(true)
+  process.stdin.on('keypress', (str, key) => {
+    if (!key) return
+    // Ctrl+C → 优雅退出
+    if (key.ctrl && key.name === 'c') {
+      shutdown()
+      return
+    }
+    switch (key.name?.toLowerCase()) {
+      case 'f':
+        fastBuild = !fastBuild
+        console.log(
+          paint(c.cyan, '  快速构建模式') +
+            paint(c.dim, ' → ') +
+            (fastBuild ? paint(c.cyan + c.bold, 'ON') : paint(c.dim, 'OFF'))
+        )
+        printStatusLine()
+        break
+      case 'l':
+        logLevelIdx = (logLevelIdx + 1) % LOG_LEVELS.length
+        console.log(
+          paint(c.cyan, '  日志级别') +
+            paint(c.dim, ' → ') +
+            paint(c.cyan + c.bold, LOG_LEVELS[logLevelIdx].toUpperCase())
+        )
+        printStatusLine()
+        break
+      case 'l':
+        logLevelIdx = (logLevelIdx + 1) % LOG_LEVELS.length
+        console.log(
+          paint(c.cyan, '  日志级别') +
+            paint(c.dim, ' → ') +
+            paint(c.cyan + c.bold, LOG_LEVELS[logLevelIdx].toUpperCase())
+        )
+        printStatusLine()
+        break
+      case 'r':
+        if (!building) {
+          runBuild('manual')
+        } else {
+          log.dim('  （已在构建中，将在完成后触发）')
+          pending = true
+        }
+        break
+      case 'q':
+        shutdown()
+        break
+      default:
+        break
+    }
+  })
+}
+
+function shutdown() {
+  console.log('')
+  log.info('dev', '正在关闭…')
+  if (process.stdin.isTTY) {
+    try { process.stdin.setRawMode(false) } catch {}
+  }
+  server.close()
+  watcher.close()
+  process.exit(0)
+}
+
 server.listen(PORT, HOST, () => {
-  console.log(`Dev server running at ${protocol}://${HOST}:${PORT}/`)
+  const urlStr = `${protocol}://${HOST}:${PORT}/`
+  // OSC 8 超链接（支持的终端点击可跳转，不支持的忽略转义序列）
+  const linked = process.stdout.isTTY
+    ? `\x1b]8;;${urlStr}\x07${paint(c.cyan + c.bold, urlStr)}\x1b]8;;\x07`
+    : urlStr
+  log.banner([
+    paint(c.bold, 'Scratch Modules Gallery') + paint(c.dim, '  Dev Server'),
+    '',
+    paint(c.dim, '  URL  ') + linked,
+    paint(c.dim, '  协议 ') + (HTTPS_ENABLED ? paint(c.green, 'HTTPS') : paint(c.dim, 'HTTP')),
+    paint(c.dim, '  端口 ') + paint(c.white, String(PORT)),
+    '',
+    paint(c.dim, '  IS_DEV    ') + paint(c.green, 'ON'),
+    paint(c.dim, '  快速构建  ') + (fastBuild ? paint(c.cyan, 'ON') : paint(c.dim, 'OFF')),
+    paint(c.dim, '  日志级别  ') + paint(c.cyan, LOG_LEVELS[logLevelIdx].toUpperCase()),
+    '',
+    paint(c.dim, '  [') + paint(c.cyan, 'f') + paint(c.dim, '] 切换快速构建   ') +
+    paint(c.dim, '[') + paint(c.cyan, 'l') + paint(c.dim, '] 切换日志级别   ') +
+    paint(c.dim, '[') + paint(c.cyan, 'r') + paint(c.dim, '] 立即构建   ') +
+    paint(c.dim, '[') + paint(c.cyan, 'q') + paint(c.dim, '] 退出'),
+  ])
+  setupKeyboard()
+  // 启动后自动触发首次构建
+  runBuild('startup')
 })
 
 // --- SSE 心跳：避免某些代理或浏览器在长时间无数据时断开，导致前端进入 Pending 状态 ---

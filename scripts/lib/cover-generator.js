@@ -10,6 +10,7 @@
 import fs from 'fs-extra'
 import path from 'path'
 import { createCanvas, GlobalFonts } from '@napi-rs/canvas'
+import log from './logger.js'
 import { Resvg } from '@resvg/resvg-js'
 import { renderToSVGString } from 'scratchblocks-plus/node-ssr.js'
 import { escapeHtml } from './html-utils.js'
@@ -143,7 +144,7 @@ export async function loadSiteCoverTemplate() {
   if (await fs.pathExists(src)) {
     return fs.readFile(src, 'utf8')
   }
-  console.warn('[cover] 未找到 src/cover.svg，跳过社交预览图生成')
+  log.warn('cover', '未找到 src/cover.svg，跳过社交预览图生成')
   return null
 }
 
@@ -161,7 +162,7 @@ export async function generateSiteCover(template, siteName, outputPath, langTag)
     const pngData = resvg.render()
     await fs.writeFile(outputPath, pngData.asPng())
   } catch (e) {
-    console.warn(`[cover] 站点封面 PNG 渲染失败:`, e?.message || e)
+    log.warn('cover', `站点封面 PNG 渲染失败: ${e?.message || e}`)
   }
 }
 
@@ -340,7 +341,7 @@ function buildModuleCoverSVG({
           </svg>
         </g>`
     } catch (e) {
-      console.warn('[cover] scratchblocks 渲染失败:', e?.message || e)
+      log.warn('cover', `scratchblocks 渲染失败: ${e?.message || e}`)
     }
   }
 
@@ -469,6 +470,6 @@ export async function generateModuleCover(module, langTag, outputPath, siteName)
     await fs.ensureDir(path.dirname(outputPath))
     await fs.writeFile(outputPath, pngData.asPng())
   } catch (e) {
-    console.warn(`[cover] 模块封面 "${module.id}" 渲染失败:`, e?.message || e)
+    log.warn('cover', `模块封面 "${module.id}" 渲染失败: ${e?.message || e}`)
   }
 }

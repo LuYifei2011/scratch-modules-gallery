@@ -2,6 +2,7 @@ import path from 'path'
 import fs from 'fs-extra'
 import { fileURLToPath } from 'url'
 import formidable from 'formidable'
+import log from './logger.js'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -112,12 +113,12 @@ async function scanModules() {
           locales,
         })
       } catch (e) {
-        console.warn(`[editor-api] Failed to load module ${dir}:`, e.message)
+        log.warn('editor-api', `Failed to load module ${dir}: ${e.message}`)
       }
     }
     return modules
   } catch (e) {
-    console.error('[editor-api] Failed to scan modules:', e)
+    log.error('editor-api', `Failed to scan modules: ${e?.message || e}`)
     return []
   }
 }

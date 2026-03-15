@@ -12,6 +12,7 @@
  */
 
 import { markdownToHtml } from './markdown.js'
+import log from './logger.js'
 
 // ── 内部辅助函数 ──────────────────────────────────────────
 
@@ -112,9 +113,7 @@ function localizeProcedures(raw, procMaps) {
       if (slotCount <= 0) continue
       const localizedSlots = (localizedPattern.match(/_/g) || []).length
       if (localizedSlots !== slotCount) {
-        console.warn(
-          `[procedures] 本地化占位符数量不匹配: pattern="${englishPattern}" slots=${slotCount} localizedSlots=${localizedSlots}`
-        )
+        log.warn('procedures', `本地化占位符数量不匹配: pattern="${englishPattern}" slots=${slotCount} localizedSlots=${localizedSlots}`)
         // 占位符数量不匹配会破坏脚本结构，回退到原始内容
         continue
       }
@@ -127,7 +126,7 @@ function localizeProcedures(raw, procMaps) {
         reDef = new RegExp('^define\\s+' + core + '$', 'gm')
         reCall = new RegExp('(^|\n)' + core + '(?=\n|$)', 'g')
       } catch (e) {
-        console.warn('[procedures] 构造正则失败:', englishPattern, e?.message || e)
+        log.warn('procedures', `构造正则失败: ${englishPattern} ${e?.message || e}`)
         continue
       }
 
@@ -136,11 +135,6 @@ function localizeProcedures(raw, procMaps) {
         // 依次把 '_' 替换为对应 capture
         return localizedPattern.replace(/_/g, () => {
           const rep = captures[idx++]
-          if (!rep) {
-            console.warn(
-              `[procedures] 捕获参数不足: pattern="${englishPattern}" need=${slotCount} have=${captures.length}`
-            )
-          }
           return rep || '_'
         })
       }
@@ -351,7 +345,7 @@ export async function translateModulesForLocale(
             }
           }
         } catch (e) {
-          console.warn(`[translate] error ${m.id} "${s.title}":`, e?.message || e)
+          log.warn('translate', `翻译失败 ${m.id} "${s.title}": ${e?.message || e}`)
         }
         // 标题本地化（自身脚本）
         if (!s.imported) {
@@ -524,7 +518,7 @@ export async function translateModulesForLocale(
         }
         if (missingFields.length) {
           const msg = `模块 ${m.id} 在 ${locale} 语言下缺失翻译字段`
-          console.warn(`[i18n-missing][${locale}] ${m.id}: ` + missingFields.join(', '))
+          log.warn('i18n-missing', `[${locale}] ${m.id}: ` + missingFields.join(', '))
           if (reportIssue) {
             reportIssue('warn', msg, {
               moduleId: m.id,
@@ -535,7 +529,7 @@ export async function translateModulesForLocale(
           }
         }
       } catch (e) {
-        console.warn('[i18n-missing] 检测失败', m.id, e?.message || e)
+        log.warn('i18n-missing', `检测失败 ${m.id}: ${e?.message || e}`)
       }
     }
     // 计算去重后的 keywords 和 tags 合并

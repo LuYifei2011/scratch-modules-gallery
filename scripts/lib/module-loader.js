@@ -8,6 +8,7 @@ import fs from 'fs-extra'
 import path from 'path'
 import fg from 'fast-glob'
 import { buildModuleRecord } from './schema.js'
+import log from './logger.js'
 
 /**
  * @param {Object} options
@@ -126,7 +127,7 @@ export async function loadModules({ root, config, isDev }) {
       errorsAll.push(`${dir}: unexpected build error ${(e && e.message) || e}`)
       if (isDev) {
         // 保留堆栈便于调试
-        console.error(e)
+        log.error('loader', String(e?.stack || e?.message || e))
       }
     }
   }
