@@ -254,12 +254,47 @@
 
       function render() {
         const locale = currentLocale
-        stats.textContent = `共 ${modules.length} 个模块`
+        stats.textContent = `共 ${modules.length} 个模块 + 主页`
 
         if (!modules.length) {
           content.innerHTML = '<div class="loading"><span>暂无模块</span></div>'
           return
         }
+
+        // 主页封面卡片
+        const homeCoverUrl = `/${locale}/cover.png`
+        const homeUrl = `/${locale}/`
+        const homeName = locale === 'en' ? 'Home' : locale === 'zh-tw' ? '首頁' : '首页'
+        const homeCard = `
+          <div class="card" data-id="home">
+            <div class="cover-wrap">
+              <div class="cover-placeholder">加载中…</div>
+              <img
+                class="cover-img"
+                data-src="${homeCoverUrl}"
+                alt="${homeName} 封面"
+                style="display:none"
+              />
+              <div class="cover-error" style="display:none">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                  <rect x="3" y="3" width="18" height="18" rx="2"/>
+                  <path d="M3 9l4-4 4 4 4-4 4 4"/>
+                  <circle cx="8.5" cy="13.5" r="1.5"/>
+                </svg>
+                <span>封面图不存在</span>
+                <span style="font-size:11px;opacity:.7">${homeCoverUrl}</span>
+              </div>
+            </div>
+            <div class="card-info">
+              <span class="card-id">home</span>
+              <span class="card-name" title="${homeName}">${homeName}</span>
+              <div class="card-actions">
+                <a href="${homeUrl}" target="_blank">查看页面</a>
+                <a href="${homeCoverUrl}" target="_blank">原图</a>
+              </div>
+            </div>
+          </div>
+        `
 
         const cards = modules
           .map((mod) => {
@@ -300,7 +335,7 @@
           })
           .join('')
 
-        content.innerHTML = `<div class="grid">${cards}</div>`
+        content.innerHTML = `<div class="grid">${homeCard}${cards}</div>`
         loadImages()
       }
 
