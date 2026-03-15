@@ -389,7 +389,12 @@ async function render(modules, allTags) {
 
     // 生成本地化 cover.png（站点级社交预览图）
     if (coverSvgTemplate) {
-      await generateSiteCover(coverSvgTemplate, locConfig.siteName, path.join(locOut, 'cover.png'), langTags[loc] || loc)
+      await generateSiteCover(
+        coverSvgTemplate,
+        locConfig.siteName,
+        path.join(locOut, 'cover.png'),
+        langTags[loc] || loc
+      )
     }
 
     // 生成模块级封面图

@@ -35,7 +35,7 @@ function getFontFamily(langTag) {
   if (normalized === 'zh-cn') order = ['SC', 'TC', '']
   else if (normalized === 'zh-tw') order = ['TC', 'SC', '']
   else order = ['', 'SC', 'TC']
-  return order.map(s => FONT_SUFFIX_NAME[s]).join(', ') + ', sans-serif'
+  return order.map((s) => FONT_SUFFIX_NAME[s]).join(', ') + ', sans-serif'
 }
 
 /**
@@ -120,8 +120,8 @@ function getFontOrder(langTag) {
 /** Resvg 共用选项 */
 function resvgOpts(langTag) {
   const fontFiles = getFontOrder(langTag)
-    .map(suffix => path.join(fontDirPath, `NotoSans${suffix}-Medium.ttf`))
-    .filter(f => fs.existsSync(f))
+    .map((suffix) => path.join(fontDirPath, `NotoSans${suffix}-Medium.ttf`))
+    .filter((f) => fs.existsSync(f))
   return {
     fitTo: { mode: 'width', value: 1200 },
     font: {
