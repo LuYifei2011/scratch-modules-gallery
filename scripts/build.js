@@ -401,7 +401,7 @@ async function render(modules, allTags) {
     const langTag = ($t?.meta?.languageTag || loc).replace('-', '_').toLowerCase()
     for (const m of modulesForLoc) {
       const moduleOutDir = path.join(locOut, 'modules', m.slug)
-      await generateModuleCover(m, langTag, path.join(moduleOutDir, 'cover.png'))
+      await generateModuleCover(m, langTag, path.join(moduleOutDir, 'cover.png'), locConfig.siteName)
     }
 
     const indexHtml = nunjucks.render('layouts/home.njk', {

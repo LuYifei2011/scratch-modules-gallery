@@ -194,6 +194,13 @@ const TAG_H = 36
 const TAG_PAD_X = 17
 const TAG_GAP = 12
 
+/** 水印布局常量 */
+const WATERMARK_ICON_SIZE = 42
+const WATERMARK_TEXT_SIZE = 27
+const WATERMARK_CY = BAR_Y - 39
+const WATERMARK_ICON_Y = Math.round(WATERMARK_CY - WATERMARK_ICON_SIZE / 2)
+const WATERMARK_TEXT_Y = Math.round(WATERMARK_CY + WATERMARK_TEXT_SIZE * 0.36)
+
 /**
  * 判断字符是否为 CJK 字符
  */
@@ -246,7 +253,7 @@ function computeTitleLayout(name, maxWidth, fontFamily) {
 /**
  * 生成模块封面 SVG 字符串。
  */
-function buildModuleCoverSVG({ name, description, tags, firstScript, allScripts, langTag }) {
+function buildModuleCoverSVG({ name, description, tags, firstScript, allScripts, langTag, siteName, faviconInnerContent }) {
   const leftMaxW = LEFT_W
   const fontFamily = getFontFamily(langTag)
 
@@ -347,6 +354,18 @@ function buildModuleCoverSVG({ name, description, tags, firstScript, allScripts,
   const dividerX = LEFT_W + PAD_X / 2 + 8
   const divider = `<line x1="${dividerX}" y1="${PAD_TOP}" x2="${dividerX}" y2="${BAR_Y - 12}" stroke="#e0e0e8" stroke-width="1" stroke-dasharray="6,4" />`
 
+  // ── 左下角网站水印（logo + 站点名） ──
+  let watermarkSvg = ''
+  if (siteName && faviconInnerContent) {
+    watermarkSvg = `
+  <g opacity="0.55">
+    <svg x="${PAD_X}" y="${WATERMARK_ICON_Y}" width="${WATERMARK_ICON_SIZE}" height="${WATERMARK_ICON_SIZE}" viewBox="0 0 2048 2048" xmlns="http://www.w3.org/2000/svg">
+      ${faviconInnerContent}
+    </svg>
+    <text x="${PAD_X + WATERMARK_ICON_SIZE + 9}" y="${WATERMARK_TEXT_Y}" font-family="${fontFamily}" font-size="${WATERMARK_TEXT_SIZE}" fill="${TEXT_PRIMARY}">${escapeHtml(siteName)}</text>
+  </g>`
+  }
+
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">
   <rect width="${W}" height="${H}" fill="${BG}" />
   ${divider}
@@ -354,12 +373,33 @@ function buildModuleCoverSVG({ name, description, tags, firstScript, allScripts,
   <text x="${PAD_X}" y="${descY}" font-family="${fontFamily}" font-size="${DESC_FONT_SIZE}" fill="${TEXT_SECONDARY}">${descTspans}</text>
   ${tagsSvg}
   ${blocksSvg}
+  ${watermarkSvg}
   ${barRects}
 </svg>`
 }
 
 /** 当前已注册字体对应的语言（用于按需重新注册） */
 let _registeredFontLang = null
+
+/** favicon.svg 内层内容缓存（null = 未加载，'' = 不存在） */
+let _faviconInnerContent = null
+
+/**
+ * 懒加载 src/favicon.svg 的内层 SVG 内容（去掉 xml 声明和外层 svg 标签）。
+ * @returns {Promise<string>}
+ */
+async function loadFaviconContent() {
+  if (_faviconInnerContent !== null) return _faviconInnerContent
+  const faviconPath = path.join(root, 'src', 'favicon.svg')
+  if (await fs.pathExists(faviconPath)) {
+    const raw = await fs.readFile(faviconPath, 'utf8')
+    const innerMatch = raw.match(/<svg[^>]*>([\s\S]*)<\/svg>/)
+    _faviconInnerContent = innerMatch ? innerMatch[1] : ''
+  } else {
+    _faviconInnerContent = ''
+  }
+  return _faviconInnerContent
+}
 
 /**
  * 按语言优先级为 canvas 注册字体（仅在语言变化时重新注册）。
@@ -385,8 +425,9 @@ function ensureFontsRegistered(langTag) {
  * @param {object} module       已翻译的模块数据
  * @param {string} langTag      scratchblocks 语言标签 (e.g. 'zh_cn')
  * @param {string} outputPath   输出 PNG 的绝对路径
+ * @param {string} [siteName]   站点名称（用于左下角水印）
  */
-export async function generateModuleCover(module, langTag, outputPath) {
+export async function generateModuleCover(module, langTag, outputPath, siteName) {
   // 提取第一个非导入脚本的文本
   const scripts = module.scripts || []
   const firstNonImport = scripts.find((s) => !s.imported)
@@ -400,6 +441,8 @@ export async function generateModuleCover(module, langTag, outputPath) {
 
   ensureFontsRegistered(langTag)
 
+  const faviconInnerContent = await loadFaviconContent()
+
   const svg = buildModuleCoverSVG({
     name: module.name,
     description: module.description,
@@ -407,6 +450,8 @@ export async function generateModuleCover(module, langTag, outputPath) {
     firstScript,
     allScripts,
     langTag,
+    siteName,
+    faviconInnerContent,
   })
 
   try {
