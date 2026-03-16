@@ -609,15 +609,10 @@ async function render(modules, allTags) {
           (modulesForLoc && modulesForLoc.find((item) => item.slug === m.slug)) || m
         const locConfig = localeConfigCache.get(loc)
         const moduleLabel =
-          localizedModule?.name ||
-          localizedModule?.description ||
-          m.name ||
-          m.description ||
-          m.id
+          localizedModule?.name || localizedModule?.description || m.name || m.description || m.id
         const siteLabel = locConfig?.siteName || config.siteName
-        const captionText = moduleLabel && siteLabel
-          ? `${moduleLabel} - ${siteLabel}`
-          : moduleLabel || siteLabel
+        const captionText =
+          moduleLabel && siteLabel ? `${moduleLabel} - ${siteLabel}` : moduleLabel || siteLabel
         sitemapUrls.push({
           loc: `/${loc}/modules/${m.slug}/`,
           lastmod: moduleLastMod,
