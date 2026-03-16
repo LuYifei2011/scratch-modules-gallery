@@ -8,7 +8,7 @@ import * as scratchblocks from 'scratchblocks-plus/syntax/index.js'
 import simpleGit from 'simple-git'
 import { favicons as generateFavicons } from 'favicons'
 import { translateModulesForLocale } from './lib/i18n-engine.js'
-import { escapeHtml, maybeMinify } from './lib/html-utils.js'
+import { escapeHtml, maybeMinify, generateShareLinks } from './lib/html-utils.js'
 import { buildSearchIndex } from './lib/search.js'
 import { resolveImports } from './lib/import-resolver.js'
 import { loadModules } from './lib/module-loader.js'
@@ -95,6 +95,14 @@ async function render(modules, allTags) {
   } catch (e) {
     basePath = ''
   }
+  const normalizedBaseUrl = (config.baseUrl || '').replace(/\/$/, '')
+  const escapeXml = (value) =>
+    String(value ?? '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&apos;')
 
   // 从 git 历史获取文件的最后修改时间（ISO8601 日期字符串）
   // 如果获取失败或不在 git 仓库中，回退到当前时间
@@ -335,6 +343,7 @@ async function render(modules, allTags) {
   const dict = await loadI18n()
   const globalTags = await loadGlobalTags()
   const locales = Object.keys(dict)
+  const localeConfigCache = new Map()
   // 每种语言的 hreflang 标记（优先使用 i18n.meta.languageTag）
   const langTags = Object.fromEntries(
     locales.map((loc) => [loc, (dict[loc]?.meta && dict[loc].meta.languageTag) || loc])
@@ -366,6 +375,7 @@ async function render(modules, allTags) {
     const locOut = path.join(outDir, loc)
     await fs.ensureDir(locOut)
     const locConfig = pickConfigForLocale(config, loc, dict)
+    localeConfigCache.set(loc, locConfig)
     const assetBase = basePath || ''
     const pageBase = (basePath ? basePath : '') + '/' + loc
     const $t = dict[loc]
@@ -440,6 +450,11 @@ async function render(modules, allTags) {
       locales,
       langTags,
       i18n: dict,
+      shareLinks: generateShareLinks({
+        url: locConfig.baseUrl + '/' + loc + '/',
+        title: locConfig.siteName,
+        description: locConfig.description,
+      }),
     })
     await fs.outputFile(
       path.join(locOut, 'index.html'),
@@ -461,6 +476,12 @@ async function render(modules, allTags) {
       locales,
       langTags,
       i18n: dict,
+      shareLinks: generateShareLinks({
+        // 关于页面的分享链接与主页相同，因为关于页面的分享按钮为推广站点而非单页面，因此仍使用主页信息
+        url: locConfig.baseUrl + '/' + loc + '/',
+        title: locConfig.siteName,
+        description: locConfig.description,
+      }),
     })
     const aboutDir = path.join(locOut, 'about')
     await fs.ensureDir(aboutDir)
@@ -471,8 +492,10 @@ async function render(modules, allTags) {
     )
 
     for (const m of modules) {
+      const moduleData = modulesForLoc.find((x) => x.id === m.id) || m
+      const moduleUrl = locConfig.baseUrl + '/' + loc + '/modules/' + m.slug + '/'
       const html = nunjucks.render('layouts/module.njk', {
-        module: modulesForLoc.find((x) => x.id === m.id) || m,
+        module: moduleData,
         config: locConfig,
         basePath,
         assetBase,
@@ -485,6 +508,11 @@ async function render(modules, allTags) {
         langTags,
         i18n: dict,
         scratchblocksLanguages,
+        shareLinks: generateShareLinks({
+          url: moduleUrl,
+          title: moduleData.name || m.id,
+          description: moduleData.description,
+        }),
       })
       const moduleDir = path.join(locOut, 'modules', m.slug)
       await fs.ensureDir(moduleDir)
@@ -544,8 +572,8 @@ async function render(modules, allTags) {
   ])
 
   // 生成 sitemap 时为每个 URL 获取对应的最后修改时间
-  // 开发模式下跳过生成以节省时间
-  if (!isDev) {
+  // 快速模式下跳过生成以节省时间
+  if (!isFast) {
     const sitemapUrls = []
 
     // 首页：使用配置文件 + 全局 i18n 文件的最后修改时间
@@ -575,14 +603,50 @@ async function render(modules, allTags) {
     for (const m of modules) {
       const moduleLastMod = await getModuleLastMod(m.slug)
       for (const loc of locales) {
+        const imagePath = `/${loc}/modules/${m.slug}/cover.png`
+        const modulesForLoc = translatedCache.get(loc)
+        const localizedModule =
+          (modulesForLoc && modulesForLoc.find((item) => item.slug === m.slug)) || m
+        const locConfig = localeConfigCache.get(loc)
+        const moduleLabel =
+          localizedModule?.name ||
+          localizedModule?.description ||
+          m.name ||
+          m.description ||
+          m.id
+        const siteLabel = locConfig?.siteName || config.siteName
+        const captionText = moduleLabel && siteLabel
+          ? `${moduleLabel} - ${siteLabel}`
+          : moduleLabel || siteLabel
         sitemapUrls.push({
           loc: `/${loc}/modules/${m.slug}/`,
           lastmod: moduleLastMod,
+          images: [
+            {
+              loc: `${normalizedBaseUrl}${imagePath}`,
+              caption: captionText || undefined,
+            },
+          ],
         })
       }
     }
 
-    const sitemap = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${sitemapUrls.map((u) => `  <url><loc>${config.baseUrl.replace(/\/$/, '')}${u.loc}</loc><lastmod>${u.lastmod}</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>`).join('\n')}\n</urlset>`
+    const sitemap = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">\n${sitemapUrls
+      .map((u) => {
+        const pageLoc = `${normalizedBaseUrl}${u.loc}`
+        const imagesSection = (u.images || [])
+          .map((img) => {
+            let imageTag = `<image:image><image:loc>${escapeXml(img.loc)}</image:loc>`
+            if (img.caption) {
+              imageTag += `<image:caption>${escapeXml(img.caption)}</image:caption>`
+            }
+            imageTag += '</image:image>'
+            return imageTag
+          })
+          .join('')
+        return `  <url><loc>${escapeXml(pageLoc)}</loc><lastmod>${escapeXml(u.lastmod)}</lastmod><changefreq>weekly</changefreq><priority>0.8</priority>${imagesSection}</url>`
+      })
+      .join('\n')}\n</urlset>`
     await fs.writeFile(path.join(outDir, 'sitemap.xml'), sitemap, 'utf8')
     // robots.txt 中禁止爬虫访问 /thirdparty/：
     // - 该目录用于存放构建时复制的第三方库的许可证文件
@@ -590,13 +654,13 @@ async function render(modules, allTags) {
     // - 因此通过 Disallow: /thirdparty/ 提示搜索引擎忽略该路径，避免污染索引结果
     await fs.writeFile(
       path.join(outDir, 'robots.txt'),
-      `User-agent: *\nAllow: /\nDisallow: /thirdparty/\nSitemap: ${config.baseUrl.replace(/\/$/, '')}/sitemap.xml\n`,
+      `User-agent: *\nAllow: /\nDisallow: /thirdparty/\nSitemap: ${normalizedBaseUrl}/sitemap.xml\n`,
       'utf8'
     )
   } else {
-    // 开发模式：跳过 sitemap 和 robots.txt 生成，使用占位符或简单版本
-    if (isDev) {
-      log.dim('  [dev] 跳过 sitemap 和 robots.txt 生成以节省时间')
+    // 快速模式：跳过 sitemap 和 robots.txt 生成
+    if (isFast) {
+      log.dim('  [fast] 跳过 sitemap 和 robots.txt 生成以节省时间')
     }
   }
 
