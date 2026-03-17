@@ -41,6 +41,9 @@ if (process.env.BASE_URL) {
     // 只替换 baseUrl 字段，不引入额外复杂度
     config.baseUrl = process.env.BASE_URL
   } catch {}
+} else if (process.env.CF_PAGES_URL) {
+  // Cloudflare Pages 提供的环境变量，主要用于非生产环境的预览部署，生产环境已通过 BASE_URL 设置正确的 URL
+  config.baseUrl = process.env.CF_PAGES_URL
 }
 // 为每个镜像站计算 isCurrent，供模板区分当前站与外链
 if (Array.isArray(config.mirrors)) {
