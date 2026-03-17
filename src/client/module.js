@@ -154,7 +154,9 @@ async function initScratchblocks() {
         exportToggle.addEventListener('click', (ev) => {
           ev.stopPropagation()
           const wasOpen = exportGroup.classList.contains('open')
-          document.querySelectorAll('.sb-export-group.open').forEach((g) => g.classList.remove('open'))
+          document
+            .querySelectorAll('.sb-export-group.open')
+            .forEach((g) => g.classList.remove('open'))
           if (!wasOpen) exportGroup.classList.add('open')
         })
       }
