@@ -1,0 +1,64 @@
+{#
+  renderSbBlock — 渲染一个 scratchblocks 代码块（操作栏 + <pre>）
+  参数:
+    content       : scratchblocks 源文本
+    editModuleId  : 编辑链接中的模块 ID
+    editScriptId  : 编辑链接中的脚本 ID
+    scriptId      : 非空时写入 data-script-id 属性（仅主脚本块需要）
+    t             : 翻译对象
+    IS_DEV        : 开发模式标志
+    icons         : icons 宏命名空间
+#}
+{% macro renderSbBlock(content, editModuleId, editScriptId, scriptId, t, IS_DEV, icons) %}
+<div class="sb-block">
+    <div class="sb-actions">
+        {% if IS_DEV %}
+            <a href="/__dev/editor/?module={{ editModuleId }}&script={{ editScriptId }}&tab=scripts"
+               class="sb-action sb-edit"
+               title="{{ t.module.editScript }}"
+               target="_blank">{{ icons.iconEdit() }}</a>
+        {% endif %}
+        <button class="sb-action sb-copy"
+                type="button"
+                aria-label="{{ t.module.copyScript }}"
+                title="{{ t.module.copyScript }}">
+            {{ icons.iconCopy() }}
+            {{ icons.iconCheck() }}
+        </button>
+        <div class="sb-export-group">
+            <div class="sb-export-options">
+                <button class="sb-action sb-export-svg"
+                        type="button"
+                        aria-label="{{ t.module.exportSVG }}"
+                        title="{{ t.module.exportSVG }}">SVG</button>
+                <button class="sb-action sb-export-png"
+                        type="button"
+                        aria-label="{{ t.module.exportPNG }}"
+                        title="{{ t.module.exportPNG }}">PNG</button>
+            </div>
+            <button class="sb-action sb-export"
+                    type="button"
+                    aria-label="{{ t.module.exportImage }}"
+                    title="{{ t.module.exportImage }}">{{ icons.iconImageDown() }}</button>
+        </div>
+    </div>
+    <pre class="scratchblocks"{% if scriptId %} data-script-id="{{ scriptId }}"{% endif %}>{{ content | escape }}</pre>
+</div>
+{% endmacro %}
+
+{#
+  renderImportedDetails — 渲染导入模块的 <details> 折叠块
+  参数 imp 需包含: fromId, fromName, fromTitle, fromIndex, fromScriptId, content
+  其余参数同 renderSbBlock
+#}
+{% macro renderImportedDetails(imp, t, IS_DEV, icons, pageBase) %}
+<details class="imported-script">
+    <summary>
+        {{ t.module.importedFrom }}
+        <a href="{{ pageBase }}/modules/{{ imp.fromId }}/">{{ imp.fromName }}</a>
+        {% if imp.fromTitle %}· {{ imp.fromTitle }}{% endif %}
+        {% if imp.fromIndex %}(#{{ imp.fromIndex }}){% endif %}
+    </summary>
+    {{ renderSbBlock(imp.content, imp.fromId, imp.fromScriptId, '', t, IS_DEV, icons) }}
+</details>
+{% endmacro %}

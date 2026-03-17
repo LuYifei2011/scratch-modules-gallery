@@ -1,4 +1,5 @@
 {% import "partials/icons.njk" as icons %}
+{% import "partials/module-macros.njk" as m %}
 {% extends "layouts/base.njk" %}
 {% block title %}{{ module.name }} - {{ config.siteName }}{% endblock %}
 {% block og_title %}{{ module.name }} - {{ config.siteName }}{% endblock %}
@@ -91,131 +92,16 @@
             {% if module.scripts and module.scripts.length %}
                 {% for s in module.scripts %}
                     {% if s.imported %}
-                        <details class="imported-script">
-                            <summary>
-                                {{ t.module.importedFrom }}
-                                <a href="{{ pageBase }}/modules/{{ s.fromId }}/">{{ s.fromName }}</a>
-                                {% if s.fromTitle %}· {{ s.fromTitle }}{% endif %}
-                                {% if s.fromIndex %}(#{{ s.fromIndex }}){% endif %}
-                            </summary>
-                            <div class="sb-block">
-                                <div class="sb-actions">
-                                    {% if IS_DEV %}
-                                        <a href="/__dev/editor/?module={{ s.fromId }}&script={{ s.fromScriptId }}&tab=scripts"
-                                           class="sb-action sb-edit"
-                                           title="{{ t.module.editScript }}"
-                                           target="_blank">{{ icons.iconEdit() }}</a>
-                                    {% endif %}
-                                    <button class="sb-action sb-copy"
-                                            type="button"
-                                            aria-label="{{ t.module.copyScript }}"
-                                            title="{{ t.module.copyScript }}">
-                                        {{ icons.iconCopy() }}
-                                        {{ icons.iconCheck() }}
-                                    </button>
-                                    <div class="sb-export-group">
-                                        <div class="sb-export-options">
-                                            <button class="sb-action sb-export-svg"
-                                                    type="button"
-                                                    aria-label="{{ t.module.exportSVG }}"
-                                                    title="{{ t.module.exportSVG }}">SVG</button>
-                                            <button class="sb-action sb-export-png"
-                                                    type="button"
-                                                    aria-label="{{ t.module.exportPNG }}"
-                                                    title="{{ t.module.exportPNG }}">PNG</button>
-                                        </div>
-                                        <button class="sb-action sb-export"
-                                                type="button"
-                                                aria-label="{{ t.module.exportImage }}"
-                                                title="{{ t.module.exportImage }}">{{ icons.iconImageDown() }}</button>
-                                    </div>
-                                </div>
-                                <pre class="scratchblocks">{{ s.content | escape }}</pre>
-                            </div>
-                        </details>
+                        {{ m.renderImportedDetails(s, t, IS_DEV, icons, pageBase) }}
                     {% else %}
                         <div class="script-block">
                             {% if s.title %}<h3 class="script-title">{{ s.title }}</h3>{% endif %}
                             {% if s.leadingImports %}
                                 {% for imp in s.leadingImports %}
-                                    <details class="imported-script">
-                                        <summary>
-                                            {{ t.module.importedFrom }}
-                                            <a href="{{ pageBase }}/modules/{{ imp.fromId }}/">{{ imp.fromName }}</a>
-                                            {% if imp.fromTitle %}· {{ imp.fromTitle }}{% endif %}
-                                            {% if imp.fromIndex %}(#{{ imp.fromIndex }}){% endif %}
-                                        </summary>
-                                        <div class="sb-block">
-                                            <div class="sb-actions">
-                                                {% if IS_DEV %}
-                                                    <a href="/__dev/editor/?module={{ imp.fromId }}&script={{ imp.fromScriptId }}&tab=scripts"
-                                                       class="sb-action sb-edit"
-                                                       title="编辑脚本"
-                                                       target="_blank">{{ icons.iconEdit() }}</a>
-                                                {% endif %}
-                                                <button class="sb-action sb-copy"
-                                                        type="button"
-                                                        aria-label="{{ t.module.copyScript }}"
-                                                        title="{{ t.module.copyScript }}">
-                                                    {{ icons.iconCopy() }}
-                                                    {{ icons.iconCheck() }}
-                                                </button>
-                                                <div class="sb-export-group">
-                                                    <div class="sb-export-options">
-                                                        <button class="sb-action sb-export-svg"
-                                                                type="button"
-                                                                aria-label="{{ t.module.exportSVG }}"
-                                                                title="{{ t.module.exportSVG }}">SVG</button>
-                                                        <button class="sb-action sb-export-png"
-                                                                type="button"
-                                                                aria-label="{{ t.module.exportPNG }}"
-                                                                title="{{ t.module.exportPNG }}">PNG</button>
-                                                    </div>
-                                                    <button class="sb-action sb-export"
-                                                            type="button"
-                                                            aria-label="{{ t.module.exportImage }}"
-                                                            title="{{ t.module.exportImage }}">{{ icons.iconImageDown() }}</button>
-                                                </div>
-                                            </div>
-                                            <pre class="scratchblocks">{{ imp.content | escape }}</pre>
-                                        </div>
-                                    </details>
+                                    {{ m.renderImportedDetails(imp, t, IS_DEV, icons, pageBase) }}
                                 {% endfor %}
                             {% endif %}
-                            <div class="sb-block">
-                                <div class="sb-actions">
-                                    {% if IS_DEV %}
-                                        <a href="/__dev/editor/?module={{ module.id }}&script={{ s.id }}&tab=scripts"
-                                           class="sb-action sb-edit"
-                                           title="编辑脚本"
-                                           target="_blank">{{ icons.iconEdit() }}</a>
-                                    {% endif %}
-                                    <button class="sb-action sb-copy"
-                                            type="button"
-                                            aria-label="{{ t.module.copyScript }}"
-                                            title="{{ t.module.copyScript }}">
-                                        {{ icons.iconCopy() }}
-                                        {{ icons.iconCheck() }}
-                                    </button>
-                                    <div class="sb-export-group">
-                                        <div class="sb-export-options">
-                                            <button class="sb-action sb-export-svg"
-                                                    type="button"
-                                                    aria-label="{{ t.module.exportSVG }}"
-                                                    title="{{ t.module.exportSVG }}">SVG</button>
-                                            <button class="sb-action sb-export-png"
-                                                    type="button"
-                                                    aria-label="{{ t.module.exportPNG }}"
-                                                    title="{{ t.module.exportPNG }}">PNG</button>
-                                        </div>
-                                        <button class="sb-action sb-export"
-                                                type="button"
-                                                aria-label="{{ t.module.exportImage }}"
-                                                title="{{ t.module.exportImage }}">{{ icons.iconImageDown() }}</button>
-                                    </div>
-                                </div>
-                                <pre class="scratchblocks" data-script-id="{{ s.id }}">{{ s.content | escape }}</pre>
-                            </div>
+                            {{ m.renderSbBlock(s.content, module.id, s.id, s.id, t, IS_DEV, icons) }}
                         </div>
                     {% endif %}
                 {% endfor %}
