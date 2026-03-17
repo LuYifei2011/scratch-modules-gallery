@@ -23,6 +23,15 @@ async function loadLanguage(langCode) {
   }
 }
 
+function downloadFile(url, filename) {
+  const a = document.createElement('a')
+  a.href = url
+  a.download = filename
+  document.body.appendChild(a)
+  a.click()
+  a.remove()
+}
+
 async function copyTextToClipboard(text) {
   if (!text) return false
   let ok = false
@@ -131,6 +140,47 @@ async function initScratchblocks() {
     } catch (e) {
       console.warn('[sb-copy] init failed:', e?.message || e)
     }
+
+    // Wire export buttons
+    try {
+      const wrapper = obj.el.closest('.sb-block')
+      const exportGroup = wrapper && wrapper.querySelector('.sb-export-group')
+      const exportToggle = exportGroup && exportGroup.querySelector('.sb-export')
+      const exportSvgBtn = exportGroup && exportGroup.querySelector('.sb-export-svg')
+      const exportPngBtn = exportGroup && exportGroup.querySelector('.sb-export-png')
+      const scriptName = obj.scriptId || 'script'
+
+      if (exportToggle && exportGroup) {
+        exportToggle.addEventListener('click', (ev) => {
+          ev.stopPropagation()
+          const wasOpen = exportGroup.classList.contains('open')
+          document.querySelectorAll('.sb-export-group.open').forEach((g) => g.classList.remove('open'))
+          if (!wasOpen) exportGroup.classList.add('open')
+        })
+      }
+      if (exportSvgBtn) {
+        exportSvgBtn.addEventListener('click', () => {
+          if (obj.view) downloadFile(obj.view.exportSVG(), scriptName + '.svg')
+          if (exportGroup) exportGroup.classList.remove('open')
+        })
+      }
+      if (exportPngBtn) {
+        exportPngBtn.addEventListener('click', () => {
+          if (obj.view) obj.view.exportPNG((url) => downloadFile(url, scriptName + '.png'), 3)
+          if (exportGroup) exportGroup.classList.remove('open')
+        })
+      }
+    } catch (e) {
+      console.warn('[sb-export] init failed:', e?.message || e)
+    }
+  })
+
+  // Close export menus when clicking outside
+  document.addEventListener('click', () => {
+    const openMenus = document.querySelectorAll('.sb-export-group.open')
+    if (openMenus.length > 0) {
+      openMenus.forEach((g) => g.classList.remove('open'))
+    }
   })
 
   const scriptIdToViewMap = {}
@@ -150,6 +200,7 @@ async function initScratchblocks() {
       if (obj.scriptId) {
         scriptIdToViewMap[obj.scriptId] = docView
       }
+      obj.view = docView
     })
   }
 

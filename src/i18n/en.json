@@ -51,7 +51,10 @@
     "copySuccess": "Copied!",
     "copyFail": "Copy failed",
     "editScript": "Edit script",
-    "editModule": "Edit module"
+    "editModule": "Edit module",
+    "exportImage": "Export image",
+    "exportSVG": "Download SVG",
+    "exportPNG": "Download PNG"
   },
   "404": {
     "title": "Page Not Found",

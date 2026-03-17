@@ -51,7 +51,10 @@
     "copySuccess": "已複製！",
     "copyFail": "複製失敗",
     "editScript": "編輯腳本",
-    "editModule": "編輯模組"
+    "editModule": "編輯模組",
+    "exportImage": "匯出圖片",
+    "exportSVG": "下載 SVG",
+    "exportPNG": "下載 PNG"
   },
   "404": {
     "title": "頁面未找到",
