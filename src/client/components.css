@@ -19,6 +19,10 @@
   white-space: nowrap;
 }
 
+.btn:hover:not(:disabled) {
+  opacity: 0.9;
+}
+
 .btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;

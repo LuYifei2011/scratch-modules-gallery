@@ -454,6 +454,9 @@ input#search:focus {
   text-decoration: none;
   color: var(--color-text-primary);
 }
+.support-more:hover {
+  opacity: 0.9;
+}
 /* GitHub 按钮在深色模式中保持原色，仅微调背景 */
 @media (prefers-color-scheme: dark) {
   .gh-btn:hover,
