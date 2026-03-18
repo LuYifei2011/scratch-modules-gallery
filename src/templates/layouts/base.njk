@@ -100,16 +100,6 @@
                             })();
                     </script>
                 {% endif %}
-                {% if config.repoUrl %}
-                    <a class="gh-btn"
-                       href="{{ config.repoUrl }}"
-                       target="_blank"
-                       rel="noopener"
-                       aria-label="{{ t.base.githubAriaLabel }}">
-                        {{ icons.iconGitHub() }}
-                        <span class="label">GitHub</span>
-                    </a>
-                {% endif %}
                 <div class="lang-switch">
                     <button id="lang-btn"
                             class="lang-btn"
@@ -152,6 +142,12 @@
                     &copy; 2025-2026
                     <a href="https://github.com/LuYifei2011" target="_blank">Lu Yifei</a>
                 </p>
+                |
+                <a href="{{ config.repoUrl }}"
+                    target="_blank"
+                    rel="noopener">
+                    {{ t.base.sourceCode }}
+                </a>
                 {% if IS_DEV %}
                     |
                     <a class="nav-link" href="/__dev/" target="_blank">🛠 Dev Tools</a>

@@ -8,7 +8,7 @@
   },
   "base": {
     "moduleCount": "{count} modules on site",
-    "githubAriaLabel": "GitHub repository",
+    "sourceCode": "Source Code (GitHub)",
     "languageSwitchTitle": "Language",
     "rememberLanguage": "Remember my language",
     "rememberLanguageTooltip": "Auto redirect to your preferred language",
@@ -94,6 +94,7 @@
     "support": "Support",
     "supportContent": "If you like this project and want to support its development, you can support me through the following ways:",
     "supportPromotion": "Promote this project",
+    "supportStar": "Star on GitHub",
     "donateOthers": "Other donation methods",
     "donateAlipay": "Alipay",
     "donateWeChatPay": "WeChat Pay",

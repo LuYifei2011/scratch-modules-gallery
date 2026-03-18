@@ -229,35 +229,6 @@ header .top-actions {
   position: static;
   transform: none;
 }
-.gh-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-xs);
-  font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-medium);
-  background: var(--color-github);
-  color: #fff;
-  padding: var(--space-sm) var(--space-md);
-  border-radius: var(--radius-md);
-  text-decoration: none;
-  line-height: 1;
-  transition: background var(--transition-base);
-}
-.gh-btn:hover,
-.gh-btn:focus {
-  background: #000;
-}
-.gh-btn svg {
-  display: block;
-}
-.gh-btn .label {
-  display: none;
-}
-@media (min-width: 520px) {
-  .gh-btn .label {
-    display: inline;
-  }
-}
 /* 语言选择器 */
 .lang-switch {
   position: relative;

@@ -8,7 +8,7 @@
   },
   "base": {
     "moduleCount": "站点共有 {count} 个模块",
-    "githubAriaLabel": "GitHub 仓库",
+    "sourceCode": "源代码 (GitHub)",
     "languageSwitchTitle": "语言",
     "rememberLanguage": "记住我的语言",
     "rememberLanguageTooltip": "自动重定向到您偏好的语言",
@@ -94,6 +94,7 @@
     "support": "支持",
     "supportContent": "如果您喜欢这个项目并想支持它的发展，您可以通过以下方式支持我：",
     "supportPromotion": "推广该项目",
+    "supportStar": "在 GitHub 上点赞",
     "donateOthers": "其他捐赠方式",
     "donateAlipay": "支付宝",
     "donateWeChatPay": "微信支付",

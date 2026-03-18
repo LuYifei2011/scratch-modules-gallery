@@ -8,7 +8,7 @@
   },
   "base": {
     "moduleCount": "站點共有 {count} 個模組",
-    "githubAriaLabel": "GitHub 倉庫",
+    "sourceCode": "源代碼 (GitHub)",
     "languageSwitchTitle": "語言",
     "rememberLanguage": "記住我的語言",
     "rememberLanguageTooltip": "自動重新導向到您偏好的語言",
@@ -94,6 +94,7 @@
     "support": "支持",
     "supportContent": "如果您喜歡這個專案並想支持它的發展，您可以通過以下方式支持我：",
     "supportPromotion": "推廣該專案",
+    "supportStar": "在 GitHub 上點讚",
     "donateOthers": "其他捐贈方式",
     "donateAlipay": "支付寶",
     "donateWeChatPay": "微信支付",
