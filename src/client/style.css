@@ -177,16 +177,6 @@ footer {
   align-items: center;
   flex-direction: row;
 }
-header h1 {
-  font-size: var(--font-size-xl);
-  font-weight: var(--font-weight-bold);
-  margin: 0;
-  display: inline-block;
-}
-header a {
-  text-decoration: none;
-  color: var(--accent);
-}
 /* 图标基础样式 */
 .icon {
   fill: none;
@@ -219,6 +209,12 @@ header a {
   display: block;
   flex-shrink: 0;
   border-radius: 4px;
+}
+/* 小屏幕和英文时标题字体适当缩小，避免换行 */
+@media (max-width: 600px) {
+  html[lang='en'] .site-title {
+    font-size: var(--font-size-base);
+  }
 }
 /* 把操作按钮放在行尾，这样标题与计数可以在同一行 */
 header .top-actions {
