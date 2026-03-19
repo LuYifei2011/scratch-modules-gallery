@@ -3,5 +3,17 @@
   "description": "将角色绕坐标点逆时针旋转指定角度。",
   "scriptTitles": {
     "main": "主脚本"
+  },
+  "variables": {
+    "dx": "x 偏移量",
+    "dy": "y 偏移量"
+  },
+  "procedures": {
+    "Rotate counterclockwise about x: %1 y: %2 by %3 degrees": "以 x: %1 y: %2 为中心 逆时针旋转 %3 度"
+  },
+  "procedureParams": {
+    "x": "x 坐标",
+    "y": "y 坐标",
+    "angle": "角度"
   }
 }

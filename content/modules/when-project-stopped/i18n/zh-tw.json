@@ -3,5 +3,8 @@
   "description": "當作品停止時觸發的事件。",
   "scriptTitles": {
     "main": "主腳本"
+  },
+  "variables": {
+    "timer": "計時器"
   }
 }

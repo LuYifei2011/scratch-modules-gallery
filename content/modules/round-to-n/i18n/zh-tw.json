@@ -3,5 +3,15 @@
   "description": "將數字四捨五入到指定的小數位數（n）。",
   "scriptTitles": {
     "main": "主腳本"
+  },
+  "variables": {
+    "result": "結果"
+  },
+  "procedures": {
+    "Round %1 to %2 bits": "將 %1 四捨五入到小數點後 %2 位"
+  },
+  "procedureParams": {
+    "num": "數字",
+    "n": "位數"
   }
 }

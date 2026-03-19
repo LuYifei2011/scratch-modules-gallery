@@ -7,5 +7,14 @@
   "scriptTitles": {
     "order": "排序脚本",
     "main": "主循环"
+  },
+  "lists": {
+    "Z ORDER": "Z 顺序"
+  },
+  "procedures": {
+    "Order Sprite by %1": "按 %1 排序角色"
+  },
+  "procedureParams": {
+    "z position": "Z 位置"
   }
 }
