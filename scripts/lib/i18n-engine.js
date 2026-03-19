@@ -88,38 +88,6 @@ function buildProcedureMaps(mod, localePriority) {
   return { procMap, paramMap }
 }
 
-/**
- * 从原始脚本源码中自动提取 procedures / procedureParams 基准
- * 规则：匹配 "define xxx" 行；用 %n 代替每个括号参数；括号内内容视为参数英文名
- */
-function extractProceduresFromScripts(originalMod) {
-  const patterns = new Set(),
-    params = new Set()
-  const scriptsArr = Array.isArray(originalMod.scripts) ? originalMod.scripts : []
-  for (const sc of scriptsArr) {
-    if (!sc || !sc.content) continue
-    const lines = sc.content.split(/\r?\n/)
-    for (const line of lines) {
-      const mDef = line.match(/^define\s+(.+)$/)
-      if (!mDef) continue
-      const body = mDef[1].trim()
-      // 抽取参数：() 内的内容（非贪婪）
-      const paramParts = [...body.matchAll(/\(([^)]*?)\)/g)]
-      for (const p of paramParts) {
-        const name = (p[1] || '').trim()
-        if (name) params.add(name)
-      }
-      let argCount = 0
-      const pattern = body
-        .replace(/\([^)]*\)/g, () => `%${++argCount}`)
-        .replace(/\s+/g, ' ')
-        .trim()
-      if (pattern) patterns.add(pattern)
-    }
-  }
-  return { patterns, params }
-}
-
 // ── 主导出函数 ────────────────────────────────────────────
 
 /**
@@ -244,6 +212,8 @@ export async function translateModulesForLocale(
         }
       })
     }
+    const accMissingProcs = new Set()
+    const accMissingParams = new Set()
     if (Array.isArray(m.scripts) && m.scripts.length) {
       const newScripts = []
       for (let si = 0; si < m.scripts.length; si++) {
@@ -269,7 +239,11 @@ export async function translateModulesForLocale(
             }
             // 通过 AST（translateScriptFields）完成自定义块定义/调用的本地化翻译
             if (translateScriptText) {
-              const translated = translateScriptText(s.content, languageTag, mapsForThis)
+              const { text: translated, missingProcs, missingParams } = translateScriptText(s.content, languageTag, mapsForThis)
+              if (!s.imported) {
+                missingProcs.forEach((p) => accMissingProcs.add(p))
+                missingParams.forEach((p) => accMissingParams.add(p))
+              }
               // 若翻译阶段未匹配到有效结果，回退到原文
               ns.content =
                 typeof translated === 'string' && translated.trim() ? translated : s.content
@@ -320,9 +294,10 @@ export async function translateModulesForLocale(
                       if (procMaps.paramMap) mf.params = procMaps.paramMap
                       if (procMaps.procMap) mf.procs = procMaps.procMap
                     }
-                    const translated = translateScriptText
-                      ? translateScriptText(imp.content, languageTag, mf)
-                      : imp.content
+                  const xlResult = translateScriptText
+                    ? translateScriptText(imp.content, languageTag, mf)
+                    : null
+                  const translated = xlResult ? xlResult.text : null
                     return typeof translated === 'string' && translated.trim()
                       ? translated
                       : imp.content
@@ -397,8 +372,9 @@ export async function translateModulesForLocale(
             .map((v) => v.name)
           const locVarMap = locTrans.variables || {}
           const locListMap = locTrans.lists || {}
-          const missVars = varsNames.filter((n) => !(n in locVarMap))
-          const missLists = listNames.filter((n) => !(n in locListMap))
+          // 仅当名称长度大于 1 时才警告，避免单字符变量（如 "i"）的误报
+          const missVars = varsNames.filter((n) => !(n in locVarMap) && n.length > 1)
+          const missLists = listNames.filter((n) => !(n in locListMap) && n.length > 1)
           if (missVars.length)
             missingFields.push(
               'variables(' + missVars.slice(0, 5).join(',') + (missVars.length > 5 ? '…' : '') + ')'
@@ -408,45 +384,18 @@ export async function translateModulesForLocale(
               'lists(' + missLists.slice(0, 5).join(',') + (missLists.length > 5 ? '…' : '') + ')'
             )
         }
-        // 自定义块 pattern 与参数
-        let enProc = (per['en'] && per['en'].procedures) || undefined
-        let enParams = (per['en'] && per['en'].procedureParams) || undefined
-        if (!enProc || typeof enProc !== 'object') {
-          const extracted = extractProceduresFromScripts(m)
-          if (extracted.patterns.size) {
-            enProc = {}
-            extracted.patterns.forEach((p) => (enProc[p] = p))
-          }
-          if (!enParams || typeof enParams !== 'object') {
-            if (extracted.params.size) {
-              enParams = {}
-              extracted.params.forEach((p) => (enParams[p] = p))
-            }
-          }
+        // 自定义块 pattern 与参数（由 translateScriptFields 运行时检测，累积自 accMissingProcs/accMissingParams）
+        if (accMissingProcs.size) {
+          const arr = [...accMissingProcs]
+          missingFields.push(
+            'procedures(' + arr.slice(0, 3).join(',') + (arr.length > 3 ? '…' : '') + ')'
+          )
         }
-        if (enProc && typeof enProc === 'object') {
-          const locProc = locTrans.procedures || {}
-          const missProc = Object.keys(enProc).filter((k) => !(k in locProc))
-          if (missProc.length) {
-            missingFields.push(
-              'procedures(' +
-                missProc.slice(0, 3).join(',') +
-                (missProc.length > 3 ? '…' : '') +
-                ')'
-            )
-          }
-        }
-        if (enParams && typeof enParams === 'object') {
-          const locParams = locTrans.procedureParams || {},
-            missParam = Object.keys(enParams).filter((k) => !(k in locParams))
-          if (missParam.length) {
-            missingFields.push(
-              'procedureParams(' +
-                missParam.slice(0, 3).join(',') +
-                (missParam.length > 3 ? '…' : '') +
-                ')'
-            )
-          }
+        if (accMissingParams.size) {
+          const arr = [...accMissingParams]
+          missingFields.push(
+            'procedureParams(' + arr.slice(0, 3).join(',') + (arr.length > 3 ? '…' : '') + ')'
+          )
         }
         if (missingFields.length) {
           const msg = `模块 ${m.id} 在 ${locale} 语言下缺失翻译字段`

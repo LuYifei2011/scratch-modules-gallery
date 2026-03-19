@@ -56,10 +56,15 @@ function applyLocalizedPattern(block, localizedPattern, argBlocks) {
  * 将 scratchblocks AST 中的变量/列表/事件/自定义块参数名称替换为目标语言
  */
 export function translateScriptFields(blocks, nameMaps) {
-  if (!blocks || !nameMaps) return
+  const missing = { missingProcs: new Set(), missingParams: new Set() }
+  if (!blocks) return missing
+  const mergeMissing = (m) => {
+    m.missingProcs.forEach((p) => missing.missingProcs.add(p))
+    m.missingParams.forEach((p) => missing.missingParams.add(p))
+  }
   blocks.forEach((block) => {
     if (block.isComment) return
-    if (block.info.selector === 'readVariable' && nameMaps.vars) {
+    if (block.info.selector === 'readVariable' && nameMaps?.vars) {
       const name = blockName(block)
       const translatedName = nameMaps.vars[name]
       if (translatedName) {
@@ -67,20 +72,28 @@ export function translateScriptFields(blocks, nameMaps) {
       }
       return
     }
-    if (block.info.category === 'custom-arg' && nameMaps.params) {
+    if (block.info.category === 'custom-arg') {
       const name = blockName(block)
-      const translatedName = nameMaps.params[name]
+      const translatedName = nameMaps?.params?.[name]
       if (translatedName) {
         block.children = [new scratchblocks.Label(translatedName)]
+      } else if (name) {
+        missing.missingParams.add(name)
       }
       return
     }
     if (block.isOutline) {
       // 过程定义块（prototype）：用 procs 映射重建 children，支持参数重排序
+      const { pattern, argBlocks } = buildCustomBlockPattern(block)
       if (nameMaps?.procs) {
-        const { pattern, argBlocks } = buildCustomBlockPattern(block)
         const localized = nameMaps.procs[pattern]
-        if (localized) applyLocalizedPattern(block, localized, argBlocks)
+        if (localized) {
+          applyLocalizedPattern(block, localized, argBlocks)
+        } else if (pattern) {
+          missing.missingProcs.add(pattern)
+        }
+      } else if (pattern) {
+        missing.missingProcs.add(pattern)
       }
       // 不 return：继续遍历 children 以翻译其中 custom-arg 块的参数名
     }
@@ -93,38 +106,42 @@ export function translateScriptFields(blocks, nameMaps) {
     }
     block.children.forEach((child) => {
       if (child.isScript) {
-        translateScriptFields(child.blocks, nameMaps)
+        mergeMissing(translateScriptFields(child.blocks, nameMaps))
         return
       } else if (child.isBlock) {
-        translateScriptFields([child], nameMaps)
+        mergeMissing(translateScriptFields([child], nameMaps))
       }
       if (child.shape === 'dropdown' && !child.menu) {
-        if (block.info.category === 'variables' && nameMaps.vars) {
+        if (block.info.category === 'variables' && nameMaps?.vars) {
           child.value = nameMaps.vars[child.value] || child.value
-        } else if (block.info.category === 'list' && nameMaps.lists) {
+        } else if (block.info.category === 'list' && nameMaps?.lists) {
           child.value = nameMaps.lists[child.value] || child.value
-        } else if (block.info.category === 'events' && nameMaps.events) {
+        } else if (block.info.category === 'events' && nameMaps?.events) {
           child.value = nameMaps.events[child.value] || child.value
         }
       }
     })
   })
+  return missing
 }
 
 /**
  * 将 scratchblocks 文本翻译为指定语言（构建期），并可替换变量/列表名称
  */
 export function translateScriptText(raw, targetLangKey, nameMaps) {
-  if (!raw) return raw
+  if (!raw) return { text: raw, missingProcs: new Set(), missingParams: new Set() }
   const allKeys = Object.keys(scratchblocks.allLanguages || {})
-  if (!allKeys.length) return raw
+  if (!allKeys.length) return { text: raw, missingProcs: new Set(), missingParams: new Set() }
   const doc = scratchblocks.parse(raw, { languages: allKeys })
   const targetLang = scratchblocks.allLanguages[targetLangKey]
-  if (!targetLang) return raw
+  if (!targetLang) return { text: raw, missingProcs: new Set(), missingParams: new Set() }
   doc.translate(targetLang)
+  const missingProcs = new Set()
+  const missingParams = new Set()
   doc.scripts.forEach((script) => {
-    translateScriptFields(script.blocks, nameMaps)
+    const m = translateScriptFields(script.blocks, nameMaps)
+    m.missingProcs.forEach((p) => missingProcs.add(p))
+    m.missingParams.forEach((p) => missingParams.add(p))
   })
-  const translated = doc.stringify()
-  return translated
+  return { text: doc.stringify(), missingProcs, missingParams }
 }
