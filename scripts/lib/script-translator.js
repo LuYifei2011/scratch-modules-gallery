@@ -13,7 +13,7 @@ import * as scratchblocks from 'scratchblocks-plus/syntax/index.js'
 export function translateScriptFields(blocks, nameMaps) {
   if (!blocks || !nameMaps) return
   blocks.forEach((block) => {
-    if (block instanceof scratchblocks.Comment) return
+    if (block.isComment) return
     if (block.info.selector === 'readVariable' && nameMaps.vars) {
       block.children[0].value = nameMaps.vars[block.children[0].value] || block.children[0].value
       return

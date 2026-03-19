@@ -52,13 +52,13 @@ export function analyzeBlockCategories(scriptTexts) {
   function walkBlocks(blocks) {
     if (!blocks) return
     for (const block of blocks) {
-      if (block instanceof scratchblocks.Comment) continue
+      if (block.isComment) continue
       const cat = block.info?.category
       counts[cat] = (counts[cat] || 0) + 1
       if (block.info?.id === 'PROCEDURES_DEFINITION') continue // 定义积木内的块（outline 和 custom-arg）不计入类别统计
       if (block.children) {
         for (const child of block.children) {
-          if (child instanceof scratchblocks.Script) {
+          if (child.isScript) {
             walkBlocks(child.blocks)
           } else if (child.isBlock) {
             walkBlocks([child])

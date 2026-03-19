@@ -179,10 +179,7 @@ async function initScratchblocks() {
 
   // Close export menus when clicking outside
   document.addEventListener('click', () => {
-    const openMenus = document.querySelectorAll('.sb-export-group.open')
-    if (openMenus.length > 0) {
-      openMenus.forEach((g) => g.classList.remove('open'))
-    }
+    document.querySelectorAll('.sb-export-group.open').forEach((g) => g.classList.remove('open'))
   })
 
   const scriptIdToViewMap = {}
