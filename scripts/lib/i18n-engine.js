@@ -239,7 +239,11 @@ export async function translateModulesForLocale(
             }
             // 通过 AST（translateScriptFields）完成自定义块定义/调用的本地化翻译
             if (translateScriptText) {
-              const { text: translated, missingProcs, missingParams } = translateScriptText(s.content, languageTag, mapsForThis)
+              const {
+                text: translated,
+                missingProcs,
+                missingParams,
+              } = translateScriptText(s.content, languageTag, mapsForThis)
               if (!s.imported) {
                 missingProcs.forEach((p) => accMissingProcs.add(p))
                 missingParams.forEach((p) => accMissingParams.add(p))
@@ -294,10 +298,10 @@ export async function translateModulesForLocale(
                       if (procMaps.paramMap) mf.params = procMaps.paramMap
                       if (procMaps.procMap) mf.procs = procMaps.procMap
                     }
-                  const xlResult = translateScriptText
-                    ? translateScriptText(imp.content, languageTag, mf)
-                    : null
-                  const translated = xlResult ? xlResult.text : null
+                    const xlResult = translateScriptText
+                      ? translateScriptText(imp.content, languageTag, mf)
+                      : null
+                    const translated = xlResult ? xlResult.text : null
                     return typeof translated === 'string' && translated.trim()
                       ? translated
                       : imp.content
