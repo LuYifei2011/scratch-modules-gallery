@@ -16,10 +16,6 @@ import log from './logger.js'
 
 // ── 内部辅助函数 ──────────────────────────────────────────
 
-function escapeProcReg(str = '') {
-  return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-}
-
 /**
  * 构造当前语言下的变量/列表/事件名称映射（原名 -> 本地化名）
  */
@@ -70,7 +66,7 @@ function buildNameMapsForModule(mod, localePriority) {
 }
 
 /**
- * 构造当前语言的自定义块与其参数映射（方案A：以英文源为 key，_ 占位参数）
+ * 构造当前语言的自定义块与其参数映射（方案A：以英文源为 key，%n 占位参数）
  */
 function buildProcedureMaps(mod, localePriority) {
   const per = mod.translations || {}
@@ -93,74 +89,8 @@ function buildProcedureMaps(mod, localePriority) {
 }
 
 /**
- * 进行文本层本地化：替换 define 行与调用行；然后替换参数槽名称
- */
-function localizeProcedures(raw, procMaps) {
-  if (!raw || !procMaps) return raw
-  let out = raw
-  const { procMap, paramMap } = procMaps
-  if (procMap && typeof procMap === 'object') {
-    // 先按 key 长度降序，避免前缀冲突
-    const entries = Object.entries(procMap).sort((a, b) => b[0].length - a[0].length)
-    for (const [englishPattern, localizedPattern] of entries) {
-      // 本地化文案缺失时，保留原始英文 pattern
-      if (typeof localizedPattern !== 'string' || !localizedPattern.trim()) {
-        continue
-      }
-      // 拆分英文 pattern 获取占位符数量（_ 表示一个参数括号）
-      const parts = englishPattern.split('_')
-      const slotCount = parts.length - 1
-      if (slotCount <= 0) continue
-      const localizedSlots = (localizedPattern.match(/_/g) || []).length
-      if (localizedSlots !== slotCount) {
-        log.warn(
-          'procedures',
-          `本地化占位符数量不匹配: pattern="${englishPattern}" slots=${slotCount} localizedSlots=${localizedSlots}`
-        )
-        // 占位符数量不匹配会破坏脚本结构，回退到原始内容
-        continue
-      }
-      // placeholder 捕获一个 custom-arg 括号，允许内部出现 :: custom-arg 及任意非换行内容
-      const placeholder = '\\s*(\\([^\n]*?\\))\\s*'
-      // 构造 core 正则主体：各静态片段之间用捕获组
-      const core = parts.map((p) => escapeProcReg(p)).join(placeholder)
-      let reDef, reCall
-      try {
-        reDef = new RegExp('^define\\s+' + core + '$', 'gm')
-        reCall = new RegExp('(^|\n)' + core + '(?=\n|$)', 'g')
-      } catch (e) {
-        log.warn('procedures', `构造正则失败: ${englishPattern} ${e?.message || e}`)
-        continue
-      }
-
-      function rebuildLocalized(captures) {
-        let idx = 0
-        // 依次把 '_' 替换为对应 capture
-        return localizedPattern.replace(/_/g, () => {
-          const rep = captures[idx++]
-          return rep || '_'
-        })
-      }
-
-      // 处理 define 行
-      out = out.replace(reDef, (full, ...groups) => {
-        // groups = capturedSlots + (last two are offset & input per JS replace spec)
-        const pure = groups.slice(0, slotCount)
-        return 'define ' + rebuildLocalized(pure)
-      })
-      // 处理调用行
-      out = out.replace(reCall, (full, prefix, ...rest) => {
-        const captures = rest.slice(0, slotCount)
-        return prefix + rebuildLocalized(captures)
-      })
-    }
-  }
-  return out
-}
-
-/**
  * 从原始脚本源码中自动提取 procedures / procedureParams 基准
- * 规则：匹配 "define xxx" 行；用 '_' 代替每个括号参数；括号内内容视为参数英文名
+ * 规则：匹配 "define xxx" 行；用 %n 代替每个括号参数；括号内内容视为参数英文名
  */
 function extractProceduresFromScripts(originalMod) {
   const patterns = new Set(),
@@ -174,13 +104,14 @@ function extractProceduresFromScripts(originalMod) {
       if (!mDef) continue
       const body = mDef[1].trim()
       // 抽取参数：() 内的内容（非贪婪）
-      const paramParts = [...body.matchAll(/\(([^)]*)\)/g)]
+      const paramParts = [...body.matchAll(/\(([^)]*?)\)/g)]
       for (const p of paramParts) {
         const name = (p[1] || '').trim()
         if (name) params.add(name)
       }
-      let pattern = body
-        .replace(/\([^)]*\)/g, '_')
+      let argCount = 0
+      const pattern = body
+        .replace(/\([^)]*\)/g, () => `%${++argCount}`)
         .replace(/\s+/g, ' ')
         .trim()
       if (pattern) patterns.add(pattern)
@@ -331,20 +262,19 @@ export async function translateModulesForLocale(
                 mapsForThis = buildNameMapsForModule(targetForProc, localePriority) || mapsForThis
             }
             const procMaps = buildProcedureMaps(targetForProc || m, localePriority)
-            if (procMaps && procMaps.paramMap) {
+            if (procMaps) {
               mapsForThis = mapsForThis || {}
-              mapsForThis.params = procMaps.paramMap
+              if (procMaps.paramMap) mapsForThis.params = procMaps.paramMap
+              if (procMaps.procMap) mapsForThis.procs = procMaps.procMap
             }
-            // 先做过程标题文本替换（基于英文模式），避免后续 scratchblocks 翻译改变关键字导致匹配失败
-            const preLocalized = localizeProcedures(s.content, procMaps)
-            // 再进行 AST 翻译与参数本地化（参数由 translateScriptFields 处理）
+            // 通过 AST（translateScriptFields）完成自定义块定义/调用的本地化翻译
             if (translateScriptText) {
-              const translated = translateScriptText(preLocalized, languageTag, mapsForThis)
-              // 若翻译阶段未匹配到有效结果，回退到预处理后的原文
+              const translated = translateScriptText(s.content, languageTag, mapsForThis)
+              // 若翻译阶段未匹配到有效结果，回退到原文
               ns.content =
-                typeof translated === 'string' && translated.trim() ? translated : preLocalized
+                typeof translated === 'string' && translated.trim() ? translated : s.content
             } else {
-              ns.content = preLocalized
+              ns.content = s.content
             }
           }
         } catch (e) {
@@ -385,18 +315,17 @@ export async function translateModulesForLocale(
                 : (function () {
                     const procMaps = buildProcedureMaps(target || m, localePriority)
                     let mf = mapsImported
-                    if (procMaps && procMaps.paramMap) {
+                    if (procMaps) {
                       mf = mf || {}
-                      mf.params = procMaps.paramMap
+                      if (procMaps.paramMap) mf.params = procMaps.paramMap
+                      if (procMaps.procMap) mf.procs = procMaps.procMap
                     }
-                    const preLocalized = localizeProcedures(imp.content, procMaps)
                     const translated = translateScriptText
-                      ? translateScriptText(preLocalized, languageTag, mf)
-                      : preLocalized
-                    if (typeof translated !== 'string' || !translated.trim()) {
-                      return preLocalized
-                    }
-                    return translated
+                      ? translateScriptText(imp.content, languageTag, mf)
+                      : imp.content
+                    return typeof translated === 'string' && translated.trim()
+                      ? translated
+                      : imp.content
                   })(),
               fromName: localizedFromName,
               fromTitle:
