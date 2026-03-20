@@ -100,6 +100,41 @@ function buildProcedureMaps(mod, localePriority) {
   return { procMap, paramMap }
 }
 
+/**
+ * 深合并两个模块翻译对象：全局默认 + 模块特定，模块特定优先级更高。
+ *
+ * - 标量字段（name/description 等）：模块值完全覆盖全局默认值
+ * - 对象字段（scriptTitles/variables/procedures 等）：key 级合并，模块 key 覆盖全局 key
+ * - 不支持数组字段的深合并（直接以模块值为准）
+ *
+ * @param {Object} globalDef - 来自 module-defaults.json 的单 locale 对象
+ * @param {Object} modSpecific - 来自模块 i18n 文件的单 locale 对象
+ * @returns {Object} 合并后的翻译对象
+ */
+function mergeTranslation(globalDef, modSpecific) {
+  const result = {}
+  const allKeys = new Set([...Object.keys(globalDef), ...Object.keys(modSpecific)])
+  for (const key of allKeys) {
+    const gv = globalDef[key]
+    const mv = modSpecific[key]
+    if (
+      mv !== undefined &&
+      gv !== undefined &&
+      typeof gv === 'object' &&
+      !Array.isArray(gv) &&
+      typeof mv === 'object' &&
+      !Array.isArray(mv)
+    ) {
+      // 双方均为普通对象：key 级合并，模块值覆盖全局默认
+      result[key] = { ...gv, ...mv }
+    } else {
+      // 标量或只有一方存在：模块值优先，回退到全局默认
+      result[key] = mv !== undefined ? mv : gv
+    }
+  }
+  return result
+}
+
 // ── 主导出函数 ────────────────────────────────────────────
 
 /**
@@ -109,7 +144,7 @@ function buildProcedureMaps(mod, localePriority) {
  * @param {Object} dict - 全局 i18n 字典（locale → translations）
  * @param {string} locale - 目标语言代码
  * @param {Object} [globalTags={}] - 全局 tags 翻译字典
- * @param {Object} [options={}] - 选项（skipMissingCheck 等）
+ * @param {Object} [options={}] - 选项（skipMissingCheck, moduleDefaults 等）
  * @param {Object} [callbacks={}] - 回调函数
  * @param {Function} [callbacks.translateScriptText] - scratchblocks 文本翻译函数 (raw, langKey, nameMaps) => string
  * @param {Function} [callbacks.reportIssue] - 构建问题上报函数 (type, message, details) => void
@@ -123,6 +158,7 @@ export async function translateModulesForLocale(
   options = {},
   callbacks = {}
 ) {
+  const { moduleDefaults = {} } = options
   const { translateScriptText, reportIssue } = callbacks
 
   const languageTag = (dict[locale]?.meta?.languageTag || locale || 'en')
@@ -144,7 +180,15 @@ export async function translateModulesForLocale(
 
   for (const m of modules) {
     const nm = { ...m }
-    const per = m.translations || {}
+    // 将全局模块默认翻译（module-defaults.json）与模块自身翻译合并（模块优先）
+    const rawPer = m.translations || {}
+    const mergedLocales = new Set([...Object.keys(moduleDefaults), ...Object.keys(rawPer)])
+    const per = {}
+    for (const loc of mergedLocales) {
+      per[loc] = mergeTranslation(moduleDefaults[loc] || {}, rawPer[loc] || {})
+    }
+    // mergedM：携带合并后翻译的模块对象，供辅助函数（buildNameMapsForModule 等）使用
+    const mergedM = { ...m, translations: per }
     const enScriptTitles = m.scriptTitles || {}
     function pickStr(base, map) {
       for (const loc of localePriority) {
@@ -208,7 +252,7 @@ export async function translateModulesForLocale(
       nm.notesHtml = ''
     }
 
-    const ownNameMaps = buildNameMapsForModule(m, localePriority)
+    const ownNameMaps = buildNameMapsForModule(mergedM, localePriority)
     // 为"变量 / 列表"表格计算本地化显示名称（模块级，始终执行）
     if (Array.isArray(nm.variables) && nm.variables.length) {
       const maps = ownNameMaps || { vars: {}, lists: {} }
@@ -244,8 +288,8 @@ export async function translateModulesForLocale(
               if (targetForProc)
                 mapsForThis = buildNameMapsForModule(targetForProc, localePriority) || mapsForThis
             }
-            const procMaps = buildProcedureMaps(targetForProc || m, localePriority)
-            const commentsMap = buildCommentsMap(targetForProc || m, localePriority)
+            const procMaps = buildProcedureMaps(targetForProc || mergedM, localePriority)
+            const commentsMap = buildCommentsMap(targetForProc || mergedM, localePriority)
             if (procMaps || commentsMap) {
               mapsForThis = mapsForThis || {}
               if (procMaps?.paramMap) mapsForThis.params = procMaps.paramMap
@@ -308,7 +352,7 @@ export async function translateModulesForLocale(
               content: isEnglishLocale
                 ? imp.content
                 : (function () {
-                    const procMaps = buildProcedureMaps(target || m, localePriority)
+                    const procMaps = buildProcedureMaps(target || mergedM, localePriority)
                     const cm = target ? buildCommentsMap(target, localePriority) : null
                     let mf = mapsImported
                     if (procMaps || cm) {

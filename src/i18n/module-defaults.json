@@ -1,0 +1,26 @@
+{
+  "en": {
+    "scriptTitles": {
+      "main": "Main"
+    },
+    "comments": {
+      "!no-refresh": "Check \"Run without screen refresh\""
+    }
+  },
+  "zh-cn": {
+    "scriptTitles": {
+      "main": "主脚本"
+    },
+    "comments": {
+      "!no-refresh": "勾选「运行时不刷新屏幕」"
+    }
+  },
+  "zh-tw": {
+    "scriptTitles": {
+      "main": "主腳本"
+    },
+    "comments": {
+      "!no-refresh": "勾選「執行完畢再更新畫面」"
+    }
+  }
+}

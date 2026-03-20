@@ -12,12 +12,13 @@ import log from './logger.js'
 const root = path.resolve('.')
 
 /**
- * 加载 i18n 词典（自动扫描 src/i18n/*.json，排除 tags.json）
+ * 加载 i18n 词典（自动扫描 src/i18n/*.json，排除 tags.json 和 module-defaults.json）
  */
 export async function loadI18n() {
   const i18nDir = path.join(root, 'src', 'i18n')
+  const EXCLUDED = new Set(['tags.json', 'module-defaults.json'])
   const files = (await fg(['*.json'], { cwd: i18nDir, onlyFiles: true }))
-    .filter((f) => f !== 'tags.json') // 排除全局 tags 字典，只加载语言文件
+    .filter((f) => !EXCLUDED.has(f)) // 排除全局 tags 字典与模块默认翻译，只加载语言文件
     .sort((a, b) => a.localeCompare(b, 'en', { numeric: true }))
   const dict = {}
   for (const f of files) {
@@ -29,6 +30,24 @@ export async function loadI18n() {
     }
   }
   return dict
+}
+
+/**
+ * 加载模块默认翻译（src/i18n/module-defaults.json）
+ *
+ * 结构：{ [locale]: { scriptTitles?, variables?, ... } }
+ * 在 translateModulesForLocale 中与模块级翻译深合并，模块的翻译优先级更高。
+ */
+export async function loadModuleDefaults() {
+  const defaultsFile = path.join(root, 'src', 'i18n', 'module-defaults.json')
+  try {
+    if (await fs.pathExists(defaultsFile)) {
+      return JSON.parse(await fs.readFile(defaultsFile, 'utf8'))
+    }
+  } catch (e) {
+    log.warn('module-defaults', `加载模块默认翻译失败: ${e?.message || e}`)
+  }
+  return {}
 }
 
 /**

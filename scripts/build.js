@@ -13,7 +13,7 @@ import { buildSearchIndex } from './lib/search.js'
 import { resolveImports } from './lib/import-resolver.js'
 import { loadModules } from './lib/module-loader.js'
 import { translateScriptText } from './lib/script-translator.js'
-import { loadI18n, loadGlobalTags, pickConfigForLocale } from './lib/i18n-loader.js'
+import { loadI18n, loadGlobalTags, loadModuleDefaults, pickConfigForLocale } from './lib/i18n-loader.js'
 import {
   loadSiteCoverTemplate,
   generateSiteCover,
@@ -343,8 +343,11 @@ async function render(modules, allTags) {
   // 搜索与文档列表将按语言分别生成
 
   // render pages per locale（对每个 locale 复用翻译结果，避免重复计算）
-  const dict = await loadI18n()
-  const globalTags = await loadGlobalTags()
+  const [dict, globalTags, moduleDefaults] = await Promise.all([
+    loadI18n(),
+    loadGlobalTags(),
+    loadModuleDefaults(),
+  ])
   const locales = Object.keys(dict)
   const localeConfigCache = new Map()
   // 每种语言的 hreflang 标记（优先使用 i18n.meta.languageTag）
@@ -364,6 +367,7 @@ async function render(modules, allTags) {
           globalTags,
           {
             skipMissingCheck: false,
+            moduleDefaults,
           },
           { translateScriptText, reportIssue }
         )
@@ -392,6 +396,7 @@ async function render(modules, allTags) {
         globalTags,
         {
           skipMissingCheck: true,
+          moduleDefaults,
         },
         { translateScriptText }
       )
