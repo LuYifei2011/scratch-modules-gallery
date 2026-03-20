@@ -105,6 +105,7 @@ export async function loadModules({ root, config, isDev }) {
               copyField('scriptTitles', isPlainObject)
               copyField('procedures', isPlainObject)
               copyField('procedureParams', isPlainObject)
+              copyField('comments', isPlainObject)
 
               translations[loc] = one
             }

@@ -39,7 +39,7 @@
   - 结构：`{ tagId: { en: "...", zh-cn: "...", zh-tw: "..." }, ... }`
   - 构建时自动应用，模块 i18n 文件无需包含 `tags` 字段
   - 新增 tag：仅需在 `tags.json` 中添加一次翻译，所有使用该 tag 的模块自动获得本地化
-- **模块局部**：`content/modules/<id>/i18n/<locale>.json` 可覆盖：name, description, variables, lists, events, scriptTitles, procedures, procedureParams
+- **模块局部**：`content/modules/<id>/i18n/<locale>.json` 可覆盖：name, description, variables, lists, events, scriptTitles, procedures, procedureParams, comments
   - **备注文件**：`content/modules/<id>/notes/<lang-code>.md`；构建时按语言优先级选取，转换为 `notesHtml` 写入模组上下文；`notesMap`（原始 Markdown 映射）存储在 schema 中
   - **不再需要翻译 tags**：直接在全局 tags.json 中维护
   - 变量/列表/事件：构建时计算 `displayName`（不改变原始 name），优先级（示例 zh-cn）：当前语言 > 同类中文变体 > 英文
@@ -48,8 +48,7 @@
   1. 脚本源统一英文 `define xxx (param :: custom-arg) ...`
   2. `procedures` 字段：英文 pattern（`_` 为参数槽）→ 本地化 pattern，如 `"FPS _": "帧率 _"`
   3. `procedureParams` 字段：参数名映射，如 `"last tick30": "上次tick30"`
-  4. **处理顺序关键**：先文本层 pattern 替换（正则匹配 `_` 占位）→ 再 scratchblocks AST 翻译 + 参数名替换（`translateScriptFields`）
-- **缺失翻译检测**：非英文 locale 构建时输出 `[i18n-missing][locale] moduleId: fields...`（开发模式）
+  4. **处理顺序关键**：先文本层 pattern 替换（正则匹配 `_` 占位）→ 再 scratchblocks AST 翻译 + 参数名替换（`translateScriptFields`）- **缺失翻译检测**：非英文 locale 构建时输出 `[i18n-missing][locale] moduleId: fields...`（开发模式）
   - 自动从英文源码提取 `define` 行生成 baseline procedures/params（若未手动指定）
 
 ### 构建/开发

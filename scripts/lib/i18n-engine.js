@@ -66,6 +66,18 @@ function buildNameMapsForModule(mod, localePriority) {
 }
 
 /**
+ * 构造当前语言注释映射（原始英文注释文本 → 本地化文本）
+ */
+function buildCommentsMap(mod, localePriority) {
+  const per = mod.translations || {}
+  for (const loc of localePriority) {
+    const map = per[loc]?.comments
+    if (map && typeof map === 'object') return map
+  }
+  return null
+}
+
+/**
  * 构造当前语言的自定义块与其参数映射（方案A：以英文源为 key，%n 占位参数）
  */
 function buildProcedureMaps(mod, localePriority) {
@@ -214,6 +226,7 @@ export async function translateModulesForLocale(
     }
     const accMissingProcs = new Set()
     const accMissingParams = new Set()
+    const accMissingComments = new Set()
     if (Array.isArray(m.scripts) && m.scripts.length) {
       const newScripts = []
       for (let si = 0; si < m.scripts.length; si++) {
@@ -232,21 +245,25 @@ export async function translateModulesForLocale(
                 mapsForThis = buildNameMapsForModule(targetForProc, localePriority) || mapsForThis
             }
             const procMaps = buildProcedureMaps(targetForProc || m, localePriority)
-            if (procMaps) {
+            const commentsMap = buildCommentsMap(targetForProc || m, localePriority)
+            if (procMaps || commentsMap) {
               mapsForThis = mapsForThis || {}
-              if (procMaps.paramMap) mapsForThis.params = procMaps.paramMap
-              if (procMaps.procMap) mapsForThis.procs = procMaps.procMap
+              if (procMaps?.paramMap) mapsForThis.params = procMaps.paramMap
+              if (procMaps?.procMap) mapsForThis.procs = procMaps.procMap
+              if (commentsMap) mapsForThis.comments = commentsMap
             }
-            // 通过 AST（translateScriptFields）完成自定义块定义/调用的本地化翻译
+            // 通过 AST（translateScriptFields）完成自定义块定义/调用及注释的本地化翻译
             if (translateScriptText) {
               const {
                 text: translated,
                 missingProcs,
                 missingParams,
+                missingComments,
               } = translateScriptText(s.content, languageTag, mapsForThis)
               if (!s.imported) {
                 missingProcs.forEach((p) => accMissingProcs.add(p))
                 missingParams.forEach((p) => accMissingParams.add(p))
+                missingComments.forEach((p) => accMissingComments.add(p))
               }
               // 若翻译阶段未匹配到有效结果，回退到原文
               ns.content =
@@ -292,11 +309,13 @@ export async function translateModulesForLocale(
                 ? imp.content
                 : (function () {
                     const procMaps = buildProcedureMaps(target || m, localePriority)
+                    const cm = target ? buildCommentsMap(target, localePriority) : null
                     let mf = mapsImported
-                    if (procMaps) {
+                    if (procMaps || cm) {
                       mf = mf || {}
-                      if (procMaps.paramMap) mf.params = procMaps.paramMap
-                      if (procMaps.procMap) mf.procs = procMaps.procMap
+                      if (procMaps?.paramMap) mf.params = procMaps.paramMap
+                      if (procMaps?.procMap) mf.procs = procMaps.procMap
+                      if (cm) mf.comments = cm
                     }
                     const xlResult = translateScriptText
                       ? translateScriptText(imp.content, languageTag, mf)
@@ -399,6 +418,12 @@ export async function translateModulesForLocale(
           const arr = [...accMissingParams]
           missingFields.push(
             'procedureParams(' + arr.slice(0, 3).join(',') + (arr.length > 3 ? '…' : '') + ')'
+          )
+        }
+        if (accMissingComments.size) {
+          const arr = [...accMissingComments]
+          missingFields.push(
+            'comments(' + arr.slice(0, 3).join(',') + (arr.length > 3 ? '…' : '') + ')'
           )
         }
         if (missingFields.length) {
