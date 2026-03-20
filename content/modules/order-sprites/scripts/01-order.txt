@@ -1,4 +1,4 @@
-define Order Sprite by (z position :: custom-arg) // Check "Run without screen refresh"
+define Order Sprite by (z position :: custom-arg) // !no-refresh
 set [i v] to (1)
 repeat until <not <(z position :: custom-arg) < (item (i) of [Z ORDER v])>>
   change [i v] by (1)

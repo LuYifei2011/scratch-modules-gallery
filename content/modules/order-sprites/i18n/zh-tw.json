@@ -16,5 +16,8 @@
   },
   "procedureParams": {
     "z position": "Z 位置"
+  },
+  "comments": {
+    "The smaller the value, the higher the layer": "值越小，圖層越靠前"
   }
 }

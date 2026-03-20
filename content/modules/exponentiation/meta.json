@@ -4,9 +4,6 @@
   "description": "Compute a to the power of b.",
   "tags": ["math", "exponentiation"],
   "keywords": ["power", "exponential", "calculation"],
-  "scriptTitles": {
-    "main": "Main"
-  },
   "contributors": "gh/LuYifei2011",
   "variables": [{ "name": "a^b", "scope": "sprite", "type": "variable" }]
 }

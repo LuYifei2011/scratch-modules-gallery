@@ -1,7 +1,4 @@
 {
   "name": "Exponentiation",
-  "description": "Compute a to the power of b.",
-  "scriptTitles": {
-    "main": "Main"
-  }
+  "description": "Compute a to the power of b."
 }

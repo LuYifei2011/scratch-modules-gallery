@@ -1,9 +1,6 @@
 {
   "name": "四捨五入到 n 位",
   "description": "將數字四捨五入到指定的小數位數（n）。",
-  "scriptTitles": {
-    "main": "主腳本"
-  },
   "variables": {
     "result": "結果"
   },

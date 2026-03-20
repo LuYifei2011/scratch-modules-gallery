@@ -4,9 +4,6 @@
   "description": "Event triggered when the project stops.",
   "tags": ["event"],
   "keywords": ["stop", "project end", "trigger"],
-  "scriptTitles": {
-    "main": "Main"
-  },
   "contributors": "gh/LuYifei2011",
   "variables": [{ "name": "timer", "scope": "choose", "type": "variable" }],
   "references": [

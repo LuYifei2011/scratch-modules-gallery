@@ -1,7 +1,4 @@
 {
   "name": "Rotate counterclockwise",
-  "description": "Rotate a sprite counterclockwise around a coordinate point by a given angle.",
-  "scriptTitles": {
-    "main": "Main"
-  }
+  "description": "Rotate a sprite counterclockwise around a coordinate point by a given angle."
 }

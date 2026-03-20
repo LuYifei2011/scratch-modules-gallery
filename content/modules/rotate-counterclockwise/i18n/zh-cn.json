@@ -1,9 +1,6 @@
 {
   "name": "逆时针旋转",
   "description": "将角色绕坐标点逆时针旋转指定角度。",
-  "scriptTitles": {
-    "main": "主脚本"
-  },
   "variables": {
     "dx": "x 偏移量",
     "dy": "y 偏移量"

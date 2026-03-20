@@ -1,7 +1,4 @@
 {
   "name": "When project stopped",
-  "description": "Event triggered when the project stops.",
-  "scriptTitles": {
-    "main": "Main"
-  }
+  "description": "Event triggered when the project stops."
 }

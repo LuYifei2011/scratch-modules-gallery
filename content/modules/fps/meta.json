@@ -4,9 +4,6 @@
   "description": "Calculate FPS.",
   "tags": ["performance", "fps"],
   "keywords": ["frame rate", "rendering", "delta time"],
-  "scriptTitles": {
-    "main": "Main"
-  },
   "contributors": "gh/LuYifei2011",
   "variables": [
     { "name": "FPS", "scope": "global", "type": "variable" },

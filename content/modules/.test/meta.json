@@ -5,7 +5,6 @@
   "tags": ["test-content"],
   "keywords": ["test", "development", "example"],
   "scriptTitles": {
-    "main": "Main",
     "import": "Import Test"
   },
   "contributors": "gh/LuYifei2011",
