@@ -277,10 +277,7 @@ export async function translateModulesForLocale(
         const s = m.scripts[si]
         const ns = { ...s }
         try {
-          if (isEnglishLocale) {
-            // 英文环境：不做翻译（要求脚本源为英文）
-            ns.content = s.content
-          } else {
+          {
             let mapsForThis = ownNameMaps
             let targetForProc
             if (s.imported && s.fromId) {
@@ -304,7 +301,8 @@ export async function translateModulesForLocale(
                 missingParams,
                 missingComments,
               } = translateScriptText(s.content, languageTag, mapsForThis)
-              if (!s.imported) {
+              // 英文环境忽略缺失翻译警告，仅非英文时累积
+              if (!s.imported && !isEnglishLocale) {
                 missingProcs.forEach((p) => accMissingProcs.add(p))
                 missingParams.forEach((p) => accMissingParams.add(p))
                 missingComments.forEach((p) => accMissingComments.add(p))
@@ -342,16 +340,12 @@ export async function translateModulesForLocale(
                 localizedFromName = target.name
               }
             }
-            const mapsImported = isEnglishLocale
-              ? undefined
-              : target
-                ? buildNameMapsForModule(target, localePriority)
-                : undefined
+            const mapsImported = target
+              ? buildNameMapsForModule(target, localePriority)
+              : undefined
             arr.push({
               ...imp,
-              content: isEnglishLocale
-                ? imp.content
-                : (function () {
+              content: (function () {
                     const procMaps = buildProcedureMaps(target || mergedM, localePriority)
                     const cm = target ? buildCommentsMap(target, localePriority) : null
                     let mf = mapsImported
