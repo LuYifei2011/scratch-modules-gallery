@@ -340,29 +340,27 @@ export async function translateModulesForLocale(
                 localizedFromName = target.name
               }
             }
-            const mapsImported = target
-              ? buildNameMapsForModule(target, localePriority)
-              : undefined
+            const mapsImported = target ? buildNameMapsForModule(target, localePriority) : undefined
             arr.push({
               ...imp,
               content: (function () {
-                    const procMaps = buildProcedureMaps(target || mergedM, localePriority)
-                    const cm = target ? buildCommentsMap(target, localePriority) : null
-                    let mf = mapsImported
-                    if (procMaps || cm) {
-                      mf = mf || {}
-                      if (procMaps?.paramMap) mf.params = procMaps.paramMap
-                      if (procMaps?.procMap) mf.procs = procMaps.procMap
-                      if (cm) mf.comments = cm
-                    }
-                    const xlResult = translateScriptText
-                      ? translateScriptText(imp.content, languageTag, mf)
-                      : null
-                    const translated = xlResult ? xlResult.text : null
-                    return typeof translated === 'string' && translated.trim()
-                      ? translated
-                      : imp.content
-                  })(),
+                const procMaps = buildProcedureMaps(target || mergedM, localePriority)
+                const cm = target ? buildCommentsMap(target, localePriority) : null
+                let mf = mapsImported
+                if (procMaps || cm) {
+                  mf = mf || {}
+                  if (procMaps?.paramMap) mf.params = procMaps.paramMap
+                  if (procMaps?.procMap) mf.procs = procMaps.procMap
+                  if (cm) mf.comments = cm
+                }
+                const xlResult = translateScriptText
+                  ? translateScriptText(imp.content, languageTag, mf)
+                  : null
+                const translated = xlResult ? xlResult.text : null
+                return typeof translated === 'string' && translated.trim()
+                  ? translated
+                  : imp.content
+              })(),
               fromName: localizedFromName,
               fromTitle:
                 imp.fromScriptId && target

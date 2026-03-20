@@ -13,7 +13,12 @@ import { buildSearchIndex } from './lib/search.js'
 import { resolveImports } from './lib/import-resolver.js'
 import { loadModules } from './lib/module-loader.js'
 import { translateScriptText } from './lib/script-translator.js'
-import { loadI18n, loadGlobalTags, loadModuleDefaults, pickConfigForLocale } from './lib/i18n-loader.js'
+import {
+  loadI18n,
+  loadGlobalTags,
+  loadModuleDefaults,
+  pickConfigForLocale,
+} from './lib/i18n-loader.js'
 import {
   loadSiteCoverTemplate,
   generateSiteCover,

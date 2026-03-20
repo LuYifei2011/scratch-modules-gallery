@@ -142,12 +142,30 @@ export function translateScriptFields(blocks, nameMaps) {
  * 将 scratchblocks 文本翻译为指定语言（构建期），并可替换变量/列表名称
  */
 export function translateScriptText(raw, targetLangKey, nameMaps) {
-  if (!raw) return { text: raw, missingProcs: new Set(), missingParams: new Set(), missingComments: new Set() }
+  if (!raw)
+    return {
+      text: raw,
+      missingProcs: new Set(),
+      missingParams: new Set(),
+      missingComments: new Set(),
+    }
   const allKeys = Object.keys(scratchblocks.allLanguages || {})
-  if (!allKeys.length) return { text: raw, missingProcs: new Set(), missingParams: new Set(), missingComments: new Set() }
+  if (!allKeys.length)
+    return {
+      text: raw,
+      missingProcs: new Set(),
+      missingParams: new Set(),
+      missingComments: new Set(),
+    }
   const doc = scratchblocks.parse(raw, { languages: allKeys })
   const targetLang = scratchblocks.allLanguages[targetLangKey]
-  if (!targetLang) return { text: raw, missingProcs: new Set(), missingParams: new Set(), missingComments: new Set() }
+  if (!targetLang)
+    return {
+      text: raw,
+      missingProcs: new Set(),
+      missingParams: new Set(),
+      missingComments: new Set(),
+    }
   doc.translate(targetLang)
   const missingProcs = new Set()
   const missingParams = new Set()
