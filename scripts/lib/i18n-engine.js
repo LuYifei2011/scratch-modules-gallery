@@ -304,7 +304,8 @@ export async function translateModulesForLocale(
               // 英文环境忽略缺失翻译警告，仅非英文时累积
               if (!s.imported && !isEnglishLocale) {
                 missingProcs.forEach((p) => accMissingProcs.add(p))
-                missingParams.forEach((p) => accMissingParams.add(p))
+                // 仅当参数名称长度大于 1 时才警告，避免单字符参数（如 "x"）的误报
+                missingParams.filter((n) => n.length > 1).forEach((p) => accMissingParams.add(p))
                 missingComments.forEach((p) => accMissingComments.add(p))
               }
               // 若翻译阶段未匹配到有效结果，回退到原文
