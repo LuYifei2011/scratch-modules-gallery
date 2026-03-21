@@ -1,5 +1,5 @@
 define Rotate counterclockwise about x: (x :: custom-arg) y: (y :: custom-arg) by (angle :: custom-arg) degrees
-set [dx v] to ((x position) - (x position :: custom-arg))
-set [dy v] to ((y position) - (y position :: custom-arg))
+set [dx v] to ((x position) - (x :: custom-arg))
+set [dy v] to ((y position) - (y :: custom-arg))
 change x by ((((dx) * ([cos v] of (angle :: custom-arg))) - ((dy) * ([sin v] of (angle :: custom-arg)))) - (dx))
 change y by ((((dx) * ([sin v] of (angle :: custom-arg))) + ((dy) * ([cos v] of (angle :: custom-arg)))) - (dy))
