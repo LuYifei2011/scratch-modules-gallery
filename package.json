@@ -23,7 +23,7 @@
     "marked": "^17.0.4",
     "minisearch": "^7.1.2",
     "nunjucks": "^3.2.4",
-    "scratchblocks-plus": "^1.1.1",
+    "scratchblocks-plus": "^1.1.2",
     "simple-git": "^3.32.3"
   },
   "devDependencies": {
