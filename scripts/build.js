@@ -555,6 +555,9 @@ async function render(modules, allTags) {
     await maybeMinify(redirectHtml, isFast),
     'utf8'
   )
+  // Cloudflare Pages 使用 _redirects 文件，以获得更好的 SEO 和性能（相较于 HTML meta 刷新）
+  const redirectsContent = '/ /en/ 301'
+  await fs.outputFile(path.join(outDir, '_redirects'), redirectsContent, 'utf8')
 
   // 生成根目录的 404 页面（GitHub Pages 使用）
   // 包含所有语言的 i18n 数据，通过 JS 动态切换
