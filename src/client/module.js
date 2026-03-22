@@ -182,7 +182,6 @@ async function initScratchblocks() {
     document.querySelectorAll('.sb-export-group.open').forEach((g) => g.classList.remove('open'))
   })
 
-  const scriptIdToViewMap = {}
   function doRender(style) {
     blocks.forEach((obj) => {
       const finalStyle = style || 'scratch3'
@@ -196,9 +195,6 @@ async function initScratchblocks() {
       obj.el.innerHTML = ''
       obj.el.appendChild(svg)
 
-      if (obj.scriptId) {
-        scriptIdToViewMap[obj.scriptId] = docView
-      }
       obj.view = docView
     })
   }
@@ -248,12 +244,16 @@ async function initScratchblocks() {
   }
 
   // 初始化备注中的跳转积木链接
+  const getViewByScriptId = (scriptId) => {
+    const block = blocks.find(b => b.scriptId === scriptId)
+    return block ? block.view : null
+  }
   document.querySelectorAll('a.go-to-block').forEach((el) => {
     el.addEventListener('click', (ev) => {
       ev.preventDefault()
       const scriptId = el.getAttribute('data-script-id')
       const blockPath = el.getAttribute('data-block-path')
-      const view = scriptIdToViewMap[scriptId]
+      const view = getViewByScriptId(scriptId)
       if (view) {
         const observer = new IntersectionObserver(
           (entries, obs) => {
