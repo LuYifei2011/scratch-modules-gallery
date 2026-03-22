@@ -2,7 +2,7 @@
   "id": "round-to-n",
   "name": "Round to n decimals",
   "description": "Round a number to n decimal places.",
-  "tags": ["math", "round"],
+  "tags": ["math"],
   "keywords": ["decimal", "precision", "rounding"],
   "contributors": "gh/LuYifei2011",
   "variables": [{ "name": "result", "scope": "sprite", "type": "variable" }]

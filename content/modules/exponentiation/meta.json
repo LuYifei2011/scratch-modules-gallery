@@ -2,7 +2,7 @@
   "id": "exponentiation",
   "name": "Exponentiation",
   "description": "Compute a to the power of b.",
-  "tags": ["math", "exponentiation"],
+  "tags": ["math"],
   "keywords": ["power", "exponential", "calculation"],
   "contributors": "gh/LuYifei2011",
   "variables": [{ "name": "a^b", "scope": "sprite", "type": "variable" }]

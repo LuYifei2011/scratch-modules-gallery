@@ -2,7 +2,7 @@
   "id": "rotate-counterclockwise",
   "name": "Rotate counterclockwise",
   "description": "Rotate a sprite counterclockwise around a coordinate point by a given angle.",
-  "tags": ["motion", "rotate"],
+  "tags": ["motion", "rotate", "animation"],
   "keywords": ["rotation", "counterclockwise", "coordinate"],
   "variables": [
     { "name": "dx", "scope": "sprite", "type": "variable" },

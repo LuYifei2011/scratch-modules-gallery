@@ -2,7 +2,7 @@
   "id": "fps",
   "name": "FPS",
   "description": "Calculate FPS.",
-  "tags": ["performance", "fps"],
+  "tags": ["performance"],
   "keywords": ["frame rate", "rendering", "delta time"],
   "contributors": "gh/LuYifei2011",
   "variables": [

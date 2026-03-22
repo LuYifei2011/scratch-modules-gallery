@@ -9,20 +9,10 @@
     "zh-cn": "数学",
     "zh-tw": "數學"
   },
-  "exponentiation": {
-    "en": "exponentiation",
-    "zh-cn": "幂",
-    "zh-tw": "冪"
-  },
   "performance": {
     "en": "performance",
     "zh-cn": "性能",
     "zh-tw": "效能"
-  },
-  "fps": {
-    "en": "fps",
-    "zh-cn": "fps",
-    "zh-tw": "fps"
   },
   "layer": {
     "en": "layer",
@@ -53,11 +43,6 @@
     "en": "tween",
     "zh-cn": "补间",
     "zh-tw": "補間"
-  },
-  "round": {
-    "en": "round",
-    "zh-cn": "四舍五入",
-    "zh-tw": "四捨五入"
   },
   "event": {
     "en": "event",
