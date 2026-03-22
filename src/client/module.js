@@ -199,6 +199,8 @@ async function initScratchblocks() {
     })
   }
 
+  const renderVarBlocks = initVariablesAndLists()
+
   const STYLE_KEY = 'sb-style-pref'
   const styleSelect = document.getElementById('sb-style')
   let currentStyle =
@@ -209,9 +211,11 @@ async function initScratchblocks() {
       currentStyle = styleSelect.value
       localStorage.setItem(STYLE_KEY, currentStyle)
       doRender(currentStyle)
+      renderVarBlocks(currentStyle)
     })
   }
   doRender(currentStyle)
+  renderVarBlocks(currentStyle)
 
   const translateSelect = document.getElementById('sb-translate')
   const TRANSLATE_KEY = 'sb-translate-pref'
@@ -274,8 +278,10 @@ async function initScratchblocks() {
   })
 }
 
-// 将变量和列表的名称渲染为积木块
+// 将变量和列表的名称渲染为积木块，返回可按样式重新渲染的函数
 function initVariablesAndLists() {
+  const varItems = []
+
   document.querySelectorAll('table.variables > tbody > tr').forEach((row) => {
     const nameCell = row.querySelector('td.var-name-cell') || row.querySelector('td')
     if (!nameCell) return
@@ -285,21 +291,6 @@ function initVariablesAndLists() {
     if (!displayName) return
 
     const blockContainer = nameCell.querySelector('.var-name-block') || nameCell
-    const doc = new scratchblocks.Document()
-    doc.scripts = [
-      new scratchblocks.Block(
-        {
-          shape: 'reporter',
-          category: type === 'list' ? 'list' : 'variables',
-        },
-        [new scratchblocks.Label(type === 'cloud' ? '☁ ' + displayName : displayName)]
-      ),
-    ]
-    const view = new scratchblocks.newView(doc, { style: 'scratch3', scale: 0.675 })
-    const svg = view.render()
-    svg.classList.add('scratchblocks-style-scratch3')
-    blockContainer.innerHTML = ''
-    blockContainer.appendChild(svg)
 
     const copyBtn = row.querySelector('.var-copy')
     if (copyBtn) {
@@ -313,9 +304,34 @@ function initVariablesAndLists() {
         showCopyResult(copyBtn, ok, label)
       })
     }
+
+    varItems.push({ blockContainer, displayName, type })
   })
+
+  return function renderVars(style) {
+    const finalStyle = style || 'scratch3'
+    varItems.forEach(({ blockContainer, displayName, type }) => {
+      const doc = new scratchblocks.Document()
+      doc.scripts = [
+        new scratchblocks.Block(
+          {
+            shape: 'reporter',
+            category: type === 'list' ? 'list' : 'variables',
+          },
+          [new scratchblocks.Label(type === 'cloud' ? '☁ ' + displayName : displayName)]
+        ),
+      ]
+      const view = new scratchblocks.newView(doc, {
+        style: finalStyle,
+        scale: /^scratch3($|-)/.test(finalStyle) ? 0.675 : 1,
+      })
+      const svg = view.render()
+      svg.classList.add('scratchblocks-style-' + finalStyle)
+      blockContainer.innerHTML = ''
+      blockContainer.appendChild(svg)
+    })
+  }
 }
 
 // 启动初始化
 initScratchblocks()
-initVariablesAndLists()
