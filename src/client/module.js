@@ -340,48 +340,63 @@ initToc()
 // 模块页目录（TOC）初始化：折叠切换 + 当前节高亮
 function initToc() {
   const toggle = document.getElementById('toc-toggle')
-  const list = document.getElementById('toc-list')
-  if (!toggle || !list) return
+  const nav = document.getElementById('module-toc')
+  if (!toggle || !nav) return
 
-  // 切换折叠/展开（仅小屏生效；大屏通过 CSS 始终展开）
+  // 切换折叠/展开：在 nav 上添加/移除 toc-expanded 类（大屏通过 CSS 忽略）
   toggle.addEventListener('click', () => {
     const expanded = toggle.getAttribute('aria-expanded') === 'true'
     toggle.setAttribute('aria-expanded', String(!expanded))
-    list.classList.toggle('toc-open', !expanded)
+    nav.classList.toggle('toc-expanded', !expanded)
   })
 
-  // 使用 IntersectionObserver 跟踪当前可见节，高亮对应目录项
-  const sectionIds = ['scripts', 'variables', 'notes', 'demo', 'references']
-  const sections = sectionIds
-    .map((id) => document.getElementById(id))
-    .filter(Boolean)
+  // 收集子脚本 ID（从 TOC 链接读取，保持与模板一致）
+  const scriptSubIds = Array.from(
+    document.querySelectorAll('.toc-link-sub[href^="#script-"]')
+  ).map((l) => l.getAttribute('href').slice(1))
 
-  if (!sections.length) return
+  // 完整有序 ID 列表：顶层节 + scripts 下的子脚本
+  const topSectionIds = ['scripts', 'variables', 'notes', 'demo', 'references']
+  const allIds = []
+  topSectionIds.forEach((id) => {
+    allIds.push(id)
+    if (id === 'scripts') scriptSubIds.forEach((sid) => allIds.push(sid))
+  })
 
-  // 记录各节的可见状态，以便在多节同时进入视口时按 sectionIds 顺序确定活跃项
-  const visibleSections = new Set()
+  const allSections = allIds.map((id) => document.getElementById(id)).filter(Boolean)
+  if (!allSections.length) return
+
+  // 记录各节的可见状态，以便在多节同时进入视口时按 allIds 顺序确定活跃项
+  const visibleIds = new Set()
   let lastActiveId = null
 
-  function updateActiveLink() {
-    // 按 sectionIds 顺序选取第一个可见节；视口内无可见节时（如滚动至底部）保持上次活跃项
-    const activeId = sectionIds.find((id) => visibleSections.has(id)) || lastActiveId
+  function updateActiveLinks() {
+    // 按 allIds 顺序选取第一个可见项；无可见时（如滚动至底部）保持上次活跃项
+    const activeId = allIds.find((id) => visibleIds.has(id)) || lastActiveId
     if (activeId) lastActiveId = activeId
+
     document.querySelectorAll('.toc-link').forEach((link) => {
       const href = link.getAttribute('href')
-      link.classList.toggle('toc-active', href === '#' + activeId)
+      const linkId = href ? href.slice(1) : null
+      link.classList.toggle('toc-active', linkId === activeId)
     })
+
+    // 当活跃项是子脚本时，同时高亮父节"脚本"链接
+    const isSubActive = Boolean(activeId && scriptSubIds.includes(activeId))
+    const scriptsLink = document.querySelector('.toc-link[href="#scripts"]')
+    if (scriptsLink) scriptsLink.classList.toggle('toc-active-parent', isSubActive)
   }
 
   const observer = new IntersectionObserver(
     (entries) => {
       entries.forEach((entry) => {
         if (entry.isIntersecting) {
-          visibleSections.add(entry.target.id)
+          visibleIds.add(entry.target.id)
         } else {
-          visibleSections.delete(entry.target.id)
+          visibleIds.delete(entry.target.id)
         }
       })
-      updateActiveLink()
+      updateActiveLinks()
     },
     {
       // 上边距 -10%：section 进入视口顶部 10% 以下时才触发，避免标题刚露出就切换
@@ -391,5 +406,5 @@ function initToc() {
     }
   )
 
-  sections.forEach((s) => observer.observe(s))
+  allSections.forEach((s) => observer.observe(s))
 }

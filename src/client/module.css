@@ -279,69 +279,105 @@ th {
 
 /* ===== Module layout: article + TOC sidebar ===== */
 .module-layout {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-lg);
-}
-
-/* TOC nav: appears above content on small screens */
-.module-toc {
-  order: 0;
-  background: var(--panel);
-  border: 1px solid var(--panel-border);
-  border-radius: var(--radius-lg);
-  overflow: hidden;
+  display: block; /* article takes full width; TOC is positioned fixed */
 }
 
 .module-detail {
-  order: 1;
   min-width: 0;
 }
 
+/* TOC: fixed to the right edge of the viewport on all screen sizes */
+.module-toc {
+  position: fixed;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 90;
+  display: flex;
+  flex-direction: row-reverse; /* toggle tab on right, panel grows to the left */
+  align-items: stretch;
+  max-height: 80vh;
+}
+
+/* Narrow vertical tab — always visible on the right edge */
 .toc-toggle {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: space-between;
-  width: 100%;
-  padding: var(--space-sm) var(--space-md);
-  background: transparent;
-  border: none;
+  justify-content: center;
+  padding: var(--space-lg) 6px;
+  min-height: 80px;
+  width: 28px;
+  background: var(--panel);
+  color: var(--color-brand);
+  border: 1px solid var(--panel-border);
+  border-right: none;
+  border-radius: var(--radius-lg) 0 0 var(--radius-lg);
   cursor: pointer;
-  color: var(--color-text-primary);
   font-family: var(--font-family-base);
-  font-size: var(--font-size-base);
-  gap: var(--space-sm);
+  box-shadow: var(--shadow-md);
+  gap: var(--space-xs);
 }
 
 .toc-toggle:hover {
   background: var(--color-bg-primary);
 }
 
+/* Title text shown vertically in the narrow tab */
 .toc-title {
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  font-size: var(--font-size-xs);
   font-weight: var(--font-weight-semibold);
-  flex: 1;
-  text-align: left;
+  white-space: nowrap;
+  color: var(--color-text-primary);
 }
 
+/* Arrow: points left (= "open to the left") when collapsed, right when expanded */
 .toc-arrow {
-  flex-shrink: 0;
-  color: var(--color-text-secondary);
+  color: var(--color-brand);
+  transform: rotate(90deg);
   transition: transform var(--transition-base);
+  flex-shrink: 0;
 }
 
 .toc-toggle[aria-expanded='true'] .toc-arrow {
-  transform: rotate(180deg);
+  transform: rotate(-90deg);
+}
+
+/* Panel hidden (width 0) by default; slides open from the right when expanded */
+.toc-panel {
+  width: 0;
+  overflow: hidden;
+  background: var(--panel);
+  border: 1px solid var(--panel-border);
+  border-right: none;
+  border-radius: var(--radius-lg) 0 0 var(--radius-lg);
+  transition: width 0.25s ease;
+}
+
+.module-toc.toc-expanded .toc-panel {
+  width: 220px;
+  overflow-y: auto;
+  max-height: 80vh;
+  box-shadow: var(--shadow-lg);
 }
 
 .toc-list {
   list-style: none;
   margin: 0;
-  padding: var(--space-xs) var(--space-sm) var(--space-sm);
-  display: none;
+  padding: var(--space-sm);
 }
 
-.toc-list.toc-open {
-  display: block;
+/* Sub-scripts indented list */
+.toc-sub-list {
+  list-style: none;
+  margin: 0;
+  padding: 0 0 0 var(--space-md);
+}
+
+.toc-sub-item {
+  margin: 0;
 }
 
 .toc-item {
@@ -362,6 +398,10 @@ th {
     border-color var(--transition-fast);
 }
 
+.toc-link-sub {
+  font-size: var(--font-size-xs);
+}
+
 .toc-link:hover {
   color: var(--color-brand);
   background: var(--color-bg-primary);
@@ -374,34 +414,60 @@ th {
   font-weight: var(--font-weight-medium);
 }
 
-/* Large screens: sidebar layout */
+/* Parent "Scripts" link highlighted when a child sub-script is active */
+.toc-link.toc-active-parent {
+  color: var(--color-brand);
+}
+
+/* Large screens (≥ 1024px): sticky sidebar inside the normal document flow */
 @media (min-width: 1024px) {
   .module-layout {
+    display: flex;
     flex-direction: row;
     align-items: flex-start;
+    gap: var(--space-xl);
   }
 
   .module-detail {
-    order: 1;
     flex: 1;
+    order: 1;
   }
 
   .module-toc {
-    order: 2;
-    flex: 0 0 200px;
     position: sticky;
+    right: auto;
     top: calc(60px + var(--space-lg));
-    max-height: calc(100vh - 100px);
+    transform: none;
+    flex-direction: column;
+    flex: 0 0 200px;
+    order: 2;
+    z-index: 1;
+    max-height: calc(100vh - 120px);
     overflow-y: auto;
+    background: var(--panel);
+    border: 1px solid var(--panel-border);
+    border-radius: var(--radius-lg);
+    box-shadow: none;
   }
 
-  /* On large screens the list is always visible; hide the toggle button */
+  /* No toggle button needed — panel is always open on large screens */
   .toc-toggle {
     display: none;
   }
 
+  .toc-panel {
+    width: auto;
+    overflow: visible;
+    overflow-y: auto;
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+    max-height: none;
+    transition: none;
+  }
+
   .toc-list {
-    display: block;
     padding: var(--space-sm);
   }
 }

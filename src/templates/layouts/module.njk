@@ -30,17 +30,28 @@
             <button class="toc-toggle"
                     id="toc-toggle"
                     aria-expanded="false"
-                    aria-controls="toc-list">
+                    aria-controls="toc-panel">
                 <span class="toc-title">{{ t.module.toc }}</span>
                 {{ icons.iconChevronDown(16, 16, "toc-arrow") }}
             </button>
-            <ol class="toc-list" id="toc-list">
-                <li class="toc-item"><a class="toc-link" href="#scripts">{{ t.module.scripts }}</a></li>
-                {% if module.variables.length %}<li class="toc-item"><a class="toc-link" href="#variables">{{ t.module.variablesTitle }}</a></li>{% endif %}
-                {% if module.notesHtml %}<li class="toc-item"><a class="toc-link" href="#notes">{{ t.module.notes }}</a></li>{% endif %}
-                {% if module.hasDemo %}<li class="toc-item"><a class="toc-link" href="#demo">{{ t.module.demo }}</a></li>{% endif %}
-                {% if module.references.length %}<li class="toc-item"><a class="toc-link" href="#references">{{ t.module.references }}</a></li>{% endif %}
-            </ol>
+            <div class="toc-panel" id="toc-panel">
+                <ol class="toc-list" id="toc-list">
+                    <li class="toc-item">
+                        <a class="toc-link" href="#scripts">{{ t.module.scripts }}</a>
+                        <ol class="toc-sub-list">
+                            {% for s in module.scripts %}
+                                {% if not s.imported and s.title %}
+                                    <li class="toc-sub-item"><a class="toc-link toc-link-sub" href="#script-{{ s.id }}">{{ s.title }}</a></li>
+                                {% endif %}
+                            {% endfor %}
+                        </ol>
+                    </li>
+                    {% if module.variables.length %}<li class="toc-item"><a class="toc-link" href="#variables">{{ t.module.variablesTitle }}</a></li>{% endif %}
+                    {% if module.notesHtml %}<li class="toc-item"><a class="toc-link" href="#notes">{{ t.module.notes }}</a></li>{% endif %}
+                    {% if module.hasDemo %}<li class="toc-item"><a class="toc-link" href="#demo">{{ t.module.demo }}</a></li>{% endif %}
+                    {% if module.references.length %}<li class="toc-item"><a class="toc-link" href="#references">{{ t.module.references }}</a></li>{% endif %}
+                </ol>
+            </div>
         </nav>
         <article class="module-detail">
             <div style="display: flex;
@@ -111,7 +122,7 @@
                     {% if s.imported %}
                         {{ m.renderImportedDetails(s, t, IS_DEV, icons, pageBase) }}
                     {% else %}
-                        <div class="script-block">
+                        <div class="script-block"{% if s.title %} id="script-{{ s.id }}"{% endif %}>
                             {% if s.title %}<h3 class="script-title">{{ s.title }}</h3>{% endif %}
                             {% if s.leadingImports %}
                                 {% for imp in s.leadingImports %}
