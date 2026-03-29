@@ -335,3 +335,61 @@ function initVariablesAndLists() {
 
 // 启动初始化
 initScratchblocks()
+initToc()
+
+// 模块页目录（TOC）初始化：折叠切换 + 当前节高亮
+function initToc() {
+  const toggle = document.getElementById('toc-toggle')
+  const list = document.getElementById('toc-list')
+  if (!toggle || !list) return
+
+  // 切换折叠/展开（仅小屏生效；大屏通过 CSS 始终展开）
+  toggle.addEventListener('click', () => {
+    const expanded = toggle.getAttribute('aria-expanded') === 'true'
+    toggle.setAttribute('aria-expanded', String(!expanded))
+    list.classList.toggle('toc-open', !expanded)
+  })
+
+  // 使用 IntersectionObserver 跟踪当前可见节，高亮对应目录项
+  const sectionIds = ['scripts', 'variables', 'notes', 'demo', 'references']
+  const sections = sectionIds
+    .map((id) => document.getElementById(id))
+    .filter(Boolean)
+
+  if (!sections.length) return
+
+  // 记录各节的可见状态，以便在多节同时进入视口时按 sectionIds 顺序确定活跃项
+  const visibleSections = new Set()
+  let lastActiveId = null
+
+  function updateActiveLink() {
+    // 按 sectionIds 顺序选取第一个可见节；视口内无可见节时（如滚动至底部）保持上次活跃项
+    const activeId = sectionIds.find((id) => visibleSections.has(id)) || lastActiveId
+    if (activeId) lastActiveId = activeId
+    document.querySelectorAll('.toc-link').forEach((link) => {
+      const href = link.getAttribute('href')
+      link.classList.toggle('toc-active', href === '#' + activeId)
+    })
+  }
+
+  const observer = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          visibleSections.add(entry.target.id)
+        } else {
+          visibleSections.delete(entry.target.id)
+        }
+      })
+      updateActiveLink()
+    },
+    {
+      // 上边距 -10%：section 进入视口顶部 10% 以下时才触发，避免标题刚露出就切换
+      // 下边距 -70%：仅关注视口上方 30% 区域，让高亮紧跟正在阅读的内容
+      rootMargin: '-10% 0px -70% 0px',
+      threshold: 0,
+    }
+  )
+
+  sections.forEach((s) => observer.observe(s))
+}

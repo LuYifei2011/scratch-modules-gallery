@@ -276,3 +276,132 @@ th {
   width: 16px;
   height: 16px;
 }
+
+/* ===== Module layout: article + TOC sidebar ===== */
+.module-layout {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+}
+
+/* TOC nav: appears above content on small screens */
+.module-toc {
+  order: 0;
+  background: var(--panel);
+  border: 1px solid var(--panel-border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.module-detail {
+  order: 1;
+  min-width: 0;
+}
+
+.toc-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: var(--space-sm) var(--space-md);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: var(--color-text-primary);
+  font-family: var(--font-family-base);
+  font-size: var(--font-size-base);
+  gap: var(--space-sm);
+}
+
+.toc-toggle:hover {
+  background: var(--color-bg-primary);
+}
+
+.toc-title {
+  font-weight: var(--font-weight-semibold);
+  flex: 1;
+  text-align: left;
+}
+
+.toc-arrow {
+  flex-shrink: 0;
+  color: var(--color-text-secondary);
+  transition: transform var(--transition-base);
+}
+
+.toc-toggle[aria-expanded='true'] .toc-arrow {
+  transform: rotate(180deg);
+}
+
+.toc-list {
+  list-style: none;
+  margin: 0;
+  padding: var(--space-xs) var(--space-sm) var(--space-sm);
+  display: none;
+}
+
+.toc-list.toc-open {
+  display: block;
+}
+
+.toc-item {
+  margin: 0;
+}
+
+.toc-link {
+  display: block;
+  padding: var(--space-xs) var(--space-sm);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  text-decoration: none;
+  border-radius: var(--radius-sm);
+  border-left: 2px solid transparent;
+  transition:
+    color var(--transition-fast),
+    background var(--transition-fast),
+    border-color var(--transition-fast);
+}
+
+.toc-link:hover {
+  color: var(--color-brand);
+  background: var(--color-bg-primary);
+}
+
+.toc-link.toc-active {
+  color: var(--color-brand);
+  border-left-color: var(--color-brand);
+  background: var(--color-tag-bg);
+  font-weight: var(--font-weight-medium);
+}
+
+/* Large screens: sidebar layout */
+@media (min-width: 1024px) {
+  .module-layout {
+    flex-direction: row;
+    align-items: flex-start;
+  }
+
+  .module-detail {
+    order: 1;
+    flex: 1;
+  }
+
+  .module-toc {
+    order: 2;
+    flex: 0 0 200px;
+    position: sticky;
+    top: calc(60px + var(--space-lg));
+    max-height: calc(100vh - 100px);
+    overflow-y: auto;
+  }
+
+  /* On large screens the list is always visible; hide the toggle button */
+  .toc-toggle {
+    display: none;
+  }
+
+  .toc-list {
+    display: block;
+    padding: var(--space-sm);
+  }
+}

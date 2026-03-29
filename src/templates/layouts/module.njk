@@ -25,55 +25,72 @@
     </script>
 {% endblock %}
 {% block content %}
-    <article class="module-detail">
-        <div style="display: flex;
-                    justify-content: space-between;
-                    align-items: baseline;
-                    flex-wrap: wrap;
-                    gap: var(--space-md)">
-            <h1>{{ module.name }}</h1>
-            {% if IS_DEV %}
-                <a href="/__dev/editor/?module={{ module.id }}"
-                   class="btn btn-sm btn-primary"
-                   style="height: 20px;
-                          display:inline-flex;
-                          align-items:center;
-                          gap:6px">
-                    {{ icons.iconEdit(14, 14) }}
-                    {{ t.module.editModule }}
-                </a>
+    <div class="module-layout">
+        <nav class="module-toc" id="module-toc" aria-label="{{ t.module.toc }}">
+            <button class="toc-toggle"
+                    id="toc-toggle"
+                    aria-expanded="false"
+                    aria-controls="toc-list">
+                <span class="toc-title">{{ t.module.toc }}</span>
+                {{ icons.iconChevronDown(16, 16, "toc-arrow") }}
+            </button>
+            <ol class="toc-list" id="toc-list">
+                <li class="toc-item"><a class="toc-link" href="#scripts">{{ t.module.scripts }}</a></li>
+                {% if module.variables.length %}<li class="toc-item"><a class="toc-link" href="#variables">{{ t.module.variablesTitle }}</a></li>{% endif %}
+                {% if module.notesHtml %}<li class="toc-item"><a class="toc-link" href="#notes">{{ t.module.notes }}</a></li>{% endif %}
+                {% if module.hasDemo %}<li class="toc-item"><a class="toc-link" href="#demo">{{ t.module.demo }}</a></li>{% endif %}
+                {% if module.references.length %}<li class="toc-item"><a class="toc-link" href="#references">{{ t.module.references }}</a></li>{% endif %}
+            </ol>
+        </nav>
+        <article class="module-detail">
+            <div style="display: flex;
+                        justify-content: space-between;
+                        align-items: baseline;
+                        flex-wrap: wrap;
+                        gap: var(--space-md)">
+                <h1>{{ module.name }}</h1>
+                {% if IS_DEV %}
+                    <a href="/__dev/editor/?module={{ module.id }}"
+                       class="btn btn-sm btn-primary"
+                       style="height: 20px;
+                              display:inline-flex;
+                              align-items:center;
+                              gap:6px">
+                        {{ icons.iconEdit(14, 14) }}
+                        {{ t.module.editModule }}
+                    </a>
+                {% endif %}
+            </div>
+            <p>{{ module.description }}</p>
+            <p class="tags">
+                {% for t in module.tags %}<span class="tag">{{ t }}</span>{% endfor %}
+            </p>
+            {% if IS_DEV and module.keywordsStr %}
+                <p style="display: flex;
+                          align-items: center;
+                          gap: 8px;
+                          margin: var(--space-md) 0 0 0;
+                          font-size: 0.9em">
+                    {{ icons.iconDebug(16, 16) }} Keywords:
+                    <span>{{ module.keywordsStr }}</span>
+                </p>
             {% endif %}
-        </div>
-        <p>{{ module.description }}</p>
-        <p class="tags">
-            {% for t in module.tags %}<span class="tag">{{ t }}</span>{% endfor %}
-        </p>
-        {% if IS_DEV and module.keywordsStr %}
-            <p style="display: flex;
-                      align-items: center;
-                      gap: 8px;
-                      margin: var(--space-md) 0 0 0;
-                      font-size: 0.9em">
-                {{ icons.iconDebug(16, 16) }} Keywords:
-                <span>{{ module.keywordsStr }}</span>
-            </p>
-        {% endif %}
-        {% if module.contributors.length %}
-            <p class="contributors">
-                {{ t.module.contributors }}:
-                {% for c in module.contributors %}
-                    <span class="contributor">
-                        {% if c.url %}
-                            <a href="{{ c.url }}" target="_blank" rel="noopener">{{ c.name }}</a>
-                        {% else %}
-                            {{ c.name }}
-                        {% endif %}
-                    </span>
-                {% endfor %}
-            </p>
-        {% endif %}
-        <section>
-            <h2>{{ t.module.scripts }}</h2>
+            {% if module.contributors.length %}
+                <p class="contributors">
+                    {{ t.module.contributors }}:
+                    {% for c in module.contributors %}
+                        <span class="contributor">
+                            {% if c.url %}
+                                <a href="{{ c.url }}" target="_blank" rel="noopener">{{ c.name }}</a>
+                            {% else %}
+                                {{ c.name }}
+                            {% endif %}
+                        </span>
+                    {% endfor %}
+                </p>
+            {% endif %}
+            <section id="scripts">
+                <h2>{{ t.module.scripts }}</h2>
             <div class="sb-style-switcher" style="margin-bottom: var(--space-lg);">
                 <label for="sb-style">{{ t.module.renderStyle }}</label>
                 <select id="sb-style" class="select-inline">
@@ -108,7 +125,7 @@
             {% endif %}
         </section>
         {% if module.variables.length %}
-            <section>
+            <section id="variables">
                 <h2>{{ t.module.variablesTitle }}</h2>
                 <table class="variables">
                     <thead>
@@ -146,13 +163,13 @@
             </section>
         {% endif %}
         {% if module.notesHtml %}
-            <section>
+            <section id="notes">
                 <h2>{{ t.module.notes }}</h2>
                 {{ module.notesHtml | safe }}
             </section>
         {% endif %}
         {% if module.hasDemo %}
-            <section>
+            <section id="demo">
                 <div class="demo-header">
                     <h2 style="margin:0;">{{ t.module.demo }}</h2>
                     <div class="demo-actions">
@@ -181,7 +198,7 @@
             </section>
         {% endif %}
         {% if module.references.length %}
-            <section>
+            <section id="references">
                 <h2>{{ t.module.references }}</h2>
                 <ul>
                     {% for r in module.references %}
@@ -193,7 +210,8 @@
                 </ul>
             </section>
         {% endif %}
-    </article>
+        </article>
+    </div>
 {% endblock %}
 {% block page_scripts %}
     <link rel="stylesheet" href="{{ assetBase }}/module.css" />
