@@ -40,8 +40,16 @@
     "varName": "Name",
     "varType": "Type",
     "varScope": "Scope",
-    "typeMap": { "variable": "Variable", "list": "List", "cloud": "Cloud Variable" },
-    "scopeMap": { "global": "Global", "sprite": "Sprite", "choose": "Choose as needed" },
+    "typeMap": {
+      "variable": "Variable",
+      "list": "List",
+      "cloud": "Cloud Variable"
+    },
+    "scopeMap": {
+      "global": "Global",
+      "sprite": "Sprite",
+      "choose": "Choose as needed"
+    },
     "notes": "Notes",
     "demo": "Demo",
     "openInTW": "Open in TurboWarp",
@@ -54,7 +62,8 @@
     "editModule": "Edit module",
     "exportImage": "Export image",
     "exportSVG": "Download SVG",
-    "exportPNG": "Download PNG"
+    "exportPNG": "Download PNG",
+    "toc": "On this page"
   },
   "404": {
     "title": "Page Not Found",
