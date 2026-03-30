@@ -249,7 +249,7 @@ async function initScratchblocks() {
 
   // 初始化备注中的跳转积木链接
   const getViewByScriptId = (scriptId) => {
-    const block = blocks.find(b => b.scriptId === scriptId)
+    const block = blocks.find((b) => b.scriptId === scriptId)
     return block ? block.view : null
   }
   document.querySelectorAll('a.go-to-block').forEach((el) => {
