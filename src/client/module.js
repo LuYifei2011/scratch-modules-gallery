@@ -335,3 +335,112 @@ function initVariablesAndLists() {
 
 // 启动初始化
 initScratchblocks()
+initToc()
+
+// 模块页目录（TOC）初始化：折叠切换 + 当前节高亮
+function initToc() {
+  const toggle = document.getElementById('toc-toggle')
+  const nav = document.getElementById('module-toc')
+  if (!toggle || !nav) return
+
+  // 切换折叠/展开：在 nav 上添加/移除 toc-expanded 类（大屏通过 CSS 忽略）
+  toggle.addEventListener('click', () => {
+    const expanded = toggle.getAttribute('aria-expanded') === 'true'
+    toggle.setAttribute('aria-expanded', String(!expanded))
+    nav.classList.toggle('toc-expanded', !expanded)
+  })
+
+  // 收集子脚本 ID（从 TOC 链接读取，保持与模板一致）
+  const scriptSubIds = Array.from(document.querySelectorAll('.toc-link-sub[href^="#script-"]')).map(
+    (l) => l.getAttribute('href').slice(1)
+  )
+
+  // 完整有序 ID 列表：顶层节 + scripts 下的子脚本
+  const topSectionIds = ['module-title', 'scripts', 'variables', 'notes', 'demo', 'references']
+  const allIds = []
+  topSectionIds.forEach((id) => {
+    allIds.push(id)
+    if (id === 'scripts') scriptSubIds.forEach((sid) => allIds.push(sid))
+  })
+
+  let lastActiveId = null
+
+  function updateActiveLinks() {
+    const viewportH = window.innerHeight
+    // 视口上方 5% 作为阅读基准线（限制最大 50px）
+    const readingLine = Math.min(viewportH * 0.05, 50)
+
+    let candidateIds = []
+    for (const id of allIds) {
+      const el = document.getElementById(id)
+      if (!el) continue
+      const rect = el.getBoundingClientRect()
+      // 判断元素是否在整个文档空间下，排除完全不在页面中的异常元素
+      // 对于只占据很小高度的标题（如 module-title），通过判断其顶部位置更合理
+      candidateIds.push({ id, rect })
+    }
+
+    if (candidateIds.length === 0) return
+
+    let activeId = null
+
+    // 将所有标题按照位置进行评估：寻找【其顶部边界已经越过或刚刚到达基准线】的最后一片区域
+    // 允许有50px的缓冲量。
+    let passedCandidates = candidateIds.filter((c) => c.rect.top <= readingLine + 80)
+
+    if (passedCandidates.length > 0) {
+      // 存在跨过基准线的元素时，取最深的那个（在数组最后面）
+      activeId = passedCandidates[passedCandidates.length - 1].id
+    } else {
+      // 如果都在基准线下方（页面刚开始稍微滚动了一点），直接给第一个
+      activeId = candidateIds[0].id
+    }
+
+    // 修复问题：当滚动到底部时，如果底部内容较少导致核心视口区域无高亮发生
+    // 强制高亮最后一个真正存在的区块
+    if (
+      window.innerHeight + Math.ceil(window.scrollY) >=
+      document.documentElement.scrollHeight - 5
+    ) {
+      const lastId = [...allIds].reverse().find((id) => document.getElementById(id))
+      if (lastId) {
+        activeId = lastId
+      }
+    }
+
+    if (!activeId) {
+      activeId = lastActiveId
+    }
+
+    if (activeId) lastActiveId = activeId
+
+    document.querySelectorAll('.toc-link').forEach((link) => {
+      const href = link.getAttribute('href')
+      const linkId = href ? href.slice(1) : null
+      link.classList.toggle('toc-active', linkId === activeId)
+    })
+
+    // 当活跃项是子脚本时，同时高亮父节"脚本"链接
+    const isSubActive = Boolean(activeId && scriptSubIds.includes(activeId))
+    const scriptsLink = document.querySelector('.toc-link[href="#scripts"]')
+    if (scriptsLink) scriptsLink.classList.toggle('toc-active-parent', isSubActive)
+  }
+
+  let ticking = false
+  const onScroll = () => {
+    if (!ticking) {
+      window.requestAnimationFrame(() => {
+        updateActiveLinks()
+        ticking = false
+      })
+      ticking = true
+    }
+  }
+
+  // 监听滚动与窗口改变
+  window.addEventListener('scroll', onScroll, { passive: true })
+  window.addEventListener('resize', onScroll, { passive: true })
+
+  // 页面加载完成时立刻计算一次
+  updateActiveLinks()
+}

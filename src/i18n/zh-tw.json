@@ -40,8 +40,16 @@
     "varName": "名稱",
     "varType": "類型",
     "varScope": "作用域",
-    "typeMap": { "variable": "變數", "list": "清單", "cloud": "雲變數" },
-    "scopeMap": { "global": "全域", "sprite": "角色", "choose": "按需自選" },
+    "typeMap": {
+      "variable": "變數",
+      "list": "清單",
+      "cloud": "雲變數"
+    },
+    "scopeMap": {
+      "global": "全域",
+      "sprite": "角色",
+      "choose": "按需自選"
+    },
     "notes": "備註",
     "demo": "演示",
     "openInTW": "在 TurboWarp 中開啟",
@@ -54,7 +62,8 @@
     "editModule": "編輯模組",
     "exportImage": "匯出圖片",
     "exportSVG": "下載 SVG",
-    "exportPNG": "下載 PNG"
+    "exportPNG": "下載 PNG",
+    "toc": "本頁目錄"
   },
   "404": {
     "title": "頁面未找到",
