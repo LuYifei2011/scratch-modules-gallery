@@ -351,9 +351,9 @@ function initToc() {
   })
 
   // 收集子脚本 ID（从 TOC 链接读取，保持与模板一致）
-  const scriptSubIds = Array.from(
-    document.querySelectorAll('.toc-link-sub[href^="#script-"]')
-  ).map((l) => l.getAttribute('href').slice(1))
+  const scriptSubIds = Array.from(document.querySelectorAll('.toc-link-sub[href^="#script-"]')).map(
+    (l) => l.getAttribute('href').slice(1)
+  )
 
   // 完整有序 ID 列表：顶层节 + scripts 下的子脚本
   const topSectionIds = ['module-title', 'scripts', 'variables', 'notes', 'demo', 'references']
@@ -368,7 +368,7 @@ function initToc() {
   function updateActiveLinks() {
     const viewportH = window.innerHeight
     // 视口上方 5% 作为阅读基准线（限制最大 50px）
-    const readingLine = Math.min(viewportH * 0.05, 50) 
+    const readingLine = Math.min(viewportH * 0.05, 50)
 
     let candidateIds = []
     for (const id of allIds) {
@@ -386,8 +386,8 @@ function initToc() {
 
     // 将所有标题按照位置进行评估：寻找【其顶部边界已经越过或刚刚到达基准线】的最后一片区域
     // 允许有50px的缓冲量。
-    let passedCandidates = candidateIds.filter(c => c.rect.top <= readingLine + 80)
-    
+    let passedCandidates = candidateIds.filter((c) => c.rect.top <= readingLine + 80)
+
     if (passedCandidates.length > 0) {
       // 存在跨过基准线的元素时，取最深的那个（在数组最后面）
       activeId = passedCandidates[passedCandidates.length - 1].id
@@ -398,8 +398,11 @@ function initToc() {
 
     // 修复问题：当滚动到底部时，如果底部内容较少导致核心视口区域无高亮发生
     // 强制高亮最后一个真正存在的区块
-    if (window.innerHeight + Math.ceil(window.scrollY) >= document.documentElement.scrollHeight - 5) {
-      const lastId = [...allIds].reverse().find(id => document.getElementById(id))
+    if (
+      window.innerHeight + Math.ceil(window.scrollY) >=
+      document.documentElement.scrollHeight - 5
+    ) {
+      const lastId = [...allIds].reverse().find((id) => document.getElementById(id))
       if (lastId) {
         activeId = lastId
       }
@@ -437,8 +440,7 @@ function initToc() {
   // 监听滚动与窗口改变
   window.addEventListener('scroll', onScroll, { passive: true })
   window.addEventListener('resize', onScroll, { passive: true })
-  
+
   // 页面加载完成时立刻计算一次
   updateActiveLinks()
 }
-

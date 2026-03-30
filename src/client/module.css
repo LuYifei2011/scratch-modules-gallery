@@ -354,7 +354,9 @@ th {
   border: 0 solid var(--panel-border);
   border-right: none;
   border-radius: var(--radius-lg) 0 0 var(--radius-lg);
-  transition: width 0.25s ease, border-width 0.25s ease;
+  transition:
+    width 0.25s ease,
+    border-width 0.25s ease;
 }
 
 .module-toc.toc-expanded .toc-panel {
@@ -459,7 +461,8 @@ th {
   }
 
   /* 重置两种状态下的大屏展示以防从小屏带状态变成大屏时带入滚动条 */
-  .toc-panel, .module-toc.toc-expanded .toc-panel {
+  .toc-panel,
+  .module-toc.toc-expanded .toc-panel {
     width: 100%;
     overflow: visible;
     background: transparent;
@@ -470,7 +473,8 @@ th {
     transition: none;
   }
 
-  .toc-list, .module-toc.toc-expanded .toc-list {
+  .toc-list,
+  .module-toc.toc-expanded .toc-list {
     padding: var(--space-sm);
     width: 100%;
   }
