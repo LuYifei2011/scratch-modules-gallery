@@ -36,6 +36,7 @@
             </button>
             <div class="toc-panel" id="toc-panel">
                 <ol class="toc-list" id="toc-list">
+                    <li class="toc-item"><a class="toc-link" href="#module-title">{{ module.name }}</a></li>
                     <li class="toc-item">
                         <a class="toc-link" href="#scripts">{{ t.module.scripts }}</a>
                         <ol class="toc-sub-list">
@@ -59,7 +60,7 @@
                         align-items: baseline;
                         flex-wrap: wrap;
                         gap: var(--space-md)">
-                <h1>{{ module.name }}</h1>
+                <h1 id="module-title">{{ module.name }}</h1>
                 {% if IS_DEV %}
                     <a href="/__dev/editor/?module={{ module.id }}"
                        class="btn btn-sm btn-primary"

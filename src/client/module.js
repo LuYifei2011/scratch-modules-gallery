@@ -356,23 +356,59 @@ function initToc() {
   ).map((l) => l.getAttribute('href').slice(1))
 
   // 完整有序 ID 列表：顶层节 + scripts 下的子脚本
-  const topSectionIds = ['scripts', 'variables', 'notes', 'demo', 'references']
+  const topSectionIds = ['module-title', 'scripts', 'variables', 'notes', 'demo', 'references']
   const allIds = []
   topSectionIds.forEach((id) => {
     allIds.push(id)
     if (id === 'scripts') scriptSubIds.forEach((sid) => allIds.push(sid))
   })
 
-  const allSections = allIds.map((id) => document.getElementById(id)).filter(Boolean)
-  if (!allSections.length) return
-
-  // 记录各节的可见状态，以便在多节同时进入视口时按 allIds 顺序确定活跃项
-  const visibleIds = new Set()
   let lastActiveId = null
 
   function updateActiveLinks() {
-    // 按 allIds 顺序选取第一个可见项；无可见时（如滚动至底部）保持上次活跃项
-    const activeId = allIds.find((id) => visibleIds.has(id)) || lastActiveId
+    const viewportH = window.innerHeight
+    // 视口上方 5% 作为阅读基准线（限制最大 50px）
+    const readingLine = Math.min(viewportH * 0.05, 50) 
+
+    let candidateIds = []
+    for (const id of allIds) {
+      const el = document.getElementById(id)
+      if (!el) continue
+      const rect = el.getBoundingClientRect()
+      // 判断元素是否在整个文档空间下，排除完全不在页面中的异常元素
+      // 对于只占据很小高度的标题（如 module-title），通过判断其顶部位置更合理
+      candidateIds.push({ id, rect })
+    }
+
+    if (candidateIds.length === 0) return
+
+    let activeId = null
+
+    // 将所有标题按照位置进行评估：寻找【其顶部边界已经越过或刚刚到达基准线】的最后一片区域
+    // 允许有50px的缓冲量。
+    let passedCandidates = candidateIds.filter(c => c.rect.top <= readingLine + 80)
+    
+    if (passedCandidates.length > 0) {
+      // 存在跨过基准线的元素时，取最深的那个（在数组最后面）
+      activeId = passedCandidates[passedCandidates.length - 1].id
+    } else {
+      // 如果都在基准线下方（页面刚开始稍微滚动了一点），直接给第一个
+      activeId = candidateIds[0].id
+    }
+
+    // 修复问题：当滚动到底部时，如果底部内容较少导致核心视口区域无高亮发生
+    // 强制高亮最后一个真正存在的区块
+    if (window.innerHeight + Math.ceil(window.scrollY) >= document.documentElement.scrollHeight - 5) {
+      const lastId = [...allIds].reverse().find(id => document.getElementById(id))
+      if (lastId) {
+        activeId = lastId
+      }
+    }
+
+    if (!activeId) {
+      activeId = lastActiveId
+    }
+
     if (activeId) lastActiveId = activeId
 
     document.querySelectorAll('.toc-link').forEach((link) => {
@@ -387,24 +423,22 @@ function initToc() {
     if (scriptsLink) scriptsLink.classList.toggle('toc-active-parent', isSubActive)
   }
 
-  const observer = new IntersectionObserver(
-    (entries) => {
-      entries.forEach((entry) => {
-        if (entry.isIntersecting) {
-          visibleIds.add(entry.target.id)
-        } else {
-          visibleIds.delete(entry.target.id)
-        }
+  let ticking = false
+  const onScroll = () => {
+    if (!ticking) {
+      window.requestAnimationFrame(() => {
+        updateActiveLinks()
+        ticking = false
       })
-      updateActiveLinks()
-    },
-    {
-      // 上边距 -10%：section 进入视口顶部 10% 以下时才触发，避免标题刚露出就切换
-      // 下边距 -70%：仅关注视口上方 30% 区域，让高亮紧跟正在阅读的内容
-      rootMargin: '-10% 0px -70% 0px',
-      threshold: 0,
+      ticking = true
     }
-  )
+  }
 
-  allSections.forEach((s) => observer.observe(s))
+  // 监听滚动与窗口改变
+  window.addEventListener('scroll', onScroll, { passive: true })
+  window.addEventListener('resize', onScroll, { passive: true })
+  
+  // 页面加载完成时立刻计算一次
+  updateActiveLinks()
 }
+

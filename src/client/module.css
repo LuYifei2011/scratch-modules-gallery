@@ -290,12 +290,11 @@ th {
 .module-toc {
   position: fixed;
   right: 0;
-  top: 50%;
-  transform: translateY(-50%);
+  top: 15vh;
   z-index: 90;
   display: flex;
-  flex-direction: row-reverse; /* toggle tab on right, panel grows to the left */
-  align-items: stretch;
+  flex-direction: row;
+  align-items: flex-start;
   max-height: 80vh;
 }
 
@@ -317,6 +316,7 @@ th {
   font-family: var(--font-family-base);
   box-shadow: var(--shadow-md);
   gap: var(--space-xs);
+  margin-top: 10px;
 }
 
 .toc-toggle:hover {
@@ -326,7 +326,7 @@ th {
 /* Title text shown vertically in the narrow tab */
 .toc-title {
   writing-mode: vertical-rl;
-  transform: rotate(180deg);
+  text-orientation: mixed;
   font-size: var(--font-size-xs);
   font-weight: var(--font-weight-semibold);
   white-space: nowrap;
@@ -348,18 +348,19 @@ th {
 /* Panel hidden (width 0) by default; slides open from the right when expanded */
 .toc-panel {
   width: 0;
+  max-height: 80vh;
   overflow: hidden;
   background: var(--panel);
-  border: 1px solid var(--panel-border);
+  border: 0 solid var(--panel-border);
   border-right: none;
   border-radius: var(--radius-lg) 0 0 var(--radius-lg);
-  transition: width 0.25s ease;
+  transition: width 0.25s ease, border-width 0.25s ease;
 }
 
 .module-toc.toc-expanded .toc-panel {
   width: 220px;
+  border-width: 1px;
   overflow-y: auto;
-  max-height: 80vh;
   box-shadow: var(--shadow-lg);
 }
 
@@ -367,6 +368,8 @@ th {
   list-style: none;
   margin: 0;
   padding: var(--space-sm);
+  width: 220px;
+  box-sizing: border-box;
 }
 
 /* Sub-scripts indented list */
@@ -439,7 +442,7 @@ th {
     top: calc(60px + var(--space-lg));
     transform: none;
     flex-direction: column;
-    flex: 0 0 200px;
+    flex: 0 0 240px; /* 增加到 240px 使得内容足够宽 */
     order: 2;
     z-index: 1;
     max-height: calc(100vh - 120px);
@@ -455,10 +458,10 @@ th {
     display: none;
   }
 
-  .toc-panel {
-    width: auto;
+  /* 重置两种状态下的大屏展示以防从小屏带状态变成大屏时带入滚动条 */
+  .toc-panel, .module-toc.toc-expanded .toc-panel {
+    width: 100%;
     overflow: visible;
-    overflow-y: auto;
     background: transparent;
     border: none;
     border-radius: 0;
@@ -467,7 +470,8 @@ th {
     transition: none;
   }
 
-  .toc-list {
+  .toc-list, .module-toc.toc-expanded .toc-list {
     padding: var(--space-sm);
+    width: 100%;
   }
 }
