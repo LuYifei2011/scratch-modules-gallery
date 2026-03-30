@@ -5,5 +5,5 @@
   "tags": ["math"],
   "keywords": ["power", "exponential", "calculation"],
   "contributors": "gh/LuYifei2011",
-  "variables": [{ "name": "a^b", "scope": "sprite", "type": "variable" }]
+  "variables": [{ "name": "result", "scope": "sprite", "type": "variable" }]
 }

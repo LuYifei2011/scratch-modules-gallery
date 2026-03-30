@@ -1,9 +1,6 @@
 {
   "name": "四捨五入到 n 位",
   "description": "將數字四捨五入到指定的小數位數（n）。",
-  "variables": {
-    "result": "結果"
-  },
   "procedures": {
     "Round %1 to %2 bits": "將 %1 四捨五入到小數點後 %2 位"
   },

@@ -13,7 +13,8 @@
     { "name": "Sprite Test Variable", "scope": "sprite", "type": "variable" },
     { "name": "Cloud Test Variable", "scope": "global", "type": "cloud" },
     { "name": "Global Test List", "scope": "global", "type": "list" },
-    { "name": "Sprite Test List", "scope": "sprite", "type": "list" }
+    { "name": "Sprite Test List", "scope": "sprite", "type": "list" },
+    { "name": "result", "scope": "sprite", "type": "variable" }
   ],
   "references": [
     {

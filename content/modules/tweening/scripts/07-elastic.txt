@@ -9,7 +9,7 @@ else
     set [Tween v] to (1)
   else
     (2) ^ (((10) * (Tween)) - (10)) :: custom
-    set [Tween v] to (() - ((a^b) * ([sin v] of ((((Tween) * (10)) - (10.75)) * (120)))))
+    set [Tween v] to (() - ((result) * ([sin v] of ((((Tween) * (10)) - (10.75)) * (120)))))
   end
 end
 set [Tween v] to (((Tween) * ((end :: custom-arg) - (start :: custom-arg))) + (start :: custom-arg))
@@ -23,7 +23,7 @@ else
     set [Tween v] to (1)
   else
     (2) ^ ((-10) * (Tween)) :: custom
-    set [Tween v] to (((a^b) * ([sin v] of ((((Tween) * (10)) - (0.75)) * (120)))) + (1))
+    set [Tween v] to (((result) * ([sin v] of ((((Tween) * (10)) - (0.75)) * (120)))) + (1))
   end
 end
 set [Tween v] to (((Tween) * ((end :: custom-arg) - (start :: custom-arg))) + (start :: custom-arg))
@@ -38,10 +38,10 @@ else
   else
     if <(Tween) < (0.5)> then
       (2) ^ (((20) * (Tween)) - (10)) :: custom
-      set [Tween v] to ((() - ((a^b) * ([sin v] of ((((Tween) * (20)) - (11.125)) * (80))))) / (2))
+      set [Tween v] to ((() - ((result) * ([sin v] of ((((Tween) * (20)) - (11.125)) * (80))))) / (2))
     else
       (2) ^ (((-20) * (Tween)) + (10)) :: custom
-      set [Tween v] to ((((a^b) * ([sin v] of ((((Tween) * (20)) - (11.125)) * (80)))) / (2)) + (1))
+      set [Tween v] to ((((result) * ([sin v] of ((((Tween) * (20)) - (11.125)) * (80)))) / (2)) + (1))
     end
   end
 end

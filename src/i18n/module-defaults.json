@@ -13,6 +13,9 @@
     },
     "comments": {
       "!no-refresh": "勾选「运行时不刷新屏幕」"
+    },
+    "variables": {
+      "result": "结果"
     }
   },
   "zh-tw": {
@@ -21,6 +24,9 @@
     },
     "comments": {
       "!no-refresh": "勾選「執行完畢再更新畫面」"
+    },
+    "variables": {
+      "result": "結果"
     }
   }
 }
