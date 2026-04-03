@@ -1,6 +1,6 @@
 ![封面](https://luyifei2011.github.io/scratch-modules-gallery/zh-cn/cover.png)
 
-<h1 align="center">Scratch 模块库</h1>
+<h1 align="center">Scratch 代码库</h1>
 <p align="center">收集各种 Scratch 代码片段并进行整理和分享</p>
 
 <strong>

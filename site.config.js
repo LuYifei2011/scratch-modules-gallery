@@ -1,7 +1,7 @@
 export default {
-  siteName: 'Scratch 模块库',
+  siteName: 'Scratch 代码库',
   baseUrl: 'https://luyifei2011.github.io/scratch-modules-gallery',
-  description: '一个可搜索的 Scratch 模块索引库',
+  description: '一个可搜索的 Scratch 代码索引库',
   language: 'zh-CN',
   outDir: 'dist',
   contentDir: 'content/modules',
