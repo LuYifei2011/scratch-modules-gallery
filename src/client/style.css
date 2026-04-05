@@ -144,7 +144,7 @@
   } /* 避免 DarkReader 再次处理，配合 lock */
 }
 html {
-  scroll-behavior: smooth;
+  /* scroll-behavior: smooth; */
   scroll-padding-top: 80px;
 }
 body {
