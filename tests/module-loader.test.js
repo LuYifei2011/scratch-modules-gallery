@@ -39,12 +39,15 @@ describe('loadModules', () => {
     assert.deepStrictEqual(fps.tags, ['performance'])
   })
 
-  it('loads module translations', async () => {
+  it('loads module translations with all expected fields', async () => {
     const { modules } = await loadModules({ root, config, isDev: true })
     const fps = modules.find((m) => m.id === 'fps')
     assert.ok(fps.translations, 'fps should have translations')
     assert.ok(fps.translations['zh-cn'], 'fps should have zh-cn translation')
     assert.strictEqual(fps.translations['zh-cn'].name, 'FPS')
+    assert.strictEqual(fps.translations['zh-cn'].description, '计算FPS。')
+    assert.ok(fps.translations['zh-cn'].variables, 'fps zh-cn should have variables map')
+    assert.strictEqual(fps.translations['zh-cn'].variables['FPS'], '帧率')
   })
 
   it('loads module notes', async () => {

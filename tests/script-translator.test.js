@@ -13,6 +13,8 @@ describe('translateScriptText', () => {
     const result = translateScriptText(null, 'zh_cn', null)
     assert.strictEqual(result.text, null)
     assert.ok(result.missingProcs instanceof Set)
+    assert.ok(result.missingParams instanceof Set)
+    assert.ok(result.missingComments instanceof Set)
   })
 
   it('returns raw text unchanged for empty string', () => {

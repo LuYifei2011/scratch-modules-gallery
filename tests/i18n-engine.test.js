@@ -147,14 +147,18 @@ describe('translateModulesForLocale', () => {
     assert.strictEqual(result[0].scripts[0].title, '主脚本')
   })
 
-  it('calls translateScriptText callback when provided', async () => {
-    let called = false
+  it('calls translateScriptText callback with correct arguments', async () => {
+    const callArgs = []
     const mockTranslate = (raw, langKey, nameMaps) => {
-      called = true
+      callArgs.push({ raw, langKey, nameMaps })
       return { text: raw, missingProcs: new Set(), missingParams: new Set(), missingComments: new Set() }
     }
     await translateModulesForLocale([baseModule], dict, 'zh-cn', {}, {}, { translateScriptText: mockTranslate })
-    assert.ok(called)
+    assert.ok(callArgs.length > 0, 'translateScriptText should be called at least once')
+    // Verify the language key passed matches the expected value (zh-CN → zh_cn)
+    assert.strictEqual(callArgs[0].langKey, 'zh_cn')
+    // Verify raw script content is passed
+    assert.ok(typeof callArgs[0].raw === 'string')
   })
 
   it('handles zh-tw fallback to zh-cn', async () => {
