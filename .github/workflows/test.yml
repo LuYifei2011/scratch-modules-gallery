@@ -1,0 +1,32 @@
+name: Test
+
+on:
+  push:
+    branches: ['main']
+    paths:
+      - 'scripts/**'
+      - 'src/i18n/**'
+      - 'tests/**'
+      - 'package.json'
+      - 'package-lock.json'
+  pull_request:
+    branches: ['main']
+    paths:
+      - 'scripts/**'
+      - 'src/i18n/**'
+      - 'tests/**'
+      - 'package.json'
+      - 'package-lock.json'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Use Node.js 22.x
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+          cache: npm
+      - run: npm ci
+      - run: npm test

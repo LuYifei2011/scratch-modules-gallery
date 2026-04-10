@@ -118,4 +118,34 @@
 
 若新增特性（如：额外资源类型、本地化维度、搜索字段）请在提交中同步更新此文件并列出回归验证步骤。
 
+### 单元测试
+
+- **框架**：使用 Node.js 内置测试运行器 `node:test` + `node:assert`，零额外依赖
+- **运行**：`npm test`（执行 `node --test tests/*.test.js`）
+- **文件结构**：所有测试文件位于 `tests/` 目录，文件名格式 `<module-name>.test.js`
+- **CI 工作流**：`.github/workflows/test.yml` 仅当以下路径变更时触发测试：
+  - `scripts/**`、`src/i18n/**`、`tests/**`、`package.json`、`package-lock.json`
+  - 模块内容变更（`content/modules/**`）**不触发**测试工作流
+- **覆盖范围**：
+
+  | 测试文件                     | 被测模块                           | 主要测试内容                                                     |
+  | ---------------------------- | ---------------------------------- | ---------------------------------------------------------------- |
+  | `schema.test.js`             | `scripts/lib/schema.js`            | `parseContributors`、`buildModuleRecord`（必填校验、i18n map）    |
+  | `import-resolver.test.js`    | `scripts/lib/import-resolver.js`   | 导入解析、循环引用检测、缺失模块、越界索引                       |
+  | `html-utils.test.js`         | `scripts/lib/html-utils.js`        | `escapeHtml`、`maybeMinify`、`generateShareLinks`                |
+  | `scratch-utils.test.js`      | `scripts/lib/scratch-utils.js`     | `tokenizeCJK`、`CATEGORY_COLORS`、`analyzeBlockCategories`       |
+  | `i18n-loader.test.js`        | `scripts/lib/i18n-loader.js`       | `pickConfigForLocale` 回退与覆盖                                 |
+  | `i18n-engine.test.js`        | `scripts/lib/i18n-engine.js`       | 元信息本地化、变量名映射、脚本标题、tags、notes、翻译字段补全    |
+  | `script-translator.test.js`  | `scripts/lib/script-translator.js` | AST 翻译、变量/列表/自定义块名称映射、多参数重排序               |
+  | `markdown.test.js`           | `scripts/lib/markdown.js`          | Markdown 转 HTML、scratchblocks/go-to-block 自定义扩展           |
+  | `search.test.js`             | `scripts/lib/search.js`            | MiniSearch 索引构建、CJK 内容                                    |
+  | `logger.test.js`             | `scripts/lib/logger.js`            | `truncate`、`formatDuration`、`timeNow`                          |
+  | `module-loader.test.js`      | `scripts/lib/module-loader.js`     | 集成测试（从磁盘加载 .test + fps 模块、翻译、notes、错误处理）   |
+
+- **编写规范**：
+  - 使用 `describe` / `it` 组织测试
+  - 测试数据尽量内联构造，避免依赖外部文件（`module-loader.test.js` 除外，它使用临时 fixture 目录）
+  - `module-loader.test.js` 通过 `before` 钩子将 `.test` 和 `fps` 两个模块复制到 `tests/.fixture-modules/` 临时目录，避免加载全部模块导致测试过慢
+  - 新增构建模块时，在对应 `*.test.js` 中补充测试
+
 NOTE: When performing a code review, respond in Chinese.

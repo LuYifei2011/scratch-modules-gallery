@@ -194,4 +194,82 @@ describe('translateModulesForLocale', () => {
     const result = await translateModulesForLocale([baseModule], dictWithTw, 'zh-tw')
     assert.strictEqual(result[0].name, '测试模块') // Falls back to zh-cn
   })
+
+  it('fills in name from translation when meta name is empty', async () => {
+    const mod = {
+      ...baseModule,
+      name: '', // 空的 metadata name
+      translations: {
+        'zh-cn': {
+          name: '翻译补全的名称',
+          description: '翻译补全的描述',
+        },
+      },
+    }
+    const result = await translateModulesForLocale([mod], dict, 'zh-cn')
+    assert.strictEqual(result[0].name, '翻译补全的名称')
+  })
+
+  it('fills in description from translation when meta description is empty', async () => {
+    const mod = {
+      ...baseModule,
+      description: '', // 空的 metadata description
+      translations: {
+        'zh-cn': {
+          name: '名称',
+          description: '翻译补全的描述',
+        },
+      },
+    }
+    const result = await translateModulesForLocale([mod], dict, 'zh-cn')
+    assert.strictEqual(result[0].description, '翻译补全的描述')
+  })
+
+  it('fills in variable displayName from translation even when meta has no name value', async () => {
+    const mod = {
+      ...baseModule,
+      variables: [{ name: 'emptyDisplay', scope: 'global', type: 'variable' }],
+      translations: {
+        'zh-cn': {
+          variables: { emptyDisplay: '翻译变量名' },
+        },
+      },
+    }
+    const result = await translateModulesForLocale([mod], dict, 'zh-cn')
+    const v = result[0].variables.find((x) => x.name === 'emptyDisplay')
+    assert.strictEqual(v.displayName, '翻译变量名')
+  })
+
+  it('fills in script title from translation when meta has no scriptTitles', async () => {
+    const mod = {
+      ...baseModule,
+      scriptTitles: {}, // 空的 scriptTitles
+      translations: {
+        'zh-cn': {
+          scriptTitles: { main: '翻译标题' },
+        },
+      },
+    }
+    const result = await translateModulesForLocale([mod], dict, 'zh-cn')
+    assert.strictEqual(result[0].scripts[0].title, '翻译标题')
+  })
+
+  it('uses en translation to fill missing meta fields when no locale translation', async () => {
+    const mod = {
+      ...baseModule,
+      name: '',
+      description: '',
+      translations: {
+        en: {
+          name: 'English Fallback Name',
+          description: 'English Fallback Desc',
+        },
+        // no zh-cn translation
+      },
+    }
+    const result = await translateModulesForLocale([mod], dict, 'zh-cn')
+    // Should fall back to en translation
+    assert.strictEqual(result[0].name, 'English Fallback Name')
+    assert.strictEqual(result[0].description, 'English Fallback Desc')
+  })
 })

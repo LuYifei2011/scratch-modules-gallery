@@ -1,6 +1,6 @@
 import { describe, it } from 'node:test'
 import assert from 'node:assert/strict'
-import { tokenizeCJK, CATEGORY_COLORS } from '../scripts/lib/scratch-utils.js'
+import { tokenizeCJK, CATEGORY_COLORS, analyzeBlockCategories } from '../scripts/lib/scratch-utils.js'
 
 describe('tokenizeCJK', () => {
   it('returns empty array for empty/null input', () => {
@@ -71,5 +71,70 @@ describe('CATEGORY_COLORS', () => {
     for (const color of Object.values(CATEGORY_COLORS)) {
       assert.match(color, /^#[0-9a-f]{6}$/i)
     }
+  })
+})
+
+describe('analyzeBlockCategories', () => {
+  it('returns empty array for empty input', () => {
+    const result = analyzeBlockCategories([])
+    assert.deepStrictEqual(result, [])
+  })
+
+  it('returns empty array for null/undefined scripts', () => {
+    const result = analyzeBlockCategories([null, undefined, ''])
+    assert.deepStrictEqual(result, [])
+  })
+
+  it('counts motion blocks', () => {
+    const result = analyzeBlockCategories(['move (10) steps\nturn cw (15) degrees'])
+    assert.ok(result.length > 0)
+    const motion = result.find((c) => c.category === 'motion')
+    assert.ok(motion, 'Should find motion category')
+    assert.ok(motion.count >= 2, 'Should count at least 2 motion blocks')
+    assert.strictEqual(motion.color, CATEGORY_COLORS.motion)
+  })
+
+  it('counts multiple categories', () => {
+    const script = 'when flag clicked\nmove (10) steps\nsay [hello]\nwait (1) seconds'
+    const result = analyzeBlockCategories([script])
+    assert.ok(result.length >= 2, 'Should detect multiple categories')
+    // Results should be sorted by count descending
+    for (let i = 1; i < result.length; i++) {
+      assert.ok(result[i - 1].count >= result[i].count, 'Should be sorted by count descending')
+    }
+  })
+
+  it('handles multiple script texts', () => {
+    const result = analyzeBlockCategories([
+      'move (10) steps',
+      'say [hello]',
+      'move (20) steps',
+    ])
+    const motion = result.find((c) => c.category === 'motion')
+    assert.ok(motion, 'Should find motion from multiple scripts')
+    assert.ok(motion.count >= 2)
+  })
+
+  it('each result has category, count and color', () => {
+    const result = analyzeBlockCategories(['when flag clicked\nmove (10) steps'])
+    for (const item of result) {
+      assert.ok(typeof item.category === 'string')
+      assert.ok(typeof item.count === 'number')
+      assert.ok(typeof item.color === 'string')
+      assert.match(item.color, /^#[0-9a-f]{6}$/i)
+    }
+  })
+
+  it('excludes categories without defined colors', () => {
+    const result = analyzeBlockCategories(['when flag clicked\nmove (10) steps'])
+    for (const item of result) {
+      assert.ok(item.color, 'Every result should have a color')
+    }
+  })
+
+  it('skips invalid/unparseable scripts gracefully', () => {
+    // 不应抛出异常
+    const result = analyzeBlockCategories(['<<<invalid scratchblocks>>>'])
+    assert.ok(Array.isArray(result))
   })
 })

@@ -39,3 +39,6 @@ Thumbs.db
 # --- Misc ---
 # Add additional ignores below as the project evolves.
 .cert
+
+# --- Test fixtures (auto-generated) ---
+tests/.fixture-modules/
