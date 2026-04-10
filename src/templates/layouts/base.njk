@@ -296,8 +296,8 @@
                         for (var i = 0; i < ls.length; i++) {
                             if (locales.indexOf(ls[i]) !== -1) return ls[i];
                         }
-                        for (var i = 0; i < ls.length; i++) {
-                            var l = ls[i];
+                        for (var j = 0; j < ls.length; j++) {
+                            var l = ls[j];
                             if (l.indexOf('zh') === 0) {
                                 if ((/-tw|-hk|-mo|hant/).test(l) && locales.indexOf('zh-tw') !== -1) return 'zh-tw';
                                 if (locales.indexOf('zh-cn') !== -1) return 'zh-cn';
@@ -305,8 +305,8 @@
                                 if (z) return z;
                             }
                         }
-                        for (var i = 0; i < ls.length; i++) {
-                            var primary = ls[i].split('-')[0];
+                        for (var k = 0; k < ls.length; k++) {
+                            var primary = ls[k].split('-')[0];
                             var hit = locales.filter(function (x) { return x.split('-')[0] === primary; })[0];
                             if (hit) return hit;
                         }
@@ -344,7 +344,7 @@
                     var dismissBtn = document.createElement('button');
                     dismissBtn.className = 'hint-item-dismiss';
                     dismissBtn.setAttribute('aria-label', dismissText);
-                    dismissBtn.textContent = '\u00d7';
+                    dismissBtn.textContent = dismissText;
                     dismissBtn.addEventListener('click', function () {
                         try { sessionStorage.setItem('hint-lang-dismissed', '1'); } catch (e) {}
                         div.remove();
