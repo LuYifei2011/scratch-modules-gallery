@@ -27,15 +27,18 @@ import log from './logger.js'
  */
 function translateMarkdownScratchblocks(rawMarkdown, translateScriptTextFn, languageTag, nameMaps) {
   if (!translateScriptTextFn || !rawMarkdown) return rawMarkdown
-  let result = rawMarkdown.replace(/<scratchblocks>([\s\S]+?)<\/scratchblocks>/g, (_, content) => {
-    const { text } = translateScriptTextFn(content.trim(), languageTag, nameMaps)
-    return `<scratchblocks>\n${typeof text === 'string' && text.trim() ? text : content.trim()}\n</scratchblocks>`
-  })
-  result = result.replace(/<sb>([\s\S]+?)<\/sb>/g, (_, content) => {
-    const { text } = translateScriptTextFn(content.trim(), languageTag, nameMaps)
-    return `<sb>${typeof text === 'string' && text.trim() ? text : content.trim()}</sb>`
-  })
-  return result
+  function replaceTag(tag, wrapFn) {
+    const re = new RegExp(`<${tag}>([\\s\\S]+?)<\\/${tag}>`, 'g')
+    return (str) =>
+      str.replace(re, (_, content) => {
+        const trimmed = content.trim()
+        const { text } = translateScriptTextFn(trimmed, languageTag, nameMaps)
+        return wrapFn(typeof text === 'string' && text.trim() ? text : trimmed)
+      })
+  }
+  const replaceBlock = replaceTag('scratchblocks', (t) => `<scratchblocks>\n${t}\n</scratchblocks>`)
+  const replaceInline = replaceTag('sb', (t) => `<sb>${t}</sb>`)
+  return replaceInline(replaceBlock(rawMarkdown))
 }
 
 /**
