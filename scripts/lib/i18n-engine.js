@@ -268,14 +268,17 @@ export async function translateModulesForLocale(modules, dict, locale, globalTag
     // notes 处理：先翻译其中的 scratchblocks 块，再转换为 HTML
     if (m.notesMap && typeof m.notesMap === 'object' && Object.keys(m.notesMap).length) {
       let rawNotes = null
+      let selectedNotesLocale = null
       for (const loc of localePriority) {
         if (m.notesMap[loc]) {
           rawNotes = m.notesMap[loc]
+          selectedNotesLocale = loc
           break
         }
       }
       if (rawNotes) {
-        if (!isEnglishLocale && translateScriptText) {
+        // 仅当备注来自与目标语言不同的回退语言时才翻译 scratchblocks（已有目标语言备注则无需翻译）
+        if (selectedNotesLocale !== locale && !isEnglishLocale && translateScriptText) {
           const notesNameMaps = { ...(ownNameMaps || {}) }
           const procMapsForNotes = buildProcedureMaps(mergedM, localePriority)
           const commentsMapsForNotes = buildCommentsMap(mergedM, localePriority)
