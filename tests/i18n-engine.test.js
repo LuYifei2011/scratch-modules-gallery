@@ -450,7 +450,10 @@ describe('translateModulesForLocale', () => {
     )
     // scratchblocks block and inline sb should have been translated (fallback from en to zh-cn)
     const html = result[0].notesHtml
-    assert.ok(html.includes('[translated:zh_cn]'), 'notes scratchblocks block should be translated when using fallback notes')
+    assert.ok(
+      html.includes('[translated:zh_cn]'),
+      'notes scratchblocks block should be translated when using fallback notes'
+    )
     assert.ok(html.includes('when green flag clicked'), 'original content should be in translated output')
   })
 
@@ -482,7 +485,10 @@ describe('translateModulesForLocale', () => {
     )
     const html = result[0].notesHtml
     // zh-cn notes should be used as-is (no re-translation)
-    assert.ok(!html.includes('[translated]'), 'notes scratchblocks should NOT be re-translated when notes are already in target locale')
+    assert.ok(
+      !html.includes('[translated]'),
+      'notes scratchblocks should NOT be re-translated when notes are already in target locale'
+    )
     assert.ok(html.includes('当绿旗被点击'), 'zh-cn notes content should be preserved')
   })
 
