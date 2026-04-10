@@ -128,19 +128,19 @@
   - 模块内容变更（`content/modules/**`）**不触发**测试工作流
 - **覆盖范围**：
 
-  | 测试文件                     | 被测模块                           | 主要测试内容                                                     |
-  | ---------------------------- | ---------------------------------- | ---------------------------------------------------------------- |
-  | `schema.test.js`             | `scripts/lib/schema.js`            | `parseContributors`、`buildModuleRecord`（必填校验、i18n map）    |
-  | `import-resolver.test.js`    | `scripts/lib/import-resolver.js`   | 导入解析、循环引用检测、缺失模块、越界索引                       |
-  | `html-utils.test.js`         | `scripts/lib/html-utils.js`        | `escapeHtml`、`maybeMinify`、`generateShareLinks`                |
-  | `scratch-utils.test.js`      | `scripts/lib/scratch-utils.js`     | `tokenizeCJK`、`CATEGORY_COLORS`、`analyzeBlockCategories`       |
-  | `i18n-loader.test.js`        | `scripts/lib/i18n-loader.js`       | `pickConfigForLocale` 回退与覆盖                                 |
-  | `i18n-engine.test.js`        | `scripts/lib/i18n-engine.js`       | 元信息本地化、变量名映射、脚本标题、tags、notes、翻译字段补全    |
-  | `script-translator.test.js`  | `scripts/lib/script-translator.js` | AST 翻译、变量/列表/自定义块名称映射、多参数重排序               |
-  | `markdown.test.js`           | `scripts/lib/markdown.js`          | Markdown 转 HTML、scratchblocks/go-to-block 自定义扩展           |
-  | `search.test.js`             | `scripts/lib/search.js`            | MiniSearch 索引构建、CJK 内容                                    |
-  | `logger.test.js`             | `scripts/lib/logger.js`            | `truncate`、`formatDuration`、`timeNow`                          |
-  | `module-loader.test.js`      | `scripts/lib/module-loader.js`     | 集成测试（从磁盘加载 .test + fps 模块、翻译、notes、错误处理）   |
+  | 测试文件                    | 被测模块                           | 主要测试内容                                                   |
+  | --------------------------- | ---------------------------------- | -------------------------------------------------------------- |
+  | `schema.test.js`            | `scripts/lib/schema.js`            | `parseContributors`、`buildModuleRecord`（必填校验、i18n map） |
+  | `import-resolver.test.js`   | `scripts/lib/import-resolver.js`   | 导入解析、循环引用检测、缺失模块、越界索引                     |
+  | `html-utils.test.js`        | `scripts/lib/html-utils.js`        | `escapeHtml`、`maybeMinify`、`generateShareLinks`              |
+  | `scratch-utils.test.js`     | `scripts/lib/scratch-utils.js`     | `tokenizeCJK`、`CATEGORY_COLORS`、`analyzeBlockCategories`     |
+  | `i18n-loader.test.js`       | `scripts/lib/i18n-loader.js`       | `pickConfigForLocale` 回退与覆盖                               |
+  | `i18n-engine.test.js`       | `scripts/lib/i18n-engine.js`       | 元信息本地化、变量名映射、脚本标题、tags、notes、翻译字段补全  |
+  | `script-translator.test.js` | `scripts/lib/script-translator.js` | AST 翻译、变量/列表/自定义块名称映射、多参数重排序             |
+  | `markdown.test.js`          | `scripts/lib/markdown.js`          | Markdown 转 HTML、scratchblocks/go-to-block 自定义扩展         |
+  | `search.test.js`            | `scripts/lib/search.js`            | MiniSearch 索引构建、CJK 内容                                  |
+  | `logger.test.js`            | `scripts/lib/logger.js`            | `truncate`、`formatDuration`、`timeNow`                        |
+  | `module-loader.test.js`     | `scripts/lib/module-loader.js`     | 集成测试（从磁盘加载 .test + fps 模块、翻译、notes、错误处理） |
 
 - **编写规范**：
   - 使用 `describe` / `it` 组织测试

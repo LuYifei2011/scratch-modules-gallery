@@ -98,7 +98,10 @@ describe('translateScriptText - multi-parameter reorder', () => {
     // 验证参数顺序：乙 应在 甲 之前（%2 的 %1）
     const idxB = result.text.indexOf('乙')
     const idxA = result.text.indexOf('甲')
-    assert.ok(idxB < idxA, `"乙" (idx=${idxB}) should appear before "甲" (idx=${idxA}) in: ${result.text}`)
+    assert.ok(
+      idxB < idxA,
+      `"乙" (idx=${idxB}) should appear before "甲" (idx=${idxA}) in: ${result.text}`
+    )
   })
 
   it('reorders parameters in call block following a define block', () => {
@@ -120,7 +123,10 @@ describe('translateScriptText - multi-parameter reorder', () => {
     // 验证值的顺序：20 应在 10 之前
     const idx20 = callLine.indexOf('20')
     const idx10 = callLine.indexOf('10')
-    assert.ok(idx20 < idx10, `"20" (idx=${idx20}) should appear before "10" (idx=${idx10}) in call: ${callLine}`)
+    assert.ok(
+      idx20 < idx10,
+      `"20" (idx=${idx20}) should appear before "10" (idx=${idx10}) in call: ${callLine}`
+    )
   })
 
   it('handles three parameters with reorder', () => {
@@ -161,10 +167,9 @@ describe('translateScriptText - multi-parameter reorder', () => {
 
   it('define and call blocks both get reordered consistently', () => {
     // 同时包含 define 和 call
-    const raw = [
-      'define (a :: custom-arg) of (b :: custom-arg)',
-      '(10) of (20) :: custom',
-    ].join('\n')
+    const raw = ['define (a :: custom-arg) of (b :: custom-arg)', '(10) of (20) :: custom'].join(
+      '\n'
+    )
     const nameMaps = {
       procs: { '%1 of %2': '%2 的 %1' },
       params: { a: '甲', b: '乙' },
@@ -173,7 +178,9 @@ describe('translateScriptText - multi-parameter reorder', () => {
     // 两行都应该包含"的"
     const lines = result.text.split('\n').filter((l) => l.trim())
     const defineLine = lines.find((l) => l.includes('定义') || l.includes('define'))
-    const callLine = lines.find((l) => !l.includes('定义') && !l.includes('define') && l.includes('的'))
+    const callLine = lines.find(
+      (l) => !l.includes('定义') && !l.includes('define') && l.includes('的')
+    )
     assert.ok(defineLine || callLine, `Should have localized lines in: ${result.text}`)
   })
 })
