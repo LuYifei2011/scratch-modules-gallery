@@ -178,6 +178,18 @@ export async function translateModulesForLocale(
 
   const out = []
 
+  // 预先构建各模块的合并翻译映射（moduleDefaults 已合并），供导入块查找使用
+  const mergedModulesMap = new Map()
+  for (const mod of modules) {
+    const rawModPer = mod.translations || {}
+    const modLocales = new Set([...Object.keys(moduleDefaults), ...Object.keys(rawModPer)])
+    const modPer = {}
+    for (const loc of modLocales) {
+      modPer[loc] = mergeTranslation(moduleDefaults[loc] || {}, rawModPer[loc] || {})
+    }
+    mergedModulesMap.set(mod.id, { ...mod, translations: modPer })
+  }
+
   for (const m of modules) {
     const nm = { ...m }
     // 将全局模块默认翻译（module-defaults.json）与模块自身翻译合并（模块优先）
@@ -281,7 +293,7 @@ export async function translateModulesForLocale(
             let mapsForThis = ownNameMaps
             let targetForProc
             if (s.imported && s.fromId) {
-              targetForProc = modules.find((x) => x.id === s.fromId)
+              targetForProc = mergedModulesMap.get(s.fromId)
               if (targetForProc)
                 mapsForThis = buildNameMapsForModule(targetForProc, localePriority) || mapsForThis
             }
@@ -328,7 +340,7 @@ export async function translateModulesForLocale(
           const arr = []
           for (const imp of s.leadingImports) {
             let localizedFromName = imp.fromName
-            const target = modules.find((x) => x.id === imp.fromId)
+            const target = mergedModulesMap.get(imp.fromId)
             if (target) {
               const perT = target.translations || {}
               const nameMap = target.name_i18n || {}
@@ -381,21 +393,35 @@ export async function translateModulesForLocale(
           }
           ns.leadingImports = arr
         }
-        // 被导入块（非 leadingImports）
-        if (s.imported && s.fromId && s.fromScriptId) {
-          const target = modules.find((x) => x.id === s.fromId)
+        // 被导入块（非 leadingImports）: 本地化 fromName 与 fromTitle
+        if (s.imported && s.fromId) {
+          const target = mergedModulesMap.get(s.fromId)
           if (target) {
-            const enTitles = target.scriptTitles || {}
+            // 本地化 fromName
+            let localizedFromName = s.fromName
             const perT = target.translations || {}
+            const nameMap = target.name_i18n || {}
             for (const loc of localePriority) {
-              const titles = perT[loc]?.scriptTitles
-              if (titles && titles[s.fromScriptId]) {
-                ns.fromTitle = titles[s.fromScriptId]
+              const name = perT[loc]?.name ?? nameMap[loc]
+              if (name) {
+                localizedFromName = name
                 break
               }
             }
-            if (!ns.fromTitle) {
-              ns.fromTitle = enTitles[s.fromScriptId] || s.fromScriptId
+            ns.fromName = localizedFromName || target.name || s.fromName
+            // 本地化 fromTitle（仅当 fromScriptId 已知时）
+            if (s.fromScriptId) {
+              const enTitles = target.scriptTitles || {}
+              for (const loc of localePriority) {
+                const titles = perT[loc]?.scriptTitles
+                if (titles && titles[s.fromScriptId]) {
+                  ns.fromTitle = titles[s.fromScriptId]
+                  break
+                }
+              }
+              if (!ns.fromTitle) {
+                ns.fromTitle = enTitles[s.fromScriptId] || s.fromScriptId
+              }
             }
           }
         }

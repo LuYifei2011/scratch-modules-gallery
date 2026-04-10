@@ -272,4 +272,141 @@ describe('translateModulesForLocale', () => {
     assert.strictEqual(result[0].name, 'English Fallback Name')
     assert.strictEqual(result[0].description, 'English Fallback Desc')
   })
+
+  it('localizes fromName for inline imported scripts (top-level s.imported)', async () => {
+    const sourceModule = {
+      id: 'lib',
+      name: 'Library',
+      description: 'lib',
+      tags: [],
+      keywords: [],
+      scripts: [{ id: 'main', content: 'say [hello]' }],
+      variables: [],
+      notesMap: {},
+      scriptTitles: {},
+      translations: {
+        'zh-cn': { name: '库模块' },
+      },
+    }
+    // Consumer has an inline import (import in the middle of the script)
+    const consumerModule = {
+      id: 'consumer',
+      name: 'Consumer',
+      description: 'uses lib',
+      tags: [],
+      keywords: [],
+      scripts: [
+        { id: 'main', content: 'when flag clicked\nmove (10) steps' },
+        { imported: true, content: 'say [hello]', fromId: 'lib', fromName: 'Library', fromIndex: 1, fromTitle: '', fromScriptId: 'main' },
+        { id: undefined, content: 'stop [all v]' },
+      ],
+      variables: [],
+      notesMap: {},
+      scriptTitles: {},
+      translations: { 'zh-cn': { name: '使用者' } },
+    }
+    const result = await translateModulesForLocale([sourceModule, consumerModule], dict, 'zh-cn')
+    const consumer = result.find((m) => m.id === 'consumer')
+    const importedScript = consumer.scripts.find((s) => s.imported)
+    // fromName should be localized using source module's zh-cn translation
+    assert.strictEqual(importedScript.fromName, '库模块')
+  })
+
+  it('applies moduleDefaults when translating imported block content', async () => {
+    const sourceModule = {
+      id: 'source',
+      name: 'Source',
+      description: 'source',
+      tags: [],
+      keywords: [],
+      scripts: [{ id: 'main', content: 'set [result v] to (0)' }],
+      variables: [{ name: 'result', type: 'variable' }],
+      notesMap: {},
+      scriptTitles: {},
+      translations: {}, // no own translations; relies on moduleDefaults
+    }
+    const consumerModule = {
+      id: 'consumer',
+      name: 'Consumer',
+      description: 'uses source',
+      tags: [],
+      keywords: [],
+      scripts: [
+        {
+          id: 'main',
+          content: 'when flag clicked',
+          leadingImports: [
+            { imported: true, content: 'set [result v] to (0)', fromId: 'source', fromName: 'Source', fromIndex: 1, fromTitle: '', fromScriptId: 'main' },
+          ],
+        },
+      ],
+      variables: [],
+      notesMap: {},
+      scriptTitles: {},
+      translations: { 'zh-cn': { name: '使用者' } },
+    }
+    const moduleDefaults = {
+      'zh-cn': { variables: { result: '结果' } },
+    }
+    const capturedCalls = []
+    const mockTranslate = (raw, langKey, nameMaps) => {
+      capturedCalls.push({ raw, vars: nameMaps?.vars })
+      return { text: raw, missingProcs: new Set(), missingParams: new Set(), missingComments: new Set() }
+    }
+    await translateModulesForLocale(
+      [sourceModule, consumerModule],
+      dict,
+      'zh-cn',
+      {},
+      { moduleDefaults },
+      { translateScriptText: mockTranslate }
+    )
+    // The leading import translation call should have the moduleDefaults variable map applied
+    const importCall = capturedCalls.find((c) => c.raw.includes('result'))
+    assert.ok(importCall, 'translateScriptText should be called for the imported content')
+    assert.deepStrictEqual(importCall.vars, { result: '结果' })
+  })
+
+  it('applies moduleDefaults scriptTitles as fromTitle for imported scripts', async () => {
+    const sourceModule = {
+      id: 'source',
+      name: 'Source',
+      description: 'source',
+      tags: [],
+      keywords: [],
+      scripts: [{ id: 'main', content: 'say [hi]' }],
+      variables: [],
+      notesMap: {},
+      scriptTitles: {},
+      translations: {}, // no own scriptTitles translation
+    }
+    const consumerModule = {
+      id: 'consumer',
+      name: 'Consumer',
+      description: 'uses source',
+      tags: [],
+      keywords: [],
+      scripts: [
+        { imported: true, content: 'say [hi]', fromId: 'source', fromName: 'Source', fromIndex: 1, fromTitle: '', fromScriptId: 'main' },
+      ],
+      variables: [],
+      notesMap: {},
+      scriptTitles: {},
+      translations: { 'zh-cn': { name: '使用者' } },
+    }
+    const moduleDefaults = {
+      'zh-cn': { scriptTitles: { main: '主脚本' } },
+    }
+    const result = await translateModulesForLocale(
+      [sourceModule, consumerModule],
+      dict,
+      'zh-cn',
+      {},
+      { moduleDefaults }
+    )
+    const consumer = result.find((m) => m.id === 'consumer')
+    const importedScript = consumer.scripts.find((s) => s.imported)
+    // fromTitle should be resolved from moduleDefaults when module has no own scriptTitle translation
+    assert.strictEqual(importedScript.fromTitle, '主脚本')
+  })
 })
