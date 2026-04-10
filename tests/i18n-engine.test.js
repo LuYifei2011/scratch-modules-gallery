@@ -419,4 +419,105 @@ describe('translateModulesForLocale', () => {
     // fromTitle should be resolved from moduleDefaults when module has no own scriptTitle translation
     assert.strictEqual(importedScript.fromTitle, '主脚本')
   })
+
+  it('translates scratchblocks in notes markdown when notes come from a fallback locale', async () => {
+    const translatedTexts = []
+    const mockTranslate = (raw, langKey, nameMaps) => {
+      translatedTexts.push(raw)
+      // Simulate translation: prefix with translated marker
+      return {
+        text: `[translated:${langKey}] ${raw}`,
+        missingProcs: new Set(),
+        missingParams: new Set(),
+        missingComments: new Set(),
+      }
+    }
+    // Module only has English notes - zh-cn page should translate its scratchblocks
+    const modWithEnOnlyNotes = {
+      ...baseModule,
+      notesMap: {
+        en: '# Notes\n\n<scratchblocks>\nwhen green flag clicked\n</scratchblocks>\n\nInline: <sb>move (10) steps</sb>',
+      },
+      translations: { 'zh-cn': { name: '测试' } },
+    }
+    const result = await translateModulesForLocale(
+      [modWithEnOnlyNotes],
+      dict,
+      'zh-cn',
+      {},
+      {},
+      { translateScriptText: mockTranslate }
+    )
+    // scratchblocks block and inline sb should have been translated (fallback from en to zh-cn)
+    const html = result[0].notesHtml
+    assert.ok(
+      html.includes('[translated:zh_cn]'),
+      'notes scratchblocks block should be translated when using fallback notes'
+    )
+    assert.ok(html.includes('when green flag clicked'), 'original content should be in translated output')
+  })
+
+  it('does not translate scratchblocks in notes when notes are already in target locale', async () => {
+    const mockTranslate = (raw, langKey, nameMaps) => {
+      return {
+        text: `[translated] ${raw}`,
+        missingProcs: new Set(),
+        missingParams: new Set(),
+        missingComments: new Set(),
+      }
+    }
+    // Module has zh-cn notes - zh-cn page should NOT re-translate its scratchblocks
+    const modWithZhCnNotes = {
+      ...baseModule,
+      notesMap: {
+        en: '# English Notes\n\n<scratchblocks>\nwhen green flag clicked\n</scratchblocks>',
+        'zh-cn': '# 中文备注\n\n<scratchblocks>\n当绿旗被点击\n</scratchblocks>',
+      },
+      translations: { 'zh-cn': { name: '测试' } },
+    }
+    const result = await translateModulesForLocale(
+      [modWithZhCnNotes],
+      dict,
+      'zh-cn',
+      {},
+      {},
+      { translateScriptText: mockTranslate }
+    )
+    const html = result[0].notesHtml
+    // zh-cn notes should be used as-is (no re-translation)
+    assert.ok(
+      !html.includes('[translated]'),
+      'notes scratchblocks should NOT be re-translated when notes are already in target locale'
+    )
+    assert.ok(html.includes('当绿旗被点击'), 'zh-cn notes content should be preserved')
+  })
+
+  it('does not translate scratchblocks in notes for English locale', async () => {
+    const mockTranslate = (raw, langKey, nameMaps) => {
+      return {
+        text: `[translated] ${raw}`,
+        missingProcs: new Set(),
+        missingParams: new Set(),
+        missingComments: new Set(),
+      }
+    }
+    const modWithNotes = {
+      ...baseModule,
+      notesMap: {
+        en: '# Notes\n\n<scratchblocks>\nwhen green flag clicked\n</scratchblocks>',
+      },
+    }
+    const result = await translateModulesForLocale(
+      [modWithNotes],
+      dict,
+      'en',
+      {},
+      {},
+      { translateScriptText: mockTranslate }
+    )
+    const html = result[0].notesHtml
+    // English locale should NOT translate notes scratchblocks
+    assert.ok(!html.includes('[translated]'), 'notes scratchblocks should NOT be translated for English locale')
+    assert.ok(html.includes('when green flag clicked'))
+  })
 })
