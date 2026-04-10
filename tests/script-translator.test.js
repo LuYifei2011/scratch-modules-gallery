@@ -137,10 +137,10 @@ describe('translateScriptText - multi-parameter reorder', () => {
     assert.ok(result.text.includes('丙'), 'Should contain param 丙')
     // 验证顺序：丙 在 乙 前，乙 在 甲 前
     const idxC = result.text.indexOf('丙')
-    const idxBB = result.text.indexOf('乙')
-    const idxAA = result.text.indexOf('甲')
-    assert.ok(idxC < idxBB, `"丙" should appear before "乙" in: ${result.text}`)
-    assert.ok(idxBB < idxAA, `"乙" should appear before "甲" in: ${result.text}`)
+    const idxB = result.text.indexOf('乙')
+    const idxA = result.text.indexOf('甲')
+    assert.ok(idxC < idxB, `"丙" should appear before "乙" in: ${result.text}`)
+    assert.ok(idxB < idxA, `"乙" should appear before "甲" in: ${result.text}`)
   })
 
   it('keeps parameter order when pattern does not reorder', () => {

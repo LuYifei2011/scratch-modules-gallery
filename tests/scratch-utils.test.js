@@ -133,8 +133,9 @@ describe('analyzeBlockCategories', () => {
   })
 
   it('skips invalid/unparseable scripts gracefully', () => {
-    // 不应抛出异常
+    // 不应抛出异常，无效脚本被跳过
     const result = analyzeBlockCategories(['<<<invalid scratchblocks>>>'])
     assert.ok(Array.isArray(result))
+    assert.deepStrictEqual(result, [])
   })
 })

@@ -86,7 +86,6 @@ describe('loadModules', () => {
     const { modules } = await loadModules({ root: fixtureRoot, config, isDev: true })
     const testMod = modules.find((m) => m.id === '.test')
     assert.ok(testMod, '.test module should exist')
-    // .test has 01-main.txt and 02-import.txt
     assert.ok(testMod.scripts.length >= 2, '.test should have at least 2 scripts')
     const scriptIds = testMod.scripts.map((s) => s.id)
     assert.ok(scriptIds.includes('main'), 'Should parse 01-main.txt to id "main"')
