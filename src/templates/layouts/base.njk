@@ -128,6 +128,7 @@
                 </div>
             </nav>
         </header>
+        <div id="hint-bar" class="hint-bar">{% block hints %}{% endblock %}</div>
         <main>
             {% block content %}{% endblock %}
         </main>
@@ -272,6 +273,99 @@
                             location.href = to + rest;
                         });
                     });
+                })();
+                // ── 提示栏 ──
+                // 1. 语言建议：当浏览器语言与当前页面语言不符时，提示用户切换
+                (function () {
+                    var i18n = window.__I18N || {};
+                    var hints = i18n.hints || {};
+                    var locales = window.LOCALES || [];
+                    var currentLocale = window.CURRENT_LOCALE || '';
+                    // 若用户已记住当前语言，不再提示
+                    try {
+                        var rememberLang = localStorage.getItem('remember-language') === 'true';
+                        var preferredLocale = localStorage.getItem('preferred-locale');
+                        if (rememberLang && preferredLocale === currentLocale) return;
+                    } catch (e) {}
+                    // 若本次会话已关闭此提示，不再显示
+                    try {
+                        if (sessionStorage.getItem('hint-lang-dismissed')) return;
+                    } catch (e) {}
+                    function pickLocale(browserLangs) {
+                        var ls = browserLangs.map(function (l) { return String(l || '').toLowerCase(); });
+                        for (var i = 0; i < ls.length; i++) {
+                            if (locales.indexOf(ls[i]) !== -1) return ls[i];
+                        }
+                        for (var j = 0; j < ls.length; j++) {
+                            var l = ls[j];
+                            if (l.indexOf('zh') === 0) {
+                                if ((/-tw|-hk|-mo|hant/).test(l) && locales.indexOf('zh-tw') !== -1) return 'zh-tw';
+                                if (locales.indexOf('zh-cn') !== -1) return 'zh-cn';
+                                var z = locales.filter(function (x) { return x.toLowerCase().indexOf('zh-') === 0; })[0];
+                                if (z) return z;
+                            }
+                        }
+                        for (var k = 0; k < ls.length; k++) {
+                            var primary = ls[k].split('-')[0];
+                            var hit = locales.filter(function (x) { return x.split('-')[0] === primary; })[0];
+                            if (hit) return hit;
+                        }
+                        return null;
+                    }
+                    var browserLangs = (navigator.languages && navigator.languages.length)
+                        ? Array.prototype.slice.call(navigator.languages)
+                        : [navigator.language || ''];
+                    var suggested = pickLocale(browserLangs);
+                    if (!suggested || suggested === currentLocale) return;
+                    var localeNames = window.LOCALE_NAMES || {};
+                    var suggestedLangName = (localeNames[suggested] && localeNames[suggested].meta && localeNames[suggested].meta.languageName) || suggested;
+                    var currentLangName = (localeNames[currentLocale] && localeNames[currentLocale].meta && localeNames[currentLocale].meta.languageName) || currentLocale;
+                    var msg = (hints.langSuggest || 'This page is also available in {langName}.').replace('{langName}', suggestedLangName);
+                    var switchText = (hints.langSuggestSwitchTo || 'Switch to {langName}').replace('{langName}', suggestedLangName);
+                    var stayText = (hints.langSuggestStayIn || 'Stay in {currentLangName}').replace('{currentLangName}', currentLangName);
+                    var hintBar = document.getElementById('hint-bar');
+                    if (!hintBar) return;
+                    var div = document.createElement('div');
+                    div.className = 'hint-item hint-item-info';
+                    var span = document.createElement('span');
+                    span.className = 'hint-item-text';
+                    span.textContent = msg;
+                    div.appendChild(span);
+                    var switchBtn = document.createElement('button');
+                    switchBtn.className = 'hint-item-action';
+                    switchBtn.textContent = switchText;
+                    switchBtn.addEventListener('click', function () {
+                        var base = (window.PAGE_BASE || '').replace(/\/$/, '').replace(/\/[A-Za-z0-9_-]+$/, '');
+                        var localesPattern = locales.join('|');
+                        var m = location.pathname.match(new RegExp('/(' + localesPattern + ')/(.*)$'));
+                        var rest = m && m[2] ? m[2] : '';
+                        location.href = base + '/' + suggested + '/' + rest;
+                    });
+                    div.appendChild(switchBtn);
+                    var stayBtn = document.createElement('button');
+                    stayBtn.className = 'hint-item-action hint-item-action-secondary';
+                    stayBtn.textContent = stayText;
+                    stayBtn.addEventListener('click', function () {
+                        try { sessionStorage.setItem('hint-lang-dismissed', '1'); } catch (e) {}
+                        div.remove();
+                    });
+                    div.appendChild(stayBtn);
+                    hintBar.appendChild(div);
+                })();
+                // 2. 部分翻译提示：对服务端渲染的 hint-partial-translation 元素处理关闭行为
+                (function () {
+                    var hint = document.getElementById('hint-partial-translation');
+                    if (!hint) return;
+                    var moduleId = hint.getAttribute('data-module') || '';
+                    var key = 'hint-pt-' + moduleId;
+                    try { if (sessionStorage.getItem(key)) { hint.style.display = 'none'; return; } } catch (e) {}
+                    var btn = hint.querySelector('.hint-item-dismiss');
+                    if (btn) {
+                        btn.addEventListener('click', function () {
+                            try { sessionStorage.setItem(key, '1'); } catch (e) {}
+                            hint.style.display = 'none';
+                        });
+                    }
                 })();
         </script>
         {% block page_scripts %}
