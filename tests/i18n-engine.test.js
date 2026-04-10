@@ -297,7 +297,15 @@ describe('translateModulesForLocale', () => {
       keywords: [],
       scripts: [
         { id: 'main', content: 'when flag clicked\nmove (10) steps' },
-        { imported: true, content: 'say [hello]', fromId: 'lib', fromName: 'Library', fromIndex: 1, fromTitle: '', fromScriptId: 'main' },
+        {
+          imported: true,
+          content: 'say [hello]',
+          fromId: 'lib',
+          fromName: 'Library',
+          fromIndex: 1,
+          fromTitle: '',
+          fromScriptId: 'main',
+        },
         { id: undefined, content: 'stop [all v]' },
       ],
       variables: [],
@@ -336,7 +344,15 @@ describe('translateModulesForLocale', () => {
           id: 'main',
           content: 'when flag clicked',
           leadingImports: [
-            { imported: true, content: 'set [result v] to (0)', fromId: 'source', fromName: 'Source', fromIndex: 1, fromTitle: '', fromScriptId: 'main' },
+            {
+              imported: true,
+              content: 'set [result v] to (0)',
+              fromId: 'source',
+              fromName: 'Source',
+              fromIndex: 1,
+              fromTitle: '',
+              fromScriptId: 'main',
+            },
           ],
         },
       ],
@@ -351,7 +367,12 @@ describe('translateModulesForLocale', () => {
     const capturedCalls = []
     const mockTranslate = (raw, langKey, nameMaps) => {
       capturedCalls.push({ raw, vars: nameMaps?.vars })
-      return { text: raw, missingProcs: new Set(), missingParams: new Set(), missingComments: new Set() }
+      return {
+        text: raw,
+        missingProcs: new Set(),
+        missingParams: new Set(),
+        missingComments: new Set(),
+      }
     }
     await translateModulesForLocale(
       [sourceModule, consumerModule],
@@ -387,7 +408,15 @@ describe('translateModulesForLocale', () => {
       tags: [],
       keywords: [],
       scripts: [
-        { imported: true, content: 'say [hi]', fromId: 'source', fromName: 'Source', fromIndex: 1, fromTitle: '', fromScriptId: 'main' },
+        {
+          imported: true,
+          content: 'say [hi]',
+          fromId: 'source',
+          fromName: 'Source',
+          fromIndex: 1,
+          fromTitle: '',
+          fromScriptId: 'main',
+        },
       ],
       variables: [],
       notesMap: {},
