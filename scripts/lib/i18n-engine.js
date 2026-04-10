@@ -17,6 +17,28 @@ import log from './logger.js'
 // ── 内部辅助函数 ──────────────────────────────────────────
 
 /**
+ * 将 Markdown 文本中的 <scratchblocks> 块和 <sb> 内联块翻译为目标语言。
+ *
+ * @param {string} rawMarkdown - 原始 Markdown 文本
+ * @param {Function} translateScriptTextFn - scratchblocks 翻译回调 (raw, langKey, nameMaps) => {text}
+ * @param {string} languageTag - 目标语言标识符（如 "zh_cn"）
+ * @param {Object|undefined} nameMaps - 变量/列表/自定义块映射
+ * @returns {string} 翻译后的 Markdown 文本
+ */
+function translateMarkdownScratchblocks(rawMarkdown, translateScriptTextFn, languageTag, nameMaps) {
+  if (!translateScriptTextFn || !rawMarkdown) return rawMarkdown
+  let result = rawMarkdown.replace(/<scratchblocks>([\s\S]+?)<\/scratchblocks>/g, (_, content) => {
+    const { text } = translateScriptTextFn(content.trim(), languageTag, nameMaps)
+    return `<scratchblocks>\n${typeof text === 'string' && text.trim() ? text : content.trim()}\n</scratchblocks>`
+  })
+  result = result.replace(/<sb>([\s\S]+?)<\/sb>/g, (_, content) => {
+    const { text } = translateScriptTextFn(content.trim(), languageTag, nameMaps)
+    return `<sb>${typeof text === 'string' && text.trim() ? text : content.trim()}</sb>`
+  })
+  return result
+}
+
+/**
  * 构造当前语言下的变量/列表/事件名称映射（原名 -> 本地化名）
  */
 function buildNameMapsForModule(mod, localePriority) {
@@ -237,7 +259,10 @@ export async function translateModulesForLocale(modules, dict, locale, globalTag
     const kw = pickKeywords('keywords', m.keywords_i18n)
     if (Array.isArray(kw)) nm.keywords = kw
 
-    // notes: 按语言优先级从 notesMap 中选取，实时转换为 HTML
+    // notes: 按语言优先级从 notesMap 中选取，实时转换为 HTML（移至 ownNameMaps 计算后）
+
+    const ownNameMaps = buildNameMapsForModule(mergedM, localePriority)
+    // notes 处理：先翻译其中的 scratchblocks 块，再转换为 HTML
     if (m.notesMap && typeof m.notesMap === 'object' && Object.keys(m.notesMap).length) {
       let rawNotes = null
       for (const loc of localePriority) {
@@ -246,12 +271,24 @@ export async function translateModulesForLocale(modules, dict, locale, globalTag
           break
         }
       }
-      nm.notesHtml = rawNotes ? markdownToHtml(rawNotes) : ''
+      if (rawNotes) {
+        if (!isEnglishLocale && translateScriptText) {
+          const notesNameMaps = { ...(ownNameMaps || {}) }
+          const procMapsForNotes = buildProcedureMaps(mergedM, localePriority)
+          const commentsMapsForNotes = buildCommentsMap(mergedM, localePriority)
+          if (procMapsForNotes?.paramMap) notesNameMaps.params = procMapsForNotes.paramMap
+          if (procMapsForNotes?.procMap) notesNameMaps.procs = procMapsForNotes.procMap
+          if (commentsMapsForNotes) notesNameMaps.comments = commentsMapsForNotes
+          rawNotes = translateMarkdownScratchblocks(rawNotes, translateScriptText, languageTag, notesNameMaps)
+        }
+        nm.notesHtml = markdownToHtml(rawNotes)
+      } else {
+        nm.notesHtml = ''
+      }
     } else {
       nm.notesHtml = ''
     }
 
-    const ownNameMaps = buildNameMapsForModule(mergedM, localePriority)
     // 为"变量 / 列表"表格计算本地化显示名称（模块级，始终执行）
     if (Array.isArray(nm.variables) && nm.variables.length) {
       const maps = ownNameMaps || { vars: {}, lists: {} }
