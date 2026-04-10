@@ -87,9 +87,7 @@
             <button data-tab="scripts" class="tab-btn">脚本</button>
             <button data-tab="i18n" class="tab-btn">翻译</button>
             <button data-tab="assets" class="tab-btn">资源</button>
-            <button id="view-module-btn" class="btn" style="margin-left: auto; background: none">
-              查看模块页
-            </button>
+            <button id="view-module-btn" class="btn" style="margin-left: auto; background: none">查看模块页</button>
           </nav>
 
           <!-- 标签页内容 -->
@@ -105,13 +103,7 @@
 
                 <div class="form-group">
                   <label for="meta-name">名称 *</label>
-                  <input
-                    type="text"
-                    id="meta-name"
-                    required
-                    class="form-control"
-                    placeholder="例如：FPS"
-                  />
+                  <input type="text" id="meta-name" required class="form-control" placeholder="例如：FPS" />
                 </div>
 
                 <div class="form-group">
@@ -160,27 +152,17 @@
 
                 <div class="form-actions">
                   <button type="submit" class="btn btn-primary">保存</button>
-                  <button type="button" id="delete-module-btn" class="btn btn-danger">
-                    删除模块
-                  </button>
+                  <button type="button" id="delete-module-btn" class="btn btn-danger">删除模块</button>
                 </div>
               </form>
             </div>
 
             <!-- Scripts 标签页 -->
-            <div
-              id="tab-scripts"
-              class="tab-panel"
-              style="display: none; padding: 0; overflow: hidden"
-            >
+            <div id="tab-scripts" class="tab-panel" style="display: none; padding: 0; overflow: hidden">
               <div class="scripts-container">
                 <div class="scripts-sidebar" id="scripts-sidebar">
                   <div class="scripts-sidebar-header">
-                    <button
-                      id="add-script-btn"
-                      class="btn btn-primary btn-icon-text"
-                      title="添加脚本"
-                    >
+                    <button id="add-script-btn" class="btn btn-primary btn-icon-text" title="添加脚本">
                       <span class="icon">+</span> <span class="text">添加脚本</span>
                     </button>
                     <button id="toggle-scripts-sidebar" class="btn-icon" title="折叠/展开">
@@ -243,11 +225,7 @@
                           <option value="scratch3-high-contrast">S3 高对比</option>
                           <option value="scratch2">Scratch 2</option>
                         </select>
-                        <button
-                          id="toggle-layout-btn"
-                          class="btn btn-sm btn-secondary"
-                          title="切换布局"
-                        >
+                        <button id="toggle-layout-btn" class="btn btn-sm btn-secondary" title="切换布局">
                           <!-- 图标 rows-2 -->
                           <svg
                             viewBox="0 0 24 24"
@@ -315,12 +293,7 @@
 
                 <div class="form-group">
                   <label for="i18n-keywords">关键词</label>
-                  <input
-                    type="text"
-                    id="i18n-keywords"
-                    class="form-control"
-                    placeholder="用逗号分隔"
-                  />
+                  <input type="text" id="i18n-keywords" class="form-control" placeholder="用逗号分隔" />
                 </div>
 
                 <div class="form-group">
@@ -331,10 +304,7 @@
                     rows="10"
                     placeholder='{"variables": {"varName": "变量名"}, "lists": {}, "events": {}}'
                   ></textarea>
-                  <small
-                    >支持 variables, lists, events, scriptTitles, procedures, procedureParams
-                    等字段</small
-                  >
+                  <small>支持 variables, lists, events, scriptTitles, procedures, procedureParams 等字段</small>
                 </div>
               </form>
             </div>
@@ -400,13 +370,7 @@
 
           <div class="form-group">
             <label for="create-name">名称 *</label>
-            <input
-              type="text"
-              id="create-name"
-              required
-              class="form-control"
-              placeholder="例如：我的模块"
-            />
+            <input type="text" id="create-name" required class="form-control" placeholder="例如：我的模块" />
           </div>
 
           <div class="form-group">

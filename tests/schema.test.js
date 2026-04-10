@@ -18,9 +18,7 @@ describe('parseContributors', () => {
 
   it('parses sc/ prefix (Scratch user)', () => {
     const result = parseContributors('sc/scratcher')
-    assert.deepStrictEqual(result, [
-      { name: 'scratcher', url: 'https://scratch.mit.edu/users/scratcher' },
-    ])
+    assert.deepStrictEqual(result, [{ name: 'scratcher', url: 'https://scratch.mit.edu/users/scratcher' }])
   })
 
   it('parses plain name (no prefix)', () => {

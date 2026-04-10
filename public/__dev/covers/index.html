@@ -300,8 +300,7 @@
           .map((mod) => {
             const coverUrl = `/${locale}/modules/${mod.id}/cover.png`
             const moduleUrl = `/${locale}/modules/${mod.id}/`
-            const name =
-              typeof mod.name === 'object' ? mod.name[locale] || mod.name['en'] || mod.id : mod.name
+            const name = typeof mod.name === 'object' ? mod.name[locale] || mod.name['en'] || mod.id : mod.name
             return `
             <div class="card" data-id="${mod.id}">
               <div class="cover-wrap">

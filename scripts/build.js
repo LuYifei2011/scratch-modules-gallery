@@ -13,17 +13,8 @@ import { buildSearchIndex } from './lib/search.js'
 import { resolveImports } from './lib/import-resolver.js'
 import { loadModules } from './lib/module-loader.js'
 import { translateScriptText } from './lib/script-translator.js'
-import {
-  loadI18n,
-  loadGlobalTags,
-  loadModuleDefaults,
-  pickConfigForLocale,
-} from './lib/i18n-loader.js'
-import {
-  loadSiteCoverTemplate,
-  generateSiteCover,
-  generateModuleCover,
-} from './lib/cover-generator.js'
+import { loadI18n, loadGlobalTags, loadModuleDefaults, pickConfigForLocale } from './lib/i18n-loader.js'
+import { loadSiteCoverTemplate, generateSiteCover, generateModuleCover } from './lib/cover-generator.js'
 import log, { c, paint, formatDuration, timeNow } from './lib/logger.js'
 
 const root = path.resolve('.')
@@ -33,8 +24,7 @@ let _faviconHtml = ''
 const configModule = await import(pathToFileURL(path.join(root, 'site.config.js')).href)
 const config = configModule.default || configModule
 // 覆盖 baseUrl 与开发模式标记
-const isDev =
-  String(process.env.IS_DEV || '').toLowerCase() === 'true' || process.env.IS_DEV === '1'
+const isDev = String(process.env.IS_DEV || '').toLowerCase() === 'true' || process.env.IS_DEV === '1'
 // 快速构建模式：跳过耗时的资源生成（favicon PNG、封面图、HTML 压缩），与 IS_DEV 独立
 // 触发方式：FAST_BUILD=1 或 --fast 命令行参数
 const isFast =
@@ -195,9 +185,7 @@ async function render(modules, allTags) {
         }
       }
 
-      const dateStr = latestDate
-        ? latestDate.toISOString().split('T')[0]
-        : new Date().toISOString().split('T')[0]
+      const dateStr = latestDate ? latestDate.toISOString().split('T')[0] : new Date().toISOString().split('T')[0]
       lastModCache.set(moduleSlug, dateStr)
       return dateStr
     } catch (e) {
@@ -216,8 +204,7 @@ async function render(modules, allTags) {
 
   // copy thirdparty
   const thirdpartyDir = path.join(root, 'thirdparty')
-  if (await fs.pathExists(thirdpartyDir))
-    await fs.copy(thirdpartyDir, path.join(outDir, 'thirdparty'))
+  if (await fs.pathExists(thirdpartyDir)) await fs.copy(thirdpartyDir, path.join(outDir, 'thirdparty'))
   // copy client resources (app.js, style.css) - 使用 glob 一次性选择
   const clientFiles = await fg(['*.{js,css}'], {
     cwd: path.join(root, 'src', 'client'),
@@ -245,13 +232,7 @@ async function render(modules, allTags) {
 
   // 复制 scratchblocks 核心库
   try {
-    const sbMinEs = path.join(
-      root,
-      'node_modules',
-      'scratchblocks-plus',
-      'build',
-      'scratchblocks-plus.min.es.js'
-    )
+    const sbMinEs = path.join(root, 'node_modules', 'scratchblocks-plus', 'build', 'scratchblocks-plus.min.es.js')
     if (await fs.pathExists(sbMinEs)) {
       await fs.copy(sbMinEs, path.join(vendorDir, 'scratchblocks-plus.min.es.js'))
     }
@@ -348,11 +329,7 @@ async function render(modules, allTags) {
   // 搜索与文档列表将按语言分别生成
 
   // render pages per locale（对每个 locale 复用翻译结果，避免重复计算）
-  const [dict, globalTags, moduleDefaults] = await Promise.all([
-    loadI18n(),
-    loadGlobalTags(),
-    loadModuleDefaults(),
-  ])
+  const [dict, globalTags, moduleDefaults] = await Promise.all([loadI18n(), loadGlobalTags(), loadModuleDefaults()])
   const locales = Object.keys(dict)
   const localeConfigCache = new Map()
   // 每种语言的 hreflang 标记（优先使用 i18n.meta.languageTag）
@@ -440,12 +417,7 @@ async function render(modules, allTags) {
     if (!isFast) {
       for (const m of modulesForLoc) {
         const moduleOutDir = path.join(locOut, 'modules', m.slug)
-        await generateModuleCover(
-          m,
-          langTag,
-          path.join(moduleOutDir, 'cover.png'),
-          locConfig.siteName
-        )
+        await generateModuleCover(m, langTag, path.join(moduleOutDir, 'cover.png'), locConfig.siteName)
       }
     }
 
@@ -469,11 +441,7 @@ async function render(modules, allTags) {
         description: locConfig.description,
       }),
     })
-    await fs.outputFile(
-      path.join(locOut, 'index.html'),
-      await maybeMinify(indexHtml, isFast),
-      'utf8'
-    )
+    await fs.outputFile(path.join(locOut, 'index.html'), await maybeMinify(indexHtml, isFast), 'utf8')
 
     // 生成关于页面
     const aboutHtml = nunjucks.render('layouts/about.njk', {
@@ -498,11 +466,7 @@ async function render(modules, allTags) {
     })
     const aboutDir = path.join(locOut, 'about')
     await fs.ensureDir(aboutDir)
-    await fs.writeFile(
-      path.join(aboutDir, 'index.html'),
-      await maybeMinify(aboutHtml, isFast),
-      'utf8'
-    )
+    await fs.writeFile(path.join(aboutDir, 'index.html'), await maybeMinify(aboutHtml, isFast), 'utf8')
 
     for (const m of modules) {
       const moduleData = modulesForLoc.find((x) => x.id === m.id) || m
@@ -529,11 +493,7 @@ async function render(modules, allTags) {
       })
       const moduleDir = path.join(locOut, 'modules', m.slug)
       await fs.ensureDir(moduleDir)
-      await fs.writeFile(
-        path.join(moduleDir, 'index.html'),
-        await maybeMinify(html, isFast),
-        'utf8'
-      )
+      await fs.writeFile(path.join(moduleDir, 'index.html'), await maybeMinify(html, isFast), 'utf8')
     }
   }
 
@@ -550,11 +510,7 @@ async function render(modules, allTags) {
     config,
     lang: langTags[defaultLocale] || defaultLocale,
   })
-  await fs.outputFile(
-    path.join(outDir, 'index.html'),
-    await maybeMinify(redirectHtml, isFast),
-    'utf8'
-  )
+  await fs.outputFile(path.join(outDir, 'index.html'), await maybeMinify(redirectHtml, isFast), 'utf8')
   // Cloudflare Pages 使用 _redirects 文件，以获得更好的 SEO 和性能（相较于 HTML meta 刷新）
   const redirectsContent = '/ /en/ 301'
   await fs.outputFile(path.join(outDir, '_redirects'), redirectsContent, 'utf8')
@@ -574,11 +530,7 @@ async function render(modules, allTags) {
     i18nJSON: JSON.stringify(dict),
     lang: langTags[defaultLocale] || defaultLocale,
   })
-  await fs.outputFile(
-    path.join(outDir, '404.html'),
-    await maybeMinify(notFound404Html, isFast),
-    'utf8'
-  )
+  await fs.outputFile(path.join(outDir, '404.html'), await maybeMinify(notFound404Html, isFast), 'utf8')
 
   // sitemap
   const urls = locales.flatMap((loc) => [
@@ -606,8 +558,7 @@ async function render(modules, allTags) {
 
     // 关于页面：使用模板文件和全局 i18n 的最后修改时间
     const aboutTemplateLastMod = await getFileLastModDate('src/templates/layouts/about.njk')
-    const aboutLastMod =
-      aboutTemplateLastMod >= globalI18nLastMod ? aboutTemplateLastMod : globalI18nLastMod
+    const aboutLastMod = aboutTemplateLastMod >= globalI18nLastMod ? aboutTemplateLastMod : globalI18nLastMod
     for (const loc of locales) {
       sitemapUrls.push({
         loc: `/${loc}/about/`,
@@ -621,14 +572,11 @@ async function render(modules, allTags) {
       for (const loc of locales) {
         const imagePath = `/${loc}/modules/${m.slug}/cover.png`
         const modulesForLoc = translatedCache.get(loc)
-        const localizedModule =
-          (modulesForLoc && modulesForLoc.find((item) => item.slug === m.slug)) || m
+        const localizedModule = (modulesForLoc && modulesForLoc.find((item) => item.slug === m.slug)) || m
         const locConfig = localeConfigCache.get(loc)
-        const moduleLabel =
-          localizedModule?.name || localizedModule?.description || m.name || m.description || m.id
+        const moduleLabel = localizedModule?.name || localizedModule?.description || m.name || m.description || m.id
         const siteLabel = locConfig?.siteName || config.siteName
-        const captionText =
-          moduleLabel && siteLabel ? `${moduleLabel} - ${siteLabel}` : moduleLabel || siteLabel
+        const captionText = moduleLabel && siteLabel ? `${moduleLabel} - ${siteLabel}` : moduleLabel || siteLabel
         sitemapUrls.push({
           loc: `/${loc}/modules/${m.slug}/`,
           lastmod: moduleLastMod,
@@ -725,11 +673,7 @@ async function render(modules, allTags) {
       const locOut = path.join(outDir, loc)
       const issuesDir = path.join(locOut, 'issues')
       await fs.ensureDir(issuesDir)
-      await fs.writeFile(
-        path.join(issuesDir, 'index.html'),
-        await maybeMinify(issuesHtml, isFast),
-        'utf8'
-      )
+      await fs.writeFile(path.join(issuesDir, 'index.html'), await maybeMinify(issuesHtml, isFast), 'utf8')
     }
   }
 }
@@ -755,10 +699,7 @@ function reportIssue(type, message, details = {}) {
 ;(async () => {
   const buildStart = Date.now()
   const modeFlags = [isDev && 'dev', isFast && 'fast'].filter(Boolean)
-  log.info(
-    'build',
-    `开始构建${modeFlags.length ? paint(c.dim, ` (${modeFlags.join(', ')})`) : ''}…`
-  )
+  log.info('build', `开始构建${modeFlags.length ? paint(c.dim, ` (${modeFlags.join(', ')})`) : ''}…`)
   const { modules, errorsAll, allTags } = await loadModules({ root, config, isDev })
   // 将 loadModules 的结构化错误加入 collectedIssues
   for (const msg of errorsAll) reportIssue('error', msg)

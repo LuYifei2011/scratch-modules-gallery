@@ -21,8 +21,7 @@ const NODE_MODULES_DIR = path.resolve('node_modules')
 
 // --- HTTPS 配置 ---
 const HTTPS_ENABLED =
-  String(process.env.HTTPS || '').toLowerCase() === '1' ||
-  String(process.env.HTTPS || '').toLowerCase() === 'true'
+  String(process.env.HTTPS || '').toLowerCase() === '1' || String(process.env.HTTPS || '').toLowerCase() === 'true'
 const HTTPS_KEY = process.env.HTTPS_KEY // PEM 私钥路径
 const HTTPS_CERT = process.env.HTTPS_CERT // PEM 证书路径
 const HTTPS_PFX = process.env.HTTPS_PFX // PFX 路径（可选）
@@ -393,10 +392,7 @@ const requestHandler = (req, res) => {
       res.setHeader('Keep-Alive', 'timeout=5')
 
       // 小文件缓存逻辑
-      if (
-        stat.size <= SMALL_FILE_LIMIT &&
-        ['.html', '.js', '.css', '.json', '.txt'].includes(ext)
-      ) {
+      if (stat.size <= SMALL_FILE_LIMIT && ['.html', '.js', '.css', '.json', '.txt'].includes(ext)) {
         const cached = getCachedFile(absPath, stat)
         if (cached) {
           if (cached.isHTML) return res.end(cached.data)
@@ -463,9 +459,7 @@ const requestHandler = (req, res) => {
   })
 }
 
-const server = HTTPS_ENABLED
-  ? https.createServer(httpsOptions, requestHandler)
-  : http.createServer(requestHandler)
+const server = HTTPS_ENABLED ? https.createServer(httpsOptions, requestHandler) : http.createServer(requestHandler)
 
 // ── 状态行打印 ────────────────────────────────────────────────────────────────
 function printStatusLine() {
@@ -506,9 +500,7 @@ function setupKeyboard() {
         setLogMode(verboseMode ? 'v' : 's')
         log.info(
           'dev',
-          paint(c.cyan, '日志模式') +
-            paint(c.dim, ' → ') +
-            paint(c.cyan + c.bold, verboseMode ? '详细' : '简略')
+          paint(c.cyan, '日志模式') + paint(c.dim, ' → ') + paint(c.cyan + c.bold, verboseMode ? '详细' : '简略')
         )
         printStatusLine()
         break
@@ -544,9 +536,7 @@ function shutdown() {
 server.listen(PORT, HOST, () => {
   const urlStr = `${protocol}://${HOST}:${PORT}/`
   // OSC 8 超链接（支持的终端点击可跳转，不支持的忽略转义序列）
-  const linked = process.stdout.isTTY
-    ? `\x1b]8;;${urlStr}\x07${paint(c.cyan + c.bold, urlStr)}\x1b]8;;\x07`
-    : urlStr
+  const linked = process.stdout.isTTY ? `\x1b]8;;${urlStr}\x07${paint(c.cyan + c.bold, urlStr)}\x1b]8;;\x07` : urlStr
   log.banner([
     paint(c.bold, 'Scratch Modules Gallery') + paint(c.dim, '  Dev Server'),
     '',

@@ -29,8 +29,7 @@
 
   /* 排版系统 */
   --font-family-base:
-    system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial,
-    sans-serif;
+    system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   --font-family-mono: 'Consolas', 'Monaco', 'Courier New', monospace;
 
   --font-size-xs: 0.65rem; /* 10.4px */

@@ -98,9 +98,7 @@ async function scanModules() {
         const i18nDir = path.join(moduleDir, 'i18n')
         const hasI18n = await fs.pathExists(i18nDir)
         const i18nFiles = hasI18n ? await fs.readdir(i18nDir) : []
-        const locales = i18nFiles
-          .filter((f) => f.endsWith('.json'))
-          .map((f) => f.replace('.json', ''))
+        const locales = i18nFiles.filter((f) => f.endsWith('.json')).map((f) => f.replace('.json', ''))
 
         modules.push({
           id: dir,
@@ -264,11 +262,7 @@ export async function createModule(req, res) {
 
     // 创建默认脚本
     const defaultScript = `when green flag clicked\nsay [Hello!] for (2) secs\n`
-    await fs.writeFile(
-      path.join(moduleDir, 'scripts/01-main.txt'),
-      normalizeScriptContent(defaultScript),
-      'utf8'
-    )
+    await fs.writeFile(path.join(moduleDir, 'scripts/01-main.txt'), normalizeScriptContent(defaultScript), 'utf8')
 
     sendJson(res, 201, { id, message: 'Module created successfully' })
   } catch (e) {
@@ -402,11 +396,7 @@ export async function createScript(req, res, moduleId) {
 
     // 验证 id 格式（只允许字母、数字、连字符）
     if (!/^[a-z0-9-]+$/.test(id)) {
-      return sendError(
-        res,
-        400,
-        'Invalid script id: only lowercase letters, numbers, and hyphens allowed'
-      )
+      return sendError(res, 400, 'Invalid script id: only lowercase letters, numbers, and hyphens allowed')
     }
 
     const scriptsDir = path.join(modulesDir, moduleId, 'scripts')
@@ -476,11 +466,7 @@ export async function updateScript(req, res, moduleId, scriptId) {
     if (finalId !== scriptId || finalOrder !== currentOrder) {
       // 验证新 id 格式
       if (!/^[a-z0-9-]+$/.test(finalId)) {
-        return sendError(
-          res,
-          400,
-          'Invalid script id: only lowercase letters, numbers, and hyphens allowed'
-        )
+        return sendError(res, 400, 'Invalid script id: only lowercase letters, numbers, and hyphens allowed')
       }
 
       const newFilename = `${String(finalOrder).padStart(2, '0')}-${finalId}.txt`
@@ -539,11 +525,7 @@ export async function deleteScript(req, res, moduleId, scriptId) {
     // 检查是否至少保留一个脚本
     const txtFiles = files.filter((f) => f.endsWith('.txt'))
     if (txtFiles.length <= 1) {
-      return sendError(
-        res,
-        400,
-        'Cannot delete the last script file: modules must have at least one script file'
-      )
+      return sendError(res, 400, 'Cannot delete the last script file: modules must have at least one script file')
     }
 
     const scriptPath = path.join(scriptsDir, targetFile)
@@ -709,9 +691,7 @@ export async function uploadAsset(req, res, moduleId) {
       maxFileSize: 5 * 1024 * 1024, // 5MB
       filter: ({ mimetype, originalFilename }) => {
         const allowed = ['.png', '.jpg', '.jpeg', '.gif', '.svg', '.pdf']
-        return (
-          originalFilename && allowed.some((ext) => originalFilename.toLowerCase().endsWith(ext))
-        )
+        return originalFilename && allowed.some((ext) => originalFilename.toLowerCase().endsWith(ext))
       },
     })
 

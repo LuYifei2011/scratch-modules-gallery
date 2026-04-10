@@ -56,11 +56,7 @@ function buildNameMapsForModule(mod, localePriority) {
       }
     }
   }
-  if (
-    !Object.keys(maps.vars).length &&
-    !Object.keys(maps.lists).length &&
-    !Object.keys(maps.events).length
-  )
+  if (!Object.keys(maps.vars).length && !Object.keys(maps.lists).length && !Object.keys(maps.events).length)
     return undefined
   return maps
 }
@@ -150,20 +146,11 @@ function mergeTranslation(globalDef, modSpecific) {
  * @param {Function} [callbacks.reportIssue] - 构建问题上报函数 (type, message, details) => void
  * @returns {Promise<Array>} 本地化后的模块副本数组
  */
-export async function translateModulesForLocale(
-  modules,
-  dict,
-  locale,
-  globalTags = {},
-  options = {},
-  callbacks = {}
-) {
+export async function translateModulesForLocale(modules, dict, locale, globalTags = {}, options = {}, callbacks = {}) {
   const { moduleDefaults = {} } = options
   const { translateScriptText, reportIssue } = callbacks
 
-  const languageTag = (dict[locale]?.meta?.languageTag || locale || 'en')
-    .replace('-', '_')
-    .toLowerCase()
+  const languageTag = (dict[locale]?.meta?.languageTag || locale || 'en').replace('-', '_').toLowerCase()
   const isEnglishLocale = locale === 'en' || languageTag.startsWith('en')
 
   // 生成语言优先级顺序：CJK 语言之间互相回退；非 CJK 语言只查自身（+ en），
@@ -294,8 +281,7 @@ export async function translateModulesForLocale(
             let targetForProc
             if (s.imported && s.fromId) {
               targetForProc = mergedModulesMap.get(s.fromId)
-              if (targetForProc)
-                mapsForThis = buildNameMapsForModule(targetForProc, localePriority) || mapsForThis
+              if (targetForProc) mapsForThis = buildNameMapsForModule(targetForProc, localePriority) || mapsForThis
             }
             const procMaps = buildProcedureMaps(targetForProc || mergedM, localePriority)
             const commentsMap = buildCommentsMap(targetForProc || mergedM, localePriority)
@@ -323,8 +309,7 @@ export async function translateModulesForLocale(
                 missingComments.forEach((p) => accMissingComments.add(p))
               }
               // 若翻译阶段未匹配到有效结果，回退到原文
-              ns.content =
-                typeof translated === 'string' && translated.trim() ? translated : s.content
+              ns.content = typeof translated === 'string' && translated.trim() ? translated : s.content
             } else {
               ns.content = s.content
             }
@@ -368,13 +353,9 @@ export async function translateModulesForLocale(
                   if (procMaps?.procMap) mf.procs = procMaps.procMap
                   if (cm) mf.comments = cm
                 }
-                const xlResult = translateScriptText
-                  ? translateScriptText(imp.content, languageTag, mf)
-                  : null
+                const xlResult = translateScriptText ? translateScriptText(imp.content, languageTag, mf) : null
                 const translated = xlResult ? xlResult.text : null
-                return typeof translated === 'string' && translated.trim()
-                  ? translated
-                  : imp.content
+                return typeof translated === 'string' && translated.trim() ? translated : imp.content
               })(),
               fromName: localizedFromName,
               fromTitle:
@@ -444,52 +425,35 @@ export async function translateModulesForLocale(
           const missingTitleIds = scriptIds.filter((id) => !(id in locTitles))
           if (missingTitleIds.length)
             missingFields.push(
-              'scriptTitles(' +
-                missingTitleIds.slice(0, 5).join(',') +
-                (missingTitleIds.length > 5 ? '…' : '') +
-                ')'
+              'scriptTitles(' + missingTitleIds.slice(0, 5).join(',') + (missingTitleIds.length > 5 ? '…' : '') + ')'
             )
         }
         // 变量/列表
         if (Array.isArray(m.variables) && m.variables.length) {
-          const varsNames = m.variables
-            .filter((v) => v && v.name && v.type !== 'list')
-            .map((v) => v.name)
-          const listNames = m.variables
-            .filter((v) => v && v.name && v.type === 'list')
-            .map((v) => v.name)
+          const varsNames = m.variables.filter((v) => v && v.name && v.type !== 'list').map((v) => v.name)
+          const listNames = m.variables.filter((v) => v && v.name && v.type === 'list').map((v) => v.name)
           const locVarMap = locTrans.variables || {}
           const locListMap = locTrans.lists || {}
           // 仅当名称长度大于 1 时才警告，避免单字符变量（如 "i"）的误报
           const missVars = varsNames.filter((n) => !(n in locVarMap) && n.length > 1)
           const missLists = listNames.filter((n) => !(n in locListMap) && n.length > 1)
           if (missVars.length)
-            missingFields.push(
-              'variables(' + missVars.slice(0, 5).join(',') + (missVars.length > 5 ? '…' : '') + ')'
-            )
+            missingFields.push('variables(' + missVars.slice(0, 5).join(',') + (missVars.length > 5 ? '…' : '') + ')')
           if (missLists.length)
-            missingFields.push(
-              'lists(' + missLists.slice(0, 5).join(',') + (missLists.length > 5 ? '…' : '') + ')'
-            )
+            missingFields.push('lists(' + missLists.slice(0, 5).join(',') + (missLists.length > 5 ? '…' : '') + ')')
         }
         // 自定义块 pattern 与参数（由 translateScriptFields 运行时检测，累积自 accMissingProcs/accMissingParams）
         if (accMissingProcs.size) {
           const arr = [...accMissingProcs]
-          missingFields.push(
-            'procedures(' + arr.slice(0, 3).join(',') + (arr.length > 3 ? '…' : '') + ')'
-          )
+          missingFields.push('procedures(' + arr.slice(0, 3).join(',') + (arr.length > 3 ? '…' : '') + ')')
         }
         if (accMissingParams.size) {
           const arr = [...accMissingParams]
-          missingFields.push(
-            'procedureParams(' + arr.slice(0, 3).join(',') + (arr.length > 3 ? '…' : '') + ')'
-          )
+          missingFields.push('procedureParams(' + arr.slice(0, 3).join(',') + (arr.length > 3 ? '…' : '') + ')')
         }
         if (accMissingComments.size) {
           const arr = [...accMissingComments]
-          missingFields.push(
-            'comments(' + arr.slice(0, 3).join(',') + (arr.length > 3 ? '…' : '') + ')'
-          )
+          missingFields.push('comments(' + arr.slice(0, 3).join(',') + (arr.length > 3 ? '…' : '') + ')')
         }
         if (missingFields.length) {
           nm.hasPartialTranslation = true

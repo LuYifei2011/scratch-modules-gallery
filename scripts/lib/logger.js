@@ -201,12 +201,8 @@ export function banner(lines) {
   const width = termWidth()
   const maxContent = Math.min(Math.max(...lines.map((l) => visLen(l))) + 4, width - 2)
 
-  const topBorder = IS_TTY
-    ? `${c.blue}╭${'─'.repeat(maxContent)}╮${RESET}`
-    : `┌${'─'.repeat(maxContent)}┐`
-  const botBorder = IS_TTY
-    ? `${c.blue}╰${'─'.repeat(maxContent)}╯${RESET}`
-    : `└${'─'.repeat(maxContent)}┘`
+  const topBorder = IS_TTY ? `${c.blue}╭${'─'.repeat(maxContent)}╮${RESET}` : `┌${'─'.repeat(maxContent)}┐`
+  const botBorder = IS_TTY ? `${c.blue}╰${'─'.repeat(maxContent)}╯${RESET}` : `└${'─'.repeat(maxContent)}┘`
   const side = IS_TTY ? `${c.blue}│${RESET}` : '│'
 
   console.log('')
@@ -214,9 +210,7 @@ export function banner(lines) {
   for (const line of lines) {
     if (line === '') {
       // 空行 → 分隔线
-      const sep = IS_TTY
-        ? `${c.blue}├${'─'.repeat(maxContent)}┤${RESET}`
-        : `├${'─'.repeat(maxContent)}┤`
+      const sep = IS_TTY ? `${c.blue}├${'─'.repeat(maxContent)}┤${RESET}` : `├${'─'.repeat(maxContent)}┤`
       console.log(sep)
     } else {
       const pad = maxContent - visLen(line) - 2
@@ -241,9 +235,7 @@ export function statusLine(state, withHints = true) {
   const readyDot = state.ready ? paint(c.green + c.bold, '●') : paint(c.yellow + c.bold, '◌')
   const readyText = state.ready ? paint(c.green + c.bold, 'Ready') : paint(c.yellow, 'Building…')
 
-  const fastLabel = state.fastBuild
-    ? paint(c.cyan, 'Fast Build: ON ')
-    : paint(c.dim, 'Fast Build: OFF')
+  const fastLabel = state.fastBuild ? paint(c.cyan, 'Fast Build: ON ') : paint(c.dim, 'Fast Build: OFF')
 
   const logLevelLabel = state.logLevel
     ? `${paint(c.dim, '│')}  ${paint(c.dim, '日志:')} ${paint(c.cyan, state.logLevel)}`

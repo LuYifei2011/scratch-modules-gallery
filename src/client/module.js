@@ -62,10 +62,8 @@ async function copyTextToClipboard(text) {
 
 function showCopyResult(btn, ok, originalLabel) {
   if (!btn) return
-  const succ =
-    (window.__I18N && window.__I18N.module && window.__I18N.module.copySuccess) || 'Copied!'
-  const fail =
-    (window.__I18N && window.__I18N.module && window.__I18N.module.copyFail) || 'Copy failed'
+  const succ = (window.__I18N && window.__I18N.module && window.__I18N.module.copySuccess) || 'Copied!'
+  const fail = (window.__I18N && window.__I18N.module && window.__I18N.module.copyFail) || 'Copy failed'
 
   if (ok) {
     btn.classList.remove('failed')
@@ -122,18 +120,14 @@ async function initScratchblocks() {
       if (!wrapper) return
       const btn = wrapper.querySelector('.sb-copy')
       if (!btn) return
-      const label =
-        (window.__I18N && window.__I18N.module && window.__I18N.module.copyScript) || 'Copy'
+      const label = (window.__I18N && window.__I18N.module && window.__I18N.module.copyScript) || 'Copy'
       btn.setAttribute('aria-label', label)
       btn.setAttribute('title', label)
       const originalLabel = label
       // click handler copies current text rendition of the doc
       btn.addEventListener('click', async (ev) => {
         ev.preventDefault()
-        const text =
-          obj.doc && typeof obj.doc.stringify === 'function'
-            ? obj.doc.stringify()
-            : obj.el.textContent || ''
+        const text = obj.doc && typeof obj.doc.stringify === 'function' ? obj.doc.stringify() : obj.el.textContent || ''
         const ok = await copyTextToClipboard(text)
         showCopyResult(btn, ok, originalLabel)
       })
@@ -154,9 +148,7 @@ async function initScratchblocks() {
         exportToggle.addEventListener('click', (ev) => {
           ev.stopPropagation()
           const wasOpen = exportGroup.classList.contains('open')
-          document
-            .querySelectorAll('.sb-export-group.open')
-            .forEach((g) => g.classList.remove('open'))
+          document.querySelectorAll('.sb-export-group.open').forEach((g) => g.classList.remove('open'))
           if (!wasOpen) exportGroup.classList.add('open')
         })
       }
@@ -203,8 +195,7 @@ async function initScratchblocks() {
 
   const STYLE_KEY = 'sb-style-pref'
   const styleSelect = document.getElementById('sb-style')
-  let currentStyle =
-    localStorage.getItem(STYLE_KEY) || (styleSelect ? styleSelect.value : 'scratch3')
+  let currentStyle = localStorage.getItem(STYLE_KEY) || (styleSelect ? styleSelect.value : 'scratch3')
   if (styleSelect) {
     styleSelect.value = currentStyle
     styleSelect.addEventListener('change', () => {
@@ -294,8 +285,7 @@ function initVariablesAndLists() {
 
     const copyBtn = row.querySelector('.var-copy')
     if (copyBtn) {
-      const label =
-        (window.__I18N && window.__I18N.module && window.__I18N.module.copyScript) || 'Copy'
+      const label = (window.__I18N && window.__I18N.module && window.__I18N.module.copyScript) || 'Copy'
       copyBtn.setAttribute('aria-label', label)
       copyBtn.setAttribute('title', label)
       copyBtn.addEventListener('click', async (ev) => {
@@ -351,8 +341,8 @@ function initToc() {
   })
 
   // 收集子脚本 ID（从 TOC 链接读取，保持与模板一致）
-  const scriptSubIds = Array.from(document.querySelectorAll('.toc-link-sub[href^="#script-"]')).map(
-    (l) => l.getAttribute('href').slice(1)
+  const scriptSubIds = Array.from(document.querySelectorAll('.toc-link-sub[href^="#script-"]')).map((l) =>
+    l.getAttribute('href').slice(1)
   )
 
   // 完整有序 ID 列表：顶层节 + scripts 下的子脚本
@@ -398,10 +388,7 @@ function initToc() {
 
     // 修复问题：当滚动到底部时，如果底部内容较少导致核心视口区域无高亮发生
     // 强制高亮最后一个真正存在的区块
-    if (
-      window.innerHeight + Math.ceil(window.scrollY) >=
-      document.documentElement.scrollHeight - 5
-    ) {
+    if (window.innerHeight + Math.ceil(window.scrollY) >= document.documentElement.scrollHeight - 5) {
       const lastId = [...allIds].reverse().find((id) => document.getElementById(id))
       if (lastId) {
         activeId = lastId

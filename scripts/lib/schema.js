@@ -80,8 +80,7 @@ export function buildModuleRecord(meta, extra) {
   if (!id) errors.push('missing id')
   if (!name) errors.push('missing name')
   if (!description) errors.push('missing description')
-  if (!(Array.isArray(tags) || (tags && typeof tags === 'object')))
-    errors.push('tags must be array or i18n map')
+  if (!(Array.isArray(tags) || (tags && typeof tags === 'object'))) errors.push('tags must be array or i18n map')
 
   const nameNorm = normalizeI18nStringOrMap(name)
   const descNorm = normalizeI18nStringOrMap(description)
@@ -89,9 +88,7 @@ export function buildModuleRecord(meta, extra) {
   const keywordsNorm = normalizeI18nKeywords(keywords)
   // 脚本标题（英文，按脚本 id -> 标题）
   const scriptTitles =
-    meta && typeof meta.scriptTitles === 'object' && !Array.isArray(meta.scriptTitles)
-      ? meta.scriptTitles
-      : {}
+    meta && typeof meta.scriptTitles === 'object' && !Array.isArray(meta.scriptTitles) ? meta.scriptTitles : {}
 
   const record = {
     id,

@@ -2,10 +2,7 @@ import { minify } from 'html-minifier-next'
 import log from './logger.js'
 
 export function escapeHtml(str = '') {
-  return str.replace(
-    /[&<>"]/g,
-    (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]
-  )
+  return str.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c])
 }
 
 export async function maybeMinify(html, skip = false) {

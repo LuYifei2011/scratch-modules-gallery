@@ -187,9 +187,7 @@ function renderModuleEditor() {
   document.getElementById('meta-name').value = meta.name || ''
   document.getElementById('meta-description').value = meta.description || ''
   document.getElementById('meta-tags').value = Array.isArray(meta.tags) ? meta.tags.join(', ') : ''
-  document.getElementById('meta-keywords').value = Array.isArray(meta.keywords)
-    ? meta.keywords.join(', ')
-    : ''
+  document.getElementById('meta-keywords').value = Array.isArray(meta.keywords) ? meta.keywords.join(', ') : ''
 
   // 处理 contributors
   let contributorsStr = ''
@@ -408,8 +406,7 @@ async function renderScriptPreview(content) {
 
   const sb = await loadScratchblocks()
   if (!sb) {
-    previewContainer.innerHTML =
-      '<p style="color: #ff6680;">预览功能不可用（scratchblocks 未加载）</p>'
+    previewContainer.innerHTML = '<p style="color: #ff6680;">预览功能不可用（scratchblocks 未加载）</p>'
     return
   }
 
@@ -622,17 +619,14 @@ document.getElementById('save-script-btn').addEventListener('click', async () =>
   }
 
   try {
-    await apiRequest(
-      `/api/modules/${state.currentModule.id}/scripts/${encodeURIComponent(state.currentScript.id)}`,
-      {
-        method: 'PUT',
-        body: JSON.stringify({
-          content,
-          newId: newId !== state.currentScript.id ? newId : undefined,
-          newOrder: newOrder !== state.currentScript.order ? newOrder : undefined,
-        }),
-      }
-    )
+    await apiRequest(`/api/modules/${state.currentModule.id}/scripts/${encodeURIComponent(state.currentScript.id)}`, {
+      method: 'PUT',
+      body: JSON.stringify({
+        content,
+        newId: newId !== state.currentScript.id ? newId : undefined,
+        newOrder: newOrder !== state.currentScript.order ? newOrder : undefined,
+      }),
+    })
     showToast('脚本已保存')
     await loadModule(state.currentModule.id)
 
@@ -659,12 +653,9 @@ document.getElementById('delete-script-btn').addEventListener('click', async () 
   }
 
   try {
-    await apiRequest(
-      `/api/modules/${state.currentModule.id}/scripts/${encodeURIComponent(state.currentScript.id)}`,
-      {
-        method: 'DELETE',
-      }
-    )
+    await apiRequest(`/api/modules/${state.currentModule.id}/scripts/${encodeURIComponent(state.currentScript.id)}`, {
+      method: 'DELETE',
+    })
     state.currentScript = null
     // 清除 URL 参数
     updateURLParams({ script: null })
@@ -702,12 +693,8 @@ document.getElementById('i18n-locale-select').addEventListener('change', async (
     // 填充表单
     document.getElementById('i18n-name').value = data.name || ''
     document.getElementById('i18n-description').value = data.description || ''
-    document.getElementById('i18n-tags').value = Array.isArray(data.tags)
-      ? data.tags.join(', ')
-      : ''
-    document.getElementById('i18n-keywords').value = Array.isArray(data.keywords)
-      ? data.keywords.join(', ')
-      : ''
+    document.getElementById('i18n-tags').value = Array.isArray(data.tags) ? data.tags.join(', ') : ''
+    document.getElementById('i18n-keywords').value = Array.isArray(data.keywords) ? data.keywords.join(', ') : ''
 
     // 提取其他字段
     const { name, description, tags, keywords, ...extra } = data
@@ -875,12 +862,9 @@ async function handleDeleteAsset(filename) {
   }
 
   try {
-    await apiRequest(
-      `/api/modules/${state.currentModule.id}/assets/${encodeURIComponent(filename)}`,
-      {
-        method: 'DELETE',
-      }
-    )
+    await apiRequest(`/api/modules/${state.currentModule.id}/assets/${encodeURIComponent(filename)}`, {
+      method: 'DELETE',
+    })
     showToast('资源已删除')
     await loadModule(state.currentModule.id)
     renderAssets()
@@ -1091,10 +1075,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
     toggleScriptsSidebar.addEventListener('click', () => {
       scriptsSidebar.classList.toggle('collapsed')
-      localStorage.setItem(
-        'scripts-sidebar-collapsed',
-        scriptsSidebar.classList.contains('collapsed')
-      )
+      localStorage.setItem('scripts-sidebar-collapsed', scriptsSidebar.classList.contains('collapsed'))
     })
   }
 

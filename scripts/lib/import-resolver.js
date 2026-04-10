@@ -107,10 +107,7 @@ export function resolveImports(modules) {
           continue
         }
         const key = refId + ':' + index1
-        const expanded = fullyExpandContent(idMap, targetModule.id, targetScript.content, [
-          mod.id + ':root',
-          key,
-        ])
+        const expanded = fullyExpandContent(idMap, targetModule.id, targetScript.content, [mod.id + ':root', key])
         leadingImports.push({
           imported: true,
           content: expanded,
@@ -167,10 +164,7 @@ export function resolveImports(modules) {
           continue
         }
         const key = refId + ':' + index1
-        const expanded = fullyExpandContent(idMap, targetModule.id, targetScript.content, [
-          mod.id + ':root',
-          key,
-        ])
+        const expanded = fullyExpandContent(idMap, targetModule.id, targetScript.content, [mod.id + ':root', key])
         newScripts.push({
           imported: true,
           content: expanded,

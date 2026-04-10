@@ -283,10 +283,7 @@ function buildModuleCoverSVG({
   const descY = titleBottomY + 44
   const descLines = wrapTextByWidth(description || '', descFont, leftMaxW).slice(0, 5)
   const descTspans = descLines
-    .map(
-      (line, i) =>
-        `<tspan x="${PAD_X}" dy="${i === 0 ? 0 : DESC_LINE_HEIGHT}">${escapeHtml(line)}</tspan>`
-    )
+    .map((line, i) => `<tspan x="${PAD_X}" dy="${i === 0 ? 0 : DESC_LINE_HEIGHT}">${escapeHtml(line)}</tspan>`)
     .join('')
   const descBottomY = descY + (descLines.length - 1) * DESC_LINE_HEIGHT
 

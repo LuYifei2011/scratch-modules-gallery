@@ -1,11 +1,6 @@
 import { describe, it } from 'node:test'
 import assert from 'node:assert/strict'
-import {
-  pickConfigForLocale,
-  loadI18n,
-  loadModuleDefaults,
-  loadGlobalTags,
-} from '../scripts/lib/i18n-loader.js'
+import { pickConfigForLocale, loadI18n, loadModuleDefaults, loadGlobalTags } from '../scripts/lib/i18n-loader.js'
 
 describe('pickConfigForLocale', () => {
   const baseConfig = {
@@ -71,11 +66,7 @@ describe('loadI18n', () => {
     assert.ok(dict['zh-cn'], 'Should load zh-cn locale')
     // Should exclude tags.json and module-defaults.json
     assert.strictEqual(dict['tags'], undefined, 'Should not include tags.json as locale')
-    assert.strictEqual(
-      dict['module-defaults'],
-      undefined,
-      'Should not include module-defaults.json as locale'
-    )
+    assert.strictEqual(dict['module-defaults'], undefined, 'Should not include module-defaults.json as locale')
   })
 
   it('each locale dict has meta section', async () => {

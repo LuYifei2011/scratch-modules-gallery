@@ -1,14 +1,7 @@
 // CodeMirror 配置和初始化
 import { EditorView, keymap, lineNumbers, highlightActiveLineGutter } from '@codemirror/view'
 import { EditorState, Compartment } from '@codemirror/state'
-import {
-  defaultKeymap,
-  history,
-  historyKeymap,
-  indentWithTab,
-  undo,
-  redo,
-} from '@codemirror/commands'
+import { defaultKeymap, history, historyKeymap, indentWithTab, undo, redo } from '@codemirror/commands'
 import { searchKeymap, highlightSelectionMatches } from '@codemirror/search'
 import { autocompletion, completionKeymap, closeBrackets } from '@codemirror/autocomplete'
 import { bracketMatching, indentOnInput, syntaxHighlighting } from '@codemirror/language'
@@ -106,13 +99,7 @@ export function createScratchblocksEditor(container, options = {}) {
     scratchblocksHighlight,
     themeCompartment.of(prefersDark ? darkTheme : []),
     syntaxHighlighting(classHighlighter),
-    keymap.of([
-      ...defaultKeymap,
-      ...historyKeymap,
-      ...searchKeymap,
-      ...completionKeymap,
-      indentWithTab,
-    ]),
+    keymap.of([...defaultKeymap, ...historyKeymap, ...searchKeymap, ...completionKeymap, indentWithTab]),
     // EditorView.lineWrapping,
     EditorState.tabSize.of(2),
   ]

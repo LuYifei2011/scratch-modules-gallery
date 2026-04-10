@@ -1,10 +1,6 @@
 import { describe, it } from 'node:test'
 import assert from 'node:assert/strict'
-import {
-  tokenizeCJK,
-  CATEGORY_COLORS,
-  analyzeBlockCategories,
-} from '../scripts/lib/scratch-utils.js'
+import { tokenizeCJK, CATEGORY_COLORS, analyzeBlockCategories } from '../scripts/lib/scratch-utils.js'
 
 describe('tokenizeCJK', () => {
   it('returns empty array for empty/null input', () => {

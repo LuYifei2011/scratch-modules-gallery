@@ -131,13 +131,7 @@ describe('translateModulesForLocale', () => {
         },
       },
     }
-    const result = await translateModulesForLocale(
-      [modNoTitles],
-      dict,
-      'zh-cn',
-      {},
-      { moduleDefaults }
-    )
+    const result = await translateModulesForLocale([modNoTitles], dict, 'zh-cn', {}, { moduleDefaults })
     // Should pick up scriptTitles from moduleDefaults
     assert.strictEqual(result[0].scripts[0].title, '默认主脚本')
   })
@@ -148,13 +142,7 @@ describe('translateModulesForLocale', () => {
         scriptTitles: { main: '默认主脚本' },
       },
     }
-    const result = await translateModulesForLocale(
-      [baseModule],
-      dict,
-      'zh-cn',
-      {},
-      { moduleDefaults }
-    )
+    const result = await translateModulesForLocale([baseModule], dict, 'zh-cn', {}, { moduleDefaults })
     // Module's own 'main' title should override the default
     assert.strictEqual(result[0].scripts[0].title, '主脚本')
   })
@@ -170,14 +158,7 @@ describe('translateModulesForLocale', () => {
         missingComments: new Set(),
       }
     }
-    await translateModulesForLocale(
-      [baseModule],
-      dict,
-      'zh-cn',
-      {},
-      {},
-      { translateScriptText: mockTranslate }
-    )
+    await translateModulesForLocale([baseModule], dict, 'zh-cn', {}, {}, { translateScriptText: mockTranslate })
     assert.ok(callArgs.length > 0, 'translateScriptText should be called at least once')
     // Verify the language key passed matches the expected value (zh-CN → zh_cn)
     assert.strictEqual(callArgs[0].langKey, 'zh_cn')
