@@ -318,10 +318,11 @@
                     var suggested = pickLocale(browserLangs);
                     if (!suggested || suggested === currentLocale) return;
                     var localeNames = window.LOCALE_NAMES || {};
-                    var langName = (localeNames[suggested] && localeNames[suggested].meta && localeNames[suggested].meta.languageName) || suggested;
-                    var msg = (hints.langSuggest || 'This page is also available in {langName}.').replace('{langName}', langName);
-                    var switchText = hints.langSuggestSwitch || 'Switch';
-                    var dismissText = hints.dismiss || '✕';
+                    var suggestedLangName = (localeNames[suggested] && localeNames[suggested].meta && localeNames[suggested].meta.languageName) || suggested;
+                    var currentLangName = (localeNames[currentLocale] && localeNames[currentLocale].meta && localeNames[currentLocale].meta.languageName) || currentLocale;
+                    var msg = (hints.langSuggest || 'This page is also available in {langName}.').replace('{langName}', suggestedLangName);
+                    var switchText = (hints.langSuggestSwitchTo || 'Switch to {langName}').replace('{langName}', suggestedLangName);
+                    var stayText = (hints.langSuggestStayIn || 'Stay in {currentLangName}').replace('{currentLangName}', currentLangName);
                     var hintBar = document.getElementById('hint-bar');
                     if (!hintBar) return;
                     var div = document.createElement('div');
@@ -341,15 +342,14 @@
                         location.href = base + '/' + suggested + '/' + rest;
                     });
                     div.appendChild(switchBtn);
-                    var dismissBtn = document.createElement('button');
-                    dismissBtn.className = 'hint-item-dismiss';
-                    dismissBtn.setAttribute('aria-label', dismissText);
-                    dismissBtn.textContent = dismissText;
-                    dismissBtn.addEventListener('click', function () {
+                    var stayBtn = document.createElement('button');
+                    stayBtn.className = 'hint-item-action hint-item-action-secondary';
+                    stayBtn.textContent = stayText;
+                    stayBtn.addEventListener('click', function () {
                         try { sessionStorage.setItem('hint-lang-dismissed', '1'); } catch (e) {}
                         div.remove();
                     });
-                    div.appendChild(dismissBtn);
+                    div.appendChild(stayBtn);
                     hintBar.appendChild(div);
                 })();
                 // 2. 部分翻译提示：对服务端渲染的 hint-partial-translation 元素处理关闭行为

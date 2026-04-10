@@ -73,7 +73,8 @@
   "hints": {
     "partialTranslation": "本页部分内容可能尚未完整翻译。",
     "langSuggest": "本页也提供 {langName} 版本。",
-    "langSuggestSwitch": "切换",
+    "langSuggestSwitchTo": "切换到 {langName}",
+    "langSuggestStayIn": "留在 {currentLangName}",
     "dismiss": "关闭"
   },
   "issues": {

@@ -545,8 +545,16 @@
   white-space: nowrap;
 }
 
+.hint-item-action-secondary {
+  opacity: 0.65;
+}
+
 .hint-item-action:hover {
   opacity: 0.8;
+}
+
+.hint-item-action-secondary:hover {
+  opacity: 1;
 }
 
 .hint-item-dismiss {

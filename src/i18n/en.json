@@ -73,7 +73,8 @@
   "hints": {
     "partialTranslation": "Some content on this page may not be fully translated.",
     "langSuggest": "This page is also available in {langName}.",
-    "langSuggestSwitch": "Switch",
+    "langSuggestSwitchTo": "Switch to {langName}",
+    "langSuggestStayIn": "Stay in {currentLangName}",
     "dismiss": "Dismiss"
   },
   "issues": {
