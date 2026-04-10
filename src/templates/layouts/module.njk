@@ -24,6 +24,14 @@
     }
     </script>
 {% endblock %}
+{% block hints %}
+    {% if module.hasPartialTranslation and locale != 'en' %}
+        <div class="hint-item hint-item-warning" id="hint-partial-translation" data-module="{{ module.slug }}">
+            <span class="hint-item-text">{{ t.hints.partialTranslation }}</span>
+            <button class="hint-item-dismiss" aria-label="{{ t.hints.dismiss }}">×</button>
+        </div>
+    {% endif %}
+{% endblock %}
 {% block content %}
     <div class="module-layout">
         <nav class="module-toc" id="module-toc" aria-label="{{ t.module.toc }}">

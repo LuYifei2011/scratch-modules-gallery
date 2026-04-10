@@ -70,6 +70,12 @@
     "text": "The page you are looking for does not exist.",
     "home": "Back to Home"
   },
+  "hints": {
+    "partialTranslation": "Some content on this page may not be fully translated.",
+    "langSuggest": "This page is also available in {langName}.",
+    "langSuggestSwitch": "Switch",
+    "dismiss": "Dismiss"
+  },
   "issues": {
     "pageTitle": "Build Issues",
     "heading": "Build Issues Report",

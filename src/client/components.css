@@ -495,3 +495,87 @@
     color: #ffd54a;
   }
 }
+
+/* === Hint Bar === */
+/**
+ * .hint-bar / .hint-item
+ * User-facing informational hints (partial translation, language suggestion).
+ * Rendered both server-side (module.njk) and client-side (base.njk JS).
+ */
+.hint-bar {
+  display: flex;
+  flex-direction: column;
+}
+
+.hint-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-sm) var(--space-lg);
+  font-size: var(--font-size-sm);
+  border-bottom: 1px solid transparent;
+}
+
+.hint-item-text {
+  flex: 1;
+}
+
+.hint-item-info {
+  background: #e8f4fd;
+  border-bottom-color: #b3d9f5;
+  color: #1565c0;
+}
+
+.hint-item-warning {
+  background: #fff8e1;
+  border-bottom-color: #ffe082;
+  color: #7b5e00;
+}
+
+.hint-item-action {
+  padding: 2px var(--space-sm);
+  font-size: var(--font-size-sm);
+  font-family: var(--font-family-base);
+  font-weight: var(--font-weight-medium);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  border: 1px solid currentColor;
+  background: transparent;
+  color: inherit;
+  white-space: nowrap;
+}
+
+.hint-item-action:hover {
+  opacity: 0.8;
+}
+
+.hint-item-dismiss {
+  border: none;
+  background: none;
+  cursor: pointer;
+  color: inherit;
+  opacity: 0.6;
+  padding: var(--space-xs);
+  line-height: 1;
+  font-size: 1rem;
+  font-family: var(--font-family-base);
+  flex-shrink: 0;
+}
+
+.hint-item-dismiss:hover {
+  opacity: 1;
+}
+
+@media (prefers-color-scheme: dark) {
+  .hint-item-info {
+    background: #0d2240;
+    border-bottom-color: #1e4d80;
+    color: #90caf9;
+  }
+
+  .hint-item-warning {
+    background: #2a2000;
+    border-bottom-color: #6b5000;
+    color: #ffd54a;
+  }
+}

@@ -70,6 +70,12 @@
     "text": "您访问的页面不存在。",
     "home": "返回首页"
   },
+  "hints": {
+    "partialTranslation": "本页部分内容可能尚未完整翻译。",
+    "langSuggest": "本页也提供 {langName} 版本。",
+    "langSuggestSwitch": "切换",
+    "dismiss": "关闭"
+  },
   "issues": {
     "pageTitle": "构建问题",
     "heading": "构建问题报告",

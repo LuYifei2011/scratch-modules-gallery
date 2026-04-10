@@ -70,6 +70,12 @@
     "text": "您訪問的頁面不存在。",
     "home": "返回首頁"
   },
+  "hints": {
+    "partialTranslation": "本頁部分內容可能尚未完整翻譯。",
+    "langSuggest": "本頁也提供 {langName} 版本。",
+    "langSuggestSwitch": "切換",
+    "dismiss": "關閉"
+  },
   "issues": {
     "pageTitle": "建置問題",
     "heading": "建置問題報告",

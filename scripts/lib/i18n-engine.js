@@ -466,6 +466,7 @@ export async function translateModulesForLocale(
           )
         }
         if (missingFields.length) {
+          nm.hasPartialTranslation = true
           const msg = `模块 ${m.id} 在 ${locale} 语言下缺失翻译字段`
           log.warn('i18n-missing', `[${locale}] ${m.id}: ` + missingFields.join(', '))
           if (reportIssue) {
