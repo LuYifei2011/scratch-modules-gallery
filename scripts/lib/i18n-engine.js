@@ -180,14 +180,14 @@ export async function translateModulesForLocale(
 
   // 预先构建各模块的合并翻译映射（moduleDefaults 已合并），供导入块查找使用
   const mergedModulesMap = new Map()
-  for (const x of modules) {
-    const rawXPer = x.translations || {}
-    const xLocales = new Set([...Object.keys(moduleDefaults), ...Object.keys(rawXPer)])
-    const xPer = {}
-    for (const loc of xLocales) {
-      xPer[loc] = mergeTranslation(moduleDefaults[loc] || {}, rawXPer[loc] || {})
+  for (const mod of modules) {
+    const rawModPer = mod.translations || {}
+    const modLocales = new Set([...Object.keys(moduleDefaults), ...Object.keys(rawModPer)])
+    const modPer = {}
+    for (const loc of modLocales) {
+      modPer[loc] = mergeTranslation(moduleDefaults[loc] || {}, rawModPer[loc] || {})
     }
-    mergedModulesMap.set(x.id, { ...x, translations: xPer })
+    mergedModulesMap.set(mod.id, { ...mod, translations: modPer })
   }
 
   for (const m of modules) {
@@ -393,7 +393,7 @@ export async function translateModulesForLocale(
           }
           ns.leadingImports = arr
         }
-        // 被导入块（非 leadingImports）：本地化 fromName 与 fromTitle
+        // 被导入块（非 leadingImports）: 本地化 fromName 与 fromTitle
         if (s.imported && s.fromId) {
           const target = mergedModulesMap.get(s.fromId)
           if (target) {
