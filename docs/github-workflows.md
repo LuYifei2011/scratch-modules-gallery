@@ -48,6 +48,7 @@
 ### 3. 测试工作流 (`test.yml`)
 
 **触发时机**：仅当以下路径发生变更时触发（push 或 pull_request）：
+
 - `scripts/**`、`src/i18n/**`、`tests/**`
 - `package.json`、`package-lock.json`
 
