@@ -33,15 +33,15 @@ jobs:
           set +e
           REPORT=$(node scripts/check-translations.js --format=markdown)
           EXIT_CODE=$?
+
+          # Also write JSON report for programmatic use (may also exit non-zero)
+          node scripts/check-translations.js --format=json > /tmp/translation-report.json
           set -e
 
           echo "exit_code=$EXIT_CODE" >> "$GITHUB_OUTPUT"
 
           # Write report to file (handles multiline)
           echo "$REPORT" > /tmp/translation-report.md
-
-          # Also write JSON report for programmatic use
-          node scripts/check-translations.js --format=json > /tmp/translation-report.json
 
           echo "--- Translation Report ---"
           echo "$REPORT"
