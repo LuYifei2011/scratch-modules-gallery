@@ -10,7 +10,8 @@
     "dev:https": "powershell -NoProfile -Command \"$env:HTTPS='1'; node ./scripts/dev-server.js\"",
     "format": "prettier --write .",
     "format:scripts": "node ./scripts/format-scratchblocks.js --all",
-    "test": "node --test tests/*.test.js"
+    "test": "node --test tests/*.test.js",
+    "check-i18n": "node scripts/check-translations.js"
   },
   "dependencies": {
     "@napi-rs/canvas": "^0.1.96",
