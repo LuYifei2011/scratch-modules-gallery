@@ -26,19 +26,19 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0 # 拉取完整的 git 历史，以便 build.js 能查询提交时间
-      - name: Use Node.js 20.x
-        uses: actions/setup-node@v4
+      - name: Use Node.js 22.x
+        uses: actions/setup-node@v6
         with:
-          node-version: 20.x
+          node-version: 22.x
           cache: npm
       - run: npm ci
       - run: npm run build
       - name: Upload Pages artifact
         if: github.event_name == 'push'
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@v5
         with:
           path: dist
   deploy:
@@ -51,4 +51,4 @@ jobs:
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5
