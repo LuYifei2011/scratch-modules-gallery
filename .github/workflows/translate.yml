@@ -170,7 +170,6 @@ jobs:
                 title: '🌐 Complete missing translations',
                 body: body,
                 labels: ['i18n'],
-                assignees: ['copilot'],
               });
               core.info(`Created issue #${issue.data.number}`);
             }
