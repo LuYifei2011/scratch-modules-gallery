@@ -20,6 +20,7 @@ import fg from 'fast-glob'
 
 const root = path.resolve('.')
 const SOURCE_LOCALE = 'en'
+const EXCLUDED_I18N_FILES = new Set(['tags.json', 'module-defaults.json'])
 
 // ── Helpers ────────────────────────────────────────────────
 
@@ -60,7 +61,7 @@ function getByPath(obj, keyPath) {
  */
 async function checkGlobalI18n() {
   const i18nDir = path.join(root, 'src', 'i18n')
-  const EXCLUDED = new Set(['tags.json', 'module-defaults.json'])
+  const EXCLUDED = EXCLUDED_I18N_FILES
   const files = (await fg(['*.json'], { cwd: i18nDir, onlyFiles: true }))
     .filter((f) => !EXCLUDED.has(f))
     .sort()
@@ -325,6 +326,18 @@ async function checkModules(locales) {
 
 // ── Report generation ──────────────────────────────────────
 
+/**
+ * Format a source value for display in markdown, truncating if needed.
+ */
+function formatSourceValue(value, maxLen = 100) {
+  if (typeof value === 'object') {
+    const str = JSON.stringify(value)
+    return str.length > maxLen ? str.substring(0, maxLen) + '…' : str
+  }
+  const str = String(value)
+  return str.length > maxLen ? str.substring(0, maxLen) + '…' : str
+}
+
 function generateMarkdown(allIssues) {
   if (allIssues.length === 0) {
     return '✅ All translations are complete. No missing translations found.'
@@ -350,7 +363,7 @@ function generateMarkdown(allIssues) {
       if (issue.type === 'missing') {
         lines.push(`**\`${issue.file}\`** — ${issue.keys.length} missing key(s):\n`)
         for (const detail of issue.details) {
-          const val = typeof detail.sourceValue === 'object' ? JSON.stringify(detail.sourceValue) : detail.sourceValue
+          const val = formatSourceValue(detail.sourceValue)
           lines.push(`- \`${detail.key}\` (English: ${val})`)
         }
         lines.push('')
@@ -388,7 +401,7 @@ function generateMarkdown(allIssues) {
         } else if (issue.type === 'missing') {
           lines.push(`- **\`${issue.file}\`** — ${issue.fields.length} missing field(s):`)
           for (const field of issue.fields) {
-            const val = typeof field.sourceValue === 'object' ? JSON.stringify(field.sourceValue) : field.sourceValue
+            const val = formatSourceValue(field.sourceValue)
             lines.push(`  - \`${field.key}\` (English: ${val})`)
           }
         }
@@ -427,7 +440,7 @@ const formatArg = args.find((a) => a.startsWith('--format='))
 const format = formatArg ? formatArg.split('=')[1] : 'markdown'
 
 const { issues: globalIssues, locales } = await checkGlobalI18n()
-const tagIssues = await checkTags([SOURCE_LOCALE, ...locales])
+const tagIssues = await checkTags(locales)
 const moduleIssues = await checkModules(locales)
 
 const allIssues = [...globalIssues, ...tagIssues, ...moduleIssues]

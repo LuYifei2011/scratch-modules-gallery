@@ -68,51 +68,52 @@ jobs:
             const totalIssues = jsonReport.totalIssues;
 
             // Build the issue body with context for the AI agent
-            const body = `## Task: Complete Missing Translations
-
-            This issue was automatically created by the **Complete Translations** workflow.
-
-            ${report}
-
-            ---
-
-            ## Instructions for Copilot
-
-            Please complete the missing translations listed above. Follow these guidelines:
-
-            ### Global UI translations (\`src/i18n/*.json\`)
-            - Use \`src/i18n/en.json\` as the source of truth
-            - For \`zh-cn\`: translate to **Simplified Chinese**
-            - For \`zh-tw\`: translate to **Traditional Chinese**
-            - Preserve all \`{placeholder}\` variables exactly as they appear in the English source
-            - Keep the same JSON structure and nesting
-
-            ### Tags translations (\`src/i18n/tags.json\`)
-            - Each tag needs translations for all supported locales: \`en\`, \`zh-cn\`, \`zh-tw\`
-            - Tags are short labels (1-2 words typically)
-
-            ### Module translations (\`content/modules/<id>/i18n/<locale>.json\`)
-            - \`name\`: translate the module display name
-            - \`description\`: translate the module description
-            - \`scriptTitles\`: translate script section titles
-            - \`variables\` / \`lists\`: translate variable/list display names (keep original English name as key)
-            - \`events\`: translate event broadcast names (keep original English name as key)
-            - \`procedures\`: translate custom block patterns (keep \`%1\`, \`%2\`, etc. parameter placeholders)
-            - \`procedureParams\`: translate parameter names
-            - \`comments\`: translate code comments
-            - Refer to existing translations in the same module for style consistency
-
-            ### Module notes (\`content/modules/<id>/notes/<locale>.md\`)
-            - Translate the Markdown content
-            - Preserve all Markdown formatting, links, and \`<scratchblocks>\` / \`<sb>\` tags
-            - Keep code blocks and technical terms where appropriate
-
-            ### Validation
-            After making changes, ensure:
-            1. All JSON files are valid JSON with consistent formatting
-            2. \`npm run build\` completes without errors
-            3. Run \`node scripts/check-translations.js\` to verify completeness
-            `.replace(/^            /gm, '');
+            const body = [
+              '## Task: Complete Missing Translations',
+              '',
+              'This issue was automatically created by the **Complete Translations** workflow.',
+              '',
+              report,
+              '',
+              '---',
+              '',
+              '## Instructions for Copilot',
+              '',
+              'Please complete the missing translations listed above. Follow these guidelines:',
+              '',
+              '### Global UI translations (`src/i18n/*.json`)',
+              '- Use `src/i18n/en.json` as the source of truth',
+              '- For `zh-cn`: translate to **Simplified Chinese**',
+              '- For `zh-tw`: translate to **Traditional Chinese**',
+              '- Preserve all `{placeholder}` variables exactly as they appear in the English source',
+              '- Keep the same JSON structure and nesting',
+              '',
+              '### Tags translations (`src/i18n/tags.json`)',
+              '- Each tag needs translations for all supported locales: `en`, `zh-cn`, `zh-tw`',
+              '- Tags are short labels (1-2 words typically)',
+              '',
+              '### Module translations (`content/modules/<id>/i18n/<locale>.json`)',
+              '- `name`: translate the module display name',
+              '- `description`: translate the module description',
+              '- `scriptTitles`: translate script section titles',
+              '- `variables` / `lists`: translate variable/list display names (keep original English name as key)',
+              '- `events`: translate event broadcast names (keep original English name as key)',
+              '- `procedures`: translate custom block patterns (keep `%1`, `%2`, etc. parameter placeholders)',
+              '- `procedureParams`: translate parameter names',
+              '- `comments`: translate code comments',
+              '- Refer to existing translations in the same module for style consistency',
+              '',
+              '### Module notes (`content/modules/<id>/notes/<locale>.md`)',
+              '- Translate the Markdown content',
+              '- Preserve all Markdown formatting, links, and `<scratchblocks>` / `<sb>` tags',
+              '- Keep code blocks and technical terms where appropriate',
+              '',
+              '### Validation',
+              'After making changes, ensure:',
+              '1. All JSON files are valid JSON with consistent formatting',
+              '2. `npm run build` completes without errors',
+              '3. Run `node scripts/check-translations.js` to verify completeness',
+            ].join('\n');
 
             // Search for existing open issues with the same title
             const existingIssues = await github.rest.issues.listForRepo({
