@@ -7,7 +7,7 @@
     "tick30": "tick30"
   },
   "procedures": {
-    "FPS %1": "FPS %1"
+    "FPS %1": "幀率 %1"
   },
   "procedureParams": {
     "last tick30": "上次tick30"
