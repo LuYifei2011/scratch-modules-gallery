@@ -1,8 +1,9 @@
 /**
  * Translation completeness checker.
  *
- * Scans all i18n files (global UI, module-level, tags, notes) and reports
- * missing translations compared to the English source of truth.
+ * Uses the same i18n engine as the build process (translateModulesForLocale +
+ * translateScriptText) to detect missing translations, ensuring results are
+ * identical to what `npm run build` reports in dev mode.
  *
  * Usage:
  *   node scripts/check-translations.js [--format=json|markdown]
@@ -17,10 +18,25 @@
 import fs from 'fs-extra'
 import path from 'path'
 import fg from 'fast-glob'
+import { pathToFileURL } from 'url'
+import { loadScratchblocksLanguages } from './lib/scratch-utils.js'
+import { translateModulesForLocale } from './lib/i18n-engine.js'
+import { loadModules } from './lib/module-loader.js'
+import { translateScriptText } from './lib/script-translator.js'
+import { loadI18n, loadGlobalTags, loadModuleDefaults } from './lib/i18n-loader.js'
+import { resolveImports } from './lib/import-resolver.js'
 
 const root = path.resolve('.')
 const SOURCE_LOCALE = 'en'
 const EXCLUDED_I18N_FILES = new Set(['tags.json', 'module-defaults.json'])
+
+// Load scratchblocks languages (required for translateScriptText to detect
+// missing procedure/param/comment translations via AST parsing)
+try {
+  loadScratchblocksLanguages()
+} catch {
+  // non-fatal: script will still detect other missing translations
+}
 
 // ── Helpers ────────────────────────────────────────────────
 
@@ -61,9 +77,8 @@ function getByPath(obj, keyPath) {
  */
 async function checkGlobalI18n() {
   const i18nDir = path.join(root, 'src', 'i18n')
-  const EXCLUDED = EXCLUDED_I18N_FILES
   const files = (await fg(['*.json'], { cwd: i18nDir, onlyFiles: true }))
-    .filter((f) => !EXCLUDED.has(f))
+    .filter((f) => !EXCLUDED_I18N_FILES.has(f))
     .sort()
 
   const localeData = {}
@@ -143,163 +158,56 @@ async function checkTags(locales) {
 }
 
 /**
- * Check module-level i18n files and notes.
+ * Check module-level translations by running the actual build i18n engine
+ * (translateModulesForLocale + translateScriptText). This detects all the same
+ * missing translations that the build process reports, including:
+ * - name, description
+ * - scriptTitles (based on actual scripts, not just en.json)
+ * - variables, lists (based on meta.json definitions, with >1 char filter)
+ * - procedures, procedureParams (from actual script AST parsing)
+ * - comments (from actual script content)
  */
-async function checkModules(locales) {
+async function checkModulesViaBuild(locales) {
+  const configModule = await import(pathToFileURL(path.join(root, 'site.config.js')).href)
+  const config = configModule.default || configModule
+  const [dict, globalTags, moduleDefaults] = await Promise.all([
+    loadI18n(),
+    loadGlobalTags(),
+    loadModuleDefaults(),
+  ])
+  const { modules } = await loadModules({ root, config, isDev: true })
+  resolveImports(modules)
+
+  const issues = []
+  for (const locale of locales) {
+    const collected = []
+    const reportIssue = (_type, message, details = {}) => {
+      collected.push({ message, ...details })
+    }
+    await translateModulesForLocale(modules, dict, locale, globalTags, { skipMissingCheck: false, moduleDefaults }, { translateScriptText, reportIssue })
+
+    for (const entry of collected) {
+      if (entry.code === 'i18n-missing') {
+        issues.push({
+          type: 'missing',
+          scope: 'module',
+          moduleId: entry.moduleId,
+          locale: entry.locale,
+          file: `content/modules/${entry.moduleId}/i18n/${entry.locale}.json`,
+          fields: (entry.fields || []).map((f) => ({ key: f })),
+        })
+      }
+    }
+  }
+
+  // Also check for missing notes files
   const contentDir = path.join(root, 'content', 'modules')
   const moduleDirs = (await fg(['*'], { cwd: contentDir, onlyDirectories: true }))
     .filter((d) => !d.startsWith('.'))
     .sort()
 
-  const issues = []
-
   for (const moduleId of moduleDirs) {
-    const i18nDir = path.join(contentDir, moduleId, 'i18n')
     const notesDir = path.join(contentDir, moduleId, 'notes')
-
-    // Check i18n files
-    if (await fs.pathExists(i18nDir)) {
-      const sourceFile = path.join(i18nDir, `${SOURCE_LOCALE}.json`)
-      let sourceData = {}
-      if (await fs.pathExists(sourceFile)) {
-        try {
-          sourceData = JSON.parse(await fs.readFile(sourceFile, 'utf8'))
-        } catch {
-          /* skip */
-        }
-      }
-
-      // Check required fields: name and description must exist in every locale
-      for (const locale of locales) {
-        const targetFile = path.join(i18nDir, `${locale}.json`)
-        let targetData = {}
-        const fileExists = await fs.pathExists(targetFile)
-
-        if (fileExists) {
-          try {
-            targetData = JSON.parse(await fs.readFile(targetFile, 'utf8'))
-          } catch {
-            /* skip */
-          }
-        }
-
-        const missingFields = []
-
-        // name and description are always required
-        if (sourceData.name && !targetData.name) {
-          missingFields.push({ key: 'name', sourceValue: sourceData.name })
-        }
-        if (sourceData.description && !targetData.description) {
-          missingFields.push({ key: 'description', sourceValue: sourceData.description })
-        }
-
-        // scriptTitles: check if source has them but target doesn't
-        if (sourceData.scriptTitles) {
-          for (const [scriptId, title] of Object.entries(sourceData.scriptTitles)) {
-            if (!targetData.scriptTitles?.[scriptId]) {
-              missingFields.push({
-                key: `scriptTitles.${scriptId}`,
-                sourceValue: title,
-              })
-            }
-          }
-        }
-
-        // variables: check if source has them but target doesn't
-        if (sourceData.variables) {
-          for (const [varName, varValue] of Object.entries(sourceData.variables)) {
-            if (!targetData.variables?.[varName]) {
-              missingFields.push({
-                key: `variables.${varName}`,
-                sourceValue: varValue,
-              })
-            }
-          }
-        }
-
-        // lists
-        if (sourceData.lists) {
-          for (const [listName, listValue] of Object.entries(sourceData.lists)) {
-            if (!targetData.lists?.[listName]) {
-              missingFields.push({
-                key: `lists.${listName}`,
-                sourceValue: listValue,
-              })
-            }
-          }
-        }
-
-        // events
-        if (sourceData.events) {
-          for (const [eventName, eventValue] of Object.entries(sourceData.events)) {
-            if (!targetData.events?.[eventName]) {
-              missingFields.push({
-                key: `events.${eventName}`,
-                sourceValue: eventValue,
-              })
-            }
-          }
-        }
-
-        // procedures
-        if (sourceData.procedures) {
-          for (const [procPattern, procValue] of Object.entries(sourceData.procedures)) {
-            if (!targetData.procedures?.[procPattern]) {
-              missingFields.push({
-                key: `procedures["${procPattern}"]`,
-                sourceValue: procValue,
-              })
-            }
-          }
-        }
-
-        // procedureParams
-        if (sourceData.procedureParams) {
-          for (const [paramName, paramValue] of Object.entries(sourceData.procedureParams)) {
-            if (!targetData.procedureParams?.[paramName]) {
-              missingFields.push({
-                key: `procedureParams.${paramName}`,
-                sourceValue: paramValue,
-              })
-            }
-          }
-        }
-
-        // comments
-        if (sourceData.comments) {
-          for (const [commentKey, commentValue] of Object.entries(sourceData.comments)) {
-            if (!targetData.comments?.[commentKey]) {
-              missingFields.push({
-                key: `comments["${commentKey}"]`,
-                sourceValue: commentValue,
-              })
-            }
-          }
-        }
-
-        if (!fileExists) {
-          issues.push({
-            type: 'missing-file',
-            scope: 'module',
-            moduleId,
-            locale,
-            file: `content/modules/${moduleId}/i18n/${locale}.json`,
-            sourceFile: `content/modules/${moduleId}/i18n/${SOURCE_LOCALE}.json`,
-          })
-        } else if (missingFields.length > 0) {
-          issues.push({
-            type: 'missing',
-            scope: 'module',
-            moduleId,
-            locale,
-            file: `content/modules/${moduleId}/i18n/${locale}.json`,
-            fields: missingFields,
-          })
-        }
-      }
-    }
-
-    // Check notes files
     if (await fs.pathExists(notesDir)) {
       const noteFiles = await fg(['*.md'], { cwd: notesDir, onlyFiles: true })
       const existingLocales = noteFiles.map((f) => path.basename(f, '.md'))
@@ -401,8 +309,7 @@ function generateMarkdown(allIssues) {
         } else if (issue.type === 'missing') {
           lines.push(`- **\`${issue.file}\`** — ${issue.fields.length} missing field(s):`)
           for (const field of issue.fields) {
-            const val = formatSourceValue(field.sourceValue)
-            lines.push(`  - \`${field.key}\` (English: ${val})`)
+            lines.push(`  - \`${field.key}\``)
           }
         }
       }
@@ -441,7 +348,7 @@ const format = formatArg ? formatArg.split('=')[1] : 'markdown'
 
 const { issues: globalIssues, locales } = await checkGlobalI18n()
 const tagIssues = await checkTags(locales)
-const moduleIssues = await checkModules(locales)
+const moduleIssues = await checkModulesViaBuild(locales)
 
 const allIssues = [...globalIssues, ...tagIssues, ...moduleIssues]
 
