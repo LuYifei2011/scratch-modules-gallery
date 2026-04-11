@@ -34,8 +34,8 @@ const EXCLUDED_I18N_FILES = new Set(['tags.json', 'module-defaults.json'])
 // missing procedure/param/comment translations via AST parsing)
 try {
   loadScratchblocksLanguages()
-} catch {
-  // non-fatal: script will still detect other missing translations
+} catch (e) {
+  console.warn('Warning: failed to load scratchblocks languages, procedure/param/comment detection may be incomplete:', e?.message || e)
 }
 
 // ── Helpers ────────────────────────────────────────────────
