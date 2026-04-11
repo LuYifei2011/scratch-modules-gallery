@@ -1,4 +1,7 @@
 {
   "name": "冪 (乘方)",
-  "description": "計算 a 的 b 次冪"
+  "description": "計算 a 的 b 次冪",
+  "procedures": {
+    "%1 ^ %2": "%1 ^ %2"
+  }
 }

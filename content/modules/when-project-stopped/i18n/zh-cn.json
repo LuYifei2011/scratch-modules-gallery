@@ -3,5 +3,8 @@
   "description": "当作品停止时触发的事件。",
   "variables": {
     "timer": "计时器"
+  },
+  "comments": {
+    "Maybe it can be done without adding 0.1?": "也许可以不用加0.1？"
   }
 }

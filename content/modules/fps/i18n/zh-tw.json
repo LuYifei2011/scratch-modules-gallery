@@ -2,8 +2,14 @@
   "name": "FPS",
   "description": "計算FPS。",
   "variables": {
-    "FPS": "帧率",
-    "DELTA": "时间差",
+    "FPS": "幀率",
+    "DELTA": "時間差",
     "tick30": "tick30"
+  },
+  "procedures": {
+    "FPS %1": "FPS %1"
+  },
+  "procedureParams": {
+    "last tick30": "上次tick30"
   }
 }
