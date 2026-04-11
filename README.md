@@ -16,10 +16,16 @@
   <a href="./README.md">English</a> | <a href="./README_ZH.md">简体中文</a>
 </p>
 
-> [!NOTE]
-> This project is currently in the early stages, and the number of modules is limited. Contributions and feedback are welcome! If you have any suggestions or modules you'd like to share, please feel free to contact me.
->
-> The documentation is also continuously being improved. If there are any unclear points, please feel free to ask or submit an issue. Thank you!
+## Documentation
+
+- [Authoring Modules](./docs/authoring-modules.md) — How to create and maintain modules
+- [Editor Guide](./docs/editor-guide.md) — Visual editor for modules (dev mode)
+- [GitHub Workflows](./docs/github-workflows.md) — CI/CD pipeline overview
+- [Markdown Syntax](./docs/markdown-syntax.md) — Extended Markdown syntax for module notes
+
+## Contributing
+
+Contributions are welcome! Please read the [authoring guide](./docs/authoring-modules.md) before submitting a pull request.
 
 ## License
 

@@ -1,3 +1,8 @@
-The documentation is continuously being improved, and the documents in this folder are from an older version, which may contain outdated information and are for reference only.
+# 项目文档
 
-项目文档正在持续完善中，该文件夹下的文档为旧版本，可能存在过时信息，仅供参考。
+本文件夹包含项目的各类说明文档：
+
+- [authoring-modules.md](./authoring-modules.md) — 模块编写指南（面向贡献者）
+- [editor-guide.md](./editor-guide.md) — 模块编辑器使用指南
+- [github-workflows.md](./github-workflows.md) — GitHub Actions 工作流说明
+- [markdown-syntax.md](./markdown-syntax.md) — 模块备注支持的 Markdown 扩展语法
