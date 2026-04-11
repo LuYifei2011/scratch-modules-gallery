@@ -35,7 +35,10 @@ const EXCLUDED_I18N_FILES = new Set(['tags.json', 'module-defaults.json'])
 try {
   loadScratchblocksLanguages()
 } catch (e) {
-  console.warn('Warning: failed to load scratchblocks languages, procedure/param/comment detection may be incomplete:', e?.message || e)
+  console.warn(
+    'Warning: failed to load scratchblocks languages, procedure/param/comment detection may be incomplete:',
+    e?.message || e
+  )
 }
 
 // ── Helpers ────────────────────────────────────────────────
@@ -170,11 +173,7 @@ async function checkTags(locales) {
 async function checkModulesViaBuild(locales) {
   const configModule = await import(pathToFileURL(path.join(root, 'site.config.js')).href)
   const config = configModule.default || configModule
-  const [dict, globalTags, moduleDefaults] = await Promise.all([
-    loadI18n(),
-    loadGlobalTags(),
-    loadModuleDefaults(),
-  ])
+  const [dict, globalTags, moduleDefaults] = await Promise.all([loadI18n(), loadGlobalTags(), loadModuleDefaults()])
   const { modules } = await loadModules({ root, config, isDev: true })
   resolveImports(modules)
 
@@ -184,7 +183,14 @@ async function checkModulesViaBuild(locales) {
     const reportIssue = (_type, message, details = {}) => {
       collected.push({ message, ...details })
     }
-    await translateModulesForLocale(modules, dict, locale, globalTags, { skipMissingCheck: false, moduleDefaults }, { translateScriptText, reportIssue })
+    await translateModulesForLocale(
+      modules,
+      dict,
+      locale,
+      globalTags,
+      { skipMissingCheck: false, moduleDefaults },
+      { translateScriptText, reportIssue }
+    )
 
     for (const entry of collected) {
       if (entry.code === 'i18n-missing') {
@@ -289,7 +295,9 @@ function generateMarkdown(allIssues) {
     lines.push('### Tags Translations\n')
     lines.push(`File: \`src/i18n/tags.json\`\n`)
     for (const issue of tagIssues) {
-      lines.push(`- Tag **\`${issue.tag}\`** (English: "${issue.sourceValue}") — missing in: ${issue.missingLocales.map((l) => `\`${l}\``).join(', ')}`)
+      lines.push(
+        `- Tag **\`${issue.tag}\`** (English: "${issue.sourceValue}") — missing in: ${issue.missingLocales.map((l) => `\`${l}\``).join(', ')}`
+      )
     }
     lines.push('')
   }
@@ -336,7 +344,7 @@ function generateJson(allIssues) {
       issues: allIssues,
     },
     null,
-    2,
+    2
   )
 }
 
