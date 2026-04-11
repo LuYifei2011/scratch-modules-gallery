@@ -42,5 +42,10 @@
     "start": "起始值",
     "end": "結束值",
     "progress%": "進度"
+  },
+  "comments": {
+    "You can change exponent: square / cubic / quartic / quintic": "可以更改指數：二次 / 三次 / 四次 / 五次",
+    "cubic: multiply again; quartic/quintic: and so on": "三次：再乘一次；四次/五次：以此類推",
+    "cubic: multiply again": "三次：再乘一次"
   }
 }

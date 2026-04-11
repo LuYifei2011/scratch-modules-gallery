@@ -1,4 +1,7 @@
 {
   "name": "幂 (乘方)",
-  "description": "计算 a 的 b 次幂"
+  "description": "计算 a 的 b 次幂",
+  "procedures": {
+    "%1 ^ %2": "%1 的 %2 次幂"
+  }
 }
