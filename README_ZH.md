@@ -16,10 +16,16 @@
   <a href="./README.md">English</a> | <a href="./README_ZH.md">简体中文</a>
 </p>
 
-> [!NOTE]
-> 该项目目前处于较早期阶段，模块数量有限，欢迎贡献和反馈！如果你有任何建议或想要分享的模块，请随时联系我。
->
-> 文档也在持续完善中，如果有任何不清楚的地方，请随时提问或提交 issue。谢谢！
+## 文档
+
+- [模块编写指南](./docs/authoring-modules.md) — 如何新增和维护模块
+- [编辑器使用指南](./docs/editor-guide.md) — 开发模式下的可视化编辑器
+- [GitHub 工作流说明](./docs/github-workflows.md) — CI/CD 流程概览
+- [Markdown 扩展语法](./docs/markdown-syntax.md) — 模块备注支持的扩展语法
+
+## 贡献
+
+欢迎贡献！提交 Pull Request 前请先阅读[模块编写指南](./docs/authoring-modules.md)。
 
 ## 许可证
 

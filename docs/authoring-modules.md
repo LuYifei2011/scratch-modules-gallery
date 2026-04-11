@@ -56,9 +56,9 @@ content/modules/fps/
 - `keywords`：数组；SEO 关键词，可在主页搜索中被匹配。与 tags 一起在模块页 meta keywords 中去重合并。
 - `contributors`：字符串或数组；支持 `gh/` 与 `sc/` 前缀自动生成链接。
 
-### 多语言支持（name/description/tags/keywords）
+### 多语言支持（name/description）
 
-现在推荐的做法是：
+推荐做法：
 
 - `meta.json` 只写一份"基线语言"（建议英文）的 `name` / `description` / `tags` / `keywords`；
 - 所有其他语言都通过模块内的 `i18n/<locale>.json` 提供。
@@ -80,10 +80,22 @@ content/modules/<id>/
 ```json
 {
   "name": "排序角色",
-  "description": "对角色进行排序。",
-  "tags": ["层", "排序"]
+  "description": "对角色进行排序。"
 }
 ```
+
+#### Tags 翻译（全局管理）
+
+Tags 的多语言翻译**不**在模块 `i18n/*.json` 中维护，而是统一定义在 `src/i18n/tags.json`：
+
+```json
+{
+  "layer": { "en": "layer", "zh-cn": "层", "zh-tw": "層" },
+  "sort":  { "en": "sort",  "zh-cn": "排序", "zh-tw": "排序" }
+}
+```
+
+新增 tag 时只需在 `tags.json` 添加一次翻译，所有使用该 tag 的模块自动获得本地化。模块 `meta.json` 中的 `tags` 数组仍使用英文 id（如 `"layer"`），不必在模块 i18n 文件中重复翻译。
 
 ### 变量与列表定义 + 名称翻译
 
@@ -237,11 +249,12 @@ content/modules/<id>/
 
 ## 校验与调试
 
-- 执行 `npm run build`：若 issues 页中有错误/警告，请修复后再提交。
+- 执行 `npm run build`：若 issues 页中有错误/警告，请修复后再提交（需设置 `IS_DEV=1` 环境变量以生成 issues 页面）。
+- 执行 `npm run check-i18n`：检查各语言翻译完整性，输出缺失字段报告。
 - 常见错误：
   - 缺失必填字段（id/name/description/tags）
   - JSON 语法错误（注意逗号、引号）
-  - 空的 `scripts/` 目录：将回退到 `script.txt`；确认是否预期。
+  - 空的 `scripts/` 目录：将出现构建警告，无脚本内容将被跳过
 
 ## 搜索策略
 

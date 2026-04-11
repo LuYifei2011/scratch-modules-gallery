@@ -2,7 +2,7 @@
 
 ## 概述
 
-项目配置了两个 CI/CD 工作流，用于自动格式化和部署：
+项目配置了三个 CI/CD 工作流：
 
 ### 1. 格式化工作流 (`format.yml`)
 
@@ -28,24 +28,35 @@
 
 **触发时机**：
 
-- main 分支的 push（忽略文档和 LICENSE 更改）
-- main 分支的 pull_request
+- main 分支的 push（忽略 `*.md` 和 LICENSE 更改）
+- main 分支的 pull_request（仅构建，不部署）
 - 手动触发 (workflow_dispatch)
 
 **步骤**：
 
-1. 检查 scratchblocks 脚本格式
-   - 运行 `npm run format:scripts`
-   - 验证无格式化差异，否则构建失败
-   - ✅ 防止未格式化的脚本被合并
-2. 构建站点 (`npm run build`)
-3. 上传构建产物到 GitHub Pages
-4. 部署到 GitHub Pages
+1. 构建站点 (`npm run build`)
+   - 使用 `fetch-depth: 0` 拉取完整 git 历史，供 sitemap 提取文件修改时间
+2. 上传构建产物到 GitHub Pages（仅 push 时）
+3. 部署到 GitHub Pages（仅 push 时）
 
 **输出**：
 
 - 构建产物上传到 GitHub Pages
-- 失败原因清晰提示（如格式化问题）
+
+---
+
+### 3. 测试工作流 (`test.yml`)
+
+**触发时机**：仅当以下路径发生变更时触发（push 或 pull_request）：
+- `scripts/**`、`src/i18n/**`、`tests/**`
+- `package.json`、`package-lock.json`
+
+**步骤**：
+
+1. 安装依赖
+2. 运行 `npm test`（Node.js 内置测试运行器）
+
+**注意**：模块内容变更（`content/modules/**`）**不触发**测试工作流。
 
 ---
 
@@ -63,11 +74,10 @@
 - ✅ push/PR 时自动执行
 - ✅ 自动提交结果
 
-### 部署前检查
+### 自动化测试
 
-- ✅ 部署前必须通过格式化检查
-- ✅ 防止未格式化脚本上线
-- ✅ 清晰的失败消息指导开发者
+- ✅ 核心构建逻辑变更时自动运行单元测试
+- ✅ 使用 Node.js 内置测试运行器，零额外依赖
 
 ---
 
@@ -84,6 +94,12 @@ npm run format
 
 # 构建站点
 npm run build
+
+# 运行单元测试
+npm test
+
+# 检查翻译完整性
+npm run check-i18n
 ```
 
 或一次性执行所有格式化：
@@ -96,11 +112,14 @@ npm run format:scripts && npm run format
 
 ## 故障排除
 
-### 部署失败：格式化检查不通过
+### 格式化工作流失败
 
-**原因**：scratchblocks 脚本格式不符合标准
+**常见原因**：
 
-**解决**：
+- 依赖安装失败 → 检查 package.json
+- Node 版本不兼容 → 格式化工作流使用 Node 22，部署工作流使用 Node 20，本地建议使用相同版本
+
+### 本地脚本格式不规范
 
 ```bash
 npm run format:scripts
@@ -109,19 +128,12 @@ git commit -m "chore: format scratchblocks scripts"
 git push
 ```
 
-### 格式化工作流失败
-
-**常见原因**：
-
-- 依赖安装失败 → 检查 package.json
-- Node 版本不兼容 → 工作流使用 Node 22/20，本地建议使用相同版本
-
 ---
 
 ## 配置位置
 
 - 格式化脚本：`scripts/format-scratchblocks.js`
-- 工作流配置：`.github/workflows/format.yml` 和 `.github/workflows/deploy.yml`
+- 工作流配置：`.github/workflows/format.yml`、`.github/workflows/deploy.yml`、`.github/workflows/test.yml`
 - npm 脚本：`package.json` 中的 `format:scripts`
 - 镜像站点列表：`site.config.js` 中的 `mirrors` 数组
 
