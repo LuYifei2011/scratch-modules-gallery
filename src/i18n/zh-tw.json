@@ -96,7 +96,7 @@
     "howToUseContent": "使用本庫中的模組很簡單：",
     "step1": "使用首頁的搜尋欄搜尋您需要的模組",
     "step2": "點擊模組以檢視其詳細資訊、腳本和文件",
-    "step3": "複製腳本程式碼並貼上到您的 Scratch 專案中（待實現）",
+    "step3": "使用 <a href=\"https://github.com/LuYifei2011/scratchblocks-to-scratch\" target=\"_blank\" rel=\"noopener\">scratchblocks-to-scratch</a> 工具將腳本程式碼轉換並貼上到您的 Scratch 專案中",
     "contribute": "貢獻",
     "contributeContent": "本專案是開源的，歡迎貢獻。您可以新增新模組、改進文件、修復錯誤或提出新功能建議。",
     "viewOnGitHub": "在 GitHub 上檢視",

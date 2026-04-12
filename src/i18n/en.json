@@ -96,7 +96,7 @@
     "howToUseContent": "Using modules from this gallery is easy:",
     "step1": "Search for the module you need using the search bar on the home page",
     "step2": "Click on a module to view its details, scripts, and documentation",
-    "step3": "Copy the script code and paste it into your Scratch project (to be implemented)",
+    "step3": "Use <a href=\"https://github.com/LuYifei2011/scratchblocks-to-scratch\" target=\"_blank\" rel=\"noopener\">scratchblocks-to-scratch</a> to convert and paste the script code into your Scratch project",
     "contribute": "Contribute",
     "contributeContent": "This project is open source and welcomes contributions. You can add new modules, improve documentation, fix bugs, or suggest new features.",
     "viewOnGitHub": "View on GitHub",

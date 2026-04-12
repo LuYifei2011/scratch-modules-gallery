@@ -96,7 +96,7 @@
     "howToUseContent": "使用本库中的模块很简单：",
     "step1": "使用首页的搜索栏搜索您需要的模块",
     "step2": "点击模块以查看其详细信息、脚本和文档",
-    "step3": "复制脚本代码并粘贴到您的 Scratch 项目中（待实现）",
+    "step3": "使用 <a href=\"https://github.com/LuYifei2011/scratchblocks-to-scratch\" target=\"_blank\" rel=\"noopener\">scratchblocks-to-scratch</a> 工具将脚本代码转换并粘贴到您的 Scratch 项目中",
     "contribute": "贡献",
     "contributeContent": "本项目是开源的，欢迎贡献。您可以添加新模块、改进文档、修复错误或提出新功能建议。",
     "viewOnGitHub": "在 GitHub 上查看",
