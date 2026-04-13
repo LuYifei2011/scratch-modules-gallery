@@ -19,11 +19,11 @@ function validateModuleId(moduleId) {
     throw new Error('Invalid module ID')
   }
   const normalized = path.normalize(moduleId)
-  if (normalized.includes('..') || path.isAbsolute(normalized) || normalized.includes(path.sep)) {
+  if (normalized === '.' || normalized.includes('..') || path.isAbsolute(normalized) || normalized.includes(path.sep)) {
     throw new Error('Invalid module ID: directory traversal detected')
   }
-  if (!/^[a-z0-9-]+$/.test(moduleId)) {
-    throw new Error('Invalid module ID: only lowercase letters, numbers, and hyphens allowed')
+  if (!/^[a-z0-9.-]+$/.test(moduleId)) {
+    throw new Error('Invalid module ID: only lowercase letters, numbers, hyphens, and dots allowed')
   }
   return moduleId
 }
@@ -159,7 +159,7 @@ export async function getModule(req, res, moduleId) {
     const scripts = []
     if (await fs.pathExists(scriptsDir)) {
       const files = await fs.readdir(scriptsDir)
-      const txtFiles = files.filter((f) => f.endsWith('.txt')).sort()
+      const txtFiles = files.filter((f) => f.endsWith('.txt')).sort((a, b) => a.localeCompare(b, 'en', { numeric: true }))
       for (const file of txtFiles) {
         const content = await fs.readFile(path.join(scriptsDir, file), 'utf8')
         const match = file.match(/^(\d+)[ _-](.+)\.txt$/)
@@ -362,7 +362,7 @@ export async function getScripts(req, res, moduleId) {
 
     const files = await fs.readdir(scriptsDir)
     const scripts = []
-    for (const file of files.filter((f) => f.endsWith('.txt')).sort()) {
+    for (const file of files.filter((f) => f.endsWith('.txt')).sort((a, b) => a.localeCompare(b, 'en', { numeric: true }))) {
       const content = await fs.readFile(path.join(scriptsDir, file), 'utf8')
       const match = file.match(/^(\d+)[ _-](.+)\.txt$/)
       if (match) {
@@ -591,6 +591,10 @@ export async function updateI18n(req, res, moduleId, locale) {
 export async function deleteI18n(req, res, moduleId, locale) {
   try {
     validateModuleId(moduleId)
+
+    if (!/^[a-z]{2}(-[a-z]{2})?$/.test(locale)) {
+      return sendError(res, 400, 'Invalid locale format')
+    }
 
     const i18nPath = path.join(modulesDir, moduleId, 'i18n', `${locale}.json`)
 
