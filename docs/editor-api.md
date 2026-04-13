@@ -284,7 +284,7 @@
 
 ### PUT /api/modules/:id/scripts/:scriptId
 
-更新脚本内容，或对脚本进行重命名/重新排序。`:scriptId` 为脚本的 `id`（如 `main`），而非完整文件名。
+更新脚本内容，或对脚本进行重命名/重新排序。`:scriptId` 为脚本的 `id`，即文件名去掉序号前缀和 `.txt` 后缀后的部分（例如文件 `01-main.txt` 对应的 `scriptId` 为 `main`，`02-helper.txt` 对应 `helper`）。
 
 **路径参数**
 
