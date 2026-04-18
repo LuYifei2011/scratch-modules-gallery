@@ -230,37 +230,27 @@ http://localhost:8800/__dev/editor/
 
 编辑器使用以下 RESTful API 端点（仅开发模式）：
 
-### 模块管理
+| 分组     | 端点                                        | 说明             |
+| -------- | ------------------------------------------- | ---------------- |
+| 模块管理 | `GET /api/modules`                          | 获取所有模块列表 |
+|          | `GET /api/modules/:id`                      | 获取单个模块详情 |
+|          | `POST /api/modules`                         | 创建新模块       |
+|          | `PUT /api/modules/:id/meta`                 | 更新模块元信息   |
+|          | `DELETE /api/modules/:id`                   | 删除模块         |
+| 脚本管理 | `GET /api/modules/:id/scripts`              | 获取脚本列表     |
+|          | `POST /api/modules/:id/scripts`             | 创建新脚本       |
+|          | `PUT /api/modules/:id/scripts/:scriptId`    | 更新脚本         |
+|          | `DELETE /api/modules/:id/scripts/:scriptId` | 删除脚本         |
+| 翻译管理 | `GET /api/modules/:id/i18n/:locale`         | 获取翻译         |
+|          | `PUT /api/modules/:id/i18n/:locale`         | 更新翻译         |
+|          | `DELETE /api/modules/:id/i18n/:locale`      | 删除翻译         |
+| 资源管理 | `POST /api/modules/:id/demo`                | 上传 Demo        |
+|          | `DELETE /api/modules/:id/demo`              | 删除 Demo        |
+|          | `POST /api/modules/:id/assets`              | 上传资源文件     |
+|          | `DELETE /api/modules/:id/assets/:filename`  | 删除资源文件     |
+| 构建状态 | `GET /api/build/status`                     | 获取构建状态     |
 
-- `GET /api/modules` - 获取所有模块列表
-- `GET /api/modules/:id` - 获取单个模块详情
-- `POST /api/modules` - 创建新模块
-- `PUT /api/modules/:id/meta` - 更新模块元信息
-- `DELETE /api/modules/:id` - 删除模块
-
-### 脚本管理
-
-- `GET /api/modules/:id/scripts` - 获取脚本列表
-- `POST /api/modules/:id/scripts` - 创建新脚本
-- `PUT /api/modules/:id/scripts/:filename` - 更新脚本
-- `DELETE /api/modules/:id/scripts/:filename` - 删除脚本
-
-### 翻译管理
-
-- `GET /api/modules/:id/i18n/:locale` - 获取翻译
-- `PUT /api/modules/:id/i18n/:locale` - 更新翻译
-- `DELETE /api/modules/:id/i18n/:locale` - 删除翻译
-
-### 资源管理
-
-- `POST /api/modules/:id/demo` - 上传 Demo
-- `DELETE /api/modules/:id/demo` - 删除 Demo
-- `POST /api/modules/:id/assets` - 上传资源
-- `DELETE /api/modules/:id/assets/:filename` - 删除资源
-
-### 构建状态
-
-- `GET /api/build/status` - 获取构建状态
+详细的请求参数与响应格式请参阅 [editor-api.md](./editor-api.md)。
 
 ## 未来增强计划
 
