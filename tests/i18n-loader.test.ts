@@ -1,6 +1,6 @@
 import { describe, it } from 'bun:test'
 import assert from 'bun:assert/strict'
-import { pickConfigForLocale, loadI18n, loadModuleDefaults, loadGlobalTags } from '../scripts/lib/i18n-loader.js'
+import { pickConfigForLocale, loadI18n, loadModuleDefaults, loadGlobalTags } from '../scripts/lib/i18n-loader.ts'
 
 describe('pickConfigForLocale', () => {
   const baseConfig = {

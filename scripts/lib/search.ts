@@ -1,5 +1,5 @@
 import MiniSearch from 'minisearch'
-import { tokenizeCJK } from './scratch-utils.js'
+import { tokenizeCJK } from './scratch-utils.ts'
 
 export function buildSearchIndex(modules) {
   const mini = new MiniSearch({

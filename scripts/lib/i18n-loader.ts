@@ -7,7 +7,7 @@
 import fs from 'fs-extra'
 import path from 'path'
 import fg from 'fast-glob'
-import log from './logger.js'
+import log from './logger.ts'
 
 const root = path.resolve('.')
 

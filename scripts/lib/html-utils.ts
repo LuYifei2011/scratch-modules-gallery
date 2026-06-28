@@ -1,5 +1,5 @@
 import { minify } from 'html-minifier-next'
-import log from './logger.js'
+import log from './logger.ts'
 
 export function escapeHtml(str = '') {
   return str.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c])

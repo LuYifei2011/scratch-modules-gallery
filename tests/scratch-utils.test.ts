@@ -1,6 +1,6 @@
 import { describe, it } from 'bun:test'
 import assert from 'bun:assert/strict'
-import { tokenizeCJK, CATEGORY_COLORS, analyzeBlockCategories } from '../scripts/lib/scratch-utils.js'
+import { tokenizeCJK, CATEGORY_COLORS, analyzeBlockCategories } from '../scripts/lib/scratch-utils.ts'
 
 describe('tokenizeCJK', () => {
   it('returns empty array for empty/null input', () => {

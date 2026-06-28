@@ -1,6 +1,6 @@
 import { describe, it } from 'bun:test'
 import assert from 'bun:assert/strict'
-import { parseContributors, buildModuleRecord } from '../scripts/lib/schema.js'
+import { parseContributors, buildModuleRecord } from '../scripts/lib/schema.ts'
 
 describe('parseContributors', () => {
   it('returns empty array for null/undefined', () => {

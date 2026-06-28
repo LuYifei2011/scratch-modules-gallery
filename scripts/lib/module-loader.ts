@@ -7,13 +7,13 @@
 import fs from 'fs-extra'
 import path from 'path'
 import fg from 'fast-glob'
-import { buildModuleRecord } from './schema.js'
-import log from './logger.js'
+import { buildModuleRecord } from './schema.ts'
+import log from './logger.ts'
 
 /**
  * @param {Object} options
  * @param {string} options.root - 项目根目录绝对路径
- * @param {Object} options.config - site.config.js 配置对象
+ * @param {Object} options.config - site.config.ts 配置对象
  * @param {boolean} options.isDev - 是否为开发模式
  * @returns {Promise<{modules: Array, errorsAll: string[], allTags: string}>}
  */

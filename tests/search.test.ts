@@ -1,6 +1,6 @@
 import { describe, it } from 'bun:test'
 import assert from 'bun:assert/strict'
-import { buildSearchIndex } from '../scripts/lib/search.js'
+import { buildSearchIndex } from '../scripts/lib/search.ts'
 
 describe('buildSearchIndex', () => {
   it('builds a valid search index from modules', () => {

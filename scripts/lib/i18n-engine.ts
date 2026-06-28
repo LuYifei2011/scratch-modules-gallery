@@ -11,8 +11,8 @@
  * @module i18n-engine
  */
 
-import { markdownToHtml } from './markdown.js'
-import log from './logger.js'
+import { markdownToHtml } from './markdown.ts'
+import log from './logger.ts'
 
 // ── 内部辅助函数 ──────────────────────────────────────────
 

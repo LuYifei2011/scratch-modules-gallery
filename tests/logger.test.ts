@@ -1,6 +1,6 @@
 import { describe, it } from 'bun:test'
 import assert from 'bun:assert/strict'
-import { truncate, formatDuration, timeNow } from '../scripts/lib/logger.js'
+import { truncate, formatDuration, timeNow } from '../scripts/lib/logger.ts'
 
 describe('truncate', () => {
   it('returns original text when within maxLen', () => {

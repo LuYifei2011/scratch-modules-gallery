@@ -5,8 +5,8 @@ import path from 'path'
 import url from 'url'
 import { spawn } from 'child_process'
 import readline from 'readline'
-import * as editorApi from './lib/editor-api.js'
-import log, { c, paint, formatDuration, timeNow, setLogMode } from './lib/logger.js'
+import * as editorApi from './lib/editor-api.ts'
+import log, { c, paint, formatDuration, timeNow, setLogMode } from './lib/logger.ts'
 
 // 轻量开发服务器，支持：
 // - 基于 chokidar 监听内容与模板变更 -> 自动执行构建
@@ -142,7 +142,7 @@ function runBuild(reason = 'changed') {
   if (fastBuild) env.FAST_BUILD = '1'
   // 传递日志模式到子进程
   if (verboseMode) env.LOG_MODE = 'v'
-  const p = spawn(process.execPath, [path.resolve('scripts', 'build.js')], {
+  const p = spawn(process.execPath, [path.resolve('scripts', 'build.ts')], {
     stdio: ['ignore', 'inherit', 'inherit'],
     env,
   })
@@ -171,7 +171,7 @@ function runBuild(reason = 'changed') {
 
 // 文件监听
 const watcher = chokidar.watch(
-  ['content/**', 'src/**', 'public/**', 'site.config.js', 'scripts/lib/**', 'scripts/build.js'],
+  ['content/**', 'src/**', 'public/**', 'site.config.ts', 'scripts/lib/**', 'scripts/build.ts'],
   { ignoreInitial: true }
 )
 

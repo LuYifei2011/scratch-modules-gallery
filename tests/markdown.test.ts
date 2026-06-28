@@ -1,6 +1,6 @@
 import { describe, it } from 'bun:test'
 import assert from 'bun:assert/strict'
-import { markdownToHtml } from '../scripts/lib/markdown.js'
+import { markdownToHtml } from '../scripts/lib/markdown.ts'
 
 describe('markdownToHtml', () => {
   it('converts basic markdown to HTML', () => {

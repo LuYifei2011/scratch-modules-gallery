@@ -1,6 +1,6 @@
 import { describe, it } from 'bun:test'
 import assert from 'bun:assert/strict'
-import { translateModulesForLocale } from '../scripts/lib/i18n-engine.js'
+import { translateModulesForLocale } from '../scripts/lib/i18n-engine.ts'
 
 describe('translateModulesForLocale', () => {
   const baseModule = {

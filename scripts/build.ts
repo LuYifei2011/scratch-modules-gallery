@@ -2,26 +2,26 @@ import fs from 'fs-extra'
 import path from 'path'
 import fg from 'fast-glob'
 import nunjucks from 'nunjucks'
-import { loadScratchblocksLanguages } from './lib/scratch-utils.js'
+import { loadScratchblocksLanguages } from './lib/scratch-utils.ts'
 import { pathToFileURL } from 'url'
 import * as scratchblocks from 'scratchblocks-plus/syntax/index.js'
 import simpleGit from 'simple-git'
 import { favicons as generateFavicons } from 'favicons'
-import { translateModulesForLocale } from './lib/i18n-engine.js'
-import { escapeHtml, maybeMinify, generateShareLinks } from './lib/html-utils.js'
-import { buildSearchIndex } from './lib/search.js'
-import { resolveImports } from './lib/import-resolver.js'
-import { loadModules } from './lib/module-loader.js'
-import { translateScriptText } from './lib/script-translator.js'
-import { loadI18n, loadGlobalTags, loadModuleDefaults, pickConfigForLocale } from './lib/i18n-loader.js'
-import { loadSiteCoverTemplate, generateSiteCover, generateModuleCover } from './lib/cover-generator.js'
-import log, { c, paint, formatDuration, timeNow } from './lib/logger.js'
+import { translateModulesForLocale } from './lib/i18n-engine.ts'
+import { escapeHtml, maybeMinify, generateShareLinks } from './lib/html-utils.ts'
+import { buildSearchIndex } from './lib/search.ts'
+import { resolveImports } from './lib/import-resolver.ts'
+import { loadModules } from './lib/module-loader.ts'
+import { translateScriptText } from './lib/script-translator.ts'
+import { loadI18n, loadGlobalTags, loadModuleDefaults, pickConfigForLocale } from './lib/i18n-loader.ts'
+import { loadSiteCoverTemplate, generateSiteCover, generateModuleCover } from './lib/cover-generator.ts'
+import log, { c, paint, formatDuration, timeNow } from './lib/logger.ts'
 
 const root = path.resolve('.')
 // 模块级 favicon HTML 片段，由 render() 生成后供 nunjucks.render monkey-patch 注入
 let _faviconHtml = ''
 // 动态 ESM 导入配置
-const configModule = await import(pathToFileURL(path.join(root, 'site.config.js')).href)
+const configModule = await import(pathToFileURL(path.join(root, 'site.config.ts')).href)
 const config = configModule.default || configModule
 // 覆盖 baseUrl 与开发模式标记
 const isDev = String(process.env.IS_DEV || '').toLowerCase() === 'true' || process.env.IS_DEV === '1'
@@ -205,13 +205,35 @@ async function render(modules, allTags) {
   // copy thirdparty
   const thirdpartyDir = path.join(root, 'thirdparty')
   if (await fs.pathExists(thirdpartyDir)) await fs.copy(thirdpartyDir, path.join(outDir, 'thirdparty'))
-  // copy client resources (app.js, style.css) - 使用 glob 一次性选择
-  const clientFiles = await fg(['*.{js,css}'], {
+  // copy client resources: TypeScript entry points are compiled to browser JS via Bun's built-in transpiler.
+  const clientFiles = await fg(['*.{ts,css}'], {
     cwd: path.join(root, 'src', 'client'),
     onlyFiles: true,
   })
   for (const file of clientFiles) {
-    await fs.copy(path.join(root, 'src', 'client', file), path.join(outDir, file))
+    const srcPath = path.join(root, 'src', 'client', file)
+    if (file.endsWith('.ts')) {
+      const outFile = path.join(outDir, file.replace(/\.ts$/, '.js'))
+      const result = await Bun.build({
+        entrypoints: [srcPath],
+        outdir: outDir,
+        naming: '[dir]/[name].js',
+        target: 'browser',
+        format: 'esm',
+        splitting: false,
+        external: ['./vendor/*'],
+      })
+      if (!result.success) {
+        for (const message of result.logs) log.error('client', message.message)
+        throw new Error(`编译客户端 TypeScript 失败: ${file}`)
+      }
+      // Bun writes directly to outdir; keep the explicit target path documented by outFile.
+      if (!(await fs.pathExists(outFile))) {
+        throw new Error(`客户端 TypeScript 未生成预期输出: ${path.relative(root, outFile)}`)
+      }
+    } else {
+      await fs.copy(srcPath, path.join(outDir, file))
+    }
   }
 
   // vendor: minisearch, scratchblocks
@@ -546,7 +568,7 @@ async function render(modules, allTags) {
 
     // 首页：使用配置文件 + 全局 i18n 文件的最后修改时间
     // 两者中较晚的时间
-    const configLastMod = await getFileLastModDate('site.config.js')
+    const configLastMod = await getFileLastModDate('site.config.ts')
     const globalI18nLastMod = await getFileLastModDate('src/i18n')
     const indexLastMod = configLastMod >= globalI18nLastMod ? configLastMod : globalI18nLastMod
     for (const loc of locales) {

@@ -10,11 +10,11 @@
 import fs from 'fs-extra'
 import path from 'path'
 import { createCanvas, GlobalFonts } from '@napi-rs/canvas'
-import log from './logger.js'
+import log from './logger.ts'
 import { Resvg } from '@resvg/resvg-js'
 import { renderToSVGString } from 'scratchblocks-plus/node-ssr.js'
-import { escapeHtml } from './html-utils.js'
-import { analyzeBlockCategories } from './scratch-utils.js'
+import { escapeHtml } from './html-utils.ts'
+import { analyzeBlockCategories } from './scratch-utils.ts'
 
 const root = path.resolve('.')
 const fontDirPath = path.join(root, 'src', 'fonts')

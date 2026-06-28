@@ -1,0 +1,11 @@
+{
+  "compilerOptions": {
+    "allowImportingTsExtensions": true,
+    "isolatedModules": true,
+    "module": "Preserve",
+    "moduleResolution": "bundler",
+    "noEmit": true,
+    "target": "ES2022"
+  },
+  "include": ["site.config.ts", "scripts/**/*.ts", "src/client/**/*.ts", "tests/**/*.ts"]
+}

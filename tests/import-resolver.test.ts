@@ -1,6 +1,6 @@
 import { describe, it } from 'bun:test'
 import assert from 'bun:assert/strict'
-import { resolveImports } from '../scripts/lib/import-resolver.js'
+import { resolveImports } from '../scripts/lib/import-resolver.ts'
 
 describe('resolveImports', () => {
   it('does nothing when there are no imports', () => {

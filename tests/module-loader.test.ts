@@ -2,7 +2,7 @@ import { describe, it, beforeAll } from 'bun:test'
 import assert from 'bun:assert/strict'
 import path from 'path'
 import fs from 'fs-extra'
-import { loadModules } from '../scripts/lib/module-loader.js'
+import { loadModules } from '../scripts/lib/module-loader.ts'
 
 // 仅复制 .test 和 fps 两个模块到临时目录，避免加载全部模块导致测试过慢
 const root = path.resolve('.')
