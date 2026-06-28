@@ -78,7 +78,7 @@ let chokidar
 try {
   chokidar = (await import('chokidar')).default
 } catch (e) {
-  log.error('dev', '缺少依赖 chokidar，请先安装: npm i -D chokidar')
+  log.error('dev', '缺少依赖 chokidar，请先安装: bun add -d chokidar')
   process.exit(1)
 }
 

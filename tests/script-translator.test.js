@@ -1,10 +1,10 @@
-import { describe, it, before } from 'node:test'
-import assert from 'node:assert/strict'
+import { describe, it, beforeAll } from 'bun:test'
+import assert from 'bun:assert/strict'
 import { translateScriptText, translateScriptFields } from '../scripts/lib/script-translator.js'
 import { loadScratchblocksLanguages } from '../scripts/lib/scratch-utils.js'
 
 // Load scratchblocks language data before running tests
-before(() => {
+beforeAll(() => {
   loadScratchblocksLanguages()
 })
 

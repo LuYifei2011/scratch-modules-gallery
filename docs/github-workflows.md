@@ -11,10 +11,10 @@
 **步骤**：
 
 1. 安装依赖
-2. **运行 `npm run format:scripts`** - 格式化所有 scratchblocks 脚本
+2. **运行 `bun run format:scripts`** - 格式化所有 scratchblocks 脚本
    - 使用 scratchblocks 解析器解析并 stringify
    - AST 校验确保正确性
-3. 运行 `npm run format` - 使用 Prettier 格式化代码
+3. 运行 `bun run format` - 使用 Prettier 格式化代码
 4. 自动提交并推送更改（如有）
 
 **输出**：
@@ -34,7 +34,7 @@
 
 **步骤**：
 
-1. 构建站点 (`npm run build`)
+1. 构建站点 (`bun run build`)
    - 使用 `fetch-depth: 0` 拉取完整 git 历史，供 sitemap 提取文件修改时间
 2. 上传构建产物到 GitHub Pages（仅 push 时）
 3. 部署到 GitHub Pages（仅 push 时）
@@ -50,12 +50,12 @@
 **触发时机**：仅当以下路径发生变更时触发（push 或 pull_request）：
 
 - `scripts/**`、`src/i18n/**`、`tests/**`
-- `package.json`、`package-lock.json`
+- `package.json`、`bun.lock`
 
 **步骤**：
 
 1. 安装依赖
-2. 运行 `npm test`（Node.js 内置测试运行器）
+2. 运行 `bun test tests/*.test.js`（Bun 测试运行器）
 
 **注意**：模块内容变更（`content/modules/**`）**不触发**测试工作流。
 
@@ -78,7 +78,7 @@
 ### 自动化测试
 
 - ✅ 核心构建逻辑变更时自动运行单元测试
-- ✅ 使用 Node.js 内置测试运行器，零额外依赖
+- ✅ 使用 `bun:test`，零额外依赖
 
 ---
 
@@ -88,25 +88,25 @@
 
 ```bash
 # 格式化所有 scratchblocks 脚本
-npm run format:scripts
+bun run format:scripts
 
 # 格式化代码
-npm run format
+bun run format
 
 # 构建站点
-npm run build
+bun run build
 
 # 运行单元测试
-npm test
+bun test tests/*.test.js
 
 # 检查翻译完整性
-npm run check-i18n
+bun run check-i18n
 ```
 
 或一次性执行所有格式化：
 
 ```bash
-npm run format:scripts && npm run format
+bun run format:scripts && bun run format
 ```
 
 ---
@@ -118,12 +118,12 @@ npm run format:scripts && npm run format
 **常见原因**：
 
 - 依赖安装失败 → 检查 package.json
-- Node 版本不兼容 → 格式化工作流使用 Node 22，部署工作流使用 Node 20，本地建议使用相同版本
+- Bun 版本不兼容 → 格式化工作流与部署工作流使用的 Bun 版本不一致，本地建议使用相同版本
 
 ### 本地脚本格式不规范
 
 ```bash
-npm run format:scripts
+bun run format:scripts
 git add content/modules/**/scripts/*.txt
 git commit -m "chore: format scratchblocks scripts"
 git push
@@ -135,7 +135,7 @@ git push
 
 - 格式化脚本：`scripts/format-scratchblocks.js`
 - 工作流配置：`.github/workflows/format.yml`、`.github/workflows/deploy.yml`、`.github/workflows/test.yml`
-- npm 脚本：`package.json` 中的 `format:scripts`
+- Bun 脚本：`package.json` 中的 `format:scripts`
 - 镜像站点列表：`site.config.js` 中的 `mirrors` 数组
 
 ---
@@ -151,9 +151,9 @@ git push
 
    | 选项                       | 值              |
    | -------------------------- | --------------- |
-   | **Build command**          | `npm run build` |
+   | **Build command**          | `bun run build` |
    | **Build output directory** | `dist`          |
-   | **Node.js version**        | `20`            |
+   | **Bun version**            | `1.3.14`        |
 
 3. 在 **Environment variables** 中添加：
 

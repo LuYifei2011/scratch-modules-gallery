@@ -1,5 +1,5 @@
-import { describe, it } from 'node:test'
-import assert from 'node:assert/strict'
+import { describe, it } from 'bun:test'
+import assert from 'bun:assert/strict'
 import { resolveImports } from '../scripts/lib/import-resolver.js'
 
 describe('resolveImports', () => {

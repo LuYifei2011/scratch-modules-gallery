@@ -6,7 +6,7 @@
 
 1. 选择唯一 `id`（目录名同时用作 slug，不含空格；用短横线连接）。
 2. 在 `content/modules/<id>/` 新建目录，创建最少文件：`meta.json` + 脚本目录 `scripts/*.txt`。
-3. 运行 `npm run build` 验证生成是否成功（查看控制台是否有 warnings / errors）。
+3. 运行 `bun run build` 验证生成是否成功（查看控制台是否有 warnings / errors）。
 4. 打开生成的 `dist/modules/<id>/index.html` 或启动本地静态服务查看效果。
 
 ## 目录结构示例
@@ -249,8 +249,8 @@ content/modules/<id>/
 
 ## 校验与调试
 
-- 执行 `npm run build`：若 issues 页中有错误/警告，请修复后再提交（需设置 `IS_DEV=1` 环境变量以生成 issues 页面）。
-- 执行 `npm run check-i18n`：检查各语言翻译完整性，输出缺失字段报告。
+- 执行 `bun run build`：若 issues 页中有错误/警告，请修复后再提交（需设置 `IS_DEV=1` 环境变量以生成 issues 页面）。
+- 执行 `bun run check-i18n`：检查各语言翻译完整性，输出缺失字段报告。
 - 常见错误：
   - 缺失必填字段（id/name/description/tags）
   - JSON 语法错误（注意逗号、引号）

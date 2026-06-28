@@ -217,7 +217,7 @@ http://localhost:8800/__dev/editor/
 ### 构建卡住
 
 - 检查服务器终端是否有错误
-- 尝试手动运行 `npm run build` 诊断问题
+- 尝试手动运行 `bun run build` 诊断问题
 - 重启开发服务器
 
 ### 上传文件失败

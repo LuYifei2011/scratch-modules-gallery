@@ -3,10 +3,10 @@
  *
  * Uses the same i18n engine as the build process (translateModulesForLocale +
  * translateScriptText) to detect missing translations, ensuring results are
- * identical to what `npm run build` reports in dev mode.
+ * identical to what `bun run build` reports in dev mode.
  *
  * Usage:
- *   node scripts/check-translations.js [--format=json|markdown]
+ *   bun scripts/check-translations.js [--format=json|markdown]
  *
  * Exit codes:
  *   0 - all translations are complete

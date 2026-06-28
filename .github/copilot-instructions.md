@@ -1,6 +1,6 @@
 ## AI 协作速览（scratch-modules-gallery）
 
-> 目标：快速理解并安全扩展本仓库。保持"单 Node 构建脚本 + 纯静态输出"原则，禁止引入前端打包器或框架级迁移。
+> 目标：快速理解并安全扩展本仓库。保持"单 Bun 构建脚本 + 纯静态输出"原则，禁止引入前端打包器或框架级迁移。
 
 ### 核心流水线
 
@@ -53,12 +53,12 @@
 
 ### 构建/开发
 
-- **构建**：`npm run build` → 输出到 `dist/`（按语言子目录）
+- **构建**：`bun run build` → 输出到 `dist/`（按语言子目录）
   - 生产构建（~6-7 秒）：包含完整 sitemap、robots.txt、favicon PNG、封面图、HTML 压缩
   - 开发构建（`IS_DEV=1`，~0.8 秒）：跳过 sitemap，生成 `/issues/` 调试页面；**仍执行封面图/favicon PNG/HTML 压缩**（适合测试完整构建产物）
-  - **快速构建**（`npm run build:fast` 或 `FAST_BUILD=1`）：额外跳过 favicon PNG 生成（仅保留 SVG）、站点+模块封面图、HTML 压缩；无 issues 页面
-  - `IS_DEV=1 npm run build`：开发调试页 + 完整压缩产物（两者可叠加）
-- **开发服务器**：`npm run dev` / `dev:https`
+  - **快速构建**（`bun run build:fast` 或 `FAST_BUILD=1`）：额外跳过 favicon PNG 生成（仅保留 SVG）、站点+模块封面图、HTML 压缩；无 issues 页面
+  - `IS_DEV=1 bun run build`：开发调试页 + 完整压缩产物（两者可叠加）
+- **开发服务器**：`bun run dev` / `bun run dev:https`
   - 监听：`content/**`, `src/**`, `public/**`, `site.config.js`, `scripts/lib/**`, `scripts/build.js`
   - 自动刷新：SSE 推送 `{type:'reload'}`；注入 `<script>` 到所有 HTML
   - 重建自动启用快速模式（同时设置 `IS_DEV=1` + `FAST_BUILD=1`），速度最快
@@ -95,7 +95,7 @@
 
 ### 验证清单（提交前）
 
-1. `npm run build` 无异常；所有语言目录含 `search-index.json` / `search-docs.json`。
+1. `bun run build` 无异常；所有语言目录含 `search-index.json` / `search-docs.json`。
 2. 任意模块页 `<head>`：canonical 正确、全量 hreflang + `x-default`。
 3. 导入展开无意外 `// 导入失败`（除演示）。
 4. 自定义块：英文源含 `define ...`；目标语言出现本地化标题 + 参数名称替换。
@@ -120,11 +120,11 @@
 
 ### 单元测试
 
-- **框架**：使用 Node.js 内置测试运行器 `node:test` + `node:assert`，零额外依赖
-- **运行**：`npm test`（执行 `node --test tests/*.test.js`）
+- **框架**：使用 `bun:test` + `bun:assert`，零额外依赖
+- **运行**：`bun test tests/*.test.js`
 - **文件结构**：所有测试文件位于 `tests/` 目录，文件名格式 `<module-name>.test.js`
 - **CI 工作流**：`.github/workflows/test.yml` 仅当以下路径变更时触发测试：
-  - `scripts/**`、`src/i18n/**`、`tests/**`、`package.json`、`package-lock.json`
+  - `scripts/**`、`src/i18n/**`、`tests/**`、`package.json`、`bun.lock`
   - 模块内容变更（`content/modules/**`）**不触发**测试工作流
 - **覆盖范围**：
 

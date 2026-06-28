@@ -1,5 +1,5 @@
-import { describe, it, before } from 'node:test'
-import assert from 'node:assert/strict'
+import { describe, it, beforeAll } from 'bun:test'
+import assert from 'bun:assert/strict'
 import path from 'path'
 import fs from 'fs-extra'
 import { loadModules } from '../scripts/lib/module-loader.js'
@@ -10,7 +10,7 @@ const fixtureRoot = path.join(root, 'tests', '.fixture-modules')
 const fixtureModules = path.join(fixtureRoot, 'content', 'modules')
 const config = { contentDir: 'content/modules' }
 
-before(async () => {
+beforeAll(async () => {
   await fs.emptyDir(fixtureModules)
   const srcModules = path.join(root, 'content', 'modules')
   for (const dir of ['.test', 'fps']) {

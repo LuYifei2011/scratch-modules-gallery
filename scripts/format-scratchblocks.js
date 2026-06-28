@@ -1,7 +1,7 @@
-#!/usr/bin/env node
+#!/usr/bin/env bun
 /**
  * 格式化 scratchblocks 脚本
- * 用法: node scripts/format-scratchblocks.js
+ * 用法: bun scripts/format-scratchblocks.js
  */
 
 import fs from 'fs-extra'

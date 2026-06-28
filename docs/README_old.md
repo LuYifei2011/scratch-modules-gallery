@@ -10,18 +10,18 @@
 
 ---
 
-静态生成的多语言 Scratch 模块索引。单一 Node 构建脚本，无前端打包器。
+静态生成的多语言 Scratch 模块索引。单一 Bun 构建脚本，无前端打包器。
 
 > 新增模块？请先阅读：`docs/authoring-modules.md`（模块编写指南）。本文档描述当前实现（以 `scripts/build.js` 为准）。
 
 ## 快速开始
 
 ```
-npm install
-npm run build           # 生成 dist/
-npm run dev             # 启动本地开发服务器（自动重建 + 自动刷新）
+bun install
+bun run build           # 生成 dist/
+bun run dev             # 启动本地开发服务器（自动重建 + 自动刷新）
 # 或启用 HTTPS（自动生成本地自签证书）：
-npm run dev:https
+bun run dev:https
 ```
 
 ## 目录结构（当前生效）
@@ -58,8 +58,8 @@ content/modules/<module-id>/
 ## 构建 / 输出
 
 ```
-npm install
-npm run build
+bun install
+bun run build
 ```
 
 输出到 `dist/`：
@@ -84,10 +84,10 @@ npm run build
 
 HTTPS 支持：
 
-- 运行 `npm run dev:https` 自动使用自签证书（首次会在 `.cert/` 生成并保存）。
+- 运行 `bun run dev:https` 自动使用自签证书（首次会在 `.cert/` 生成并保存）。
 - 或自备证书（PowerShell 示例）：
   ```pwsh
-  $env:HTTPS="1"; $env:HTTPS_KEY="certs/localhost-key.pem"; $env:HTTPS_CERT="certs/localhost.pem"; npm run dev
+  $env:HTTPS="1"; $env:HTTPS_KEY="certs/localhost-key.pem"; $env:HTTPS_CERT="certs/localhost.pem"; bun run dev
   ```
 - 支持 PFX：`$env:HTTPS_PFX="certs/localhost.pfx"; $env:HTTPS_PASSPHRASE="pass"`。
 
@@ -95,7 +95,7 @@ HTTPS 支持：
 
 - `BASE_URL`：在构建时覆盖 `site.config.js` 的 `baseUrl`，示例：
   ```pwsh
-  $env:BASE_URL="http://localhost:8800"; npm run build
+  $env:BASE_URL="http://localhost:8800"; bun run build
   ```
 - `IS_DEV`：构建时传入模板上下文；开发服务器会自动设置为 `true`。模板中可用变量 `IS_DEV`；页面已注入 `window.IS_DEV`，前端 JS 可读取：
   ```js
@@ -115,7 +115,7 @@ HTTPS 支持：
 
 构建前准备：
 
-- 请先运行 `npm install`（或 `pnpm install`/`yarn`）以安装 `minisearch` 等依赖；构建脚本会尝试从 `node_modules` 拷贝 MiniSearch 的 UMD 文件到 `dist/vendor/`。
+- 请先运行 `bun install`（或 `npm install`/`pnpm install`/`yarn`）以安装 `minisearch` 等依赖；构建脚本会尝试从 `node_modules` 拷贝 MiniSearch 的 UMD 文件到 `dist/vendor/`。
 
 ### 验证 meta keywords
 
@@ -138,7 +138,7 @@ HTTPS 支持：
 
 ### GitHub Actions 配置
 
-为了在 CI 环境中正确获取 git 提交历史，`.github/workflows/node.js.yml` 中的 `checkout` action 需配置 `fetch-depth: 0`：
+为了在 CI 环境中正确获取 git 提交历史，`.github/workflows/deploy.yml` 中的 `checkout` action 需配置 `fetch-depth: 0`：
 
 ```yaml
 - uses: actions/checkout@v4
@@ -197,7 +197,7 @@ main.txt      -> id: main
 
 ### 方法 A：使用可视化编辑器（推荐）
 
-1. 启动开发服务器：`npm run dev`
+1. 启动开发服务器：`bun run dev`
 2. 在浏览器中访问 `http://localhost:8800/__dev/editor/`
 3. 点击 **"+ 新建模块"** 按钮，填写模块信息
 4. 在编辑器中添加脚本、翻译、资源文件
@@ -209,7 +209,7 @@ main.txt      -> id: main
 1. 新建 `content/modules/<id>/` 并添加 `meta.json` 与 `scripts/*.txt` 至少 1 段。
 2. （可选）在 `meta.json` 中新增 `variables`、`references`，并添加 `demo.sb3`, `notes.md`, `assets/`。
 3. （可选）添加 `i18n/<locale>.json` 做本地化。
-4. 运行 `npm run build`；修复 `Issues:` 中的错误。
+4. 运行 `bun run build`；修复 `Issues:` 中的错误。
 5. 打开 `dist/<locale>/modules/<id>/` 验证脚本、导入块、变量表与引用列表。
 
 ## 验证清单
