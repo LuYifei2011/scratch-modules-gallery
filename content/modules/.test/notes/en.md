@@ -26,7 +26,7 @@ _Italic_
 
 ==Highlight== (some platforms)
 
-H~~2~~O　　X^2^ + Y^3^
+H<sub>2</sub>O　　X<sup>2</sup> + Y<sup>3</sup>
 
 Text with <sup>superscript</sup> and <sub>subscript</sub>
 
