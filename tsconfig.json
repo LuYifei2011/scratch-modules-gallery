@@ -2,10 +2,16 @@
   "compilerOptions": {
     "allowImportingTsExtensions": true,
     "isolatedModules": true,
+    "lib": ["ESNext", "DOM"],
     "module": "Preserve",
     "moduleResolution": "bundler",
     "noEmit": true,
-    "target": "ES2022"
+    "noImplicitAny": false,
+    "skipLibCheck": true,
+    "strict": false,
+    "strictNullChecks": false,
+    "target": "ESNext",
+    "types": ["bun-types", "node"]
   },
   "include": ["site.config.ts", "scripts/**/*.ts", "src/client/**/*.ts", "tests/**/*.ts"]
 }

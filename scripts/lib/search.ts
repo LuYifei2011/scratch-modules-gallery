@@ -1,7 +1,10 @@
 import MiniSearch from 'minisearch'
 import { tokenizeCJK } from './scratch-utils.ts'
+import type { ModuleRecord } from './types.ts'
 
-export function buildSearchIndex(modules) {
+type SearchDocument = Pick<ModuleRecord, 'id' | 'name' | 'description' | 'tags' | 'keywords' | 'slug' | 'hasDemo'>
+
+export function buildSearchIndex(modules: SearchDocument[]) {
   const mini = new MiniSearch({
     fields: ['name', 'id', 'description', 'tags', 'keywords'],
     storeFields: ['id', 'name', 'description', 'tags', 'keywords', 'slug', 'hasDemo'],
