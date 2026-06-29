@@ -1,4 +1,3 @@
-// @ts-nocheck
 import fs from 'fs-extra'
 import path from 'path'
 import fg from 'fast-glob'
@@ -15,15 +14,29 @@ import { resolveImports } from './lib/import-resolver.ts'
 import { loadModules } from './lib/module-loader.ts'
 import { translateScriptText } from './lib/script-translator.ts'
 import { loadI18n, loadGlobalTags, loadModuleDefaults, pickConfigForLocale } from './lib/i18n-loader.ts'
+import type { I18nDictionary } from './lib/i18n-loader.ts'
 import { loadSiteCoverTemplate, generateSiteCover, generateModuleCover } from './lib/cover-generator.ts'
 import log, { c, paint, formatDuration, timeNow } from './lib/logger.ts'
+import type {
+  BuildIssue,
+  BuildIssueType,
+  BuildIssuesSummary,
+  LocalizedModuleRecord,
+  ModuleRecord,
+  SitemapUrl,
+  SiteConfig,
+} from './lib/types.ts'
 
 const root = path.resolve('.')
 // 模块级 favicon HTML 片段，由 render() 生成后供 nunjucks.render monkey-patch 注入
 let _faviconHtml = ''
 // 动态 ESM 导入配置
 const configModule = await import(pathToFileURL(path.join(root, 'site.config.ts')).href)
-const config = configModule.default || configModule
+const config = (configModule.default || configModule) as SiteConfig & {
+  baseUrl: string
+  outDir: string
+  siteName: string
+}
 // 覆盖 baseUrl 与开发模式标记
 const isDev = String(process.env.IS_DEV || '').toLowerCase() === 'true' || process.env.IS_DEV === '1'
 // 快速构建模式：跳过耗时的资源生成（favicon PNG、封面图、HTML 压缩），与 IS_DEV 独立
@@ -67,12 +80,28 @@ const scratchblocksLanguages = Object.entries(scratchblocks.allLanguages)
 const templatesPath = path.join(root, 'src', 'templates')
 nunjucks.configure(templatesPath, { autoescape: true })
 
-async function render(modules, allTags) {
+function errorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : String(error)
+}
+
+function summarizeIssues(issues: BuildIssue[]): BuildIssuesSummary {
+  return issues.reduce(
+    (acc, issue) => {
+      if (issue.type === 'error') acc.errors++
+      else if (issue.type === 'warn') acc.warnings++
+      acc.total++
+      return acc
+    },
+    { errors: 0, warnings: 0, total: 0 }
+  )
+}
+
+async function render(modules: ModuleRecord[], _allTags: string) {
   const outDir = path.join(root, config.outDir)
   await fs.emptyDir(outDir)
 
   // 过滤掉无效模块（缺少必需字段），避免后续 path.join 等操作报错
-  const validModules = modules.filter((m) => {
+  const validModules = modules.filter((m): m is ModuleRecord & { id: string; slug: string } => {
     if (!m.id || !m.slug) {
       log.warn('render', `跳过无效模块（缺少 id 或 slug）: ${JSON.stringify(m)}`)
       return false
@@ -95,7 +124,7 @@ async function render(modules, allTags) {
     basePath = ''
   }
   const normalizedBaseUrl = (config.baseUrl || '').replace(/\/$/, '')
-  const escapeXml = (value) =>
+  const escapeXml = (value: unknown) =>
     String(value ?? '')
       .replace(/&/g, '&amp;')
       .replace(/</g, '&lt;')
@@ -105,7 +134,7 @@ async function render(modules, allTags) {
 
   // 从 git 历史获取文件的最后修改时间（ISO8601 日期字符串）
   // 如果获取失败或不在 git 仓库中，回退到当前时间
-  async function getFileLastModDate(relativeFilePath) {
+  async function getFileLastModDate(relativeFilePath: string): Promise<string> {
     try {
       const git = simpleGit(root)
       const isRepo = await git.checkIsRepo()
@@ -121,26 +150,26 @@ async function render(modules, allTags) {
       }
 
       // 获取该文件的最后一次提交时间
-      const log = await git.log({
+      const gitLog = await git.log({
         file: relativeFilePath,
         '--diff-filter': 'M',
         '--max-count': '1',
       })
-      if (log.latest) {
-        const commitDate = new Date(log.latest.date).toISOString().split('T')[0]
+      if (gitLog.latest) {
+        const commitDate = new Date(gitLog.latest.date).toISOString().split('T')[0]
         return commitDate
       }
       return new Date().toISOString().split('T')[0]
     } catch (e) {
-      if (isDev) log.warn('git', `获取 ${relativeFilePath} 的提交时间失败: ${e?.message || e}`)
+      if (isDev) log.warn('git', `获取 ${relativeFilePath} 的提交时间失败: ${errorMessage(e)}`)
       return new Date().toISOString().split('T')[0]
     }
   }
 
   // 批量获取模块文件的最后修改时间，缓存结果以避免重复查询
   // 考虑：scripts/ 目录 + 模块级 i18n 目录 + 全局 i18n 目录
-  const lastModCache = new Map()
-  async function getModuleLastMod(moduleSlug) {
+  const lastModCache = new Map<string, string>()
+  async function getModuleLastMod(moduleSlug: string): Promise<string> {
     if (lastModCache.has(moduleSlug)) {
       return lastModCache.get(moduleSlug)
     }
@@ -181,7 +210,7 @@ async function render(modules, allTags) {
         } catch (e) {
           // 某个路径可能不存在或出错，继续处理其他路径
           if (isDev) {
-            log.warn('git', `获取 ${moduleSlug}/${filePath} 的提交时间失败: ${e?.message || e}`)
+            log.warn('git', `获取 ${moduleSlug}/${filePath} 的提交时间失败: ${errorMessage(e)}`)
           }
         }
       }
@@ -190,7 +219,7 @@ async function render(modules, allTags) {
       lastModCache.set(moduleSlug, dateStr)
       return dateStr
     } catch (e) {
-      if (isDev) log.warn('git', `获取模块 ${moduleSlug} 的提交时间失败: ${e?.message || e}`)
+      if (isDev) log.warn('git', `获取模块 ${moduleSlug} 的提交时间失败: ${errorMessage(e)}`)
       const date = new Date().toISOString().split('T')[0]
       lastModCache.set(moduleSlug, date)
       return date
@@ -201,7 +230,7 @@ async function render(modules, allTags) {
   if (await fs.pathExists(publicDir)) await fs.copy(publicDir, outDir)
 
   // 读取 cover SVG 模板（用于生成各语言社交预览图）；快速构建模式下跳过
-  const coverSvgTemplate = isFast ? null : await loadSiteCoverTemplate()
+  const coverSvgTemplate: string | null = isFast ? null : await loadSiteCoverTemplate()
 
   // copy thirdparty
   const thirdpartyDir = path.join(root, 'thirdparty')
@@ -354,13 +383,13 @@ async function render(modules, allTags) {
   // render pages per locale（对每个 locale 复用翻译结果，避免重复计算）
   const [dict, globalTags, moduleDefaults] = await Promise.all([loadI18n(), loadGlobalTags(), loadModuleDefaults()])
   const locales = Object.keys(dict)
-  const localeConfigCache = new Map()
+  const localeConfigCache = new Map<string, SiteConfig>()
   // 每种语言的 hreflang 标记（优先使用 i18n.meta.languageTag）
-  const langTags = Object.fromEntries(
+  const langTags: Record<string, string> = Object.fromEntries(
     locales.map((loc) => [loc, (dict[loc]?.meta && dict[loc].meta.languageTag) || loc])
   )
   // 预先一次性收集所有语言的缺失翻译警告，确保之后所有页面的 buildIssuesSummary 一致
-  const translatedCache = new Map()
+  const translatedCache = new Map<string, LocalizedModuleRecord[]>()
   if (isDev) {
     for (const loc of locales) {
       if (loc === 'en') continue
@@ -540,7 +569,7 @@ async function render(modules, allTags) {
 
   // 生成根目录的 404 页面（GitHub Pages 使用）
   // 包含所有语言的 i18n 数据，通过 JS 动态切换
-  const languageNames = {}
+  const languageNames: Record<string, string> = {}
   for (const loc of locales) {
     languageNames[loc] = (dict[loc]?.meta && dict[loc].meta.languageName) || loc
   }
@@ -565,7 +594,7 @@ async function render(modules, allTags) {
   // 生成 sitemap 时为每个 URL 获取对应的最后修改时间
   // 快速模式下跳过生成以节省时间
   if (!isFast) {
-    const sitemapUrls = []
+    const sitemapUrls: SitemapUrl[] = []
 
     // 首页：使用配置文件 + 全局 i18n 文件的最后修改时间
     // 两者中较晚的时间
@@ -649,7 +678,7 @@ async function render(modules, allTags) {
   // 在所有语言与模块页面渲染完成后，再统一生成 issues 页面，确保每个语言目录看到的是全集合
   if (isDev) {
     // 统一使用最终 collectedIssues（通过 nunjucks.render monkey patch 注入到模板）
-    const dict = await loadI18n()
+    const dict: I18nDictionary = await loadI18n()
     const locales = Object.keys(dict)
     const langTags = Object.fromEntries(
       locales.map((loc) => [loc, (dict[loc]?.meta && dict[loc].meta.languageTag) || loc])
@@ -660,15 +689,7 @@ async function render(modules, allTags) {
       const assetBase = basePath || ''
       // 由于我们在统一生成阶段调用 render，此时 monkey patch 仍会注入 buildIssues & summary。
       // 但为稳妥（避免某些运行路径失效），这里显式计算一次并覆盖（模板优先使用传入值）。
-      const summary = collectedIssues.reduce(
-        (acc, i) => {
-          if (i.type === 'error') acc.errors++
-          else if (i.type === 'warn') acc.warnings++
-          acc.total++
-          return acc
-        },
-        { errors: 0, warnings: 0, total: 0 }
-      )
+      const summary = summarizeIssues(collectedIssues)
       const dictIssues = dict[loc]?.issues
       const summaryText = dictIssues?.summaryPrefix
         ? dictIssues.summaryPrefix
@@ -703,12 +724,12 @@ async function render(modules, allTags) {
 
 // --- 开发模式下的构建问题聚合 ---
 // 收集的结构：{ type: 'error'|'warn', message: string, moduleId?: string, code?: string }
-const collectedIssues = []
+const collectedIssues: BuildIssue[] = []
 
-function reportIssue(type, message, details = {}) {
+function reportIssue(type: BuildIssueType, message: string, details: Record<string, unknown> = {}) {
   if (!isDev) return
   try {
-    const entry = {
+    const entry: BuildIssue = {
       type,
       message: String(message || ''),
       details: details || {},
@@ -734,23 +755,17 @@ function reportIssue(type, message, details = {}) {
   const origRender = nunjucks.render
   nunjucks.render = function (...args) {
     if (typeof args[1] === 'object' && args[1] !== null) {
-      args[1].faviconHtml = _faviconHtml
-      args[1].buildIssues = collectedIssues
-      const summary = collectedIssues.reduce(
-        (acc, i) => {
-          if (i.type === 'error') acc.errors++
-          else if (i.type === 'warn') acc.warnings++
-          acc.total++
-          return acc
-        },
-        { errors: 0, warnings: 0, total: 0 }
-      )
-      args[1].buildIssuesSummary = summary
+      const context = args[1] as Record<string, unknown>
+      context.faviconHtml = _faviconHtml
+      context.buildIssues = collectedIssues
+      const summary = summarizeIssues(collectedIssues)
+      context.buildIssuesSummary = summary
       // 预计算本地化 summary 文本，避免在模板中链式 replace 引发解析问题
       try {
-        const dictIssues = args[1].t && args[1].t.issues
+        const t = context.t as { issues?: { summaryPrefix?: string } } | undefined
+        const dictIssues = t?.issues
         if (dictIssues && typeof dictIssues.summaryPrefix === 'string') {
-          args[1].buildIssuesSummaryText = dictIssues.summaryPrefix
+          context.buildIssuesSummaryText = dictIssues.summaryPrefix
             .replace('{total}', String(summary.total))
             .replace('{errors}', String(summary.errors))
             .replace('{warnings}', String(summary.warnings))
@@ -772,14 +787,7 @@ function reportIssue(type, message, details = {}) {
     `✓ Built ${modules.length} modules across ${locales.length} locale(s) in ${paint(c.bold, formatDuration(buildDuration))}`
   )
   if (isDev && collectedIssues.length) {
-    const summary = collectedIssues.reduce(
-      (acc, i) => {
-        if (i.type === 'error') acc.errors++
-        else if (i.type === 'warn') acc.warnings++
-        return acc
-      },
-      { errors: 0, warnings: 0 }
-    )
+    const summary = summarizeIssues(collectedIssues)
     const errPart = summary.errors > 0 ? paint(c.red + c.bold, `${summary.errors} 个错误`) : null
     const warnPart = summary.warnings > 0 ? paint(c.yellow, `${summary.warnings} 个警告`) : null
     const parts = [errPart, warnPart].filter(Boolean).join(paint(c.dim, ', '))

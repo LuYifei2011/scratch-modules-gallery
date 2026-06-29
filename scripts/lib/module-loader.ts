@@ -9,7 +9,7 @@ import path from 'path'
 import fg from 'fast-glob'
 import { buildModuleRecord } from './schema.ts'
 import log from './logger.ts'
-import type { ModuleMeta, ModuleRecord, ModuleTranslation, SiteConfig } from './types.ts'
+import type { ModuleMeta, ModuleRecord, ModuleScript, ModuleTranslation, SiteConfig } from './types.ts'
 
 interface LoadModulesOptions {
   root: string
@@ -50,7 +50,7 @@ export async function loadModules({ root, config, isDev }: LoadModulesOptions): 
         continue
       }
 
-      const scripts: ModuleRecord['scripts'] = []
+      const scripts: ModuleScript[] = []
       // scripts/ 目录下若存在 *.txt，按文件名自然排序
       const scriptsDir = path.join(moduleDir, 'scripts')
       if (await fs.pathExists(scriptsDir)) {

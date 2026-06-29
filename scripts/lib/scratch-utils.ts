@@ -1,6 +1,7 @@
 import fs from 'fs-extra'
 import path from 'path'
 import * as scratchblocks from 'scratchblocks-plus/syntax/index.js'
+import type { ScratchblocksBlock } from 'scratchblocks-plus/syntax/index.js'
 
 const root = path.resolve('.')
 
@@ -53,7 +54,7 @@ export function analyzeBlockCategories(scriptTexts?: Array<string | null | undef
   const allKeys = Object.keys(scratchblocks.allLanguages || {})
   const counts: Record<string, number> = {}
 
-  function walkBlocks(blocks: any[] | undefined | null): void {
+  function walkBlocks(blocks: ScratchblocksBlock[] | undefined | null): void {
     if (!blocks) return
     for (const block of blocks) {
       if (block.isComment) continue

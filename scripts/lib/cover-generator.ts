@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * 封面图生成器：站点级 + 模块级 OG 社交预览图。
  *
@@ -13,9 +12,19 @@ import path from 'path'
 import { createCanvas, GlobalFonts } from '@napi-rs/canvas'
 import log from './logger.ts'
 import { Resvg } from '@resvg/resvg-js'
+import type { ResvgRenderOptions } from '@resvg/resvg-js'
 import { renderToSVGString } from 'scratchblocks-plus/node-ssr.js'
 import { escapeHtml } from './html-utils.ts'
 import { analyzeBlockCategories } from './scratch-utils.ts'
+import type { ResolvedModuleScript } from './types.ts'
+
+export interface CoverModule {
+  id?: string
+  name?: string
+  description?: string
+  tags?: string[]
+  scripts?: ResolvedModuleScript[]
+}
 
 const root = path.resolve('.')
 const fontDirPath = path.join(root, 'src', 'fonts')
@@ -24,14 +33,14 @@ const fontDirPath = path.join(root, 'src', 'fonts')
 const _measureCanvas = createCanvas(1, 1)
 const _measureCtx = _measureCanvas.getContext('2d')
 /** 字体后缀 → CSS 字体族名称 */
-const FONT_SUFFIX_NAME = { SC: 'Noto Sans SC', TC: 'Noto Sans TC', '': 'Noto Sans' }
+const FONT_SUFFIX_NAME: Record<string, string> = { SC: 'Noto Sans SC', TC: 'Noto Sans TC', '': 'Noto Sans' }
 
 /**
  * 根据语言标签返回 CSS font-family 字符串（优先显示当前语言字体）。
  * @param {string} langTag
  * @returns {string}
  */
-function getFontFamily(langTag) {
+function getFontFamily(langTag: string) {
   const normalized = (langTag || '').toLowerCase().replace('_', '-')
   let order
   if (normalized === 'zh-cn') order = ['SC', 'TC', '']
@@ -46,7 +55,7 @@ function getFontFamily(langTag) {
  * @param {string} font  CSS font 字符串，如 "bold 42px Noto Sans SC"
  * @returns {number}
  */
-function measureText(text, font) {
+function measureText(text: string, font: string) {
   _measureCtx.font = font
   return _measureCtx.measureText(text).width
 }
@@ -58,10 +67,10 @@ function measureText(text, font) {
  * @param {number} maxWidth  最大像素宽度
  * @returns {string[]}
  */
-function wrapTextByWidth(text, font, maxWidth) {
+function wrapTextByWidth(text: string, font: string, maxWidth: number) {
   if (!text) return []
   _measureCtx.font = font
-  const lines = []
+  const lines: string[] = []
   // 按 CJK 字符边界或空格拆分为 token
   const tokens = tokenize(text)
   let line = ''
@@ -81,8 +90,8 @@ function wrapTextByWidth(text, font, maxWidth) {
 /**
  * 将文本拆为可换行单元（CJK 逐字、英文按词/空格）。
  */
-function tokenize(text) {
-  const tokens = []
+function tokenize(text: string) {
+  const tokens: string[] = []
   let buf = ''
   for (const ch of text) {
     if (isCJK(ch)) {
@@ -112,7 +121,7 @@ function tokenize(text) {
  * @param {string} langTag
  * @returns {string[]}
  */
-function getFontOrder(langTag) {
+function getFontOrder(langTag: string) {
   const normalized = (langTag || '').toLowerCase().replace('_', '-')
   if (normalized === 'zh-cn') return ['SC', 'TC', '']
   if (normalized === 'zh-tw') return ['TC', 'SC', '']
@@ -120,7 +129,7 @@ function getFontOrder(langTag) {
 }
 
 /** Resvg 共用选项 */
-function resvgOpts(langTag) {
+function resvgOpts(langTag: string): ResvgRenderOptions {
   const fontFiles = getFontOrder(langTag)
     .map((suffix) => path.join(fontDirPath, `NotoSans${suffix}-Medium.ttf`))
     .filter((f) => fs.existsSync(f))
@@ -156,7 +165,7 @@ export async function loadSiteCoverTemplate() {
  * @param {string} outputPath  输出 PNG 的绝对路径
  * @param {string} langTag     当前语言的标签
  */
-export async function generateSiteCover(template, siteName, outputPath, langTag) {
+export async function generateSiteCover(template: string, siteName: string, outputPath: string, langTag: string) {
   const svg = template.replace('__SITE_TITLE__', escapeHtml(siteName))
   try {
     const resvg = new Resvg(svg, resvgOpts(langTag))
@@ -264,6 +273,15 @@ function buildModuleCoverSVG({
   langTag,
   siteName,
   faviconInnerContent,
+}: {
+  name?: string
+  description?: string
+  tags: string[]
+  firstScript: string
+  allScripts: string[]
+  langTag: string
+  siteName?: string
+  faviconInnerContent: string
 }) {
   const leftMaxW = LEFT_W
   const fontFamily = getFontFamily(langTag)
@@ -387,10 +405,10 @@ function buildModuleCoverSVG({
 }
 
 /** 当前已注册字体对应的语言（用于按需重新注册） */
-let _registeredFontLang = null
+let _registeredFontLang: string | null = null
 
 /** favicon.svg 内层内容缓存（null = 未加载，'' = 不存在） */
-let _faviconInnerContent = null
+let _faviconInnerContent: string | null = null
 
 /**
  * 懒加载 src/favicon.svg 的内层 SVG 内容（去掉 xml 声明和外层 svg 标签）。
@@ -414,7 +432,7 @@ async function loadFaviconContent() {
  * 保证 canvas 文本测量使用正确的字体回退顺序。
  * @param {string} langTag
  */
-function ensureFontsRegistered(langTag) {
+function ensureFontsRegistered(langTag: string) {
   const normalized = (langTag || '').toLowerCase().replace('_', '-')
   if (_registeredFontLang === normalized) return
   GlobalFonts.removeAll()
@@ -435,7 +453,7 @@ function ensureFontsRegistered(langTag) {
  * @param {string} outputPath   输出 PNG 的绝对路径
  * @param {string} [siteName]   站点名称（用于左下角水印）
  */
-export async function generateModuleCover(module, langTag, outputPath, siteName) {
+export async function generateModuleCover(module: CoverModule, langTag: string, outputPath: string, siteName?: string) {
   // 提取第一个非导入脚本的文本
   const scripts = module.scripts || []
   const firstNonImport = scripts.find((s) => !s.imported)

@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { describe, expect, it } from 'bun:test'
 import { translateModulesForLocale } from '../scripts/lib/i18n-engine.ts'
 
@@ -162,9 +161,9 @@ describe('translateModulesForLocale', () => {
       callArgs.push({ raw, langKey, nameMaps })
       return {
         text: raw,
-        missingProcs: new Set(),
-        missingParams: new Set(),
-        missingComments: new Set(),
+        missingProcs: new Set<string>(),
+        missingParams: new Set<string>(),
+        missingComments: new Set<string>(),
       }
     }
     await translateModulesForLocale([baseModule], dict, 'zh-cn', {}, {}, { translateScriptText: mockTranslate })
@@ -335,7 +334,7 @@ describe('translateModulesForLocale', () => {
           content: 'when flag clicked',
           leadingImports: [
             {
-              imported: true,
+              imported: true as true,
               content: 'set [result v] to (0)',
               fromId: 'source',
               fromName: 'Source',
@@ -359,9 +358,9 @@ describe('translateModulesForLocale', () => {
       capturedCalls.push({ raw, vars: nameMaps?.vars })
       return {
         text: raw,
-        missingProcs: new Set(),
-        missingParams: new Set(),
-        missingComments: new Set(),
+        missingProcs: new Set<string>(),
+        missingParams: new Set<string>(),
+        missingComments: new Set<string>(),
       }
     }
     await translateModulesForLocale(
@@ -399,7 +398,7 @@ describe('translateModulesForLocale', () => {
       keywords: [],
       scripts: [
         {
-          imported: true,
+          imported: true as true,
           content: 'say [hi]',
           fromId: 'source',
           fromName: 'Source',
@@ -436,9 +435,9 @@ describe('translateModulesForLocale', () => {
       // Simulate translation: prefix with translated marker
       return {
         text: `[translated:${langKey}] ${raw}`,
-        missingProcs: new Set(),
-        missingParams: new Set(),
-        missingComments: new Set(),
+        missingProcs: new Set<string>(),
+        missingParams: new Set<string>(),
+        missingComments: new Set<string>(),
       }
     }
     // Module only has English notes - zh-cn page should translate its scratchblocks
@@ -467,9 +466,9 @@ describe('translateModulesForLocale', () => {
     const mockTranslate = (raw, langKey, nameMaps) => {
       return {
         text: `[translated] ${raw}`,
-        missingProcs: new Set(),
-        missingParams: new Set(),
-        missingComments: new Set(),
+        missingProcs: new Set<string>(),
+        missingParams: new Set<string>(),
+        missingComments: new Set<string>(),
       }
     }
     // Module has zh-cn notes - zh-cn page should NOT re-translate its scratchblocks
@@ -499,9 +498,9 @@ describe('translateModulesForLocale', () => {
     const mockTranslate = (raw, langKey, nameMaps) => {
       return {
         text: `[translated] ${raw}`,
-        missingProcs: new Set(),
-        missingParams: new Set(),
-        missingComments: new Set(),
+        missingProcs: new Set<string>(),
+        missingParams: new Set<string>(),
+        missingComments: new Set<string>(),
       }
     }
     const modWithNotes = {

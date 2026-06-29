@@ -1,4 +1,3 @@
-// @ts-nocheck
 import http from 'http'
 import https from 'https'
 import fs from 'fs'
@@ -29,7 +28,7 @@ const HTTPS_PFX = process.env.HTTPS_PFX // PFX 路径（可选）
 const HTTPS_PASSPHRASE = process.env.HTTPS_PASSPHRASE // PFX 密码（可选）
 
 let protocol = 'http'
-let httpsOptions = undefined
+let httpsOptions: https.ServerOptions | undefined = undefined
 if (HTTPS_ENABLED) {
   try {
     if (HTTPS_PFX) {
@@ -50,8 +49,8 @@ if (HTTPS_ENABLED) {
         certStr = fs.readFileSync(certFile, 'utf8')
       } catch {
         // 动态导入 selfsigned 以避免非 HTTPS 场景的额外依赖
-        const selfsigned = (await import('selfsigned')).default
-        const pems = selfsigned.generate([{ name: 'commonName', value: 'localhost' }], {
+        const selfsigned = (await import('selfsigned')).default as any
+        const pems = await selfsigned.generate([{ name: 'commonName', value: 'localhost' }], {
           days: 365,
           keySize: 2048,
           algorithm: 'sha256',
@@ -75,7 +74,7 @@ if (HTTPS_ENABLED) {
 const BASE_URL = `${protocol}://${HOST}:${PORT}`
 
 // chokidar 为 dev 依赖，按需加载，避免生产构建耦合
-let chokidar
+let chokidar: any
 try {
   chokidar = (await import('chokidar')).default
 } catch (e) {
@@ -86,7 +85,7 @@ try {
 // --- 构建队列 ---
 let building = false
 let pending = false
-const sseClients = new Set()
+const sseClients = new Set<any>()
 
 // 快速构建模式（运行时可通过按键切换）
 let fastBuild = true
@@ -96,18 +95,18 @@ let verboseMode = false // 默认简略模式
 
 // 记录最近一次构建触发时间与结果，用于状态行展示
 let lastBuildStart = 0
-let lastBuildResult = null // { time: string, duration: number, success: boolean }
+let lastBuildResult: { time: string; duration: number; success: boolean } | null = null
 
 // --- 简易小文件缓存 (仅开发，用于减少频繁磁盘 IO) ---
 // 策略：< 256KB 且命中 mtime 不变则复用；超过阈值走流式读取
 const SMALL_FILE_LIMIT = 256 * 1024
-const fileCache = new Map() // key: absPath -> { mtimeMs, data: Buffer|string, isHTML }
-function getCachedFile(absPath, stat) {
+const fileCache = new Map<string, any>() // key: absPath -> { mtimeMs, data: Buffer|string, isHTML }
+function getCachedFile(absPath: string, stat: fs.Stats) {
   const c = fileCache.get(absPath)
   if (c && c.mtimeMs === stat.mtimeMs) return c
   return null
 }
-function setCachedFile(absPath, stat, payload) {
+function setCachedFile(absPath: string, stat: fs.Stats, payload: any) {
   // 简单容量控制：超过 300 条随即删除 30%（朴素做法即可）
   if (fileCache.size > 300) {
     let i = 0
@@ -119,7 +118,7 @@ function setCachedFile(absPath, stat, payload) {
   fileCache.set(absPath, { mtimeMs: stat.mtimeMs, ...payload })
 }
 
-function broadcast(obj) {
+function broadcast(obj: any) {
   const msg = JSON.stringify(obj)
   for (const res of sseClients) {
     try {
@@ -139,7 +138,7 @@ function runBuild(reason = 'changed') {
   fileCache.clear()
   lastBuildStart = Date.now()
   broadcast({ type: 'building', reason, time: lastBuildStart })
-  const env = { ...process.env, IS_DEV: '1', BASE_URL: BASE_URL }
+  const env: any = { ...process.env, IS_DEV: '1', BASE_URL: BASE_URL }
   if (fastBuild) env.FAST_BUILD = '1'
   // 传递日志模式到子进程
   if (verboseMode) env.LOG_MODE = 'v'
@@ -177,8 +176,8 @@ const watcher = chokidar.watch(
 )
 
 // Debounce 聚合：短时间多事件只触发一次构建
-let debounceTimer = null
-let aggregatedReasons = []
+let debounceTimer: ReturnType<typeof setTimeout> | null = null
+let aggregatedReasons: string[] = []
 const DEBOUNCE_MS = 120
 watcher.on('all', (event, file) => {
   const reason = `${event}:${file}`
@@ -191,13 +190,13 @@ watcher.on('all', (event, file) => {
       .slice(0, 3)
       .map((r) => paint(c.dim, `  • `) + paint(c.gray, r.replace(/\\/g, '/').slice(0, 60)))
     log.info('watch', `${uniq.length} 个文件变更`)
-    for (const p of preview) log.dim('watch', p)
-    if (uniq.length > 3) log.dim('watch', `  … 及其他 ${uniq.length - 3} 个`)
+    for (const p of preview) log.dim(p)
+    if (uniq.length > 3) log.dim(`  … 及其他 ${uniq.length - 3} 个`)
     runBuild(uniq.slice(0, 5).join(','))
   }, DEBOUNCE_MS)
 })
 
-function serve404(res) {
+function serve404(res: any) {
   const notFoundPage = path.join(DIST_DIR, '404.html')
   fs.readFile(notFoundPage, (err, buf) => {
     res.statusCode = 404

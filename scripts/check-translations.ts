@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Translation completeness checker.
  *
@@ -306,7 +305,7 @@ function generateMarkdown(allIssues) {
   if (moduleIssues.length > 0) {
     lines.push('### Module Translations\n')
     // Group by module
-    const byModule = {}
+    const byModule: Record<string, any[]> = {}
     for (const issue of moduleIssues) {
       ;(byModule[issue.moduleId] ??= []).push(issue)
     }

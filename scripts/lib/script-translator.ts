@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * 构建期 scratchblocks 脚本翻译：将英文源脚本翻译为指定语言，
  * 并替换变量/列表/事件/自定义块参数名称。
@@ -8,6 +7,7 @@
 
 import * as scratchblocks from 'scratchblocks-plus/syntax/index.js'
 import { blockName } from 'scratchblocks-plus/syntax/blocks.js'
+import type { NameMaps, TranslateScriptTextResult } from './types.ts'
 
 /**
  * 从自定义块 children 构造英文 pattern。
@@ -56,8 +56,12 @@ function applyLocalizedPattern(block, localizedPattern, argBlocks) {
 /**
  * 将 scratchblocks AST 中的变量/列表/事件/自定义块参数名称替换为目标语言
  */
-export function translateScriptFields(blocks, nameMaps) {
-  const missing = { missingProcs: new Set(), missingParams: new Set(), missingComments: new Set() }
+export function translateScriptFields(blocks, nameMaps?: NameMaps): Omit<TranslateScriptTextResult, 'text'> {
+  const missing = {
+    missingProcs: new Set<string>(),
+    missingParams: new Set<string>(),
+    missingComments: new Set<string>(),
+  }
   if (!blocks) return missing
   const mergeMissing = (m) => {
     m.missingProcs.forEach((p) => missing.missingProcs.add(p))
@@ -142,35 +146,35 @@ export function translateScriptFields(blocks, nameMaps) {
 /**
  * 将 scratchblocks 文本翻译为指定语言（构建期），并可替换变量/列表名称
  */
-export function translateScriptText(raw, targetLangKey, nameMaps) {
+export function translateScriptText(raw: string, targetLangKey: string, nameMaps?: NameMaps): TranslateScriptTextResult {
   if (!raw)
     return {
       text: raw,
-      missingProcs: new Set(),
-      missingParams: new Set(),
-      missingComments: new Set(),
+      missingProcs: new Set<string>(),
+      missingParams: new Set<string>(),
+      missingComments: new Set<string>(),
     }
   const allKeys = Object.keys(scratchblocks.allLanguages || {})
   if (!allKeys.length)
     return {
       text: raw,
-      missingProcs: new Set(),
-      missingParams: new Set(),
-      missingComments: new Set(),
+      missingProcs: new Set<string>(),
+      missingParams: new Set<string>(),
+      missingComments: new Set<string>(),
     }
   const doc = scratchblocks.parse(raw, { languages: allKeys })
   const targetLang = scratchblocks.allLanguages[targetLangKey]
   if (!targetLang)
     return {
       text: raw,
-      missingProcs: new Set(),
-      missingParams: new Set(),
-      missingComments: new Set(),
+      missingProcs: new Set<string>(),
+      missingParams: new Set<string>(),
+      missingComments: new Set<string>(),
     }
   doc.translate(targetLang)
-  const missingProcs = new Set()
-  const missingParams = new Set()
-  const missingComments = new Set()
+  const missingProcs = new Set<string>()
+  const missingParams = new Set<string>()
+  const missingComments = new Set<string>()
   doc.scripts.forEach((script) => {
     const m = translateScriptFields(script.blocks, nameMaps)
     m.missingProcs.forEach((p) => missingProcs.add(p))

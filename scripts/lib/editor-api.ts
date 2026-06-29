@@ -1,4 +1,3 @@
-// @ts-nocheck
 import path from 'path'
 import fs from 'fs-extra'
 import { fileURLToPath } from 'url'
@@ -32,7 +31,7 @@ function validateModuleId(moduleId) {
 /**
  * 解析 JSON 请求体
  */
-export async function parseJsonBody(req) {
+export async function parseJsonBody(req): Promise<any> {
   return new Promise((resolve, reject) => {
     let body = ''
     req.on('data', (chunk) => {

@@ -1,15 +1,43 @@
-// @ts-nocheck
 import { describe, expect, it } from 'bun:test'
 import { resolveImports } from '../scripts/lib/import-resolver.ts'
+import type { ModuleRecord, ModuleScript } from '../scripts/lib/types.ts'
+
+function moduleFixture({
+  id,
+  name,
+  scripts,
+}: {
+  id: string
+  name: string
+  scripts: ModuleScript[]
+}): ModuleRecord {
+  return {
+    id,
+    slug: id,
+    name,
+    description: '',
+    tags: [],
+    keywords: [],
+    scriptTitles: {},
+    contributors: [],
+    scripts,
+    hasDemo: false,
+    variables: [],
+    notesMap: {},
+    references: [],
+    translations: {},
+    hasPartialTranslation: false,
+  }
+}
 
 describe('resolveImports', () => {
   it('does nothing when there are no imports', () => {
     const modules = [
-      {
+      moduleFixture({
         id: 'a',
         name: 'A',
         scripts: [{ id: 'main', title: '', content: 'when flag clicked\nmove (10) steps' }],
-      },
+      }),
     ]
     resolveImports(modules)
     expect(modules[0].scripts.length).toBe(1)
@@ -18,16 +46,16 @@ describe('resolveImports', () => {
 
   it('resolves a leading import', () => {
     const modules = [
-      {
+      moduleFixture({
         id: 'lib',
         name: 'Library',
         scripts: [{ id: 'main', title: '', content: 'define helper\nsay [hi]' }],
-      },
-      {
+      }),
+      moduleFixture({
         id: 'consumer',
         name: 'Consumer',
         scripts: [{ id: 'main', title: '', content: '!import lib\nwhen flag clicked' }],
-      },
+      }),
     ]
     resolveImports(modules)
     const consumer = modules.find((m) => m.id === 'consumer')
@@ -43,19 +71,19 @@ describe('resolveImports', () => {
 
   it('resolves import with specific script index', () => {
     const modules = [
-      {
+      moduleFixture({
         id: 'multi',
         name: 'Multi',
         scripts: [
           { id: 'first', title: '', content: 'say [first]' },
           { id: 'second', title: '', content: 'say [second]' },
         ],
-      },
-      {
+      }),
+      moduleFixture({
         id: 'user',
         name: 'User',
         scripts: [{ id: 'main', title: '', content: '!import multi:2\nwhen flag clicked' }],
-      },
+      }),
     ]
     resolveImports(modules)
     const user = modules.find((m) => m.id === 'user')
@@ -64,11 +92,11 @@ describe('resolveImports', () => {
 
   it('handles missing module reference', () => {
     const modules = [
-      {
+      moduleFixture({
         id: 'bad',
         name: 'Bad',
         scripts: [{ id: 'main', title: '', content: '!import nonexistent\nwhen flag clicked' }],
-      },
+      }),
     ]
     resolveImports(modules)
     const mod = modules[0]
@@ -77,16 +105,16 @@ describe('resolveImports', () => {
 
   it('handles out-of-bounds script index', () => {
     const modules = [
-      {
+      moduleFixture({
         id: 'single',
         name: 'Single',
         scripts: [{ id: 'main', title: '', content: 'say [only one]' }],
-      },
-      {
+      }),
+      moduleFixture({
         id: 'bad-idx',
         name: 'BadIdx',
         scripts: [{ id: 'main', title: '', content: '!import single:5\nwhen flag clicked' }],
-      },
+      }),
     ]
     resolveImports(modules)
     const mod = modules.find((m) => m.id === 'bad-idx')
@@ -95,12 +123,12 @@ describe('resolveImports', () => {
 
   it('handles inline imports (not leading)', () => {
     const modules = [
-      {
+      moduleFixture({
         id: 'lib',
         name: 'Lib',
         scripts: [{ id: 'main', title: '', content: 'define foo\nsay [foo]' }],
-      },
-      {
+      }),
+      moduleFixture({
         id: 'mixed',
         name: 'Mixed',
         scripts: [
@@ -110,7 +138,7 @@ describe('resolveImports', () => {
             content: 'when flag clicked\nmove (10) steps\n!import lib\nstop [all v]',
           },
         ],
-      },
+      }),
     ]
     resolveImports(modules)
     const mod = modules.find((m) => m.id === 'mixed')
@@ -124,16 +152,16 @@ describe('resolveImports', () => {
 
   it('detects circular references', () => {
     const modules = [
-      {
+      moduleFixture({
         id: 'a',
         name: 'A',
         scripts: [{ id: 'main', title: '', content: '!import b\nwhen flag clicked' }],
-      },
-      {
+      }),
+      moduleFixture({
         id: 'b',
         name: 'B',
         scripts: [{ id: 'main', title: '', content: '!import a\nwhen flag clicked' }],
-      },
+      }),
     ]
     resolveImports(modules)
     // Both should resolve without infinite loop
@@ -143,21 +171,4 @@ describe('resolveImports', () => {
     expect(importedContent.includes('循环引用') || importedContent.includes('when flag clicked')).toBeTruthy()
   })
 
-  it('handles module with legacy script field (no scripts array)', () => {
-    const modules = [
-      {
-        id: 'legacy',
-        name: 'Legacy',
-        script: 'say [hello]',
-      },
-      {
-        id: 'user',
-        name: 'User',
-        scripts: [{ id: 'main', title: '', content: '!import legacy\nwhen flag clicked' }],
-      },
-    ]
-    resolveImports(modules)
-    const user = modules.find((m) => m.id === 'user')
-    expect(user.scripts[0].leadingImports[0].content.includes('say [hello]')).toBeTruthy()
-  })
 })

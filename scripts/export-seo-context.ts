@@ -9,9 +9,10 @@ import { translateModulesForLocale } from './lib/i18n-engine.ts'
 import { translateScriptText } from './lib/script-translator.ts'
 import type {
   Contributor,
+  LocalizedModuleRecord,
+  LocalizedModuleScript,
   ModuleRecord,
   ModuleReference,
-  ModuleScript,
   ModuleVariable,
   SiteConfig,
 } from './lib/types.ts'
@@ -25,21 +26,8 @@ interface CliOptions {
   help: boolean
 }
 
-type SeoScript = Omit<ModuleScript, 'id' | 'imported'> & {
-  id?: string
-  imported?: boolean | ModuleScript['imported']
-  fromId?: string
-  fromName?: string
-  fromIndex?: number
-  fromTitle?: string
-  fromScriptId?: string
-  leadingImports?: SeoScript[]
-}
-
-type SeoModule = Omit<ModuleRecord, 'scripts'> & {
-  notesHtml?: string
-  scripts: SeoScript[]
-}
+type SeoScript = LocalizedModuleScript
+type SeoModule = LocalizedModuleRecord
 
 export interface RenderSeoContextOptions {
   module: SeoModule
@@ -281,14 +269,14 @@ async function loadLocalizedModule(root: string, moduleId: string, locale: strin
 
   resolveImports(modules)
 
-  const localizedModules = (await translateModulesForLocale(
+  const localizedModules = await translateModulesForLocale(
     modules,
     dict,
     locale,
     globalTags,
     { skipMissingCheck: true, moduleDefaults },
     { translateScriptText }
-  )) as SeoModule[]
+  )
 
   const module = localizedModules.find((entry) => entry.id === moduleId || entry.slug === moduleId)
   if (!module) {

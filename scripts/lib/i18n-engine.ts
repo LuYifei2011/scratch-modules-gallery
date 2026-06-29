@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * 多语言翻译引擎：将模块数据翻译为指定语言的本地化副本。
  *
@@ -14,6 +13,38 @@
 
 import { markdownToHtml } from './markdown.ts'
 import log from './logger.ts'
+import type { GlobalTagsDictionary, I18nDictionary, ModuleDefaultsDictionary } from './i18n-loader.ts'
+import type {
+  BuildIssueType,
+  ImportedModuleScript,
+  LocalizedModuleRecord,
+  LocalizedModuleScript,
+  LocaleCode,
+  ModuleRecord,
+  ModuleTranslation,
+  NameMaps,
+  ResolvedModuleScript,
+  TranslateScriptText,
+} from './types.ts'
+
+interface TranslateModulesOptions {
+  skipMissingCheck?: boolean
+  moduleDefaults?: ModuleDefaultsDictionary
+}
+
+interface TranslateModulesCallbacks {
+  translateScriptText?: TranslateScriptText
+  reportIssue?: (type: BuildIssueType, message: string, details: Record<string, unknown>) => void
+}
+
+interface ProcedureMaps {
+  procMap: Record<string, string> | null
+  paramMap: Record<string, string> | null
+}
+
+type MergedModuleRecord = ModuleRecord & {
+  translations: Record<LocaleCode, ModuleTranslation>
+}
 
 // ── 内部辅助函数 ──────────────────────────────────────────
 
@@ -26,13 +57,18 @@ import log from './logger.ts'
  * @param {Object|undefined} nameMaps - 变量/列表/自定义块映射
  * @returns {string} 翻译后的 Markdown 文本
  */
-function translateMarkdownScratchblocks(rawMarkdown, translateScriptTextFn, languageTag, nameMaps) {
+function translateMarkdownScratchblocks(
+  rawMarkdown: string,
+  translateScriptTextFn: TranslateScriptText | undefined,
+  languageTag: string,
+  nameMaps: NameMaps | undefined
+): string {
   if (!translateScriptTextFn || !rawMarkdown) return rawMarkdown
-  function replaceTag(tag, wrapFn) {
+  function replaceTag(tag: 'scratchblocks' | 'sb', wrapFn: (translated: string) => string) {
     const re = new RegExp(`<${tag}>([\\s\\S]+?)<\\/${tag}>`, 'g')
-    return (str) =>
+    return (str: string) =>
       str.replace(re, (_, content) => {
-        const trimmed = content.trim()
+        const trimmed = String(content).trim()
         const { text } = translateScriptTextFn(trimmed, languageTag, nameMaps)
         return wrapFn(typeof text === 'string' && text.trim() ? text : trimmed)
       })
@@ -45,11 +81,11 @@ function translateMarkdownScratchblocks(rawMarkdown, translateScriptTextFn, lang
 /**
  * 构造当前语言下的变量/列表/事件名称映射（原名 -> 本地化名）
  */
-function buildNameMapsForModule(mod, localePriority) {
+function buildNameMapsForModule(mod: MergedModuleRecord, localePriority: string[]): NameMaps | undefined {
   const per = mod.translations || {}
-  const maps = { vars: {}, lists: {}, events: {} }
+  const maps: Required<Pick<NameMaps, 'vars' | 'lists' | 'events'>> = { vars: {}, lists: {}, events: {} }
 
-  function pickByPriority(fieldName, key) {
+  function pickByPriority(fieldName: 'variables' | 'lists', key: string): string | null {
     for (const loc of localePriority) {
       const map = per[loc]?.[fieldName]
       if (map && map[key]) return map[key]
@@ -90,7 +126,7 @@ function buildNameMapsForModule(mod, localePriority) {
 /**
  * 构造当前语言注释映射（原始英文注释文本 → 本地化文本）
  */
-function buildCommentsMap(mod, localePriority) {
+function buildCommentsMap(mod: MergedModuleRecord, localePriority: string[]): Record<string, string> | null {
   const per = mod.translations || {}
   for (const loc of localePriority) {
     const map = per[loc]?.comments
@@ -102,7 +138,7 @@ function buildCommentsMap(mod, localePriority) {
 /**
  * 构造当前语言的自定义块与其参数映射（方案A：以英文源为 key，%n 占位参数）
  */
-function buildProcedureMaps(mod, localePriority) {
+function buildProcedureMaps(mod: MergedModuleRecord, localePriority: string[]): ProcedureMaps | undefined {
   const per = mod.translations || {}
   const procMap = (() => {
     for (const loc of localePriority) {
@@ -133,12 +169,13 @@ function buildProcedureMaps(mod, localePriority) {
  * @param {Object} modSpecific - 来自模块 i18n 文件的单 locale 对象
  * @returns {Object} 合并后的翻译对象
  */
-function mergeTranslation(globalDef, modSpecific) {
-  const result = {}
+function mergeTranslation(globalDef: ModuleTranslation = {}, modSpecific: ModuleTranslation = {}): ModuleTranslation {
+  const result: Record<string, unknown> = {}
   const allKeys = new Set([...Object.keys(globalDef), ...Object.keys(modSpecific)])
   for (const key of allKeys) {
-    const gv = globalDef[key]
-    const mv = modSpecific[key]
+    const typedKey = key as keyof ModuleTranslation
+    const gv = globalDef[typedKey]
+    const mv = modSpecific[typedKey]
     if (
       mv !== undefined &&
       gv !== undefined &&
@@ -154,7 +191,23 @@ function mergeTranslation(globalDef, modSpecific) {
       result[key] = mv !== undefined ? mv : gv
     }
   }
-  return result
+  return result as ModuleTranslation
+}
+
+function mergeModuleTranslations(
+  moduleDefaults: ModuleDefaultsDictionary,
+  rawPer: Record<LocaleCode, ModuleTranslation>
+): Record<LocaleCode, ModuleTranslation> {
+  const mergedLocales = new Set([...Object.keys(moduleDefaults), ...Object.keys(rawPer)])
+  const per: Record<LocaleCode, ModuleTranslation> = {}
+  for (const loc of mergedLocales) {
+    per[loc] = mergeTranslation(moduleDefaults[loc] || {}, rawPer[loc] || {})
+  }
+  return per
+}
+
+function isImportedScript(script: ResolvedModuleScript | LocalizedModuleScript): script is ImportedModuleScript {
+  return script.imported === true
 }
 
 // ── 主导出函数 ────────────────────────────────────────────
@@ -172,7 +225,14 @@ function mergeTranslation(globalDef, modSpecific) {
  * @param {Function} [callbacks.reportIssue] - 构建问题上报函数 (type, message, details) => void
  * @returns {Promise<Array>} 本地化后的模块副本数组
  */
-export async function translateModulesForLocale(modules, dict, locale, globalTags = {}, options = {}, callbacks = {}) {
+export async function translateModulesForLocale(
+  modules: ModuleRecord[],
+  dict: I18nDictionary,
+  locale: LocaleCode,
+  globalTags: GlobalTagsDictionary = {},
+  options: TranslateModulesOptions = {},
+  callbacks: TranslateModulesCallbacks = {}
+): Promise<LocalizedModuleRecord[]> {
   const { moduleDefaults = {} } = options
   const { translateScriptText, reportIssue } = callbacks
 
@@ -189,51 +249,53 @@ export async function translateModulesForLocale(modules, dict, locale, globalTag
   }
   const localePriority = getLocalePriority()
 
-  const out = []
+  const out: LocalizedModuleRecord[] = []
 
   // 预先构建各模块的合并翻译映射（moduleDefaults 已合并），供导入块查找使用
-  const mergedModulesMap = new Map()
+  const mergedModulesMap = new Map<string, MergedModuleRecord>()
   for (const mod of modules) {
     const rawModPer = mod.translations || {}
-    const modLocales = new Set([...Object.keys(moduleDefaults), ...Object.keys(rawModPer)])
-    const modPer = {}
-    for (const loc of modLocales) {
-      modPer[loc] = mergeTranslation(moduleDefaults[loc] || {}, rawModPer[loc] || {})
+    const modPer = mergeModuleTranslations(moduleDefaults, rawModPer)
+    if (mod.id) {
+      mergedModulesMap.set(mod.id, { ...mod, translations: modPer })
     }
-    mergedModulesMap.set(mod.id, { ...mod, translations: modPer })
   }
 
   for (const m of modules) {
-    const nm = { ...m }
+    const nm: LocalizedModuleRecord = {
+      ...m,
+      scripts: [...m.scripts],
+      variables: [...(m.variables || [])],
+      notesHtml: '',
+      keywordsFinal: [],
+      keywordsFinalStr: '',
+      keywordsStr: '',
+    }
     // 将全局模块默认翻译（module-defaults.json）与模块自身翻译合并（模块优先）
     const rawPer = m.translations || {}
-    const mergedLocales = new Set([...Object.keys(moduleDefaults), ...Object.keys(rawPer)])
-    const per = {}
-    for (const loc of mergedLocales) {
-      per[loc] = mergeTranslation(moduleDefaults[loc] || {}, rawPer[loc] || {})
-    }
+    const per = mergeModuleTranslations(moduleDefaults, rawPer)
     // mergedM：携带合并后翻译的模块对象，供辅助函数（buildNameMapsForModule 等）使用
     const mergedM = { ...m, translations: per }
     const enScriptTitles = m.scriptTitles || {}
-    function pickStr(base, map) {
+    function pickStr(base: 'name' | 'description' | 'seoDescription', map?: Record<string, string>) {
       for (const loc of localePriority) {
         const val = per[loc]?.[base] ?? (map && map[loc])
         if (val) return val
       }
       return nm[base]
     }
-    function pickArr(base, map) {
+    function pickArr(base: 'tags' | 'keywords', map?: Record<string, string[]>) {
       for (const loc of localePriority) {
         const val = per[loc]?.[base] ?? (map && map[loc])
         if (val) return val
       }
       return nm[base]
     }
-    function pickKeywords(base, map) {
+    function pickKeywords(base: 'keywords', map?: Record<string, string[]>) {
       const val = pickArr(base, map)
       return Array.isArray(val) ? val : []
     }
-    function pickTitleForScript(scriptId, index1) {
+    function pickTitleForScript(scriptId: string | undefined, index1: number) {
       // 按优先级查找脚本标题
       for (const loc of localePriority) {
         const titles = per[loc]?.scriptTitles
@@ -264,15 +326,15 @@ export async function translateModulesForLocale(modules, dict, locale, globalTag
       })
     }
     const kw = pickKeywords('keywords', m.keywords_i18n)
-    if (Array.isArray(kw)) nm.keywords = kw
+    nm.keywords = kw
 
     // notes: 按语言优先级从 notesMap 中选取，实时转换为 HTML（移至 ownNameMaps 计算后）
 
     const ownNameMaps = buildNameMapsForModule(mergedM, localePriority)
     // notes 处理：先翻译其中的 scratchblocks 块，再转换为 HTML
     if (m.notesMap && typeof m.notesMap === 'object' && Object.keys(m.notesMap).length) {
-      let rawNotes = null
-      let selectedNotesLocale = null
+      let rawNotes: string | null = null
+      let selectedNotesLocale: string | null = null
       for (const loc of localePriority) {
         if (m.notesMap[loc]) {
           rawNotes = m.notesMap[loc]
@@ -283,7 +345,7 @@ export async function translateModulesForLocale(modules, dict, locale, globalTag
       if (rawNotes) {
         // 仅当备注来自与目标语言不同的回退语言时才翻译 scratchblocks（已有目标语言备注则无需翻译）
         if (selectedNotesLocale !== locale && !isEnglishLocale && translateScriptText) {
-          const notesNameMaps = { ...(ownNameMaps || {}) }
+          const notesNameMaps: NameMaps = { ...(ownNameMaps || {}) }
           const procMapsForNotes = buildProcedureMaps(mergedM, localePriority)
           const commentsMapsForNotes = buildCommentsMap(mergedM, localePriority)
           if (procMapsForNotes?.paramMap) notesNameMaps.params = procMapsForNotes.paramMap
@@ -301,7 +363,7 @@ export async function translateModulesForLocale(modules, dict, locale, globalTag
 
     // 为"变量 / 列表"表格计算本地化显示名称（模块级，始终执行）
     if (Array.isArray(nm.variables) && nm.variables.length) {
-      const maps = ownNameMaps || { vars: {}, lists: {} }
+      const maps: NameMaps = ownNameMaps || { vars: {}, lists: {} }
       nm.variables = nm.variables.map((v) => {
         try {
           const isList = String(v?.type) === 'list'
@@ -314,19 +376,19 @@ export async function translateModulesForLocale(modules, dict, locale, globalTag
         }
       })
     }
-    const accMissingProcs = new Set()
-    const accMissingParams = new Set()
-    const accMissingComments = new Set()
+    const accMissingProcs = new Set<string>()
+    const accMissingParams = new Set<string>()
+    const accMissingComments = new Set<string>()
     if (Array.isArray(m.scripts) && m.scripts.length) {
-      const newScripts = []
+      const newScripts: LocalizedModuleScript[] = []
       for (let si = 0; si < m.scripts.length; si++) {
         const s = m.scripts[si]
-        const ns = { ...s }
+        const ns: LocalizedModuleScript = { ...s }
         try {
           {
             let mapsForThis = ownNameMaps
-            let targetForProc
-            if (s.imported && s.fromId) {
+            let targetForProc: MergedModuleRecord | undefined
+            if (isImportedScript(s) && s.fromId) {
               targetForProc = mergedModulesMap.get(s.fromId)
               if (targetForProc) mapsForThis = buildNameMapsForModule(targetForProc, localePriority) || mapsForThis
             }
@@ -347,7 +409,7 @@ export async function translateModulesForLocale(modules, dict, locale, globalTag
                 missingComments,
               } = translateScriptText(s.content, languageTag, mapsForThis)
               // 英文环境忽略缺失翻译警告，仅非英文时累积
-              if (!s.imported && !isEnglishLocale) {
+              if (!isImportedScript(s) && !isEnglishLocale) {
                 missingProcs.forEach((p) => accMissingProcs.add(p))
                 // 仅当参数名称长度大于 1 时才警告，避免单字符参数（如 "x"）的误报
                 missingParams.forEach((p) => {
@@ -365,11 +427,11 @@ export async function translateModulesForLocale(modules, dict, locale, globalTag
           log.warn('translate', `翻译失败 ${m.id} "${s.title}": ${e?.message || e}`)
         }
         // 标题本地化（自身脚本）
-        if (!s.imported) {
+        if (!isImportedScript(s)) {
           ns.title = pickTitleForScript(s.id, si + 1)
         }
         if (Array.isArray(s.leadingImports) && s.leadingImports.length) {
-          const arr = []
+          const arr: ImportedModuleScript[] = []
           for (const imp of s.leadingImports) {
             let localizedFromName = imp.fromName
             const target = mergedModulesMap.get(imp.fromId)
@@ -393,7 +455,7 @@ export async function translateModulesForLocale(modules, dict, locale, globalTag
               content: (function () {
                 const procMaps = buildProcedureMaps(target || mergedM, localePriority)
                 const cm = target ? buildCommentsMap(target, localePriority) : null
-                let mf = mapsImported
+                let mf: NameMaps | undefined = mapsImported
                 if (procMaps || cm) {
                   mf = mf || {}
                   if (procMaps?.paramMap) mf.params = procMaps.paramMap
@@ -422,7 +484,7 @@ export async function translateModulesForLocale(modules, dict, locale, globalTag
           ns.leadingImports = arr
         }
         // 被导入块（非 leadingImports）: 本地化 fromName 与 fromTitle
-        if (s.imported && s.fromId) {
+        if (isImportedScript(s) && s.fromId) {
           const target = mergedModulesMap.get(s.fromId)
           if (target) {
             // 本地化 fromName
@@ -460,7 +522,7 @@ export async function translateModulesForLocale(modules, dict, locale, globalTag
     // --- 缺失翻译检测（仅非英文 locale，且未跳过） ---
     if (!isEnglishLocale && !options.skipMissingCheck) {
       try {
-        const missingFields = []
+        const missingFields: string[] = []
         const locTrans = per[locale] || {}
         if (!('name' in locTrans)) missingFields.push('name')
         if (!('description' in locTrans)) missingFields.push('description')
@@ -521,8 +583,8 @@ export async function translateModulesForLocale(modules, dict, locale, globalTag
     }
     // 计算去重后的 keywords 和 tags 合并
     {
-      const seen = new Set()
-      const final = []
+      const seen = new Set<string>()
+      const final: string[] = []
       const kws = Array.isArray(nm.keywords) ? nm.keywords : []
       const tgs = Array.isArray(nm.tags) ? nm.tags : []
       for (const item of kws.concat(tgs)) {

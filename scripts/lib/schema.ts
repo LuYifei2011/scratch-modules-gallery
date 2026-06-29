@@ -120,7 +120,7 @@ export function buildModuleRecord(
   const scriptTitles =
     meta && typeof meta.scriptTitles === 'object' && !Array.isArray(meta.scriptTitles) ? meta.scriptTitles : {}
 
-  const record = {
+  const record: ModuleRecord = {
     id,
     slug: id, // slug 直接使用 id
     name: nameNorm.base,

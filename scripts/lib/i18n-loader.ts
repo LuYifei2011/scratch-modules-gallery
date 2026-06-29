@@ -18,6 +18,10 @@ export interface LocaleDictionary {
     description?: string
     keywords?: string | string[]
     languageTag?: string
+    languageName?: string
+  }
+  issues?: {
+    summaryPrefix?: string
   }
   [key: string]: unknown
 }

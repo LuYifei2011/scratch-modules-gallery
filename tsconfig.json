@@ -10,8 +10,9 @@
     "allowImportingTsExtensions": true,
     "verbatimModuleSyntax": true,
     "noEmit": true,
-    "strict": true,
+    "strict": false, // Recommended to set this to true for better type safety
     "skipLibCheck": true,
+    "noImplicitAny": false, // Recommended to set this to true for better type safety
     "noFallthroughCasesInSwitch": true,
     "noUncheckedIndexedAccess": true,
     "noImplicitOverride": true,

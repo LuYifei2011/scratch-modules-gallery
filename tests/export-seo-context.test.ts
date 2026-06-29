@@ -9,6 +9,9 @@ describe('renderSeoContextMarkdown', () => {
     description: '用于测试 SEO 上下文导出。',
     tags: ['数学', '工具'],
     keywords: ['scratch', 'seo'],
+    keywordsFinal: ['scratch', 'seo', '数学', '工具'],
+    keywordsFinalStr: 'scratch,seo,数学,工具',
+    keywordsStr: 'scratch,seo',
     contributors: [{ name: 'dev', url: 'https://example.com/dev' }],
     scripts: [
       {
@@ -17,7 +20,7 @@ describe('renderSeoContextMarkdown', () => {
         content: 'when flag clicked\nsay [hello]',
         leadingImports: [
           {
-            imported: true,
+            imported: true as true,
             content: 'define helper\nsay [helper]',
             fromId: 'helper-module',
             fromName: 'Helper Module',
