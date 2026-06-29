@@ -27,7 +27,7 @@
     "marked": "^18.0.5",
     "minisearch": "^7.2.0",
     "nunjucks": "^3.2.4",
-    "scratchblocks-plus": "^1.1.2",
+    "scratchblocks-plus": "^1.2.0",
     "simple-git": "^3.36.0"
   },
   "devDependencies": {

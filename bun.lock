@@ -1,5 +1,6 @@
 {
   "lockfileVersion": 1,
+  "configVersion": 0,
   "workspaces": {
     "": {
       "name": "scratch-modules-gallery",
@@ -15,7 +16,7 @@
         "marked": "^18.0.5",
         "minisearch": "^7.2.0",
         "nunjucks": "^3.2.4",
-        "scratchblocks-plus": "^1.1.2",
+        "scratchblocks-plus": "^1.2.0",
         "simple-git": "^3.36.0",
       },
       "devDependencies": {
@@ -380,7 +381,7 @@
 
     "sax": ["sax@1.5.0", "", {}, "sha512-21IYA3Q5cQf089Z6tgaUTr7lDAyzoTPx5HRtbhsME8Udispad8dC/+sziTNugOEx54ilvatQ9YCzl4KQLPcRHA=="],
 
-    "scratchblocks-plus": ["scratchblocks-plus@1.1.2", "", { "peerDependencies": { "@napi-rs/canvas": "*", "@xmldom/xmldom": ">=0.8.0", "canvas": ">=2.0.0", "jsdom": ">=16.0.0" }, "optionalPeers": ["canvas", "jsdom"] }, "sha512-pO6LJB9Krw6Lj98qEhKtwoMvTEOcs9cldHwY6P3FIgDFI85DUdSj/yEKChefNuVI5lyOZ5ad2mnHk874mQiLOQ=="],
+    "scratchblocks-plus": ["scratchblocks-plus@1.2.0", "", { "peerDependencies": { "@napi-rs/canvas": "*", "@xmldom/xmldom": ">=0.8.0", "canvas": ">=2.0.0", "jsdom": ">=16.0.0" }, "optionalPeers": ["@napi-rs/canvas", "@xmldom/xmldom", "canvas", "jsdom"] }, "sha512-wy9l4pfBAHQ7JhaX38JgmhSHkH7pUKdAVr+NtwofJ7D3E9QNBShE1jrHGuS98CGLUw8EPR5XjpkVpyyBfcfvjQ=="],
 
     "selfsigned": ["selfsigned@5.5.0", "", { "dependencies": { "@peculiar/x509": "^1.14.2", "pkijs": "^3.3.3" } }, "sha512-ftnu3TW4+3eBfLRFnDEkzGxSF/10BJBkaLJuBHZX0kiPS7bRdlpZGu6YGt4KngMkdTwJE6MbjavFpqHvqVt+Ew=="],
 
