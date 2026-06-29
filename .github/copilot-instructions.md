@@ -12,7 +12,9 @@
    - i18n 字段可为字符串或 locale map 对象；自动选择默认值 (en → zh-cn → 首个 key)
 3. **模板 Nunjucks**：`src/templates/layouts/{base,home,module}.njk` 只做展示；上下文：`config,module,t,locale,pageBase,assetBase,pagePath,locales,year,IS_DEV,langTags,buildIssues,buildIssuesSummary`。
    - 禁止模板中直接调用时间或访问浏览器环境
-  - `pageBase` / `assetBase` 由 `site.config.ts` baseUrl 计算，确保多语言路径正确
+
+- `pageBase` / `assetBase` 由 `site.config.ts` baseUrl 计算，确保多语言路径正确
+
 4. **前端 TS**：`src/client/{home.ts,module.ts}` 仅负责搜索索引加载、语言切换、scratchblocks 二次渲染。全局注入：`window.__I18N`, `PAGE_BASE`, `ASSET_BASE`, `IS_DEV`。
    - 异步加载 `/search-index.json` + `/search-docs.json`（按语言目录）
    - CJK 分词客户端与构建端同步（单字+双字滑窗）
