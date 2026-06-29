@@ -156,11 +156,7 @@ export interface TranslateScriptTextResult {
   missingComments: Set<string>
 }
 
-export type TranslateScriptText = (
-  raw: string,
-  langKey: string,
-  nameMaps?: NameMaps
-) => TranslateScriptTextResult
+export type TranslateScriptText = (raw: string, langKey: string, nameMaps?: NameMaps) => TranslateScriptTextResult
 
 export type BuildIssueType = 'error' | 'warn'
 

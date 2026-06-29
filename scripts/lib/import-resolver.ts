@@ -61,7 +61,12 @@ function fullyExpandContent(idMap: Map<string, ModuleRecord>, rawContent: string
   return out.join('\n')
 }
 
-function importedScriptFailure(refId: string, content: string, fromName: string, fromIndex: number): ImportedModuleScript {
+function importedScriptFailure(
+  refId: string,
+  content: string,
+  fromName: string,
+  fromIndex: number
+): ImportedModuleScript {
   return {
     imported: true,
     content,
@@ -90,9 +95,7 @@ function importedScriptSuccess(
 }
 
 export function resolveImports(modules: ModuleRecord[]): void {
-  const idMap = new Map<string, ModuleRecord>(
-    modules.flatMap((m) => (m.id ? ([[m.id, m]] as const) : []))
-  )
+  const idMap = new Map<string, ModuleRecord>(modules.flatMap((m) => (m.id ? ([[m.id, m]] as const) : [])))
 
   for (const mod of modules) {
     let modChanged = false // 仅用于内部判断（当前未输出日志）
@@ -112,7 +115,9 @@ export function resolveImports(modules: ModuleRecord[]): void {
         const specifiedIndex = mTop[2] ? parseInt(mTop[2], 10) : undefined
         const targetModule = idMap.get(refId)
         if (!targetModule) {
-          leadingImports.push(importedScriptFailure(refId, `// 导入失败: 未找到模块 ${refId}`, refId, specifiedIndex || 1))
+          leadingImports.push(
+            importedScriptFailure(refId, `// 导入失败: 未找到模块 ${refId}`, refId, specifiedIndex || 1)
+          )
           continue
         }
         const { script: targetScript, error, index1 } = getScriptObj(targetModule, specifiedIndex)

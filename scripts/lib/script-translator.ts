@@ -146,7 +146,11 @@ export function translateScriptFields(blocks, nameMaps?: NameMaps): Omit<Transla
 /**
  * 将 scratchblocks 文本翻译为指定语言（构建期），并可替换变量/列表名称
  */
-export function translateScriptText(raw: string, targetLangKey: string, nameMaps?: NameMaps): TranslateScriptTextResult {
+export function translateScriptText(
+  raw: string,
+  targetLangKey: string,
+  nameMaps?: NameMaps
+): TranslateScriptTextResult {
   if (!raw)
     return {
       text: raw,

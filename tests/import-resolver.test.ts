@@ -2,15 +2,7 @@ import { describe, expect, it } from 'bun:test'
 import { resolveImports } from '../scripts/lib/import-resolver.ts'
 import type { ModuleRecord, ModuleScript } from '../scripts/lib/types.ts'
 
-function moduleFixture({
-  id,
-  name,
-  scripts,
-}: {
-  id: string
-  name: string
-  scripts: ModuleScript[]
-}): ModuleRecord {
+function moduleFixture({ id, name, scripts }: { id: string; name: string; scripts: ModuleScript[] }): ModuleRecord {
   return {
     id,
     slug: id,
@@ -170,5 +162,4 @@ describe('resolveImports', () => {
     const importedContent = modA.scripts[0].leadingImports[0].content
     expect(importedContent.includes('循环引用') || importedContent.includes('when flag clicked')).toBeTruthy()
   })
-
 })
