@@ -44,6 +44,7 @@ content/modules/fps/
 ```json
 {
   "keywords": ["frame rate", "rendering", "performance"],
+  "seoDescription": "在 Scratch 中统计和展示 FPS 的模块，适合调试动画、游戏循环和性能表现。",
   "variables": [...],
   "references": [...]
 }
@@ -54,6 +55,7 @@ content/modules/fps/
 - `id`：与目录同名；仅小写字母/数字/短横线。
 - `tags`：数组；用于搜索与分类徽章。
 - `keywords`：数组；SEO 关键词，可在主页搜索中被匹配。与 tags 一起在模块页 meta keywords 中去重合并。
+- `seoDescription`：字符串；可选，仅用于模块页 `<meta name="description">`。缺省时使用 `description`，不会影响页面正文、搜索、OG/Twitter 或 JSON-LD 描述。
 - `contributors`：字符串或数组；支持 `gh/` 与 `sc/` 前缀自动生成链接。
 
 ### 多语言支持（name/description）
@@ -80,7 +82,8 @@ content/modules/<id>/
 ```json
 {
   "name": "排序角色",
-  "description": "对角色进行排序。"
+  "description": "对角色进行排序。",
+  "seoDescription": "用于在 Scratch 中按图层或索引整理角色顺序的模块，适合需要控制显示层级的项目。"
 }
 ```
 

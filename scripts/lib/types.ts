@@ -38,6 +38,7 @@ export interface ModuleScript {
 export interface ModuleTranslation {
   name?: string
   description?: string
+  seoDescription?: string
   tags?: string[]
   variables?: Record<string, string>
   lists?: Record<string, string>
@@ -52,6 +53,7 @@ export interface ModuleMeta {
   id?: string
   name?: I18nStringOrMap
   description?: I18nStringOrMap
+  seoDescription?: string
   tags?: I18nStringArrayOrMap
   keywords?: I18nStringArrayOrMap
   contributors?: string | Array<string | Contributor>
@@ -65,6 +67,7 @@ export interface ModuleRecord {
   slug?: string
   name?: string
   description?: string
+  seoDescription?: string
   tags: string[]
   keywords: string[]
   scriptTitles: Record<string, string>

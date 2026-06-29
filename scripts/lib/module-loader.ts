@@ -115,6 +115,7 @@ export async function loadModules({ root, config, isDev }: LoadModulesOptions): 
 
               copyField('name', (v) => typeof v === 'string')
               copyField('description', (v) => typeof v === 'string')
+              copyField('seoDescription', (v) => typeof v === 'string')
               copyField('tags', (v) => Array.isArray(v))
               copyField('variables', isPlainObject)
               copyField('lists', isPlainObject)

@@ -105,7 +105,7 @@ export function buildModuleRecord(
   meta: ModuleMeta,
   extra: BuildModuleRecordExtra
 ): { record: ModuleRecord; errors: string[] } {
-  const { id, name, description, tags, keywords, contributors } = meta
+  const { id, name, description, seoDescription, tags, keywords, contributors } = meta
   const errors = []
   if (!id) errors.push('missing id')
   if (!name) errors.push('missing name')
@@ -125,6 +125,7 @@ export function buildModuleRecord(
     slug: id, // slug 直接使用 id
     name: nameNorm.base,
     description: descNorm.base,
+    seoDescription: typeof seoDescription === 'string' ? seoDescription : undefined,
     tags: Array.isArray(tagsNorm.base) ? tagsNorm.base : [],
     keywords: Array.isArray(keywordsNorm.base) ? keywordsNorm.base : [],
     // 新增：脚本标题（英文）

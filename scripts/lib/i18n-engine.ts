@@ -250,6 +250,9 @@ export async function translateModulesForLocale(modules, dict, locale, globalTag
     if (m.description_i18n || per[locale] || per['en'] || per['zh-cn'] || per['zh-tw']) {
       nm.description = pickStr('description', m.description_i18n)
     }
+    if (m.seoDescription_i18n || per[locale] || per['en'] || per['zh-cn'] || per['zh-tw']) {
+      nm.seoDescription = pickStr('seoDescription', m.seoDescription_i18n)
+    }
     const tv = pickArr('tags', m.tags_i18n)
     if (Array.isArray(tv)) {
       // 使用全局 tags 字典翻译 tags

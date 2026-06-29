@@ -7,6 +7,7 @@ describe('translateModulesForLocale', () => {
     id: 'test-mod',
     name: 'Test Module',
     description: 'A test module',
+    seoDescription: 'SEO description for a test module',
     tags: ['performance'],
     keywords: ['test'],
     scripts: [{ id: 'main', title: 'Main', content: 'when flag clicked\nsay [hello]' }],
@@ -22,6 +23,7 @@ describe('translateModulesForLocale', () => {
       'zh-cn': {
         name: '测试模块',
         description: '一个测试模块',
+        seoDescription: '测试模块的 SEO 描述',
         variables: { myVar: '我的变量' },
         lists: { myList: '我的列表' },
         scriptTitles: { main: '主脚本' },
@@ -42,10 +44,17 @@ describe('translateModulesForLocale', () => {
     expect(result[0].description).toBe('一个测试模块')
   })
 
+  it('returns localized seoDescription for zh-cn', async () => {
+    const result = await translateModulesForLocale([baseModule], dict, 'zh-cn')
+    expect(result[0].description).toBe('一个测试模块')
+    expect(result[0].seoDescription).toBe('测试模块的 SEO 描述')
+  })
+
   it('preserves original values for en locale', async () => {
     const result = await translateModulesForLocale([baseModule], dict, 'en')
     expect(result[0].name).toBe('Test Module')
     expect(result[0].description).toBe('A test module')
+    expect(result[0].seoDescription).toBe('SEO description for a test module')
   })
 
   it('localizes variable displayName', async () => {

@@ -9,7 +9,7 @@
 {% block twitter_description %}{{ module.description }}{% endblock %}
 {% block twitter_image %}{{ config.baseUrl }}/{{ locale }}/modules/{{ module.slug }}/cover.png{% endblock %}
 {% set canonical = '/' + locale + '/modules/' + module.slug + '/' %}
-{% block meta_description %}{{ module.description }}{% endblock %}
+{% block meta_description %}{{ module.seoDescription or module.description }}{% endblock %}
 {% block meta_keywords %}<meta name="keywords" content="{{ module.keywordsFinalStr }}" />{% endblock %}
 {% block head_extra %}
     <script type="application/ld+json">

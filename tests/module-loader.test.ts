@@ -19,6 +19,15 @@ beforeAll(async () => {
       await fs.copy(src, path.join(fixtureModules, dir))
     }
   }
+  const fpsMetaFile = path.join(fixtureModules, 'fps', 'meta.json')
+  const fpsMeta = await fs.readJson(fpsMetaFile)
+  fpsMeta.seoDescription = 'Calculate and display FPS in Scratch.'
+  await fs.writeJson(fpsMetaFile, fpsMeta)
+
+  const fpsZhCnFile = path.join(fixtureModules, 'fps', 'i18n', 'zh-cn.json')
+  const fpsZhCn = await fs.readJson(fpsZhCnFile)
+  fpsZhCn.seoDescription = '在 Scratch 中计算并显示 FPS。'
+  await fs.writeJson(fpsZhCnFile, fpsZhCn)
 })
 
 describe('loadModules', () => {
@@ -63,8 +72,15 @@ describe('loadModules', () => {
     expect(fps.translations['zh-cn']).toBeTruthy()
     expect(fps.translations['zh-cn'].name).toBe('FPS')
     expect(fps.translations['zh-cn'].description).toBe('计算FPS。')
+    expect(fps.translations['zh-cn'].seoDescription).toBe('在 Scratch 中计算并显示 FPS。')
     expect(fps.translations['zh-cn'].variables).toBeTruthy()
     expect(fps.translations['zh-cn'].variables['FPS']).toBe('帧率')
+  })
+
+  it('loads baseline seoDescription from meta.json', async () => {
+    const { modules } = await loadModules({ root: fixtureRoot, config, isDev: true })
+    const fps = modules.find((m) => m.id === 'fps')
+    expect(fps.seoDescription).toBe('Calculate and display FPS in Scratch.')
   })
 
   it('loads module notes', async () => {
