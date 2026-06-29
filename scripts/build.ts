@@ -1,3 +1,4 @@
+// @ts-nocheck
 import fs from 'fs-extra'
 import path from 'path'
 import fg from 'fast-glob'

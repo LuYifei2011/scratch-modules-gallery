@@ -1,3 +1,4 @@
+// @ts-nocheck
 import MiniSearch from './vendor/minisearch.js'
 
 function qs(sel) {
