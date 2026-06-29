@@ -11,6 +11,7 @@
     "dev:https": "bun ./scripts/dev-server-https.ts",
     "format": "prettier --write .",
     "format:scripts": "bun ./scripts/format-scratchblocks.ts --all",
+    "seo:context": "bun ./scripts/export-seo-context.ts",
     "test": "bun test tests/*.test.ts",
     "check-i18n": "bun ./scripts/check-translations.ts",
     "typecheck": "tsc --noEmit"

@@ -81,6 +81,21 @@ describe('buildModuleRecord', () => {
     expect(record.hasDemo).toBe(false)
   })
 
+  it('preserves optional seoDescription without requiring it', () => {
+    const meta = {
+      id: 'seo-mod',
+      name: 'SEO Module',
+      description: 'Visible description.',
+      seoDescription: 'Search result description.',
+      tags: ['seo'],
+    }
+    const extra = { scripts: [], notesMap: {} }
+    const { record, errors } = buildModuleRecord(meta, extra)
+    expect(errors.length).toBe(0)
+    expect(record.description).toBe('Visible description.')
+    expect(record.seoDescription).toBe('Search result description.')
+  })
+
   it('reports errors for missing required fields', () => {
     const meta = {}
     const extra = { scripts: [], notesMap: {} }
