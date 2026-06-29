@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { describe, expect, it } from 'bun:test'
 import { truncate, formatDuration, timeNow } from '../scripts/lib/logger.ts'
 

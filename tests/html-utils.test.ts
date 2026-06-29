@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { describe, expect, it } from 'bun:test'
 import { escapeHtml, maybeMinify, generateShareLinks } from '../scripts/lib/html-utils.ts'
 
@@ -53,8 +52,10 @@ describe('maybeMinify', () => {
     const html = '<div>   <p>   hello   </p>   </div>'
     const result = await maybeMinify(html, false)
     // Whitespace should be collapsed
-    expect(result.length < html.length).toBeTruthy()
-    expect(result.includes('hello')).toBeTruthy()
+    expect(result).toBeDefined()
+    const minified = result as string
+    expect(minified.length < html.length).toBeTruthy()
+    expect(minified.includes('hello')).toBeTruthy()
   })
 })
 

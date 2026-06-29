@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { describe, expect, it } from 'bun:test'
 import { pickConfigForLocale, loadI18n, loadModuleDefaults, loadGlobalTags } from '../scripts/lib/i18n-loader.ts'
 
@@ -8,6 +7,7 @@ describe('pickConfigForLocale', () => {
     description: 'Default description',
     keywords: 'default,keywords',
     language: 'en',
+    contentDir: 'content/modules',
   }
 
   it('returns base config when locale not in dict', () => {

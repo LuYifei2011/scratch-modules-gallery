@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * 轻量控制台日志工具
  * - 原生 ANSI 转义码，零外部依赖
@@ -12,15 +11,19 @@ const IS_TTY = process.stdout.isTTY === true
 
 // ── 日志模式 ──────────────────────────────────────────────────────────────────
 // 模式字符：simple(s) → 简略, verbose(v) → 详细
-const _MODE_MAP = { simple: 's', verbose: 'v' }
-let _currentMode = (process.env.LOG_MODE || 's').toLowerCase() === 'v' ? 'v' : 's'
-const _LEVEL_MAP = { error: 0, warn: 1, info: 2, verbose: 3 }
+type LogMode = 's' | 'v' | 'simple' | 'verbose'
+type NormalizedLogMode = 's' | 'v'
+type LogLevel = 'error' | 'warn' | 'info' | 'verbose'
 
-export function setLogMode(mode) {
+const _MODE_MAP = { simple: 's', verbose: 'v' } as const
+let _currentMode: NormalizedLogMode = (process.env.LOG_MODE || 's').toLowerCase() === 'v' ? 'v' : 's'
+const _LEVEL_MAP: Record<LogLevel, number> = { error: 0, warn: 1, info: 2, verbose: 3 }
+
+export function setLogMode(mode: LogMode): void {
   _currentMode = mode === 'v' || mode === 'verbose' ? 'v' : 's'
 }
 
-function _shouldLog(level) {
+function _shouldLog(level: LogLevel): boolean {
   const levelNum = _LEVEL_MAP[level] ?? 0
   // 简略模式：只显示 info(2)、success、error(0)
   // 详细模式：显示所有（包括 warn 和 verbose）
@@ -34,7 +37,7 @@ function _shouldLog(level) {
 // ── ANSI 转义辅助 ──────────────────────────────────────────────────────────────
 const RESET = IS_TTY ? '\x1b[0m' : ''
 
-function ansi(code) {
+function ansi(code: string): string {
   return IS_TTY ? `\x1b[${code}m` : ''
 }
 
@@ -65,34 +68,34 @@ export const c = {
 // ── 工具函数 ───────────────────────────────────────────────────────────────────
 
 /** 用给定样式包裹文本，末尾自动重置 */
-export function paint(style, text) {
+export function paint(style: string, text: string): string {
   if (!IS_TTY) return text
   return `${style}${text}${RESET}`
 }
 
 /** 超出宽度时右侧截断并加省略号 */
-export function truncate(text, maxLen = 60) {
+export function truncate(text: string, maxLen = 60): string {
   if (text.length <= maxLen) return text
   return text.slice(0, maxLen - 1) + '…'
 }
 
 /** 格式化毫秒数为可读字符串（< 1000ms 显示 ms，否则显示 s） */
-export function formatDuration(ms) {
+export function formatDuration(ms: number): string {
   if (ms < 1000) return `${ms}ms`
   return `${(ms / 1000).toFixed(2)}s`
 }
 
 /** 当前时间字符串 HH:MM:SS */
-export function timeNow() {
+export function timeNow(): string {
   return new Date().toLocaleTimeString('zh-CN', { hour12: false })
 }
 
 // ── 终端尺寸 ───────────────────────────────────────────────────────────────────
-function termWidth() {
+function termWidth(): number {
   return (IS_TTY ? process.stdout.columns : 0) || 80
 }
 
-function hr(char = '─', width) {
+function hr(char = '─', width?: number): string {
   return char.repeat(width ?? termWidth())
 }
 
@@ -102,8 +105,8 @@ function hr(char = '─', width) {
  * 判断一个 Unicode 字符是否为东亚全角（占 2 列）。
  * 覆盖 CJK 统一表意文字、全角符号、片假名 / 平假名、谚文等常见范围。
  */
-function isCJKWide(ch) {
-  const cp = ch.codePointAt(0)
+function isCJKWide(ch: string): boolean {
+  const cp = ch.codePointAt(0) ?? 0
   return (
     (cp >= 0x1100 && cp <= 0x115f) || // Hangul Jamo
     (cp >= 0x2e80 && cp <= 0x303e) || // CJK 部首 / 符号标点
@@ -127,7 +130,7 @@ function isCJKWide(ch) {
  * 2. 剥离 OSC 序列（如 OSC 8 超链接）
  * 3. CJK 全角字符计为 2 列
  */
-function visLen(s) {
+function visLen(s: string): number {
   // 剥离 ANSI CSI 序列（ESC [ ... m）
   let t = s.replace(/\x1b\[[^m]*m/g, '')
   // 剥离 OSC 序列（ESC ] ... BEL 或 ESC ] ... ESC \）
@@ -146,7 +149,7 @@ function visLen(s) {
  * @param {string} prefix  分类标签，如 'build' / 'watch'
  * @param {string} msg     消息正文
  */
-export function info(prefix, msg) {
+export function info(prefix: string, msg: string): void {
   if (!_shouldLog('info')) return
   const tag = paint(c.cyan, `[${prefix}]`)
   console.log(`${tag} ${msg}`)
@@ -157,7 +160,7 @@ export function info(prefix, msg) {
  * @param {string} prefix
  * @param {string} msg
  */
-export function success(prefix, msg) {
+export function success(prefix: string, msg: string): void {
   const tag = paint(c.green + c.bold, `[${prefix}]`)
   console.log(`${tag} ${paint(c.green, msg)}`)
 }
@@ -167,7 +170,7 @@ export function success(prefix, msg) {
  * @param {string} prefix
  * @param {string} msg
  */
-export function warn(prefix, msg) {
+export function warn(prefix: string, msg: string): void {
   if (!_shouldLog('warn')) return
   const tag = paint(c.yellow, `[${prefix}]`)
   console.warn(`${tag} ${paint(c.yellow, '⚠')} ${msg}`)
@@ -178,7 +181,7 @@ export function warn(prefix, msg) {
  * @param {string} prefix
  * @param {string} msg
  */
-export function error(prefix, msg) {
+export function error(prefix: string, msg: string): void {
   const tag = paint(c.red + c.bold, `[${prefix}]`)
   console.error(`${tag} ${paint(c.red, '✖')} ${msg}`)
 }
@@ -187,7 +190,7 @@ export function error(prefix, msg) {
  * 打印暗色调试信息（LOG_LEVEL=verbose 可见）
  * @param {string} msg
  */
-export function dim(msg) {
+export function dim(msg: string): void {
   if (!_shouldLog('verbose')) return
   console.log(paint(c.dim + c.gray, msg))
 }
@@ -198,7 +201,7 @@ export function dim(msg) {
  * 打印带圆角边框的启动横幅（始终显示，不受 LOG_LEVEL 限制）
  * @param {string[]} lines  每行内容（不含边框），传入空行 '' 作分隔线
  */
-export function banner(lines) {
+export function banner(lines: string[]): void {
   const width = termWidth()
   const maxContent = Math.min(Math.max(...lines.map((l) => visLen(l))) + 4, width - 2)
 
@@ -229,7 +232,14 @@ export function banner(lines) {
  * @param {{ ready: boolean, fastBuild: boolean, logLevel?: string, lastBuild?: { time: string, duration: number } }} state
  * @param {boolean} [withHints=true]  是否显示按键提示
  */
-export function statusLine(state, withHints = true) {
+export interface DevStatusLineState {
+  ready: boolean
+  fastBuild: boolean
+  logLevel?: string
+  lastBuild?: { time: string; duration: number }
+}
+
+export function statusLine(state: DevStatusLineState, withHints = true): void {
   const w = termWidth()
   const sep = paint(c.dim, hr('─', w))
 

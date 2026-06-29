@@ -16,7 +16,7 @@ export interface LocaleDictionary {
   meta?: {
     siteName?: string
     description?: string
-    keywords?: string[]
+    keywords?: string | string[]
     languageTag?: string
   }
   [key: string]: unknown
