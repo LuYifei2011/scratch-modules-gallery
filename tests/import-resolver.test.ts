@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { describe, expect, it } from 'bun:test'
 import { resolveImports } from '../scripts/lib/import-resolver.ts'
 

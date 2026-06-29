@@ -63,7 +63,7 @@ export async function loadModules({ root, config, isDev }: LoadModulesOptions): 
           const base = path.basename(f, '.txt')
           // 新标准：序号+id，例如 01-main.txt；无序号时，整个 base 为 id
           const m = base.match(/^(\d+)[ _-](.+)$/)
-          const id = (m ? m[2] : base).trim()
+          const id = (m ? m[2]! : base).trim()
           scripts.push({ id, content })
         }
         // 若目录存在但为空，视为错误
@@ -102,14 +102,16 @@ export async function loadModules({ root, config, isDev }: LoadModulesOptions): 
           try {
             const obj = JSON.parse(await fs.readFile(path.join(i18nDir, f), 'utf8'))
             if (obj && typeof obj === 'object') {
-              const one: ModuleTranslation = {}
+              const one: Record<string, unknown> = {}
+              const source = obj as Record<string, unknown>
               const copyField = (
                 key: keyof ModuleTranslation,
                 validator = (v: unknown) => v !== null && v !== undefined
               ) => {
-                if (validator(obj[key])) one[key] = obj[key]
+                if (validator(source[key])) one[key] = source[key]
               }
-              const isPlainObject = (v: unknown) => v && typeof v === 'object' && !Array.isArray(v)
+              const isPlainObject = (v: unknown): v is Record<string, unknown> =>
+                Boolean(v && typeof v === 'object' && !Array.isArray(v))
 
               copyField('name', (v) => typeof v === 'string')
               copyField('description', (v) => typeof v === 'string')
@@ -122,7 +124,7 @@ export async function loadModules({ root, config, isDev }: LoadModulesOptions): 
               copyField('procedureParams', isPlainObject)
               copyField('comments', isPlainObject)
 
-              translations[loc] = one
+              translations[loc] = one as ModuleTranslation
             }
           } catch (e) {
             errorsAll.push(`${dir}: i18n/${f} parse error`)
@@ -139,10 +141,10 @@ export async function loadModules({ root, config, isDev }: LoadModulesOptions): 
       if (errors.length) errorsAll.push(`${dir}: ${errors.join(', ')}`)
       modules.push(record)
     } catch (e) {
-      errorsAll.push(`${dir}: unexpected build error ${(e && e.message) || e}`)
+      errorsAll.push(`${dir}: unexpected build error ${e instanceof Error ? e.message : e}`)
       if (isDev) {
         // 保留堆栈便于调试
-        log.error('loader', String(e?.stack || e?.message || e))
+        log.error('loader', String(e instanceof Error ? e.stack || e.message : e))
       }
     }
   }

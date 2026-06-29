@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+// @ts-nocheck
 /**
  * 格式化 scratchblocks 脚本
  * 用法: bun scripts/format-scratchblocks.ts

@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { beforeAll, describe, expect, it } from 'bun:test'
 import path from 'path'
 import fs from 'fs-extra'

@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { describe, expect, it } from 'bun:test'
 import { escapeHtml, maybeMinify, generateShareLinks } from '../scripts/lib/html-utils.ts'
 

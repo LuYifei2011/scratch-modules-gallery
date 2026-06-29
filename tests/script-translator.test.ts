@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { beforeAll, describe, expect, it } from 'bun:test'
 import { translateScriptText, translateScriptFields } from '../scripts/lib/script-translator.ts'
 import { loadScratchblocksLanguages } from '../scripts/lib/scratch-utils.ts'

@@ -18,7 +18,8 @@ export interface ShareLinks {
 }
 
 export function escapeHtml(str = ''): string {
-  return str.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c])
+  const entities: Record<string, string> = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }
+  return str.replace(/[&<>"]/g, (c) => entities[c] ?? c)
 }
 
 export async function maybeMinify(html: string | null | undefined, skip = false): Promise<string | null | undefined> {
@@ -36,7 +37,7 @@ export async function maybeMinify(html: string | null | undefined, skip = false)
       minifyJS: true,
     })
   } catch (e) {
-    log.warn('minify', `html-minifier-next 压缩失败，返回原始 HTML: ${e?.message || e}`)
+    log.warn('minify', `html-minifier-next 压缩失败，返回原始 HTML: ${e instanceof Error ? e.message : e}`)
     return html
   }
 }

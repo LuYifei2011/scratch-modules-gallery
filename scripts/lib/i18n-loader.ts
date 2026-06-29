@@ -41,7 +41,7 @@ export async function loadI18n(): Promise<I18nDictionary> {
     try {
       dict[loc] = JSON.parse(await fs.readFile(path.join(i18nDir, f), 'utf8'))
     } catch (e) {
-      log.warn('i18n', `解析失败，跳过 ${f}: ${e?.message || e}`)
+      log.warn('i18n', `解析失败，跳过 ${f}: ${e instanceof Error ? e.message : e}`)
     }
   }
   return dict
@@ -60,7 +60,7 @@ export async function loadModuleDefaults(): Promise<ModuleDefaultsDictionary> {
       return JSON.parse(await fs.readFile(defaultsFile, 'utf8'))
     }
   } catch (e) {
-    log.warn('module-defaults', `加载模块默认翻译失败: ${e?.message || e}`)
+    log.warn('module-defaults', `加载模块默认翻译失败: ${e instanceof Error ? e.message : e}`)
   }
   return {}
 }
@@ -75,7 +75,7 @@ export async function loadGlobalTags(): Promise<GlobalTagsDictionary> {
       return JSON.parse(await fs.readFile(tagsFile, 'utf8'))
     }
   } catch (e) {
-    log.warn('tags', `加载全局 tags 字典失败: ${e?.message || e}`)
+    log.warn('tags', `加载全局 tags 字典失败: ${e instanceof Error ? e.message : e}`)
   }
   return {}
 }

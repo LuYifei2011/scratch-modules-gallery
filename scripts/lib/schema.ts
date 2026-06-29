@@ -20,7 +20,7 @@ export function parseContributors(raw: unknown): Contributor[] {
   if (!raw) return []
   // 允许: "gh/name, sc/other, Alice" 或数组
   if (Array.isArray(raw)) {
-    return raw.map(normalizeOne).filter(Boolean)
+    return raw.map(normalizeOne).filter((item): item is Contributor => Boolean(item))
   }
   if (typeof raw === 'string') {
     return raw
@@ -28,7 +28,7 @@ export function parseContributors(raw: unknown): Contributor[] {
       .map((s) => s.trim())
       .filter(Boolean)
       .map(normalizeOne)
-      .filter(Boolean)
+      .filter((item): item is Contributor => Boolean(item))
   }
   return []
 }
@@ -60,7 +60,7 @@ function pickDefaultFromMap<T>(map: Record<string, T> | undefined): T | undefine
   if (map['en']) return map['en']
   if (map['zh-cn']) return map['zh-cn']
   const keys = Object.keys(map)
-  return keys.length ? map[keys[0]] : undefined
+  return keys.length ? map[keys[0]!] : undefined
 }
 
 function normalizeI18nStringOrMap(v: I18nStringOrMap | undefined): NormalizedI18nValue<string> {

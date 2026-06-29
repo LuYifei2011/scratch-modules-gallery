@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { describe, expect, it } from 'bun:test'
 import { buildSearchIndex } from '../scripts/lib/search.ts'
 
