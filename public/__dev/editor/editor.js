@@ -62,6 +62,19 @@ function parseCommaSeparatedInput(value) {
     .filter((item) => item)
 }
 
+function escapeHtml(value) {
+  return String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+}
+
+function moduleApiPath(moduleId) {
+  return `/api/modules/${encodeURIComponent(moduleId)}`
+}
+
 // ==================== API 请求封装 ====================
 async function apiRequest(url, options = {}) {
   try {
@@ -105,7 +118,7 @@ async function loadModules() {
 }
 
 async function loadModule(moduleId) {
-  const data = await apiRequest(`/api/modules/${moduleId}`)
+  const data = await apiRequest(moduleApiPath(moduleId))
   state.currentModule = data
 
   // 从 URL 恢复状态
@@ -147,9 +160,9 @@ function renderModuleList() {
   list.innerHTML = filtered
     .map(
       (m) => `
-    <li data-id="${m.id}" class="${state.currentModule?.id === m.id ? 'active' : ''}">
-      <div class="module-name">${m.name}</div>
-      <div class="module-desc">${m.description}</div>
+    <li data-id="${escapeHtml(m.id)}" class="${state.currentModule?.id === m.id ? 'active' : ''}">
+      <div class="module-name">${escapeHtml(m.name)}</div>
+      <div class="module-desc">${escapeHtml(m.description)}</div>
     </li>
   `
     )
@@ -230,8 +243,8 @@ function renderScriptsList() {
   list.innerHTML = scripts
     .map(
       (s) => `
-    <li data-id="${s.id}" class="${state.currentScript?.id === s.id ? 'active' : ''}" title="${s.id}">
-      <span class="script-order">${String(s.order).padStart(2, '0')}</span> <span class="script-id">${s.id}</span>
+    <li data-id="${escapeHtml(s.id)}" class="${state.currentScript?.id === s.id ? 'active' : ''}" title="${escapeHtml(s.id)}">
+      <span class="script-order">${escapeHtml(String(s.order).padStart(2, '0'))}</span> <span class="script-id">${escapeHtml(s.id)}</span>
     </li>
   `
     )
@@ -320,10 +333,10 @@ function renderAssets() {
       (a) => `
     <li>
       <div class="asset-info">
-        <div class="asset-name">${a.filename}</div>
-        <div class="asset-size">${formatFileSize(a.size)}</div>
+        <div class="asset-name">${escapeHtml(a.filename)}</div>
+        <div class="asset-size">${escapeHtml(formatFileSize(a.size))}</div>
       </div>
-      <button class="btn btn-sm btn-danger" data-filename="${a.filename}">删除</button>
+      <button class="btn btn-sm btn-danger" data-filename="${escapeHtml(a.filename)}">删除</button>
     </li>
   `
     )
@@ -453,7 +466,7 @@ document.getElementById('meta-form').addEventListener('submit', async (e) => {
   }
 
   try {
-    await apiRequest(`/api/modules/${state.currentModule.id}/meta`, {
+    await apiRequest(`${moduleApiPath(state.currentModule.id)}/meta`, {
       method: 'PUT',
       body: JSON.stringify(meta),
     })
@@ -469,7 +482,7 @@ document.getElementById('view-module-btn').addEventListener('click', () => {
   if (!state.currentModule) return
 
   // 构建模块页 URL（假设默认语言为 zh-cn）
-  const moduleUrl = `/zh-cn/modules/${state.currentModule.id}/`
+  const moduleUrl = `/zh-cn/modules/${encodeURIComponent(state.currentModule.id)}/`
   window.open(moduleUrl, '_blank')
 })
 
@@ -480,7 +493,7 @@ document.getElementById('delete-module-btn').addEventListener('click', async () 
   }
 
   try {
-    await apiRequest(`/api/modules/${state.currentModule.id}`, {
+    await apiRequest(moduleApiPath(state.currentModule.id), {
       method: 'DELETE',
     })
     showToast('模块已删除')
@@ -580,13 +593,13 @@ document.querySelectorAll('.tab-btn').forEach((btn) => {
 
 // 添加脚本
 document.getElementById('add-script-btn').addEventListener('click', async () => {
-  let scriptId = prompt('输入脚本 ID（例如：new-script）：')
+  let scriptId = prompt('输入脚本 ID（例如：new-script、初始化、main helper）：')
   if (!scriptId) return
 
   scriptId = scriptId.trim()
 
   try {
-    await apiRequest(`/api/modules/${state.currentModule.id}/scripts`, {
+    await apiRequest(`${moduleApiPath(state.currentModule.id)}/scripts`, {
       method: 'POST',
       body: JSON.stringify({
         id: scriptId,
@@ -619,7 +632,7 @@ document.getElementById('save-script-btn').addEventListener('click', async () =>
   }
 
   try {
-    await apiRequest(`/api/modules/${state.currentModule.id}/scripts/${encodeURIComponent(state.currentScript.id)}`, {
+    await apiRequest(`${moduleApiPath(state.currentModule.id)}/scripts/${encodeURIComponent(state.currentScript.id)}`, {
       method: 'PUT',
       body: JSON.stringify({
         content,
@@ -653,7 +666,7 @@ document.getElementById('delete-script-btn').addEventListener('click', async () 
   }
 
   try {
-    await apiRequest(`/api/modules/${state.currentModule.id}/scripts/${encodeURIComponent(state.currentScript.id)}`, {
+    await apiRequest(`${moduleApiPath(state.currentModule.id)}/scripts/${encodeURIComponent(state.currentScript.id)}`, {
       method: 'DELETE',
     })
     state.currentScript = null
@@ -688,7 +701,7 @@ document.getElementById('i18n-locale-select').addEventListener('change', async (
 
   // 尝试加载现有翻译
   try {
-    const data = await apiRequest(`/api/modules/${state.currentModule.id}/i18n/${locale}`)
+    const data = await apiRequest(`${moduleApiPath(state.currentModule.id)}/i18n/${encodeURIComponent(locale)}`)
 
     // 填充表单
     document.getElementById('i18n-name').value = data.name || ''
@@ -739,7 +752,7 @@ document.getElementById('save-i18n-btn').addEventListener('click', async () => {
     if (tags.length > 0) data.tags = tags
     if (keywords.length > 0) data.keywords = keywords
 
-    await apiRequest(`/api/modules/${state.currentModule.id}/i18n/${state.currentLocale}`, {
+    await apiRequest(`${moduleApiPath(state.currentModule.id)}/i18n/${encodeURIComponent(state.currentLocale)}`, {
       method: 'PUT',
       body: JSON.stringify(data),
     })
@@ -758,7 +771,7 @@ document.getElementById('delete-i18n-btn').addEventListener('click', async () =>
   }
 
   try {
-    await apiRequest(`/api/modules/${state.currentModule.id}/i18n/${state.currentLocale}`, {
+    await apiRequest(`${moduleApiPath(state.currentModule.id)}/i18n/${encodeURIComponent(state.currentLocale)}`, {
       method: 'DELETE',
     })
     showToast('翻译已删除')
@@ -786,7 +799,7 @@ document.getElementById('demo-file-input').addEventListener('change', async (e) 
   formData.append('file', file)
 
   try {
-    const response = await fetch(`/api/modules/${state.currentModule.id}/demo`, {
+    const response = await fetch(`${moduleApiPath(state.currentModule.id)}/demo`, {
       method: 'POST',
       body: formData,
     })
@@ -812,7 +825,7 @@ async function handleDeleteDemo() {
   }
 
   try {
-    await apiRequest(`/api/modules/${state.currentModule.id}/demo`, {
+    await apiRequest(`${moduleApiPath(state.currentModule.id)}/demo`, {
       method: 'DELETE',
     })
     showToast('Demo 已删除')
@@ -836,7 +849,7 @@ document.getElementById('asset-file-input').addEventListener('change', async (e)
   formData.append('file', file)
 
   try {
-    const response = await fetch(`/api/modules/${state.currentModule.id}/assets`, {
+    const response = await fetch(`${moduleApiPath(state.currentModule.id)}/assets`, {
       method: 'POST',
       body: formData,
     })
@@ -862,7 +875,7 @@ async function handleDeleteAsset(filename) {
   }
 
   try {
-    await apiRequest(`/api/modules/${state.currentModule.id}/assets/${encodeURIComponent(filename)}`, {
+    await apiRequest(`${moduleApiPath(state.currentModule.id)}/assets/${encodeURIComponent(filename)}`, {
       method: 'DELETE',
     })
     showToast('资源已删除')

@@ -8,8 +8,14 @@ const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 const rootDir = path.resolve(__dirname, '../..')
 const modulesDir = path.join(rootDir, 'content/modules')
+const localePattern = /^[a-z]{2}(-[a-z]{2})?$/
 
 // ==================== 工具函数 ====================
+
+function assertPathInside(parentDir, childPath) {
+  const relative = path.relative(parentDir, childPath)
+  return relative !== '' && !relative.startsWith('..') && !path.isAbsolute(relative)
+}
 
 /**
  * 验证模块 ID 是否合法（防止目录穿越攻击）
@@ -18,14 +24,67 @@ function validateModuleId(moduleId) {
   if (!moduleId || typeof moduleId !== 'string') {
     throw new Error('Invalid module ID')
   }
-  const normalized = path.normalize(moduleId)
-  if (normalized.includes('..') || path.isAbsolute(normalized) || normalized.includes(path.sep)) {
+  if (!/^[a-z0-9.-]+$/.test(moduleId)) {
+    throw new Error('Invalid module ID: only lowercase letters, numbers, hyphens, and dots allowed')
+  }
+  if (moduleId === '.' || moduleId === '..' || moduleId.includes('/') || moduleId.includes('\\')) {
     throw new Error('Invalid module ID: directory traversal detected')
   }
-  if (!/^[a-z0-9-]+$/.test(moduleId)) {
-    throw new Error('Invalid module ID: only lowercase letters, numbers, and hyphens allowed')
+  if (!assertPathInside(modulesDir, path.resolve(modulesDir, moduleId))) {
+    throw new Error('Invalid module ID: directory traversal detected')
   }
   return moduleId
+}
+
+/**
+ * 验证脚本 ID 是否为安全文件名片段。
+ */
+function validateScriptId(scriptId) {
+  if (!scriptId || typeof scriptId !== 'string') {
+    throw new Error('Invalid script id')
+  }
+  const trimmed = scriptId.trim()
+  if (!trimmed || trimmed === '.' || trimmed === '..') {
+    throw new Error('Invalid script id')
+  }
+  if (trimmed.includes('\0') || trimmed.includes('/') || trimmed.includes('\\')) {
+    throw new Error('Invalid script id: directory traversal detected')
+  }
+  if (trimmed.toLowerCase().endsWith('.txt')) {
+    throw new Error('Invalid script id: do not include .txt suffix')
+  }
+  if (!assertPathInside(modulesDir, path.resolve(modulesDir, trimmed))) {
+    throw new Error('Invalid script id: directory traversal detected')
+  }
+  return trimmed
+}
+
+function naturalCompare(a, b) {
+  return a.localeCompare(b, 'en', { numeric: true })
+}
+
+function parseScriptFileName(file) {
+  const base = path.basename(file, '.txt')
+  const match = base.match(/^(\d+)[ _-](.+)$/)
+  const id = (match ? match[2] : base).trim()
+  const order = match ? parseInt(match[1], 10) : 0
+  return { id, order }
+}
+
+async function readScriptsFromDir(scriptsDir) {
+  const files = await fs.readdir(scriptsDir)
+  const scripts = []
+  for (const file of files.filter((f) => f.endsWith('.txt')).sort(naturalCompare)) {
+    const content = await fs.readFile(path.join(scriptsDir, file), 'utf8')
+    const { id, order } = parseScriptFileName(file)
+    scripts.push({ id, order, content })
+  }
+  return scripts
+}
+
+async function findScriptFile(scriptsDir, scriptId) {
+  const files = await fs.readdir(scriptsDir)
+  return files.find((f) => f.endsWith('.txt') && parseScriptFileName(f).id === scriptId)
 }
 
 /**
@@ -158,21 +217,7 @@ export async function getModule(req, res, moduleId) {
     const scriptsDir = path.join(moduleDir, 'scripts')
     const scripts = []
     if (await fs.pathExists(scriptsDir)) {
-      const files = await fs.readdir(scriptsDir)
-      const txtFiles = files.filter((f) => f.endsWith('.txt')).sort()
-      for (const file of txtFiles) {
-        const content = await fs.readFile(path.join(scriptsDir, file), 'utf8')
-        const match = file.match(/^(\d+)[ _-](.+)\.txt$/)
-        if (match) {
-          const order = parseInt(match[1], 10)
-          const id = match[2]
-          scripts.push({ id, order, content })
-        } else {
-          // 无序号的文件，给予默认序号
-          const id = file.replace('.txt', '')
-          scripts.push({ id, order: 0, content })
-        }
-      }
+      scripts.push(...(await readScriptsFromDir(scriptsDir)))
     }
 
     // 读取 i18n
@@ -360,24 +405,13 @@ export async function getScripts(req, res, moduleId) {
       return sendJson(res, 200, { scripts: [] })
     }
 
-    const files = await fs.readdir(scriptsDir)
-    const scripts = []
-    for (const file of files.filter((f) => f.endsWith('.txt')).sort()) {
-      const content = await fs.readFile(path.join(scriptsDir, file), 'utf8')
-      const match = file.match(/^(\d+)[ _-](.+)\.txt$/)
-      if (match) {
-        const order = parseInt(match[1], 10)
-        const id = match[2]
-        scripts.push({ id, order, content })
-      } else {
-        const id = file.replace('.txt', '')
-        scripts.push({ id, order: 0, content })
-      }
-    }
-
-    sendJson(res, 200, { scripts })
+    sendJson(res, 200, { scripts: await readScriptsFromDir(scriptsDir) })
   } catch (e) {
-    sendError(res, 500, e.message)
+    if (e.message.includes('Invalid module ID')) {
+      sendError(res, 400, e.message)
+    } else {
+      sendError(res, 500, e.message)
+    }
   }
 }
 
@@ -394,10 +428,7 @@ export async function createScript(req, res, moduleId) {
       return sendError(res, 400, 'Missing script id')
     }
 
-    // 验证 id 格式（只允许字母、数字、连字符）
-    if (!/^[a-z0-9-]+$/.test(id)) {
-      return sendError(res, 400, 'Invalid script id: only lowercase letters, numbers, and hyphens allowed')
-    }
+    const scriptId = validateScriptId(id)
 
     const scriptsDir = path.join(modulesDir, moduleId, 'scripts')
     await fs.ensureDir(scriptsDir)
@@ -409,13 +440,12 @@ export async function createScript(req, res, moduleId) {
       const orders = files
         .filter((f) => f.endsWith('.txt'))
         .map((f) => {
-          const match = f.match(/^(\d+)[ _-]/)
-          return match ? parseInt(match[1], 10) : 0
+          return parseScriptFileName(f).order
         })
       fileOrder = orders.length > 0 ? Math.max(...orders) + 1 : 1
     }
 
-    const filename = `${String(fileOrder).padStart(2, '0')}-${id}.txt`
+    const filename = `${String(fileOrder).padStart(2, '0')}-${scriptId}.txt`
     const scriptPath = path.join(scriptsDir, filename)
 
     if (await fs.pathExists(scriptPath)) {
@@ -424,9 +454,13 @@ export async function createScript(req, res, moduleId) {
 
     await fs.writeFile(scriptPath, normalizeScriptContent(content || ''), 'utf8')
 
-    sendJson(res, 201, { message: 'Script created successfully', id, order: fileOrder })
+    sendJson(res, 201, { message: 'Script created successfully', id: scriptId, order: fileOrder })
   } catch (e) {
-    sendError(res, 500, e.message)
+    if (e.message.includes('Invalid script id') || e.message.includes('Invalid module ID')) {
+      sendError(res, 400, e.message)
+    } else {
+      sendError(res, 500, e.message)
+    }
   }
 }
 
@@ -443,32 +477,21 @@ export async function updateScript(req, res, moduleId, scriptId) {
     const scriptsDir = path.join(modulesDir, moduleId, 'scripts')
 
     // 查找当前脚本文件
-    const files = await fs.readdir(scriptsDir)
-    const currentFile = files.find((f) => {
-      const match = f.match(/^(\d+)[ _-](.+)\.txt$/)
-      const id = match ? match[2] : f.replace('.txt', '')
-      return id === scriptId
-    })
+    const currentFile = await findScriptFile(scriptsDir, scriptId)
 
     if (!currentFile) {
       return sendError(res, 404, 'Script not found')
     }
 
     const scriptPath = path.join(scriptsDir, currentFile)
-    const match = currentFile.match(/^(\d+)[ _-]/)
-    const currentOrder = match ? parseInt(match[1], 10) : 0
+    const { order: currentOrder } = parseScriptFileName(currentFile)
 
     // 确定新的 id 和 order
-    const finalId = newId !== undefined ? newId : scriptId
+    const finalId = newId !== undefined ? validateScriptId(newId) : scriptId
     const finalOrder = newOrder !== undefined ? newOrder : currentOrder
 
     // 如果 id 或 order 发生变化，需要重命名
     if (finalId !== scriptId || finalOrder !== currentOrder) {
-      // 验证新 id 格式
-      if (!/^[a-z0-9-]+$/.test(finalId)) {
-        return sendError(res, 400, 'Invalid script id: only lowercase letters, numbers, and hyphens allowed')
-      }
-
       const newFilename = `${String(finalOrder).padStart(2, '0')}-${finalId}.txt`
       const newPath = path.join(scriptsDir, newFilename)
 
@@ -497,7 +520,11 @@ export async function updateScript(req, res, moduleId, scriptId) {
       sendJson(res, 200, { message: 'Script updated successfully' })
     }
   } catch (e) {
-    sendError(res, 500, e.message)
+    if (e.message.includes('Invalid script id') || e.message.includes('Invalid module ID')) {
+      sendError(res, 400, e.message)
+    } else {
+      sendError(res, 500, e.message)
+    }
   }
 }
 
@@ -512,11 +539,7 @@ export async function deleteScript(req, res, moduleId, scriptId) {
 
     // 查找脚本文件
     const files = await fs.readdir(scriptsDir)
-    const targetFile = files.find((f) => {
-      const match = f.match(/^(\d+)[ _-](.+)\.txt$/)
-      const id = match ? match[2] : f.replace('.txt', '')
-      return id === scriptId
-    })
+    const targetFile = files.find((f) => f.endsWith('.txt') && parseScriptFileName(f).id === scriptId)
 
     if (!targetFile) {
       return sendError(res, 404, 'Script not found')
@@ -533,7 +556,11 @@ export async function deleteScript(req, res, moduleId, scriptId) {
 
     sendJson(res, 200, { message: 'Script deleted successfully' })
   } catch (e) {
-    sendError(res, 500, e.message)
+    if (e.message.includes('Invalid module ID')) {
+      sendError(res, 400, e.message)
+    } else {
+      sendError(res, 500, e.message)
+    }
   }
 }
 
@@ -544,7 +571,7 @@ export async function getI18n(req, res, moduleId, locale) {
   try {
     validateModuleId(moduleId)
 
-    if (!/^[a-z]{2}(-[a-z]{2})?$/.test(locale)) {
+    if (!localePattern.test(locale)) {
       return sendError(res, 400, 'Invalid locale format')
     }
 
@@ -568,7 +595,7 @@ export async function updateI18n(req, res, moduleId, locale) {
   try {
     validateModuleId(moduleId)
 
-    if (!/^[a-z]{2}(-[a-z]{2})?$/.test(locale)) {
+    if (!localePattern.test(locale)) {
       return sendError(res, 400, 'Invalid locale format')
     }
 
@@ -591,6 +618,10 @@ export async function updateI18n(req, res, moduleId, locale) {
 export async function deleteI18n(req, res, moduleId, locale) {
   try {
     validateModuleId(moduleId)
+
+    if (!localePattern.test(locale)) {
+      return sendError(res, 400, 'Invalid locale format')
+    }
 
     const i18nPath = path.join(modulesDir, moduleId, 'i18n', `${locale}.json`)
 
