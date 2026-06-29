@@ -38,19 +38,17 @@ export const CATEGORY_COLORS: Record<string, string> = {
   extension: '#0fbd8c',
 }
 
-/**
- * 统计 scratchblocks 脚本文本中各积木类别的出现次数。
- * 解析所有脚本并递归遍历 AST，统计 block.info.category。
- *
- * @param {string[]} scriptTexts 所有脚本文本数组
- * @returns {{ category: string, count: number, color: string }[]} 按数量降序排列
- */
+/** scratchblocks 脚本文本中某个积木类别的统计结果。 */
 export interface BlockCategorySummary {
   category: string
   count: number
   color: string
 }
 
+/**
+ * 统计 scratchblocks 脚本文本中各积木类别的出现次数。
+ * 解析所有脚本并递归遍历 AST，统计 block.info.category，按数量降序排列。
+ */
 export function analyzeBlockCategories(scriptTexts?: Array<string | null | undefined> | null): BlockCategorySummary[] {
   const allKeys = Object.keys(scratchblocks.allLanguages || {})
   const counts: Record<string, number> = {}

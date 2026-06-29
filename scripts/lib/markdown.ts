@@ -8,8 +8,8 @@ interface ScratchblocksToken {
   blockPath?: string
 }
 
-export function markdownToHtml(markdown: string) {
-  return marked.parse(markdown)
+export function markdownToHtml(markdown: string): string {
+  return marked.parse(markdown) as string
 }
 
 const scratchblocksBlockExtension = {

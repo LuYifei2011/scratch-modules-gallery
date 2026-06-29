@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { describe, expect, it } from 'bun:test'
 import { parseContributors, buildModuleRecord } from '../scripts/lib/schema.ts'
 
@@ -29,16 +28,16 @@ describe('parseContributors', () => {
   it('parses mixed string', () => {
     const result = parseContributors('gh/dev, sc/user, Plain Name')
     expect(result.length).toBe(3)
-    expect(result[0].url).toBe('https://github.com/dev')
-    expect(result[1].url).toBe('https://scratch.mit.edu/users/user')
-    expect(result[2].name).toBe('Plain Name')
-    expect(result[2].url).toBe(undefined)
+    expect(result[0]!.url).toBe('https://github.com/dev')
+    expect(result[1]!.url).toBe('https://scratch.mit.edu/users/user')
+    expect(result[2]!.name).toBe('Plain Name')
+    expect(result[2]!.url).toBe(undefined)
   })
 
   it('parses array of strings', () => {
     const result = parseContributors(['gh/a', 'sc/b'])
     expect(result.length).toBe(2)
-    expect(result[0].url).toBe('https://github.com/a')
+    expect(result[0]!.url).toBe('https://github.com/a')
   })
 
   it('parses array of objects', () => {
@@ -116,7 +115,7 @@ describe('buildModuleRecord', () => {
     const extra = { scripts: [], notesMap: {} }
     const { record } = buildModuleRecord(meta, extra)
     expect(record.contributors.length).toBe(1)
-    expect(record.contributors[0].name).toBe('dev')
+    expect(record.contributors[0]!.name).toBe('dev')
   })
 
   it('includes variables and references from meta', () => {
