@@ -1,13 +1,26 @@
-// @ts-nocheck
 import scratchblocks from './vendor/scratchblocks-plus.min.es.js'
 
-const pageLangSb = window.__I18N && window.__I18N.meta.languageTag.replace('-', '_').toLowerCase()
+type ScratchblocksBlockEntry = {
+  el: HTMLPreElement | HTMLElement
+  doc: ScratchblocksDoc
+  inline: boolean
+  scriptId?: string
+  view?: ScratchblocksView
+}
+
+type VariableItem = {
+  blockContainer: Element
+  displayName: string
+  type?: string
+}
+
+const pageLangSb = window.__I18N.meta.languageTag.replace('-', '_').toLowerCase()
 
 // 记录已加载的语言，避免重复加载
 const loadedLanguages = new Set(['en']) // 英语默认内置
 
 // 按需加载单个语言文件（除了英语）
-async function loadLanguage(langCode) {
+async function loadLanguage(langCode: string): Promise<void> {
   if (!langCode || langCode === 'en') return // 英语已默认内置
   if (loadedLanguages.has(langCode)) return // 已加载过
 
@@ -20,11 +33,12 @@ async function loadLanguage(langCode) {
     scratchblocks.loadLanguages({ [langCode]: langData })
     loadedLanguages.add(langCode)
   } catch (e) {
-    console.warn(`[scratchblocks] 加载语言 ${langCode} 失败:`, e?.message || e)
+    const message = e instanceof Error ? e.message : String(e)
+    console.warn(`[scratchblocks] 加载语言 ${langCode} 失败:`, message)
   }
 }
 
-function downloadFile(url, filename) {
+function downloadFile(url: string, filename: string): void {
   const a = document.createElement('a')
   a.href = url
   a.download = filename
@@ -33,14 +47,14 @@ function downloadFile(url, filename) {
   a.remove()
 }
 
-async function copyTextToClipboard(text) {
+async function copyTextToClipboard(text: string): Promise<boolean> {
   if (!text) return false
   let ok = false
   if (navigator.clipboard && navigator.clipboard.writeText) {
     try {
       await navigator.clipboard.writeText(text)
       ok = true
-    } catch (e) {
+    } catch {
       ok = false
     }
   }
@@ -53,7 +67,7 @@ async function copyTextToClipboard(text) {
     ta.select()
     try {
       ok = document.execCommand('copy')
-    } catch (e) {
+    } catch {
       ok = false
     }
     ta.remove()
@@ -61,10 +75,10 @@ async function copyTextToClipboard(text) {
   return ok
 }
 
-function showCopyResult(btn, ok, originalLabel) {
+function showCopyResult(btn: HTMLElement | null, ok: boolean, originalLabel: string): void {
   if (!btn) return
-  const succ = (window.__I18N && window.__I18N.module && window.__I18N.module.copySuccess) || 'Copied!'
-  const fail = (window.__I18N && window.__I18N.module && window.__I18N.module.copyFail) || 'Copy failed'
+  const succ = window.__I18N.module.copySuccess || 'Copied!'
+  const fail = window.__I18N.module.copyFail || 'Copy failed'
 
   if (ok) {
     btn.classList.remove('failed')
@@ -91,22 +105,22 @@ function showCopyResult(btn, ok, originalLabel) {
 }
 
 // 初始化脚本渲染：先加载语言，再 parse
-async function initScratchblocks() {
+async function initScratchblocks(): Promise<void> {
   // 先加载页面语言（非英语时）
   if (pageLangSb && pageLangSb !== 'en') {
     await loadLanguage(pageLangSb)
   }
 
-  const blocks = []
-  document.querySelectorAll('pre.scratchblocks').forEach((pre) => {
+  const blocks: ScratchblocksBlockEntry[] = []
+  document.querySelectorAll<HTMLPreElement>('pre.scratchblocks').forEach((pre) => {
     blocks.push({
       el: pre,
       doc: scratchblocks.parse(pre.textContent, { languages: [pageLangSb, 'en'] }),
       inline: false,
-      scriptId: pre.getAttribute('data-script-id'),
+      scriptId: pre.getAttribute('data-script-id') ?? undefined,
     })
   })
-  document.querySelectorAll('code.scratchblocks').forEach((code) => {
+  document.querySelectorAll<HTMLElement>('code.scratchblocks').forEach((code) => {
     blocks.push({
       el: code,
       doc: scratchblocks.parse(code.textContent, { languages: [pageLangSb, 'en'] }),
@@ -119,30 +133,32 @@ async function initScratchblocks() {
     try {
       const wrapper = obj.el.closest('.sb-block')
       if (!wrapper) return
-      const btn = wrapper.querySelector('.sb-copy')
+      const btn = wrapper.querySelector<HTMLButtonElement>('.sb-copy')
       if (!btn) return
-      const label = (window.__I18N && window.__I18N.module && window.__I18N.module.copyScript) || 'Copy'
+      const label = window.__I18N.module.copyScript || 'Copy'
       btn.setAttribute('aria-label', label)
       btn.setAttribute('title', label)
       const originalLabel = label
       // click handler copies current text rendition of the doc
-      btn.addEventListener('click', async (ev) => {
+      btn.addEventListener('click', async (ev: MouseEvent) => {
         ev.preventDefault()
-        const text = obj.doc && typeof obj.doc.stringify === 'function' ? obj.doc.stringify() : obj.el.textContent || ''
+        const text = obj.doc.stringify() || obj.el.textContent || ''
         const ok = await copyTextToClipboard(text)
         showCopyResult(btn, ok, originalLabel)
       })
     } catch (e) {
-      console.warn('[sb-copy] init failed:', e?.message || e)
+      const message = e instanceof Error ? e.message : String(e)
+      console.warn('[sb-copy] init failed:', message)
     }
 
     // Wire export buttons
     try {
       const wrapper = obj.el.closest('.sb-block')
-      const exportGroup = wrapper && wrapper.querySelector('.sb-export-group')
-      const exportToggle = exportGroup && exportGroup.querySelector('.sb-export')
-      const exportSvgBtn = exportGroup && exportGroup.querySelector('.sb-export-svg')
-      const exportPngBtn = exportGroup && exportGroup.querySelector('.sb-export-png')
+      if (!wrapper) return
+      const exportGroup = wrapper.querySelector<HTMLElement>('.sb-export-group')
+      const exportToggle = exportGroup?.querySelector<HTMLButtonElement>('.sb-export')
+      const exportSvgBtn = exportGroup?.querySelector<HTMLButtonElement>('.sb-export-svg')
+      const exportPngBtn = exportGroup?.querySelector<HTMLButtonElement>('.sb-export-png')
       const scriptName = obj.scriptId || 'script'
 
       if (exportToggle && exportGroup) {
@@ -161,12 +177,13 @@ async function initScratchblocks() {
       }
       if (exportPngBtn) {
         exportPngBtn.addEventListener('click', () => {
-          if (obj.view) obj.view.exportPNG((url) => downloadFile(url, scriptName + '.png'), 3)
+          if (obj.view) obj.view.exportPNG((url: string) => downloadFile(url, scriptName + '.png'), 3)
           if (exportGroup) exportGroup.classList.remove('open')
         })
       }
     } catch (e) {
-      console.warn('[sb-export] init failed:', e?.message || e)
+      const message = e instanceof Error ? e.message : String(e)
+      console.warn('[sb-export] init failed:', message)
     }
   })
 
@@ -175,7 +192,7 @@ async function initScratchblocks() {
     document.querySelectorAll('.sb-export-group.open').forEach((g) => g.classList.remove('open'))
   })
 
-  function doRender(style) {
+  function doRender(style: string): void {
     blocks.forEach((obj) => {
       const finalStyle = style || 'scratch3'
       const docView = scratchblocks.newView(obj.doc, {
@@ -195,7 +212,7 @@ async function initScratchblocks() {
   const renderVarBlocks = initVariablesAndLists()
 
   const STYLE_KEY = 'sb-style-pref'
-  const styleSelect = document.getElementById('sb-style')
+  const styleSelect = document.getElementById('sb-style') as HTMLSelectElement | null
   let currentStyle = localStorage.getItem(STYLE_KEY) || (styleSelect ? styleSelect.value : 'scratch3')
   if (styleSelect) {
     styleSelect.value = currentStyle
@@ -209,13 +226,13 @@ async function initScratchblocks() {
   doRender(currentStyle)
   renderVarBlocks(currentStyle)
 
-  const translateSelect = document.getElementById('sb-translate')
+  const translateSelect = document.getElementById('sb-translate') as HTMLSelectElement | null
   const TRANSLATE_KEY = 'sb-translate-pref'
   let currentLang = localStorage.getItem(TRANSLATE_KEY) || 'no-translate'
 
   if (translateSelect) {
     translateSelect.value = currentLang
-    const doTranslate = async () => {
+    const doTranslate = async (): Promise<void> => {
       currentLang = translateSelect.value
       localStorage.setItem(TRANSLATE_KEY, currentLang)
 
@@ -224,11 +241,10 @@ async function initScratchblocks() {
         await loadLanguage(currentLang)
       }
 
+      const translationLanguage = currentLang === 'no-translate' ? pageLangSb : currentLang
       blocks.forEach((obj) => {
-        if (currentLang === 'no-translate') {
-          obj.doc.translate(scratchblocks.allLanguages[pageLangSb])
-        } else {
-          obj.doc.translate(scratchblocks.allLanguages[currentLang])
+        if (translationLanguage) {
+          obj.doc.translate(scratchblocks.allLanguages[translationLanguage])
         }
       })
       doRender(currentStyle)
@@ -240,19 +256,19 @@ async function initScratchblocks() {
   }
 
   // 初始化备注中的跳转积木链接
-  const getViewByScriptId = (scriptId) => {
+  const getViewByScriptId = (scriptId: string | null): ScratchblocksView | null => {
     const block = blocks.find((b) => b.scriptId === scriptId)
-    return block ? block.view : null
+    return block?.view ?? null
   }
-  document.querySelectorAll('a.go-to-block').forEach((el) => {
+  document.querySelectorAll<HTMLAnchorElement>('a.go-to-block').forEach((el) => {
     el.addEventListener('click', (ev) => {
       ev.preventDefault()
       const scriptId = el.getAttribute('data-script-id')
       const blockPath = el.getAttribute('data-block-path')
       const view = getViewByScriptId(scriptId)
-      if (view) {
+      if (view && blockPath) {
         const observer = new IntersectionObserver(
-          (entries, obs) => {
+          (entries: IntersectionObserverEntry[], obs: IntersectionObserver) => {
             entries.forEach((entry) => {
               if (entry.isIntersecting) {
                 view.highlightBlock(blockPath, { blink: true }) // 进入视口时高亮积木
@@ -263,19 +279,22 @@ async function initScratchblocks() {
           { threshold: 0.5 }
         )
         const targetEl = view.getElementByPath(blockPath)
-        observer.observe(targetEl)
-        targetEl?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+        if (targetEl) {
+          observer.observe(targetEl)
+          targetEl.scrollIntoView({ behavior: 'smooth', block: 'center' })
+        }
       }
     })
   })
 }
 
 // 将变量和列表的名称渲染为积木块，返回可按样式重新渲染的函数
-function initVariablesAndLists() {
-  const varItems = []
+function initVariablesAndLists(): (style: string) => void {
+  const varItems: VariableItem[] = []
 
-  document.querySelectorAll('table.variables > tbody > tr').forEach((row) => {
-    const nameCell = row.querySelector('td.var-name-cell') || row.querySelector('td')
+  document.querySelectorAll<HTMLTableRowElement>('table.variables > tbody > tr').forEach((row) => {
+    const nameCell =
+      row.querySelector<HTMLTableCellElement>('td.var-name-cell') || row.querySelector<HTMLTableCellElement>('td')
     if (!nameCell) return
     const displayName = row.dataset.displayName
     const type = row.dataset.type
@@ -284,12 +303,12 @@ function initVariablesAndLists() {
 
     const blockContainer = nameCell.querySelector('.var-name-block') || nameCell
 
-    const copyBtn = row.querySelector('.var-copy')
+    const copyBtn = row.querySelector<HTMLButtonElement>('.var-copy')
     if (copyBtn) {
-      const label = (window.__I18N && window.__I18N.module && window.__I18N.module.copyScript) || 'Copy'
+      const label = window.__I18N.module.copyScript || 'Copy'
       copyBtn.setAttribute('aria-label', label)
       copyBtn.setAttribute('title', label)
-      copyBtn.addEventListener('click', async (ev) => {
+      copyBtn.addEventListener('click', async (ev: MouseEvent) => {
         ev.preventDefault()
         const ok = await copyTextToClipboard(type === 'cloud' ? '☁ ' + displayName : displayName)
         showCopyResult(copyBtn, ok, label)
@@ -299,7 +318,7 @@ function initVariablesAndLists() {
     varItems.push({ blockContainer, displayName, type })
   })
 
-  return function renderVars(style) {
+  return function renderVars(style: string): void {
     const finalStyle = style || 'scratch3'
     varItems.forEach(({ blockContainer, displayName, type }) => {
       const doc = new scratchblocks.Document()
@@ -312,7 +331,7 @@ function initVariablesAndLists() {
           [new scratchblocks.Label(type === 'cloud' ? '☁ ' + displayName : displayName)]
         ),
       ]
-      const view = new scratchblocks.newView(doc, {
+      const view = scratchblocks.newView(doc, {
         style: finalStyle,
         scale: /^scratch3($|-)/.test(finalStyle) ? 0.675 : 1,
       })
@@ -330,7 +349,7 @@ initToc()
 
 // 模块页目录（TOC）初始化：折叠切换 + 当前节高亮
 function initToc() {
-  const toggle = document.getElementById('toc-toggle')
+  const toggle = document.getElementById('toc-toggle') as HTMLButtonElement | null
   const nav = document.getElementById('module-toc')
   if (!toggle || !nav) return
 
@@ -342,26 +361,29 @@ function initToc() {
   })
 
   // 收集子脚本 ID（从 TOC 链接读取，保持与模板一致）
-  const scriptSubIds = Array.from(document.querySelectorAll('.toc-link-sub[href^="#script-"]')).map((l) =>
-    l.getAttribute('href').slice(1)
+  const scriptSubIds: string[] = Array.from(
+    document.querySelectorAll<HTMLAnchorElement>('.toc-link-sub[href^="#script-"]')
   )
+    .map((l) => l.getAttribute('href'))
+    .filter((href): href is string => Boolean(href))
+    .map((href) => href.slice(1))
 
   // 完整有序 ID 列表：顶层节 + scripts 下的子脚本
   const topSectionIds = ['module-title', 'scripts', 'variables', 'notes', 'demo', 'references']
-  const allIds = []
+  const allIds: string[] = []
   topSectionIds.forEach((id) => {
     allIds.push(id)
     if (id === 'scripts') scriptSubIds.forEach((sid) => allIds.push(sid))
   })
 
-  let lastActiveId = null
+  let lastActiveId: string | null = null
 
-  function updateActiveLinks() {
+  function updateActiveLinks(): void {
     const viewportH = window.innerHeight
     // 视口上方 5% 作为阅读基准线（限制最大 50px）
     const readingLine = Math.min(viewportH * 0.05, 50)
 
-    let candidateIds = []
+    const candidateIds: Array<{ id: string; rect: DOMRect }> = []
     for (const id of allIds) {
       const el = document.getElementById(id)
       if (!el) continue
@@ -373,24 +395,24 @@ function initToc() {
 
     if (candidateIds.length === 0) return
 
-    let activeId = null
+    let activeId: string | null = null
 
     // 将所有标题按照位置进行评估：寻找【其顶部边界已经越过或刚刚到达基准线】的最后一片区域
     // 允许有50px的缓冲量。
-    let passedCandidates = candidateIds.filter((c) => c.rect.top <= readingLine + 80)
+    const passedCandidates = candidateIds.filter((c) => c.rect.top <= readingLine + 80)
 
     if (passedCandidates.length > 0) {
       // 存在跨过基准线的元素时，取最深的那个（在数组最后面）
-      activeId = passedCandidates[passedCandidates.length - 1].id
+      activeId = passedCandidates.at(-1)?.id ?? null
     } else {
       // 如果都在基准线下方（页面刚开始稍微滚动了一点），直接给第一个
-      activeId = candidateIds[0].id
+      activeId = candidateIds[0]?.id ?? null
     }
 
     // 修复问题：当滚动到底部时，如果底部内容较少导致核心视口区域无高亮发生
     // 强制高亮最后一个真正存在的区块
     if (window.innerHeight + Math.ceil(window.scrollY) >= document.documentElement.scrollHeight - 5) {
-      const lastId = [...allIds].reverse().find((id) => document.getElementById(id))
+      const lastId = [...allIds].reverse().find((id) => document.getElementById(id)) ?? null
       if (lastId) {
         activeId = lastId
       }
@@ -410,7 +432,7 @@ function initToc() {
 
     // 当活跃项是子脚本时，同时高亮父节"脚本"链接
     const isSubActive = Boolean(activeId && scriptSubIds.includes(activeId))
-    const scriptsLink = document.querySelector('.toc-link[href="#scripts"]')
+    const scriptsLink = document.querySelector<HTMLAnchorElement>('.toc-link[href="#scripts"]')
     if (scriptsLink) scriptsLink.classList.toggle('toc-active-parent', isSubActive)
   }
 

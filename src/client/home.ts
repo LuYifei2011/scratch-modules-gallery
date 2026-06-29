@@ -47,7 +47,7 @@ async function initSearch() {
 
 function renderList(docs) {
   if (!resultsDiv) return
-  const t = (window.__I18N && window.__I18N.home) || {
+  const t = window.__I18N.home || {
     onlineDemoBadge: 'Live Demo',
     noResults: 'No results',
   }
