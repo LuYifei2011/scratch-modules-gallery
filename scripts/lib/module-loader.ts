@@ -7,21 +7,34 @@
 import fs from 'fs-extra'
 import path from 'path'
 import fg from 'fast-glob'
-import { buildModuleRecord } from './schema.js'
-import log from './logger.js'
+import { buildModuleRecord } from './schema.ts'
+import log from './logger.ts'
+import type { ModuleMeta, ModuleRecord, ModuleTranslation, SiteConfig } from './types.ts'
+
+interface LoadModulesOptions {
+  root: string
+  config: SiteConfig
+  isDev: boolean
+}
+
+interface LoadModulesResult {
+  modules: ModuleRecord[]
+  errorsAll: string[]
+  allTags: string
+}
 
 /**
  * @param {Object} options
  * @param {string} options.root - 项目根目录绝对路径
- * @param {Object} options.config - site.config.js 配置对象
+ * @param {Object} options.config - site.config.ts 配置对象
  * @param {boolean} options.isDev - 是否为开发模式
  * @returns {Promise<{modules: Array, errorsAll: string[], allTags: string}>}
  */
-export async function loadModules({ root, config, isDev }) {
+export async function loadModules({ root, config, isDev }: LoadModulesOptions): Promise<LoadModulesResult> {
   const baseDir = path.join(root, config.contentDir)
   const dirs = await fg(['*'], { cwd: baseDir, onlyDirectories: true, dot: true })
-  const modules = []
-  const errorsAll = []
+  const modules: ModuleRecord[] = []
+  const errorsAll: string[] = []
   for (const dir of dirs) {
     try {
       // 生产环境下跳过以 . 开头的模块（用于开发/测试）
@@ -29,16 +42,15 @@ export async function loadModules({ root, config, isDev }) {
       const moduleDir = path.join(baseDir, dir)
       const metaFile = path.join(moduleDir, 'meta.json')
       if (!(await fs.pathExists(metaFile))) continue // skip
-      let meta
+      let meta: ModuleMeta
       try {
-        meta = JSON.parse(await fs.readFile(metaFile, 'utf8'))
+        meta = JSON.parse(await fs.readFile(metaFile, 'utf8')) as ModuleMeta
       } catch (e) {
-        errorsAll.push(`${dir}: meta.json parse error ${e.message}`)
+        errorsAll.push(`${dir}: meta.json parse error ${e instanceof Error ? e.message : String(e)}`)
         continue
       }
 
-      let script = ''
-      let scripts = []
+      const scripts: ModuleRecord['scripts'] = []
       // scripts/ 目录下若存在 *.txt，按文件名自然排序
       const scriptsDir = path.join(moduleDir, 'scripts')
       if (await fs.pathExists(scriptsDir)) {
@@ -67,7 +79,7 @@ export async function loadModules({ root, config, isDev }) {
       const demoFile = (await fs.pathExists(demoPath)) ? `modules/${dir}/demo.sb3` : undefined
 
       // optional notes: notes/<lang-code>.md（按语言国际化）
-      const notesMap = {}
+      const notesMap: Record<string, string> = {}
       const notesDirPath = path.join(moduleDir, 'notes')
       if (await fs.pathExists(notesDirPath)) {
         const noteFiles = await fg(['*.md'], { cwd: notesDirPath, onlyFiles: true })
@@ -79,7 +91,7 @@ export async function loadModules({ root, config, isDev }) {
       }
 
       // optional per-module translations: i18n/<locale>.json
-      let translations = {}
+      const translations: Record<string, ModuleTranslation> = {}
       const i18nDir = path.join(moduleDir, 'i18n')
       if (await fs.pathExists(i18nDir)) {
         const files = (await fg(['*.json'], { cwd: i18nDir, onlyFiles: true })).sort((a, b) =>
@@ -90,11 +102,14 @@ export async function loadModules({ root, config, isDev }) {
           try {
             const obj = JSON.parse(await fs.readFile(path.join(i18nDir, f), 'utf8'))
             if (obj && typeof obj === 'object') {
-              const one = {}
-              const copyField = (key, validator = (v) => v !== null && v !== undefined) => {
+              const one: ModuleTranslation = {}
+              const copyField = (
+                key: keyof ModuleTranslation,
+                validator = (v: unknown) => v !== null && v !== undefined
+              ) => {
                 if (validator(obj[key])) one[key] = obj[key]
               }
-              const isPlainObject = (v) => v && typeof v === 'object' && !Array.isArray(v)
+              const isPlainObject = (v: unknown) => v && typeof v === 'object' && !Array.isArray(v)
 
               copyField('name', (v) => typeof v === 'string')
               copyField('description', (v) => typeof v === 'string')
@@ -116,7 +131,6 @@ export async function loadModules({ root, config, isDev }) {
       }
 
       const { record, errors } = buildModuleRecord(meta, {
-        script,
         scripts,
         demoFile,
         notesMap,

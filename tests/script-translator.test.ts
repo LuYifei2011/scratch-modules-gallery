@@ -1,7 +1,6 @@
-import { describe, it, beforeAll } from 'bun:test'
-import assert from 'bun:assert/strict'
-import { translateScriptText, translateScriptFields } from '../scripts/lib/script-translator.js'
-import { loadScratchblocksLanguages } from '../scripts/lib/scratch-utils.js'
+import { beforeAll, describe, expect, it } from 'bun:test'
+import { translateScriptText, translateScriptFields } from '../scripts/lib/script-translator.ts'
+import { loadScratchblocksLanguages } from '../scripts/lib/scratch-utils.ts'
 
 // Load scratchblocks language data before running tests
 beforeAll(() => {
@@ -11,52 +10,52 @@ beforeAll(() => {
 describe('translateScriptText', () => {
   it('returns raw text unchanged for null/empty input', () => {
     const result = translateScriptText(null, 'zh_cn', null)
-    assert.strictEqual(result.text, null)
-    assert.ok(result.missingProcs instanceof Set)
-    assert.ok(result.missingParams instanceof Set)
-    assert.ok(result.missingComments instanceof Set)
+    expect(result.text).toBe(null)
+    expect(result.missingProcs instanceof Set).toBeTruthy()
+    expect(result.missingParams instanceof Set).toBeTruthy()
+    expect(result.missingComments instanceof Set).toBeTruthy()
   })
 
   it('returns raw text unchanged for empty string', () => {
     const result = translateScriptText('', 'zh_cn', null)
-    assert.strictEqual(result.text, '')
+    expect(result.text).toBe('')
   })
 
   it('translates basic blocks to a known language', () => {
     const raw = 'when flag clicked\nmove (10) steps'
     const result = translateScriptText(raw, 'zh_cn', null)
-    assert.ok(result.text, 'Should produce translated text')
-    assert.ok(typeof result.text === 'string')
+    expect(result.text).toBeTruthy()
+    expect(typeof result.text === 'string').toBeTruthy()
     // The text should be different from English (translated to Chinese)
-    assert.notStrictEqual(result.text, raw)
+    expect(result.text).not.toBe(raw)
   })
 
   it('returns original text for unknown language key', () => {
     const raw = 'when flag clicked'
     const result = translateScriptText(raw, 'nonexistent_lang', null)
     // Should return the raw text since language is not found
-    assert.strictEqual(result.text, raw)
+    expect(result.text).toBe(raw)
   })
 
   it('applies variable name maps', () => {
     const raw = 'set [myVar v] to (10)'
     const nameMaps = { vars: { myVar: '我的变量' } }
     const result = translateScriptText(raw, 'zh_cn', nameMaps)
-    assert.ok(result.text.includes('我的变量'))
+    expect(result.text.includes('我的变量')).toBeTruthy()
   })
 
   it('applies list name maps', () => {
     const raw = 'add [thing] to [myList v]'
     const nameMaps = { lists: { myList: '我的列表' } }
     const result = translateScriptText(raw, 'zh_cn', nameMaps)
-    assert.ok(result.text.includes('我的列表'))
+    expect(result.text.includes('我的列表')).toBeTruthy()
   })
 
   it('reports missing procedure translations', () => {
     const raw = 'define custom block (param :: custom-arg)\nsay [hi]'
     const result = translateScriptText(raw, 'zh_cn', null)
     // With no procedure maps, should report the missing proc
-    assert.ok(result.missingProcs.size > 0)
+    expect(result.missingProcs.size > 0).toBeTruthy()
   })
 
   it('applies procedure pattern translation', () => {
@@ -66,8 +65,8 @@ describe('translateScriptText', () => {
       params: { name: '名字' },
     }
     const result = translateScriptText(raw, 'zh_cn', nameMaps)
-    assert.ok(result.text.includes('打招呼'))
-    assert.ok(result.text.includes('名字'))
+    expect(result.text.includes('打招呼')).toBeTruthy()
+    expect(result.text.includes('名字')).toBeTruthy()
   })
 
   it('applies comment translations', () => {
@@ -76,7 +75,7 @@ describe('translateScriptText', () => {
       comments: { 'my comment': '我的注释' },
     }
     const result = translateScriptText(raw, 'zh_cn', nameMaps)
-    assert.ok(result.text.includes('我的注释'))
+    expect(result.text.includes('我的注释')).toBeTruthy()
   })
 })
 
@@ -91,14 +90,14 @@ describe('translateScriptText - multi-parameter reorder', () => {
     }
     const result = translateScriptText(raw, 'zh_cn', nameMaps)
     // 验证翻译后的文本中包含本地化 pattern
-    assert.ok(result.text.includes('的'), 'Should contain localized pattern word "的"')
+    expect(result.text.includes('的')).toBeTruthy()
     // 验证参数名被替换
-    assert.ok(result.text.includes('甲'), 'Param "a" should be translated to "甲"')
-    assert.ok(result.text.includes('乙'), 'Param "b" should be translated to "乙"')
+    expect(result.text.includes('甲')).toBeTruthy()
+    expect(result.text.includes('乙')).toBeTruthy()
     // 验证参数顺序：乙 应在 甲 之前（%2 的 %1）
     const idxB = result.text.indexOf('乙')
     const idxA = result.text.indexOf('甲')
-    assert.ok(idxB < idxA, `"乙" (idx=${idxB}) should appear before "甲" (idx=${idxA}) in: ${result.text}`)
+    expect(idxB < idxA).toBeTruthy()
   })
 
   it('reorders parameters in call block following a define block', () => {
@@ -112,11 +111,11 @@ describe('translateScriptText - multi-parameter reorder', () => {
     // 调用行应该和定义行一样被重排序
     const lines = result.text.split('\n').filter((l) => l.trim())
     const callLine = lines.find((l) => l.includes('10') || l.includes('20'))
-    assert.ok(callLine, `Should have a call line containing 10 or 20 in: ${result.text}`)
+    expect(callLine).toBeTruthy()
     // 验证值的顺序：20 应在 10 之前
     const idx20 = callLine.indexOf('20')
     const idx10 = callLine.indexOf('10')
-    assert.ok(idx20 < idx10, `"20" (idx=${idx20}) should appear before "10" (idx=${idx10}) in call: ${callLine}`)
+    expect(idx20 < idx10).toBeTruthy()
   })
 
   it('handles three parameters with reorder', () => {
@@ -128,15 +127,15 @@ describe('translateScriptText - multi-parameter reorder', () => {
       params: { a: '甲', b: '乙', c: '丙' },
     }
     const result = translateScriptText(raw, 'zh_cn', nameMaps)
-    assert.ok(result.text.includes('甲'), 'Should contain param 甲')
-    assert.ok(result.text.includes('乙'), 'Should contain param 乙')
-    assert.ok(result.text.includes('丙'), 'Should contain param 丙')
+    expect(result.text.includes('甲')).toBeTruthy()
+    expect(result.text.includes('乙')).toBeTruthy()
+    expect(result.text.includes('丙')).toBeTruthy()
     // 验证顺序：丙 在 乙 前，乙 在 甲 前
     const idxC = result.text.indexOf('丙')
     const idxB = result.text.indexOf('乙')
     const idxA = result.text.indexOf('甲')
-    assert.ok(idxC < idxB, `"丙" should appear before "乙" in: ${result.text}`)
-    assert.ok(idxB < idxA, `"乙" should appear before "甲" in: ${result.text}`)
+    expect(idxC < idxB).toBeTruthy()
+    expect(idxB < idxA).toBeTruthy()
   })
 
   it('keeps parameter order when pattern does not reorder', () => {
@@ -147,12 +146,12 @@ describe('translateScriptText - multi-parameter reorder', () => {
       params: { a: '值', b: '列表' },
     }
     const result = translateScriptText(raw, 'zh_cn', nameMaps)
-    assert.ok(result.text.includes('值'), 'Should contain param 值')
-    assert.ok(result.text.includes('列表'), 'Should contain param 列表')
+    expect(result.text.includes('值')).toBeTruthy()
+    expect(result.text.includes('列表')).toBeTruthy()
     // 验证顺序保持不变
     const idxVal = result.text.indexOf('值')
     const idxList = result.text.indexOf('列表')
-    assert.ok(idxVal < idxList, `"值" should appear before "列表" in: ${result.text}`)
+    expect(idxVal < idxList).toBeTruthy()
   })
 
   it('define and call blocks both get reordered consistently', () => {
@@ -167,6 +166,6 @@ describe('translateScriptText - multi-parameter reorder', () => {
     const lines = result.text.split('\n').filter((l) => l.trim())
     const defineLine = lines.find((l) => l.includes('定义') || l.includes('define'))
     const callLine = lines.find((l) => !l.includes('定义') && !l.includes('define') && l.includes('的'))
-    assert.ok(defineLine || callLine, `Should have localized lines in: ${result.text}`)
+    expect(defineLine || callLine).toBeTruthy()
   })
 })

@@ -1,34 +1,33 @@
-import { describe, it } from 'bun:test'
-import assert from 'bun:assert/strict'
-import { escapeHtml, maybeMinify, generateShareLinks } from '../scripts/lib/html-utils.js'
+import { describe, expect, it } from 'bun:test'
+import { escapeHtml, maybeMinify, generateShareLinks } from '../scripts/lib/html-utils.ts'
 
 describe('escapeHtml', () => {
   it('escapes ampersand', () => {
-    assert.strictEqual(escapeHtml('a & b'), 'a &amp; b')
+    expect(escapeHtml('a & b')).toBe('a &amp; b')
   })
 
   it('escapes less-than', () => {
-    assert.strictEqual(escapeHtml('<div>'), '&lt;div&gt;')
+    expect(escapeHtml('<div>')).toBe('&lt;div&gt;')
   })
 
   it('escapes double quotes', () => {
-    assert.strictEqual(escapeHtml('"hello"'), '&quot;hello&quot;')
+    expect(escapeHtml('"hello"')).toBe('&quot;hello&quot;')
   })
 
   it('handles empty string', () => {
-    assert.strictEqual(escapeHtml(''), '')
+    expect(escapeHtml('')).toBe('')
   })
 
   it('handles undefined', () => {
-    assert.strictEqual(escapeHtml(undefined), '')
+    expect(escapeHtml(undefined)).toBe('')
   })
 
   it('handles string with no special chars', () => {
-    assert.strictEqual(escapeHtml('plain text'), 'plain text')
+    expect(escapeHtml('plain text')).toBe('plain text')
   })
 
   it('escapes multiple special chars', () => {
-    assert.strictEqual(escapeHtml('<a href="x">&'), '&lt;a href=&quot;x&quot;&gt;&amp;')
+    expect(escapeHtml('<a href="x">&')).toBe('&lt;a href=&quot;x&quot;&gt;&amp;')
   })
 })
 
@@ -36,25 +35,25 @@ describe('maybeMinify', () => {
   it('returns input when skip is true', async () => {
     const html = '<div>  <p>  hello  </p>  </div>'
     const result = await maybeMinify(html, true)
-    assert.strictEqual(result, html)
+    expect(result).toBe(html)
   })
 
   it('returns input when html is empty', async () => {
     const result = await maybeMinify('', false)
-    assert.strictEqual(result, '')
+    expect(result).toBe('')
   })
 
   it('returns input when html is null/undefined', async () => {
-    assert.strictEqual(await maybeMinify(null), null)
-    assert.strictEqual(await maybeMinify(undefined), undefined)
+    expect(await maybeMinify(null)).toBe(null)
+    expect(await maybeMinify(undefined)).toBe(undefined)
   })
 
   it('minifies HTML when not skipped', async () => {
     const html = '<div>   <p>   hello   </p>   </div>'
     const result = await maybeMinify(html, false)
     // Whitespace should be collapsed
-    assert.ok(result.length < html.length)
-    assert.ok(result.includes('hello'))
+    expect(result.length < html.length).toBeTruthy()
+    expect(result.includes('hello')).toBeTruthy()
   })
 })
 
@@ -65,13 +64,13 @@ describe('generateShareLinks', () => {
       title: 'Test Module',
       description: 'A test description',
     })
-    assert.ok(links.url)
-    assert.ok(links.twitter)
-    assert.ok(links.facebook)
-    assert.ok(links.reddit)
-    assert.ok(links.weibo)
-    assert.ok(links.email)
-    assert.ok(links.coverImage)
+    expect(links.url).toBeTruthy()
+    expect(links.twitter).toBeTruthy()
+    expect(links.facebook).toBeTruthy()
+    expect(links.reddit).toBeTruthy()
+    expect(links.weibo).toBeTruthy()
+    expect(links.email).toBeTruthy()
+    expect(links.coverImage).toBeTruthy()
   })
 
   it('generates correct URL for Twitter', () => {
@@ -79,8 +78,8 @@ describe('generateShareLinks', () => {
       url: 'https://example.com/',
       title: 'Title',
     })
-    assert.ok(links.twitter.startsWith('https://x.com/intent/tweet?'))
-    assert.ok(links.twitter.includes(encodeURIComponent('https://example.com/')))
+    expect(links.twitter.startsWith('https://x.com/intent/tweet?')).toBeTruthy()
+    expect(links.twitter.includes(encodeURIComponent('https://example.com/'))).toBeTruthy()
   })
 
   it('generates correct cover image URL', () => {
@@ -88,7 +87,7 @@ describe('generateShareLinks', () => {
       url: 'https://example.com/module/',
       title: 'T',
     })
-    assert.strictEqual(links.coverImage, 'https://example.com/module/cover.png')
+    expect(links.coverImage).toBe('https://example.com/module/cover.png')
   })
 
   it('generates email link with subject', () => {
@@ -97,6 +96,6 @@ describe('generateShareLinks', () => {
       title: 'My Module',
       description: 'Desc',
     })
-    assert.ok(links.email.startsWith('mailto:'))
+    expect(links.email.startsWith('mailto:')).toBeTruthy()
   })
 })

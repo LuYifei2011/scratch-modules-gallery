@@ -1,70 +1,69 @@
-import { describe, it } from 'bun:test'
-import assert from 'bun:assert/strict'
-import { markdownToHtml } from '../scripts/lib/markdown.js'
+import { describe, expect, it } from 'bun:test'
+import { markdownToHtml } from '../scripts/lib/markdown.ts'
 
 describe('markdownToHtml', () => {
   it('converts basic markdown to HTML', () => {
     const html = markdownToHtml('# Hello')
-    assert.ok(html.includes('<h1'))
-    assert.ok(html.includes('Hello'))
+    expect(html.includes('<h1')).toBeTruthy()
+    expect(html.includes('Hello')).toBeTruthy()
   })
 
   it('converts paragraphs', () => {
     const html = markdownToHtml('This is a paragraph.')
-    assert.ok(html.includes('<p>'))
-    assert.ok(html.includes('This is a paragraph.'))
+    expect(html.includes('<p>')).toBeTruthy()
+    expect(html.includes('This is a paragraph.')).toBeTruthy()
   })
 
   it('converts bold text', () => {
     const html = markdownToHtml('**bold**')
-    assert.ok(html.includes('<strong>bold</strong>'))
+    expect(html.includes('<strong>bold</strong>')).toBeTruthy()
   })
 
   it('converts italic text', () => {
     const html = markdownToHtml('*italic*')
-    assert.ok(html.includes('<em>italic</em>'))
+    expect(html.includes('<em>italic</em>')).toBeTruthy()
   })
 
   it('converts links', () => {
     const html = markdownToHtml('[Example](https://example.com)')
-    assert.ok(html.includes('<a'))
-    assert.ok(html.includes('https://example.com'))
+    expect(html.includes('<a')).toBeTruthy()
+    expect(html.includes('https://example.com')).toBeTruthy()
   })
 
   it('converts unordered lists', () => {
     const html = markdownToHtml('- item 1\n- item 2')
-    assert.ok(html.includes('<li>'))
-    assert.ok(html.includes('item 1'))
+    expect(html.includes('<li>')).toBeTruthy()
+    expect(html.includes('item 1')).toBeTruthy()
   })
 
   it('handles scratchblocks block extension', () => {
     const html = markdownToHtml('<scratchblocks>\nwhen green flag clicked\n</scratchblocks>')
-    assert.ok(html.includes('class="scratchblocks"'))
-    assert.ok(html.includes('when green flag clicked'))
+    expect(html.includes('class="scratchblocks"')).toBeTruthy()
+    expect(html.includes('when green flag clicked')).toBeTruthy()
   })
 
   it('handles scratchblocks inline extension', () => {
     const html = markdownToHtml('Click <sb>show</sb> block.')
-    assert.ok(html.includes('<code class="scratchblocks">show</code>'))
+    expect(html.includes('<code class="scratchblocks">show</code>')).toBeTruthy()
   })
 
   it('handles go-to-block extension', () => {
     const html = markdownToHtml('<go-to-block main:1.2>click here</go-to-block>')
-    assert.ok(html.includes('class="go-to-block"'))
-    assert.ok(html.includes('data-script-id="main"'))
-    assert.ok(html.includes('data-block-path="1.2"'))
-    assert.ok(html.includes('click here'))
+    expect(html.includes('class="go-to-block"')).toBeTruthy()
+    expect(html.includes('data-script-id="main"')).toBeTruthy()
+    expect(html.includes('data-block-path="1.2"')).toBeTruthy()
+    expect(html.includes('click here')).toBeTruthy()
   })
 
   it('converts code blocks', () => {
     const html = markdownToHtml('```javascript\nconsole.log("hi")\n```')
-    assert.ok(html.includes('<code'))
-    assert.ok(html.includes('console.log'))
+    expect(html.includes('<code')).toBeTruthy()
+    expect(html.includes('console.log')).toBeTruthy()
   })
 
   it('converts tables', () => {
     const md = '| A | B |\n| --- | --- |\n| 1 | 2 |'
     const html = markdownToHtml(md)
-    assert.ok(html.includes('<table'))
+    expect(html.includes('<table')).toBeTruthy()
   })
 })

@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Translation completeness checker.
  *
@@ -6,7 +7,7 @@
  * identical to what `bun run build` reports in dev mode.
  *
  * Usage:
- *   bun scripts/check-translations.js [--format=json|markdown]
+ *   bun scripts/check-translations.ts [--format=json|markdown]
  *
  * Exit codes:
  *   0 - all translations are complete
@@ -19,12 +20,12 @@ import fs from 'fs-extra'
 import path from 'path'
 import fg from 'fast-glob'
 import { pathToFileURL } from 'url'
-import { loadScratchblocksLanguages } from './lib/scratch-utils.js'
-import { translateModulesForLocale } from './lib/i18n-engine.js'
-import { loadModules } from './lib/module-loader.js'
-import { translateScriptText } from './lib/script-translator.js'
-import { loadI18n, loadGlobalTags, loadModuleDefaults } from './lib/i18n-loader.js'
-import { resolveImports } from './lib/import-resolver.js'
+import { loadScratchblocksLanguages } from './lib/scratch-utils.ts'
+import { translateModulesForLocale } from './lib/i18n-engine.ts'
+import { loadModules } from './lib/module-loader.ts'
+import { translateScriptText } from './lib/script-translator.ts'
+import { loadI18n, loadGlobalTags, loadModuleDefaults } from './lib/i18n-loader.ts'
+import { resolveImports } from './lib/import-resolver.ts'
 
 const root = path.resolve('.')
 const SOURCE_LOCALE = 'en'
@@ -171,7 +172,7 @@ async function checkTags(locales) {
  * - comments (from actual script content)
  */
 async function checkModulesViaBuild(locales) {
-  const configModule = await import(pathToFileURL(path.join(root, 'site.config.js')).href)
+  const configModule = await import(pathToFileURL(path.join(root, 'site.config.ts')).href)
   const config = configModule.default || configModule
   const [dict, globalTags, moduleDefaults] = await Promise.all([loadI18n(), loadGlobalTags(), loadModuleDefaults()])
   const { modules } = await loadModules({ root, config, isDev: true })

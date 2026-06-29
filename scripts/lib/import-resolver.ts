@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * 解析脚本中的 !import 指令并拆分为普通块与导入块。
  * 语法: !import moduleId[:scriptIndex]  (scriptIndex 为 1 基)

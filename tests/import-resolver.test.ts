@@ -1,6 +1,5 @@
-import { describe, it } from 'bun:test'
-import assert from 'bun:assert/strict'
-import { resolveImports } from '../scripts/lib/import-resolver.js'
+import { describe, expect, it } from 'bun:test'
+import { resolveImports } from '../scripts/lib/import-resolver.ts'
 
 describe('resolveImports', () => {
   it('does nothing when there are no imports', () => {
@@ -12,8 +11,8 @@ describe('resolveImports', () => {
       },
     ]
     resolveImports(modules)
-    assert.strictEqual(modules[0].scripts.length, 1)
-    assert.ok(modules[0].scripts[0].content.includes('move (10) steps'))
+    expect(modules[0].scripts.length).toBe(1)
+    expect(modules[0].scripts[0].content.includes('move (10) steps')).toBeTruthy()
   })
 
   it('resolves a leading import', () => {
@@ -33,12 +32,12 @@ describe('resolveImports', () => {
     const consumer = modules.find((m) => m.id === 'consumer')
     const mainScript = consumer.scripts[0]
     // The main script should have leadingImports
-    assert.ok(mainScript.leadingImports)
-    assert.strictEqual(mainScript.leadingImports.length, 1)
-    assert.strictEqual(mainScript.leadingImports[0].fromId, 'lib')
-    assert.ok(mainScript.leadingImports[0].content.includes('define helper'))
+    expect(mainScript.leadingImports).toBeTruthy()
+    expect(mainScript.leadingImports.length).toBe(1)
+    expect(mainScript.leadingImports[0].fromId).toBe('lib')
+    expect(mainScript.leadingImports[0].content.includes('define helper')).toBeTruthy()
     // Main body content should be the remaining code
-    assert.ok(mainScript.content.includes('when flag clicked'))
+    expect(mainScript.content.includes('when flag clicked')).toBeTruthy()
   })
 
   it('resolves import with specific script index', () => {
@@ -59,7 +58,7 @@ describe('resolveImports', () => {
     ]
     resolveImports(modules)
     const user = modules.find((m) => m.id === 'user')
-    assert.ok(user.scripts[0].leadingImports[0].content.includes('say [second]'))
+    expect(user.scripts[0].leadingImports[0].content.includes('say [second]')).toBeTruthy()
   })
 
   it('handles missing module reference', () => {
@@ -72,7 +71,7 @@ describe('resolveImports', () => {
     ]
     resolveImports(modules)
     const mod = modules[0]
-    assert.ok(mod.scripts[0].leadingImports[0].content.includes('导入失败'))
+    expect(mod.scripts[0].leadingImports[0].content.includes('导入失败')).toBeTruthy()
   })
 
   it('handles out-of-bounds script index', () => {
@@ -90,7 +89,7 @@ describe('resolveImports', () => {
     ]
     resolveImports(modules)
     const mod = modules.find((m) => m.id === 'bad-idx')
-    assert.ok(mod.scripts[0].leadingImports[0].content.includes('导入失败'))
+    expect(mod.scripts[0].leadingImports[0].content.includes('导入失败')).toBeTruthy()
   })
 
   it('handles inline imports (not leading)', () => {
@@ -115,11 +114,11 @@ describe('resolveImports', () => {
     resolveImports(modules)
     const mod = modules.find((m) => m.id === 'mixed')
     // Should produce multiple script segments
-    assert.ok(mod.scripts.length >= 2)
+    expect(mod.scripts.length >= 2).toBeTruthy()
     // One of them should be an imported segment
     const imported = mod.scripts.find((s) => s.imported)
-    assert.ok(imported)
-    assert.ok(imported.content.includes('define foo'))
+    expect(imported).toBeTruthy()
+    expect(imported.content.includes('define foo')).toBeTruthy()
   })
 
   it('detects circular references', () => {
@@ -140,7 +139,7 @@ describe('resolveImports', () => {
     // The expanded content of a's import of b should contain a circular ref comment
     const modA = modules.find((m) => m.id === 'a')
     const importedContent = modA.scripts[0].leadingImports[0].content
-    assert.ok(importedContent.includes('循环引用') || importedContent.includes('when flag clicked'))
+    expect(importedContent.includes('循环引用') || importedContent.includes('when flag clicked')).toBeTruthy()
   })
 
   it('handles module with legacy script field (no scripts array)', () => {
@@ -158,6 +157,6 @@ describe('resolveImports', () => {
     ]
     resolveImports(modules)
     const user = modules.find((m) => m.id === 'user')
-    assert.ok(user.scripts[0].leadingImports[0].content.includes('say [hello]'))
+    expect(user.scripts[0].leadingImports[0].content.includes('say [hello]')).toBeTruthy()
   })
 })

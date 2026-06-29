@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * 多语言翻译引擎：将模块数据翻译为指定语言的本地化副本。
  *
@@ -11,8 +12,8 @@
  * @module i18n-engine
  */
 
-import { markdownToHtml } from './markdown.js'
-import log from './logger.js'
+import { markdownToHtml } from './markdown.ts'
+import log from './logger.ts'
 
 // ── 内部辅助函数 ──────────────────────────────────────────
 

@@ -1,11 +1,27 @@
 import { minify } from 'html-minifier-next'
-import log from './logger.js'
+import log from './logger.ts'
 
-export function escapeHtml(str = '') {
+export interface ShareLinkOptions {
+  url: string
+  title: string
+  description?: string
+}
+
+export interface ShareLinks {
+  url: string
+  coverImage: string
+  twitter: string
+  facebook: string
+  reddit: string
+  weibo: string
+  email: string
+}
+
+export function escapeHtml(str = ''): string {
   return str.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c])
 }
 
-export async function maybeMinify(html, skip = false) {
+export async function maybeMinify(html: string | null | undefined, skip = false): Promise<string | null | undefined> {
   if (!html || skip) return html
   try {
     return minify(html, {
@@ -33,7 +49,7 @@ export async function maybeMinify(html, skip = false) {
  * @param {string} options.description - 页面描述
  * @returns {Object} 包含各平台分享链接的对象
  */
-export function generateShareLinks({ url, title, description = '' }) {
+export function generateShareLinks({ url, title, description = '' }: ShareLinkOptions): ShareLinks {
   const safeUrl = encodeURIComponent(url)
   const shareText = title + (description ? '\n' + description : '')
   const safeText = encodeURIComponent(shareText + '\n#Scratch #ScratchModulesGallery')

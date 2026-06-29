@@ -7,20 +7,35 @@
 import fs from 'fs-extra'
 import path from 'path'
 import fg from 'fast-glob'
-import log from './logger.js'
+import log from './logger.ts'
+import type { LocaleCode, ModuleTranslation, SiteConfig } from './types.ts'
 
 const root = path.resolve('.')
+
+export interface LocaleDictionary {
+  meta?: {
+    siteName?: string
+    description?: string
+    keywords?: string[]
+    languageTag?: string
+  }
+  [key: string]: unknown
+}
+
+export type I18nDictionary = Record<LocaleCode, LocaleDictionary>
+export type ModuleDefaultsDictionary = Record<LocaleCode, ModuleTranslation>
+export type GlobalTagsDictionary = Record<string, Record<LocaleCode, string>>
 
 /**
  * 加载 i18n 词典（自动扫描 src/i18n/*.json，排除 tags.json 和 module-defaults.json）
  */
-export async function loadI18n() {
+export async function loadI18n(): Promise<I18nDictionary> {
   const i18nDir = path.join(root, 'src', 'i18n')
   const EXCLUDED = new Set(['tags.json', 'module-defaults.json'])
   const files = (await fg(['*.json'], { cwd: i18nDir, onlyFiles: true }))
     .filter((f) => !EXCLUDED.has(f)) // 排除全局 tags 字典与模块默认翻译，只加载语言文件
     .sort((a, b) => a.localeCompare(b, 'en', { numeric: true }))
-  const dict = {}
+  const dict: I18nDictionary = {}
   for (const f of files) {
     const loc = path.basename(f, '.json')
     try {
@@ -38,7 +53,7 @@ export async function loadI18n() {
  * 结构：{ [locale]: { scriptTitles?, variables?, ... } }
  * 在 translateModulesForLocale 中与模块级翻译深合并，模块的翻译优先级更高。
  */
-export async function loadModuleDefaults() {
+export async function loadModuleDefaults(): Promise<ModuleDefaultsDictionary> {
   const defaultsFile = path.join(root, 'src', 'i18n', 'module-defaults.json')
   try {
     if (await fs.pathExists(defaultsFile)) {
@@ -53,7 +68,7 @@ export async function loadModuleDefaults() {
 /**
  * 加载全局 tags 翻译字典（src/i18n/tags.json）
  */
-export async function loadGlobalTags() {
+export async function loadGlobalTags(): Promise<GlobalTagsDictionary> {
   const tagsFile = path.join(root, 'src', 'i18n', 'tags.json')
   try {
     if (await fs.pathExists(tagsFile)) {
@@ -68,7 +83,7 @@ export async function loadGlobalTags() {
 /**
  * 根据语言代码从 i18n 字典中提取配置（siteName, description 等）
  */
-export function pickConfigForLocale(baseConfig, locale, dict) {
+export function pickConfigForLocale(baseConfig: SiteConfig, locale: LocaleCode, dict: I18nDictionary): SiteConfig {
   const meta = dict[locale]?.meta || {}
   return {
     ...baseConfig,

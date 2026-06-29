@@ -1,6 +1,5 @@
-import { describe, it } from 'bun:test'
-import assert from 'bun:assert/strict'
-import { translateModulesForLocale } from '../scripts/lib/i18n-engine.js'
+import { describe, expect, it } from 'bun:test'
+import { translateModulesForLocale } from '../scripts/lib/i18n-engine.ts'
 
 describe('translateModulesForLocale', () => {
   const baseModule = {
@@ -37,29 +36,29 @@ describe('translateModulesForLocale', () => {
 
   it('returns localized name and description for zh-cn', async () => {
     const result = await translateModulesForLocale([baseModule], dict, 'zh-cn')
-    assert.strictEqual(result.length, 1)
-    assert.strictEqual(result[0].name, '测试模块')
-    assert.strictEqual(result[0].description, '一个测试模块')
+    expect(result.length).toBe(1)
+    expect(result[0].name).toBe('测试模块')
+    expect(result[0].description).toBe('一个测试模块')
   })
 
   it('preserves original values for en locale', async () => {
     const result = await translateModulesForLocale([baseModule], dict, 'en')
-    assert.strictEqual(result[0].name, 'Test Module')
-    assert.strictEqual(result[0].description, 'A test module')
+    expect(result[0].name).toBe('Test Module')
+    expect(result[0].description).toBe('A test module')
   })
 
   it('localizes variable displayName', async () => {
     const result = await translateModulesForLocale([baseModule], dict, 'zh-cn')
     const vars = result[0].variables
     const myVar = vars.find((v) => v.name === 'myVar')
-    assert.strictEqual(myVar.displayName, '我的变量')
+    expect(myVar.displayName).toBe('我的变量')
     const myList = vars.find((v) => v.name === 'myList')
-    assert.strictEqual(myList.displayName, '我的列表')
+    expect(myList.displayName).toBe('我的列表')
   })
 
   it('localizes script titles', async () => {
     const result = await translateModulesForLocale([baseModule], dict, 'zh-cn')
-    assert.strictEqual(result[0].scripts[0].title, '主脚本')
+    expect(result[0].scripts[0].title).toBe('主脚本')
   })
 
   it('applies global tags translations', async () => {
@@ -67,13 +66,13 @@ describe('translateModulesForLocale', () => {
       performance: { 'zh-cn': '性能', 'zh-tw': '效能' },
     }
     const result = await translateModulesForLocale([baseModule], dict, 'zh-cn', globalTags)
-    assert.ok(result[0].tags.includes('性能'))
+    expect(result[0].tags.includes('性能')).toBeTruthy()
   })
 
   it('selects correct notes by locale priority', async () => {
     const result = await translateModulesForLocale([baseModule], dict, 'zh-cn')
     // zh-cn notes should be selected, rendered as HTML
-    assert.ok(result[0].notesHtml.includes('中文备注'))
+    expect(result[0].notesHtml.includes('中文备注')).toBeTruthy()
   })
 
   it('falls back to en notes when locale not available', async () => {
@@ -83,19 +82,19 @@ describe('translateModulesForLocale', () => {
       translations: {},
     }
     const result = await translateModulesForLocale([modNoZh], dict, 'zh-cn')
-    assert.ok(result[0].notesHtml.includes('English only'))
+    expect(result[0].notesHtml.includes('English only')).toBeTruthy()
   })
 
   it('produces empty notesHtml when no notes exist', async () => {
     const modNoNotes = { ...baseModule, notesMap: {}, translations: {} }
     const result = await translateModulesForLocale([modNoNotes], dict, 'en')
-    assert.strictEqual(result[0].notesHtml, '')
+    expect(result[0].notesHtml).toBe('')
   })
 
   it('computes keywordsFinal (merged keywords + tags, deduplicated)', async () => {
     const result = await translateModulesForLocale([baseModule], dict, 'en')
-    assert.ok(Array.isArray(result[0].keywordsFinal))
-    assert.ok(result[0].keywordsFinalStr.length > 0)
+    expect(Array.isArray(result[0].keywordsFinal)).toBeTruthy()
+    expect(result[0].keywordsFinalStr.length > 0).toBeTruthy()
   })
 
   it('handles module with no translations', async () => {
@@ -111,8 +110,8 @@ describe('translateModulesForLocale', () => {
       translations: {},
     }
     const result = await translateModulesForLocale([simpleModule], dict, 'zh-cn')
-    assert.strictEqual(result.length, 1)
-    assert.strictEqual(result[0].name, 'Simple') // falls back to original
+    expect(result.length).toBe(1)
+    expect(result[0].name).toBe('Simple') // falls back to original
   })
 
   it('merges moduleDefaults with module translations', async () => {
@@ -133,7 +132,7 @@ describe('translateModulesForLocale', () => {
     }
     const result = await translateModulesForLocale([modNoTitles], dict, 'zh-cn', {}, { moduleDefaults })
     // Should pick up scriptTitles from moduleDefaults
-    assert.strictEqual(result[0].scripts[0].title, '默认主脚本')
+    expect(result[0].scripts[0].title).toBe('默认主脚本')
   })
 
   it('module translations override moduleDefaults', async () => {
@@ -144,7 +143,7 @@ describe('translateModulesForLocale', () => {
     }
     const result = await translateModulesForLocale([baseModule], dict, 'zh-cn', {}, { moduleDefaults })
     // Module's own 'main' title should override the default
-    assert.strictEqual(result[0].scripts[0].title, '主脚本')
+    expect(result[0].scripts[0].title).toBe('主脚本')
   })
 
   it('calls translateScriptText callback with correct arguments', async () => {
@@ -159,11 +158,11 @@ describe('translateModulesForLocale', () => {
       }
     }
     await translateModulesForLocale([baseModule], dict, 'zh-cn', {}, {}, { translateScriptText: mockTranslate })
-    assert.ok(callArgs.length > 0, 'translateScriptText should be called at least once')
+    expect(callArgs.length > 0).toBeTruthy()
     // Verify the language key passed matches the expected value (zh-CN → zh_cn)
-    assert.strictEqual(callArgs[0].langKey, 'zh_cn')
+    expect(callArgs[0].langKey).toBe('zh_cn')
     // Verify raw script content is passed
-    assert.ok(typeof callArgs[0].raw === 'string')
+    expect(typeof callArgs[0].raw === 'string').toBeTruthy()
   })
 
   it('handles zh-tw fallback to zh-cn', async () => {
@@ -173,7 +172,7 @@ describe('translateModulesForLocale', () => {
     }
     // No zh-tw translation; should fall back to zh-cn
     const result = await translateModulesForLocale([baseModule], dictWithTw, 'zh-tw')
-    assert.strictEqual(result[0].name, '测试模块') // Falls back to zh-cn
+    expect(result[0].name).toBe('测试模块') // Falls back to zh-cn
   })
 
   it('fills in name from translation when meta name is empty', async () => {
@@ -188,7 +187,7 @@ describe('translateModulesForLocale', () => {
       },
     }
     const result = await translateModulesForLocale([mod], dict, 'zh-cn')
-    assert.strictEqual(result[0].name, '翻译补全的名称')
+    expect(result[0].name).toBe('翻译补全的名称')
   })
 
   it('fills in description from translation when meta description is empty', async () => {
@@ -203,7 +202,7 @@ describe('translateModulesForLocale', () => {
       },
     }
     const result = await translateModulesForLocale([mod], dict, 'zh-cn')
-    assert.strictEqual(result[0].description, '翻译补全的描述')
+    expect(result[0].description).toBe('翻译补全的描述')
   })
 
   it('fills in variable displayName from translation even when meta has no name value', async () => {
@@ -218,7 +217,7 @@ describe('translateModulesForLocale', () => {
     }
     const result = await translateModulesForLocale([mod], dict, 'zh-cn')
     const v = result[0].variables.find((x) => x.name === 'emptyDisplay')
-    assert.strictEqual(v.displayName, '翻译变量名')
+    expect(v.displayName).toBe('翻译变量名')
   })
 
   it('fills in script title from translation when meta has no scriptTitles', async () => {
@@ -232,7 +231,7 @@ describe('translateModulesForLocale', () => {
       },
     }
     const result = await translateModulesForLocale([mod], dict, 'zh-cn')
-    assert.strictEqual(result[0].scripts[0].title, '翻译标题')
+    expect(result[0].scripts[0].title).toBe('翻译标题')
   })
 
   it('uses en translation to fill missing meta fields when no locale translation', async () => {
@@ -250,8 +249,8 @@ describe('translateModulesForLocale', () => {
     }
     const result = await translateModulesForLocale([mod], dict, 'zh-cn')
     // Should fall back to en translation
-    assert.strictEqual(result[0].name, 'English Fallback Name')
-    assert.strictEqual(result[0].description, 'English Fallback Desc')
+    expect(result[0].name).toBe('English Fallback Name')
+    expect(result[0].description).toBe('English Fallback Desc')
   })
 
   it('localizes fromName for inline imported scripts (top-level s.imported)', async () => {
@@ -298,7 +297,7 @@ describe('translateModulesForLocale', () => {
     const consumer = result.find((m) => m.id === 'consumer')
     const importedScript = consumer.scripts.find((s) => s.imported)
     // fromName should be localized using source module's zh-cn translation
-    assert.strictEqual(importedScript.fromName, '库模块')
+    expect(importedScript.fromName).toBe('库模块')
   })
 
   it('applies moduleDefaults when translating imported block content', async () => {
@@ -365,8 +364,8 @@ describe('translateModulesForLocale', () => {
     )
     // The leading import translation call should have the moduleDefaults variable map applied
     const importCall = capturedCalls.find((c) => c.raw.includes('result'))
-    assert.ok(importCall, 'translateScriptText should be called for the imported content')
-    assert.deepStrictEqual(importCall.vars, { result: '结果' })
+    expect(importCall).toBeTruthy()
+    expect(importCall.vars).toEqual({ result: '结果' })
   })
 
   it('applies moduleDefaults scriptTitles as fromTitle for imported scripts', async () => {
@@ -417,7 +416,7 @@ describe('translateModulesForLocale', () => {
     const consumer = result.find((m) => m.id === 'consumer')
     const importedScript = consumer.scripts.find((s) => s.imported)
     // fromTitle should be resolved from moduleDefaults when module has no own scriptTitle translation
-    assert.strictEqual(importedScript.fromTitle, '主脚本')
+    expect(importedScript.fromTitle).toBe('主脚本')
   })
 
   it('translates scratchblocks in notes markdown when notes come from a fallback locale', async () => {
@@ -450,11 +449,8 @@ describe('translateModulesForLocale', () => {
     )
     // scratchblocks block and inline sb should have been translated (fallback from en to zh-cn)
     const html = result[0].notesHtml
-    assert.ok(
-      html.includes('[translated:zh_cn]'),
-      'notes scratchblocks block should be translated when using fallback notes'
-    )
-    assert.ok(html.includes('when green flag clicked'), 'original content should be in translated output')
+    expect(html.includes('[translated:zh_cn]')).toBeTruthy()
+    expect(html.includes('when green flag clicked')).toBeTruthy()
   })
 
   it('does not translate scratchblocks in notes when notes are already in target locale', async () => {
@@ -485,11 +481,8 @@ describe('translateModulesForLocale', () => {
     )
     const html = result[0].notesHtml
     // zh-cn notes should be used as-is (no re-translation)
-    assert.ok(
-      !html.includes('[translated]'),
-      'notes scratchblocks should NOT be re-translated when notes are already in target locale'
-    )
-    assert.ok(html.includes('当绿旗被点击'), 'zh-cn notes content should be preserved')
+    expect(!html.includes('[translated]')).toBeTruthy()
+    expect(html.includes('当绿旗被点击')).toBeTruthy()
   })
 
   it('does not translate scratchblocks in notes for English locale', async () => {
@@ -517,7 +510,7 @@ describe('translateModulesForLocale', () => {
     )
     const html = result[0].notesHtml
     // English locale should NOT translate notes scratchblocks
-    assert.ok(!html.includes('[translated]'), 'notes scratchblocks should NOT be translated for English locale')
-    assert.ok(html.includes('when green flag clicked'))
+    expect(!html.includes('[translated]')).toBeTruthy()
+    expect(html.includes('when green flag clicked')).toBeTruthy()
   })
 })

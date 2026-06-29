@@ -1,16 +1,15 @@
-import { describe, it } from 'bun:test'
-import assert from 'bun:assert/strict'
-import { parseContributors, buildModuleRecord } from '../scripts/lib/schema.js'
+import { describe, expect, it } from 'bun:test'
+import { parseContributors, buildModuleRecord } from '../scripts/lib/schema.ts'
 
 describe('parseContributors', () => {
   it('returns empty array for null/undefined', () => {
-    assert.deepStrictEqual(parseContributors(null), [])
-    assert.deepStrictEqual(parseContributors(undefined), [])
+    expect(parseContributors(null)).toEqual([])
+    expect(parseContributors(undefined)).toEqual([])
   })
 
   it('parses comma-separated string with gh/ prefix', () => {
     const result = parseContributors('gh/alice, gh/bob')
-    assert.deepStrictEqual(result, [
+    expect(result).toEqual([
       { name: 'alice', url: 'https://github.com/alice' },
       { name: 'bob', url: 'https://github.com/bob' },
     ])
@@ -18,42 +17,42 @@ describe('parseContributors', () => {
 
   it('parses sc/ prefix (Scratch user)', () => {
     const result = parseContributors('sc/scratcher')
-    assert.deepStrictEqual(result, [{ name: 'scratcher', url: 'https://scratch.mit.edu/users/scratcher' }])
+    expect(result).toEqual([{ name: 'scratcher', url: 'https://scratch.mit.edu/users/scratcher' }])
   })
 
   it('parses plain name (no prefix)', () => {
     const result = parseContributors('Alice')
-    assert.deepStrictEqual(result, [{ name: 'Alice' }])
+    expect(result).toEqual([{ name: 'Alice' }])
   })
 
   it('parses mixed string', () => {
     const result = parseContributors('gh/dev, sc/user, Plain Name')
-    assert.strictEqual(result.length, 3)
-    assert.strictEqual(result[0].url, 'https://github.com/dev')
-    assert.strictEqual(result[1].url, 'https://scratch.mit.edu/users/user')
-    assert.strictEqual(result[2].name, 'Plain Name')
-    assert.strictEqual(result[2].url, undefined)
+    expect(result.length).toBe(3)
+    expect(result[0].url).toBe('https://github.com/dev')
+    expect(result[1].url).toBe('https://scratch.mit.edu/users/user')
+    expect(result[2].name).toBe('Plain Name')
+    expect(result[2].url).toBe(undefined)
   })
 
   it('parses array of strings', () => {
     const result = parseContributors(['gh/a', 'sc/b'])
-    assert.strictEqual(result.length, 2)
-    assert.strictEqual(result[0].url, 'https://github.com/a')
+    expect(result.length).toBe(2)
+    expect(result[0].url).toBe('https://github.com/a')
   })
 
   it('parses array of objects', () => {
     const result = parseContributors([{ name: 'Test', url: 'https://example.com' }])
-    assert.deepStrictEqual(result, [{ name: 'Test', url: 'https://example.com' }])
+    expect(result).toEqual([{ name: 'Test', url: 'https://example.com' }])
   })
 
   it('filters out empty entries', () => {
     const result = parseContributors('gh/a, , gh/b')
-    assert.strictEqual(result.length, 2)
+    expect(result.length).toBe(2)
   })
 
   it('returns empty array for non-string/non-array', () => {
-    assert.deepStrictEqual(parseContributors(42), [])
-    assert.deepStrictEqual(parseContributors({}), [])
+    expect(parseContributors(42)).toEqual([])
+    expect(parseContributors({})).toEqual([])
   })
 })
 
@@ -72,24 +71,24 @@ describe('buildModuleRecord', () => {
       translations: {},
     }
     const { record, errors } = buildModuleRecord(meta, extra)
-    assert.strictEqual(errors.length, 0)
-    assert.strictEqual(record.id, 'test-mod')
-    assert.strictEqual(record.slug, 'test-mod')
-    assert.strictEqual(record.name, 'Test Module')
-    assert.strictEqual(record.description, 'A test module.')
-    assert.deepStrictEqual(record.tags, ['math'])
-    assert.strictEqual(record.scripts.length, 1)
-    assert.strictEqual(record.hasDemo, false)
+    expect(errors.length).toBe(0)
+    expect(record.id).toBe('test-mod')
+    expect(record.slug).toBe('test-mod')
+    expect(record.name).toBe('Test Module')
+    expect(record.description).toBe('A test module.')
+    expect(record.tags).toEqual(['math'])
+    expect(record.scripts.length).toBe(1)
+    expect(record.hasDemo).toBe(false)
   })
 
   it('reports errors for missing required fields', () => {
     const meta = {}
     const extra = { scripts: [], notesMap: {} }
     const { errors } = buildModuleRecord(meta, extra)
-    assert.ok(errors.includes('missing id'))
-    assert.ok(errors.includes('missing name'))
-    assert.ok(errors.includes('missing description'))
-    assert.ok(errors.some((e) => e.includes('tags')))
+    expect(errors.includes('missing id')).toBeTruthy()
+    expect(errors.includes('missing name')).toBeTruthy()
+    expect(errors.includes('missing description')).toBeTruthy()
+    expect(errors.some((e) => e.includes('tags'))).toBeTruthy()
   })
 
   it('handles i18n map for name field', () => {
@@ -102,7 +101,7 @@ describe('buildModuleRecord', () => {
     const extra = { scripts: [], notesMap: {} }
     const { record } = buildModuleRecord(meta, extra)
     // pickDefaultFromMap picks 'en' first
-    assert.strictEqual(record.name, 'English Name')
+    expect(record.name).toBe('English Name')
   })
 
   it('handles contributors in meta', () => {
@@ -115,8 +114,8 @@ describe('buildModuleRecord', () => {
     }
     const extra = { scripts: [], notesMap: {} }
     const { record } = buildModuleRecord(meta, extra)
-    assert.strictEqual(record.contributors.length, 1)
-    assert.strictEqual(record.contributors[0].name, 'dev')
+    expect(record.contributors.length).toBe(1)
+    expect(record.contributors[0].name).toBe('dev')
   })
 
   it('includes variables and references from meta', () => {
@@ -130,16 +129,16 @@ describe('buildModuleRecord', () => {
     }
     const extra = { scripts: [], notesMap: {} }
     const { record } = buildModuleRecord(meta, extra)
-    assert.strictEqual(record.variables.length, 1)
-    assert.strictEqual(record.references.length, 1)
+    expect(record.variables.length).toBe(1)
+    expect(record.references.length).toBe(1)
   })
 
   it('sets hasDemo to true when demoFile is provided', () => {
     const meta = { id: 'demo', name: 'D', description: 'D', tags: ['x'] }
     const extra = { scripts: [], demoFile: 'modules/demo/demo.sb3', notesMap: {} }
     const { record } = buildModuleRecord(meta, extra)
-    assert.strictEqual(record.hasDemo, true)
-    assert.strictEqual(record.demoFile, 'modules/demo/demo.sb3')
+    expect(record.hasDemo).toBe(true)
+    expect(record.demoFile).toBe('modules/demo/demo.sb3')
   })
 
   it('handles scriptTitles from meta', () => {
@@ -152,6 +151,6 @@ describe('buildModuleRecord', () => {
     }
     const extra = { scripts: [], notesMap: {} }
     const { record } = buildModuleRecord(meta, extra)
-    assert.deepStrictEqual(record.scriptTitles, { main: 'Main Script' })
+    expect(record.scriptTitles).toEqual({ main: 'Main Script' })
   })
 })

@@ -1,15 +1,15 @@
 #!/usr/bin/env bun
 /**
  * 格式化 scratchblocks 脚本
- * 用法: bun scripts/format-scratchblocks.js
+ * 用法: bun scripts/format-scratchblocks.ts
  */
 
 import fs from 'fs-extra'
 import path from 'path'
 import * as scratchblocks from 'scratchblocks-plus/syntax/index.js'
-import { loadScratchblocksLanguages } from './lib/scratch-utils.js'
+import { loadScratchblocksLanguages } from './lib/scratch-utils.ts'
 import fg from 'fast-glob'
-import log from './lib/logger.js'
+import log from './lib/logger.ts'
 
 const root = path.resolve('.')
 

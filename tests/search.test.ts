@@ -1,6 +1,5 @@
-import { describe, it } from 'bun:test'
-import assert from 'bun:assert/strict'
-import { buildSearchIndex } from '../scripts/lib/search.js'
+import { describe, expect, it } from 'bun:test'
+import { buildSearchIndex } from '../scripts/lib/search.ts'
 
 describe('buildSearchIndex', () => {
   it('builds a valid search index from modules', () => {
@@ -26,8 +25,8 @@ describe('buildSearchIndex', () => {
     ]
     const index = buildSearchIndex(modules)
     // Should return a JSON-serializable object (MiniSearch index)
-    assert.ok(index)
-    assert.ok(typeof index === 'object')
+    expect(index).toBeTruthy()
+    expect(typeof index === 'object').toBeTruthy()
   })
 
   it('returns valid JSON-serializable output', () => {
@@ -45,15 +44,15 @@ describe('buildSearchIndex', () => {
     const index = buildSearchIndex(modules)
     // Should be JSON-serializable
     const json = JSON.stringify(index)
-    assert.ok(json.length > 0)
+    expect(json.length > 0).toBeTruthy()
     const parsed = JSON.parse(json)
-    assert.ok(typeof parsed === 'object')
+    expect(typeof parsed === 'object').toBeTruthy()
   })
 
   it('handles empty modules array', () => {
     const index = buildSearchIndex([])
-    assert.ok(index)
-    assert.ok(typeof index === 'object')
+    expect(index).toBeTruthy()
+    expect(typeof index === 'object').toBeTruthy()
   })
 
   it('handles modules with CJK content', () => {
@@ -69,6 +68,6 @@ describe('buildSearchIndex', () => {
       },
     ]
     const index = buildSearchIndex(modules)
-    assert.ok(index)
+    expect(index).toBeTruthy()
   })
 })

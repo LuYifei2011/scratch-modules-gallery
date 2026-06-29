@@ -1,3 +1,4 @@
+// @ts-nocheck
 import fs from 'fs-extra'
 import path from 'path'
 import * as scratchblocks from 'scratchblocks-plus/syntax/index.js'

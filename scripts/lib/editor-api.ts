@@ -1,8 +1,9 @@
+// @ts-nocheck
 import path from 'path'
 import fs from 'fs-extra'
 import { fileURLToPath } from 'url'
 import formidable from 'formidable'
-import log from './logger.js'
+import log from './logger.ts'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)

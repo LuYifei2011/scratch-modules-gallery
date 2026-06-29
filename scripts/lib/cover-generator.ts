@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * 封面图生成器：站点级 + 模块级 OG 社交预览图。
  *
@@ -10,11 +11,11 @@
 import fs from 'fs-extra'
 import path from 'path'
 import { createCanvas, GlobalFonts } from '@napi-rs/canvas'
-import log from './logger.js'
+import log from './logger.ts'
 import { Resvg } from '@resvg/resvg-js'
 import { renderToSVGString } from 'scratchblocks-plus/node-ssr.js'
-import { escapeHtml } from './html-utils.js'
-import { analyzeBlockCategories } from './scratch-utils.js'
+import { escapeHtml } from './html-utils.ts'
+import { analyzeBlockCategories } from './scratch-utils.ts'
 
 const root = path.resolve('.')
 const fontDirPath = path.join(root, 'src', 'fonts')
