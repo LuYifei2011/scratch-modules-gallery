@@ -1,6 +1,7 @@
 {
-  "name": "FPS",
-  "description": "計算FPS。",
+  "name": "幀率計數器",
+  "description": "計算幀率（FPS）。",
+  "seoDescription": "基於Scratch計時器與自定義積木實現FPS計算。通過記錄30幀間隔的tick30變量，計算與上一幀的時間差，再以30除以時間差得出近似幀率，並四捨五入顯示。適用於實時渲染性能監測。",
   "variables": {
     "FPS": "幀率",
     "DELTA": "時間差",

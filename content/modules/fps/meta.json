@@ -1,9 +1,9 @@
 {
   "id": "fps",
-  "name": "FPS",
+  "name": "FPS Counter",
   "description": "Calculate FPS.",
   "tags": ["performance"],
-  "keywords": ["frame rate", "rendering", "delta time"],
+  "keywords": ["frame rate", "rendering", "delta time", "fps"],
   "contributors": "gh/LuYifei2011",
   "variables": [
     { "name": "FPS", "scope": "global", "type": "variable" },
