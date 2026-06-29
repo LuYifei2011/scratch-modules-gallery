@@ -1,21 +1,20 @@
-// @ts-nocheck
 import fs from 'fs-extra'
 import path from 'path'
 import * as scratchblocks from 'scratchblocks-plus/syntax/index.js'
 
 const root = path.resolve('.')
 
-export function tokenizeCJK(text) {
+export function tokenizeCJK(text?: string | null): string[] {
   if (!text) return []
   const baseTokens = text.match(/[\p{L}\p{N}\p{M}\p{Pc}\-']+/gu) || []
-  const out = []
+  const out: string[] = []
   for (const tok of baseTokens) {
     out.push(tok)
     if (/^[\u4e00-\u9fff]+$/.test(tok) && tok.length > 1) {
       const chars = Array.from(tok)
       for (const c of chars) out.push(c)
       for (let i = 0; i < chars.length - 1; i++) {
-        out.push(chars[i] + chars[i + 1])
+        out.push(chars[i]! + chars[i + 1]!)
       }
     }
   }
@@ -25,7 +24,7 @@ export function tokenizeCJK(text) {
 /**
  * Scratch 3.0 标准积木类别颜色（取自 scratchblocks-plus/scratch3/style.css.js）
  */
-export const CATEGORY_COLORS = {
+export const CATEGORY_COLORS: Record<string, string> = {
   motion: '#4c97ff',
   looks: '#9966ff',
   sound: '#cf63cf',
@@ -46,16 +45,22 @@ export const CATEGORY_COLORS = {
  * @param {string[]} scriptTexts 所有脚本文本数组
  * @returns {{ category: string, count: number, color: string }[]} 按数量降序排列
  */
-export function analyzeBlockCategories(scriptTexts) {
-  const allKeys = Object.keys(scratchblocks.allLanguages || {})
-  const counts = {}
+export interface BlockCategorySummary {
+  category: string
+  count: number
+  color: string
+}
 
-  function walkBlocks(blocks) {
+export function analyzeBlockCategories(scriptTexts?: Array<string | null | undefined> | null): BlockCategorySummary[] {
+  const allKeys = Object.keys(scratchblocks.allLanguages || {})
+  const counts: Record<string, number> = {}
+
+  function walkBlocks(blocks: any[] | undefined | null): void {
     if (!blocks) return
     for (const block of blocks) {
       if (block.isComment) continue
       const cat = block.info?.category
-      counts[cat] = (counts[cat] || 0) + 1
+      if (typeof cat === 'string') counts[cat] = (counts[cat] || 0) + 1
       if (block.info?.id === 'PROCEDURES_DEFINITION') continue // 定义积木内的块（outline 和 custom-arg）不计入类别统计
       if (block.children) {
         for (const child of block.children) {
@@ -69,7 +74,7 @@ export function analyzeBlockCategories(scriptTexts) {
     }
   }
 
-  for (const text of scriptTexts) {
+  for (const text of scriptTexts ?? []) {
     if (!text) continue
     try {
       const doc = scratchblocks.parse(text, { languages: allKeys })
@@ -83,15 +88,13 @@ export function analyzeBlockCategories(scriptTexts) {
 
   return Object.entries(counts)
     .sort((a, b) => b[1] - a[1])
-    .map(([category, count]) => ({
-      category,
-      count,
-      color: CATEGORY_COLORS[category],
-    }))
-    .filter((c) => c.color) // 排除没有定义颜色的类别
+    .flatMap(([category, count]) => {
+      const color = CATEGORY_COLORS[category]
+      return color ? [{ category, count, color }] : []
+    }) // 排除没有定义颜色的类别
 }
 
-export function loadScratchblocksLanguages() {
+export function loadScratchblocksLanguages(): void {
   const localesDir = path.join(root, 'node_modules', 'scratchblocks-plus', 'locales')
   try {
     const files = fs.readdirSync(localesDir)

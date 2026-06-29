@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { describe, expect, it } from 'bun:test'
 import { tokenizeCJK, CATEGORY_COLORS, analyzeBlockCategories } from '../scripts/lib/scratch-utils.ts'
 
@@ -90,8 +89,8 @@ describe('analyzeBlockCategories', () => {
     expect(result.length > 0).toBeTruthy()
     const motion = result.find((c) => c.category === 'motion')
     expect(motion).toBeTruthy()
-    expect(motion.count >= 2).toBeTruthy()
-    expect(motion.color).toBe(CATEGORY_COLORS.motion)
+    expect(motion!.count >= 2).toBeTruthy()
+    expect(motion!.color).toBe(CATEGORY_COLORS.motion!)
   })
 
   it('counts multiple categories', () => {
@@ -100,7 +99,7 @@ describe('analyzeBlockCategories', () => {
     expect(result.length >= 2).toBeTruthy()
     // Results should be sorted by count descending
     for (let i = 1; i < result.length; i++) {
-      expect(result[i - 1].count >= result[i].count).toBeTruthy()
+      expect(result[i - 1]!.count >= result[i]!.count).toBeTruthy()
     }
   })
 
@@ -108,7 +107,7 @@ describe('analyzeBlockCategories', () => {
     const result = analyzeBlockCategories(['move (10) steps', 'say [hello]', 'move (20) steps'])
     const motion = result.find((c) => c.category === 'motion')
     expect(motion).toBeTruthy()
-    expect(motion.count >= 2).toBeTruthy()
+    expect(motion!.count >= 2).toBeTruthy()
   })
 
   it('each result has category, count and color', () => {

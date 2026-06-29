@@ -227,11 +227,7 @@ export function banner(lines: string[]): void {
 
 // ── Dev 状态行（始终显示）────────────────────────────────────────────────────────
 
-/**
- * 打印状态行（带分隔线），供开发服务器每次构建后调用（始终显示）
- * @param {{ ready: boolean, fastBuild: boolean, logLevel?: string, lastBuild?: { time: string, duration: number } }} state
- * @param {boolean} [withHints=true]  是否显示按键提示
- */
+/** 开发服务器状态行所需的当前状态。 */
 export interface DevStatusLineState {
   ready: boolean
   fastBuild: boolean
@@ -239,6 +235,11 @@ export interface DevStatusLineState {
   lastBuild?: { time: string; duration: number }
 }
 
+/**
+ * 打印状态行（带分隔线），供开发服务器每次构建后调用（始终显示）。
+ * @param state 当前开发服务器状态
+ * @param withHints 是否显示按键提示
+ */
 export function statusLine(state: DevStatusLineState, withHints = true): void {
   const w = termWidth()
   const sep = paint(c.dim, hr('─', w))
