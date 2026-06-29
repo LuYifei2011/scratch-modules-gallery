@@ -190,9 +190,10 @@
                 window.PAGE_BASE = '{{ pageBase or assetBase }}';
                 window.ASSET_BASE = '{{ assetBase }}';
                 window.PAGE_PATH = '{{ pagePath }}';
-                window.LOCALES = {{ locales | dump | safe }};
+                // TODO: 改掉这两个奇怪的命名
+                window.LOCALES = {{ locales | dump | safe }}; // 语言代码数组
                 window.CURRENT_LOCALE = '{{ locale }}';
-                window.LOCALE_NAMES = {{ i18n | dump | safe }};
+                window.LOCALE_NAMES = {{ i18n | dump | safe }}; // 语言代码 => 语言信息对象
                 // 检查是否需要重定向到偏好语言
                 (function () {
                     try {
