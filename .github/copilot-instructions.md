@@ -4,16 +4,16 @@
 
 ### 核心流水线
 
-1. **入口 `scripts/build.js`**：读取 `site.config.js` → 扫描模块(`content/modules/**`)→ 解析脚本/导入/变量 → 合并模块级 i18n → 逐语言生成 HTML + 搜索 JSON → 生成根跳转、sitemap、robots。
+1. **入口 `scripts/build.ts`**：读取 `site.config.ts` → 扫描模块(`content/modules/**`)→ 解析脚本/导入/变量 → 合并模块级 i18n → 逐语言生成 HTML + 搜索 JSON → 生成根跳转、sitemap、robots。
    - 开发模式(`IS_DEV=1`)：收集构建警告/错误至 `collectedIssues`，生成 `/issues/` 页面；跳过 sitemap 生成节省 ~8x 时间
    - Sitemap 使用 `simple-git` 从提交历史提取文件修改时间（CI 需 `fetch-depth: 0`）
-2. **数据模型 `scripts/lib/schema.js`**：统一字段 (id, slug, name, description, tags, contributors[], scripts[], hasDemo, variables[], notesMap, references)。任何字段变更需评估链路：schema → build → 模板 → 搜索 → 前端脚本。
+2. **数据模型 `scripts/lib/schema.ts`**：统一字段 (id, slug, name, description, tags, contributors[], scripts[], hasDemo, variables[], notesMap, references)。任何字段变更需评估链路：schema → build → 模板 → 搜索 → 前端脚本。
    - `parseContributors`: 支持 `gh/user` / `sc/user` 自动生成链接，或普通字符串/对象数组
    - i18n 字段可为字符串或 locale map 对象；自动选择默认值 (en → zh-cn → 首个 key)
 3. **模板 Nunjucks**：`src/templates/layouts/{base,home,module}.njk` 只做展示；上下文：`config,module,t,locale,pageBase,assetBase,pagePath,locales,year,IS_DEV,langTags,buildIssues,buildIssuesSummary`。
    - 禁止模板中直接调用时间或访问浏览器环境
-   - `pageBase` / `assetBase` 由 `site.config.js` baseUrl 计算，确保多语言路径正确
-4. **前端 JS**：`src/client/{home.js,module.js}` 仅负责搜索索引加载、语言切换、scratchblocks 二次渲染。全局注入：`window.__I18N`, `PAGE_BASE`, `ASSET_BASE`, `IS_DEV`。
+  - `pageBase` / `assetBase` 由 `site.config.ts` baseUrl 计算，确保多语言路径正确
+4. **前端 TS**：`src/client/{home.ts,module.ts}` 仅负责搜索索引加载、语言切换、scratchblocks 二次渲染。全局注入：`window.__I18N`, `PAGE_BASE`, `ASSET_BASE`, `IS_DEV`。
    - 异步加载 `/search-index.json` + `/search-docs.json`（按语言目录）
    - CJK 分词客户端与构建端同步（单字+双字滑窗）
 5. **搜索 MiniSearch**：ES 模块拷贝至 `dist/vendor/`；索引字段：name,id,description,tags；boost 权重：name(5) > id(4) > tags(3) > description(2)。
@@ -59,14 +59,14 @@
   - **快速构建**（`bun run build:fast` 或 `FAST_BUILD=1`）：额外跳过 favicon PNG 生成（仅保留 SVG）、站点+模块封面图、HTML 压缩；无 issues 页面
   - `IS_DEV=1 bun run build`：开发调试页 + 完整压缩产物（两者可叠加）
 - **开发服务器**：`bun run dev` / `bun run dev:https`
-  - 监听：`content/**`, `src/**`, `public/**`, `site.config.js`, `scripts/lib/**`, `scripts/build.js`
+  - 监听：`content/**`, `src/**`, `public/**`, `site.config.ts`, `scripts/lib/**`, `scripts/build.ts`
   - 自动刷新：SSE 推送 `{type:'reload'}`；注入 `<script>` 到所有 HTML
   - 重建自动启用快速模式（同时设置 `IS_DEV=1` + `FAST_BUILD=1`），速度最快
   - HTTPS 支持：自动生成自签证书（`.cert/`），或指定 PEM/PFX（环境变量）
-  - **模块编辑器**：`/__dev/editor/` 可视化编辑模块（`scripts/lib/editor-api.js` 处理 API）
+  - **模块编辑器**：`/__dev/editor/` 可视化编辑模块（`scripts/lib/editor-api.ts` 处理 API）
   - 路由回退：无扩展名路径 → 相对 `index.html`；目录 → `index.html`
 - **环境变量**：
-  - `BASE_URL`：覆盖 `site.config.js` baseUrl（影响 canonical / sitemap）
+  - `BASE_URL`：覆盖 `site.config.ts` baseUrl（影响 canonical / sitemap）
   - `IS_DEV`：传入模板与前端（`window.IS_DEV`）；开发服务器自动设置；控制 issues 页面与 sitemap 跳过
   - `FAST_BUILD`：控制耗时资源跳过（favicon PNG、封面图、HTML 压缩）；开发服务器自动设置；与 `IS_DEV` 独立
   - `HTTPS=1` + `HTTPS_KEY/HTTPS_CERT` 或 `HTTPS_PFX/HTTPS_PASSPHRASE`：HTTPS 配置
@@ -86,12 +86,12 @@
 | 目标                 | 入口                         | 注意点                                       |
 | -------------------- | ---------------------------- | -------------------------------------------- |
 | 新增模块             | `content/modules/<id>/`      | 至少 1 个脚本；补齐 meta 与（可选）i18n      |
-| 扩展数据字段         | `schema.js`                  | 同步模板 & 搜索 & 前端依赖字段               |
+| 扩展数据字段         | `schema.ts`                  | 同步模板 & 搜索 & 前端依赖字段               |
 | 新语言               | 复制一份 `src/i18n/en.json`  | 如果需要模块级翻译，新增对应 i18n JSON       |
 | 新增 tag             | `src/i18n/tags.json`         | 添加所有支持语言的翻译，所有模块自动获得     |
 | 添加或更新备注       | `notes/<lang-code>.md`       | 每个语言独立文件；构建时按语言优先级选取     |
 | 自定义块新增 pattern | 模块 i18n `procedures`       | 保持英文源脚本同步；`_` 数量需与参数个数一致 |
-| SEO 调整             | `site.config.js` + 模板 head | 确保 `hreflang`、canonical 含语言段          |
+| SEO 调整             | `site.config.ts` + 模板 head | 确保 `hreflang`、canonical 含语言段          |
 
 ### 验证清单（提交前）
 
@@ -114,15 +114,15 @@
 
 ### 推荐阅读顺序
 
-`scripts/build.js` → `scripts/lib/schema.js` → `src/templates/layouts/*.njk` → `src/client/*.js` → 示例模块 `content/modules/fps/`。
+`scripts/build.ts` → `scripts/lib/schema.ts` → `src/templates/layouts/*.njk` → `src/client/*.ts` → 示例模块 `content/modules/fps/`。
 
 若新增特性（如：额外资源类型、本地化维度、搜索字段）请在提交中同步更新此文件并列出回归验证步骤。
 
 ### 单元测试
 
-- **框架**：使用 `bun:test` + `bun:assert`，零额外依赖
-- **运行**：`bun test tests/*.test.js`
-- **文件结构**：所有测试文件位于 `tests/` 目录，文件名格式 `<module-name>.test.js`
+- **框架**：使用 `bun:test`，零额外依赖
+- **运行**：`bun test tests/*.test.ts`
+- **文件结构**：所有测试文件位于 `tests/` 目录，文件名格式 `<module-name>.test.ts`
 - **CI 工作流**：`.github/workflows/test.yml` 仅当以下路径变更时触发测试：
   - `scripts/**`、`src/i18n/**`、`tests/**`、`package.json`、`bun.lock`
   - 模块内容变更（`content/modules/**`）**不触发**测试工作流
@@ -130,22 +130,22 @@
 
   | 测试文件                    | 被测模块                           | 主要测试内容                                                   |
   | --------------------------- | ---------------------------------- | -------------------------------------------------------------- |
-  | `schema.test.js`            | `scripts/lib/schema.js`            | `parseContributors`、`buildModuleRecord`（必填校验、i18n map） |
-  | `import-resolver.test.js`   | `scripts/lib/import-resolver.js`   | 导入解析、循环引用检测、缺失模块、越界索引                     |
-  | `html-utils.test.js`        | `scripts/lib/html-utils.js`        | `escapeHtml`、`maybeMinify`、`generateShareLinks`              |
-  | `scratch-utils.test.js`     | `scripts/lib/scratch-utils.js`     | `tokenizeCJK`、`CATEGORY_COLORS`、`analyzeBlockCategories`     |
-  | `i18n-loader.test.js`       | `scripts/lib/i18n-loader.js`       | `pickConfigForLocale` 回退与覆盖                               |
-  | `i18n-engine.test.js`       | `scripts/lib/i18n-engine.js`       | 元信息本地化、变量名映射、脚本标题、tags、notes、翻译字段补全  |
-  | `script-translator.test.js` | `scripts/lib/script-translator.js` | AST 翻译、变量/列表/自定义块名称映射、多参数重排序             |
-  | `markdown.test.js`          | `scripts/lib/markdown.js`          | Markdown 转 HTML、scratchblocks/go-to-block 自定义扩展         |
-  | `search.test.js`            | `scripts/lib/search.js`            | MiniSearch 索引构建、CJK 内容                                  |
-  | `logger.test.js`            | `scripts/lib/logger.js`            | `truncate`、`formatDuration`、`timeNow`                        |
-  | `module-loader.test.js`     | `scripts/lib/module-loader.js`     | 集成测试（从磁盘加载 .test + fps 模块、翻译、notes、错误处理） |
+  | `schema.test.ts`            | `scripts/lib/schema.ts`            | `parseContributors`、`buildModuleRecord`（必填校验、i18n map） |
+  | `import-resolver.test.ts`   | `scripts/lib/import-resolver.ts`   | 导入解析、循环引用检测、缺失模块、越界索引                     |
+  | `html-utils.test.ts`        | `scripts/lib/html-utils.ts`        | `escapeHtml`、`maybeMinify`、`generateShareLinks`              |
+  | `scratch-utils.test.ts`     | `scripts/lib/scratch-utils.ts`     | `tokenizeCJK`、`CATEGORY_COLORS`、`analyzeBlockCategories`     |
+  | `i18n-loader.test.ts`       | `scripts/lib/i18n-loader.ts`       | `pickConfigForLocale` 回退与覆盖                               |
+  | `i18n-engine.test.ts`       | `scripts/lib/i18n-engine.ts`       | 元信息本地化、变量名映射、脚本标题、tags、notes、翻译字段补全  |
+  | `script-translator.test.ts` | `scripts/lib/script-translator.ts` | AST 翻译、变量/列表/自定义块名称映射、多参数重排序             |
+  | `markdown.test.ts`          | `scripts/lib/markdown.ts`          | Markdown 转 HTML、scratchblocks/go-to-block 自定义扩展         |
+  | `search.test.ts`            | `scripts/lib/search.ts`            | MiniSearch 索引构建、CJK 内容                                  |
+  | `logger.test.ts`            | `scripts/lib/logger.ts`            | `truncate`、`formatDuration`、`timeNow`                        |
+  | `module-loader.test.ts`     | `scripts/lib/module-loader.ts`     | 集成测试（从磁盘加载 .test + fps 模块、翻译、notes、错误处理） |
 
 - **编写规范**：
   - 使用 `describe` / `it` 组织测试
-  - 测试数据尽量内联构造，避免依赖外部文件（`module-loader.test.js` 除外，它使用临时 fixture 目录）
-  - `module-loader.test.js` 通过 `before` 钩子将 `.test` 和 `fps` 两个模块复制到 `tests/.fixture-modules/` 临时目录，避免加载全部模块导致测试过慢
-  - 新增构建模块时，在对应 `*.test.js` 中补充测试
+  - 测试数据尽量内联构造，避免依赖外部文件（`module-loader.test.ts` 除外，它使用临时 fixture 目录）
+  - `module-loader.test.ts` 通过 `before` 钩子将 `.test` 和 `fps` 两个模块复制到 `tests/.fixture-modules/` 临时目录，避免加载全部模块导致测试过慢
+  - 新增构建模块时，在对应 `*.test.ts` 中补充测试
 
 NOTE: When performing a code review, respond in Chinese.

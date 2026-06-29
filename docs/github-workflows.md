@@ -55,7 +55,7 @@
 **步骤**：
 
 1. 安装依赖
-2. 运行 `bun test tests/*.test.js`（Bun 测试运行器）
+2. 运行 `bun test tests/*.test.ts`（Bun 测试运行器）
 
 **注意**：模块内容变更（`content/modules/**`）**不触发**测试工作流。
 
@@ -97,7 +97,7 @@ bun run format
 bun run build
 
 # 运行单元测试
-bun test tests/*.test.js
+bun test tests/*.test.ts
 
 # 检查翻译完整性
 bun run check-i18n
@@ -133,10 +133,10 @@ git push
 
 ## 配置位置
 
-- 格式化脚本：`scripts/format-scratchblocks.js`
+- 格式化脚本：`scripts/format-scratchblocks.ts`
 - 工作流配置：`.github/workflows/format.yml`、`.github/workflows/deploy.yml`、`.github/workflows/test.yml`
 - Bun 脚本：`package.json` 中的 `format:scripts`
-- 镜像站点列表：`site.config.js` 中的 `mirrors` 数组
+- 镜像站点列表：`site.config.ts` 中的 `mirrors` 数组
 
 ---
 
@@ -161,13 +161,13 @@ git push
    BASE_URL = https://scratch-modules-gallery.pages.dev
    ```
 
-   这会覆盖 `site.config.js` 中的 `baseUrl`，使生成的 canonical URL、sitemap 和页脚镜像标注均指向 CF Pages 地址。
+   这会覆盖 `site.config.ts` 中的 `baseUrl`，使生成的 canonical URL、sitemap 和页脚镜像标注均指向 CF Pages 地址。
 
 4. 保存并触发首次部署。
 
 ### 镜像站点切换原理
 
-`site.config.js` 中的 `mirrors` 数组声明了所有已知站点：
+`site.config.ts` 中的 `mirrors` 数组声明了所有已知站点：
 
 ```js
 mirrors: [

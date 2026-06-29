@@ -266,8 +266,8 @@ http://localhost:8800/__dev/editor/
 
 如需改进编辑器功能，请参考：
 
-- 后端 API：`scripts/lib/editor-api.js`
+- 后端 API：`scripts/lib/editor-api.ts`
 - 前端界面：`public/__dev/editor/`
-- 开发服务器：`scripts/dev-server.js`
+- 开发服务器：`scripts/dev-server.ts`
 
 欢迎提交 Pull Request！

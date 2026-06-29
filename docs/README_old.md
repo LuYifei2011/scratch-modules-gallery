@@ -12,7 +12,7 @@
 
 静态生成的多语言 Scratch 模块索引。单一 Bun 构建脚本，无前端打包器。
 
-> 新增模块？请先阅读：`docs/authoring-modules.md`（模块编写指南）。本文档描述当前实现（以 `scripts/build.js` 为准）。
+> 新增模块？请先阅读：`docs/authoring-modules.md`（模块编写指南）。本文档描述当前实现（以 `scripts/build.ts` 为准）。
 
 ## 快速开始
 
@@ -75,7 +75,7 @@ bun run build
 
 特性：
 
-- 监听：`content/**`, `src/**`, `public/**`, `site.config.js`, `scripts/lib/**`, `scripts/build.js`
+- 监听：`content/**`, `src/**`, `public/**`, `site.config.ts`, `scripts/lib/**`, `scripts/build.ts`
 - 自动刷新：SSE 推送 `{type:'reload'}`
 - 路由回退：目录 / 无扩展路径 -> 相对 `index.html`
 - 强制禁用缓存 & `Access-Control-Allow-Origin: *`
@@ -93,7 +93,7 @@ HTTPS 支持：
 
 环境变量覆盖：
 
-- `BASE_URL`：在构建时覆盖 `site.config.js` 的 `baseUrl`，示例：
+- `BASE_URL`：在构建时覆盖 `site.config.ts` 的 `baseUrl`，示例：
   ```pwsh
   $env:BASE_URL="http://localhost:8800"; bun run build
   ```
@@ -104,9 +104,9 @@ HTTPS 支持：
   }
   ```
 
-## 站点配置 (site.config.js)
+## 站点配置 (site.config.ts)
 
-项目读取 `site.config.js` 作为构建配置。常用字段：
+项目读取 `site.config.ts` 作为构建配置。常用字段：
 
 - `siteName`, `baseUrl`, `description`, `language`
 - `outDir`, `contentDir`
@@ -119,14 +119,14 @@ HTTPS 支持：
 
 ### 验证 meta keywords
 
-- 构建后检查 `dist/index.html` 中 `<meta name="keywords">` 是否为 `site.config.js` 中 `keywords` 的值。
+- 构建后检查 `dist/index.html` 中 `<meta name="keywords">` 是否为 `site.config.ts` 中 `keywords` 的值。
 - 检查模块页 `dist/modules/<id>/index.html` 中的 keywords（模块页会包含 site 配置 keywords 与模块 tags 的组合）。
 
 ## Sitemap 与修改时间
 
 构建过程会自动从 git 提交历史中提取文件修改时间，并生成 `dist/sitemap.xml` 与 `dist/robots.txt`：
 
-- **首页** (`/en/`, `/zh-cn/`, `/zh-tw/`)：使用 `site.config.js` 和 `src/i18n/` 目录的最晚修改时间
+- **首页** (`/en/`, `/zh-cn/`, `/zh-tw/`)：使用 `site.config.ts` 和 `src/i18n/` 目录的最晚修改时间
 - **模块页面** (`/modules/<id>/`)：使用该模块 `scripts/`、`i18n/` 及全局 `src/i18n/` 的最晚修改时间
 
 ### 开发模式优化
@@ -143,7 +143,7 @@ HTTPS 支持：
 ```yaml
 - uses: actions/checkout@v4
   with:
-    fetch-depth: 0 # 拉取完整的 git 历史，以便 build.js 能查询提交时间
+    fetch-depth: 0 # 拉取完整的 git 历史，以便 build.ts 能查询提交时间
 ```
 
 ⚠️ 如果 CI 中 sitemap 的 `lastmod` 显示为构建当时的日期（而非提交时间），说明 git 历史未拉取。需检查上述配置。
@@ -223,10 +223,10 @@ main.txt      -> id: main
 
 ## 搜索 / 调试技巧
 
-- 调试分词：可在构建后临时 `console.log` `tokenizeCJK()`（`scripts/build.js`）。
+- 调试分词：可在构建后临时 `console.log` `tokenizeCJK()`（`scripts/build.ts`）。
 - 查看导入展开：在构建后检查目标脚本 HTML 中的导入块注释与结构。
 
-## 站点配置 (site.config.js) 额外说明
+## 站点配置 (site.config.ts) 额外说明
 
 - `baseUrl` 决定 canonical / sitemap；可用 `BASE_URL` 环境变量覆盖。
 - 构建期注入 `year`、`IS_DEV`，模板不要调用 `new Date()`。
@@ -235,4 +235,4 @@ main.txt      -> id: main
 
 （待补充）
 
-> 文档与实现不符时，以 `scripts/build.js` 为准；欢迎提交修正。
+> 文档与实现不符时，以 `scripts/build.ts` 为准；欢迎提交修正。

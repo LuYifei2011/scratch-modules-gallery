@@ -223,7 +223,7 @@ content/modules/<id>/
 
 构建时按当前语言优先级自动选取对应文件；若当前语言缺失，则按回退规则（当前语言 → 中文变体 → 英文）依次尝试。
 
-支持标准 Markdown 语法，由 `scripts/lib/markdown.js` 解析。
+支持标准 Markdown 语法，由 `scripts/lib/markdown.ts` 解析。
 
 > 注意：不再支持 `notes.md` / `notes.txt`（扁平文件），无需向后兼容。
 
