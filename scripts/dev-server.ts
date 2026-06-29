@@ -101,6 +101,17 @@ let lastBuildResult: { time: string; duration: number; success: boolean } | null
 // 策略：< 256KB 且命中 mtime 不变则复用；超过阈值走流式读取
 const SMALL_FILE_LIMIT = 256 * 1024
 const fileCache = new Map<string, any>() // key: absPath -> { mtimeMs, data: Buffer|string, isHTML }
+
+function isPathInside(parentDir: string, childPath: string) {
+  const relative = path.relative(parentDir, childPath)
+  return relative === '' || (!relative.startsWith('..') && !path.isAbsolute(relative))
+}
+
+function resolveStaticPath(rootDir: string, requestPath: string) {
+  const resolved = path.resolve(rootDir, requestPath.replace(/^\/+/, ''))
+  return isPathInside(rootDir, resolved) ? resolved : null
+}
+
 function getCachedFile(absPath: string, stat: fs.Stats) {
   const c = fileCache.get(absPath)
   if (c && c.mtimeMs === stat.mtimeMs) return c
@@ -359,11 +370,19 @@ const requestHandler = (req, res) => {
     pathname = modulePath
   }
 
-  const requestedPath = pathnameRaw.startsWith('/node_modules/')
-    ? path.join(NODE_MODULES_DIR, pathname)
-    : path.join(DIST_DIR, pathname)
+  const staticRoot = pathnameRaw.startsWith('/node_modules/') ? NODE_MODULES_DIR : DIST_DIR
+  const requestedPath = resolveStaticPath(staticRoot, pathname)
+
+  if (!requestedPath) {
+    return serve404(res)
+  }
 
   const sendFile = (absPath) => {
+    if (!isPathInside(staticRoot, path.resolve(absPath))) {
+      serve404(res)
+      return
+    }
+
     fs.stat(absPath, (err, stat) => {
       if (err || !stat.isFile()) {
         serve404(res)

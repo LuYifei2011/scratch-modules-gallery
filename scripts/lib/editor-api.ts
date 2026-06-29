@@ -9,6 +9,7 @@ const __dirname = path.dirname(__filename)
 const rootDir = path.resolve(__dirname, '../..')
 const modulesDir = path.join(rootDir, 'content/modules')
 const localePattern = /^[a-z]{2}(-[a-z]{2})?$/
+const allowedAssetExtensions = ['.png', '.jpg', '.jpeg', '.gif', '.svg', '.pdf']
 
 // ==================== 工具函数 ====================
 
@@ -57,6 +58,37 @@ function validateScriptId(scriptId) {
     throw new Error('Invalid script id: directory traversal detected')
   }
   return trimmed
+}
+
+function validateAssetFilename(filename) {
+  if (!filename || typeof filename !== 'string') {
+    throw new Error('Invalid asset filename')
+  }
+  if (
+    filename.includes('\0') ||
+    filename.includes('/') ||
+    filename.includes('\\') ||
+    !/^[A-Za-z0-9._-]+$/.test(filename) ||
+    filename === '.' ||
+    filename === '..' ||
+    filename !== path.basename(filename) ||
+    filename !== path.win32.basename(filename)
+  ) {
+    throw new Error('Invalid asset filename: directory traversal detected')
+  }
+  if (!allowedAssetExtensions.includes(path.extname(filename).toLowerCase())) {
+    throw new Error('Invalid asset filename: unsupported file type')
+  }
+  return filename
+}
+
+function isAllowedAssetFilename(filename) {
+  try {
+    validateAssetFilename(filename)
+    return true
+  } catch {
+    return false
+  }
 }
 
 function naturalCompare(a, b) {
@@ -721,8 +753,7 @@ export async function uploadAsset(req, res, moduleId) {
       keepExtensions: true,
       maxFileSize: 5 * 1024 * 1024, // 5MB
       filter: ({ mimetype, originalFilename }) => {
-        const allowed = ['.png', '.jpg', '.jpeg', '.gif', '.svg', '.pdf']
-        return originalFilename && allowed.some((ext) => originalFilename.toLowerCase().endsWith(ext))
+        return isAllowedAssetFilename(originalFilename)
       },
     })
 
@@ -737,8 +768,12 @@ export async function uploadAsset(req, res, moduleId) {
       }
 
       const uploadedFile = Array.isArray(file) ? file[0] : file
-      const filename = uploadedFile.originalFilename || 'asset'
-      const targetPath = path.join(assetsDir, filename)
+      const filename = validateAssetFilename(uploadedFile.originalFilename)
+      const targetPath = path.resolve(assetsDir, filename)
+
+      if (!assertPathInside(assetsDir, targetPath)) {
+        return sendError(res, 400, 'Invalid asset filename: directory traversal detected')
+      }
 
       try {
         await fs.move(uploadedFile.filepath, targetPath, { overwrite: true })

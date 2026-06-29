@@ -240,6 +240,15 @@
       let modules = []
       let currentLocale = localeSelect.value
 
+      function escapeHtml(value) {
+        return String(value ?? '')
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;')
+          .replace(/'/g, '&#39;')
+      }
+
       async function loadModules() {
         try {
           const res = await fetch('/api/modules')
@@ -248,7 +257,7 @@
           modules = data.modules || []
           render()
         } catch (e) {
-          content.innerHTML = `<div class="error-msg">加载模块列表失败：${e.message}<br>请确保开发服务器正在运行。</div>`
+          content.innerHTML = `<div class="error-msg">加载模块列表失败：${escapeHtml(e.message)}<br>请确保开发服务器正在运行。</div>`
         }
       }
 
@@ -298,17 +307,21 @@
 
         const cards = modules
           .map((mod) => {
-            const coverUrl = `/${locale}/modules/${mod.id}/cover.png`
-            const moduleUrl = `/${locale}/modules/${mod.id}/`
+            const safeId = encodeURIComponent(mod.id)
+            const coverUrl = `/${locale}/modules/${safeId}/cover.png`
+            const moduleUrl = `/${locale}/modules/${safeId}/`
             const name = typeof mod.name === 'object' ? mod.name[locale] || mod.name['en'] || mod.id : mod.name
+            const displayId = escapeHtml(mod.id)
+            const displayName = escapeHtml(name)
+            const displayCoverUrl = escapeHtml(coverUrl)
             return `
-            <div class="card" data-id="${mod.id}">
+            <div class="card" data-id="${displayId}">
               <div class="cover-wrap">
                 <div class="cover-placeholder">加载中…</div>
                 <img
                   class="cover-img"
-                  data-src="${coverUrl}"
-                  alt="${name} 封面"
+                  data-src="${displayCoverUrl}"
+                  alt="${displayName} 封面"
                   style="display:none"
                 />
                 <div class="cover-error" style="display:none">
@@ -318,12 +331,12 @@
                     <circle cx="8.5" cy="13.5" r="1.5"/>
                   </svg>
                   <span>封面图不存在</span>
-                  <span style="font-size:11px;opacity:.7">${coverUrl}</span>
+                  <span style="font-size:11px;opacity:.7">${displayCoverUrl}</span>
                 </div>
               </div>
               <div class="card-info">
-                <span class="card-id">${mod.id}</span>
-                <span class="card-name" title="${name}">${name}</span>
+                <span class="card-id">${displayId}</span>
+                <span class="card-name" title="${displayName}">${displayName}</span>
                 <div class="card-actions">
                   <a href="${moduleUrl}" target="_blank">查看页面</a>
                   <a href="${coverUrl}" target="_blank">原图</a>

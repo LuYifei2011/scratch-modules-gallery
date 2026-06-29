@@ -429,7 +429,11 @@ async function renderScriptPreview(content) {
     doRenderPreview(currentPreviewStyle)
   } catch (error) {
     console.error('Scratchblocks render error:', error)
-    previewContainer.innerHTML = `<p style="color: #ff6680;">渲染错误: ${error.message}</p>`
+    previewContainer.innerHTML = ''
+    const message = document.createElement('p')
+    message.style.color = '#ff6680'
+    message.textContent = `渲染错误: ${error.message}`
+    previewContainer.appendChild(message)
   }
 }
 
