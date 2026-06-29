@@ -7,7 +7,14 @@ import { resolveImports } from './lib/import-resolver.ts'
 import { loadGlobalTags, loadI18n, loadModuleDefaults } from './lib/i18n-loader.ts'
 import { translateModulesForLocale } from './lib/i18n-engine.ts'
 import { translateScriptText } from './lib/script-translator.ts'
-import type { Contributor, ModuleRecord, ModuleReference, ModuleScript, ModuleVariable, SiteConfig } from './lib/types.ts'
+import type {
+  Contributor,
+  ModuleRecord,
+  ModuleReference,
+  ModuleScript,
+  ModuleVariable,
+  SiteConfig,
+} from './lib/types.ts'
 
 const DEFAULT_LOCALE = 'zh-cn'
 
@@ -111,7 +118,12 @@ function clean(value: unknown): string {
 
 function listText(values: unknown[] | undefined): string {
   if (!Array.isArray(values) || values.length === 0) return 'None'
-  return values.map((value) => clean(value)).filter(Boolean).join(', ') || 'None'
+  return (
+    values
+      .map((value) => clean(value))
+      .filter(Boolean)
+      .join(', ') || 'None'
+  )
 }
 
 function contributorText(contributor: Contributor): string {
@@ -237,7 +249,12 @@ export function renderSeoContextMarkdown({ module, locale, systemPrompt }: Rende
 - 只输出纯文本。`
   )
 
-  return lines.join('\n').replace(/\n{3,}/g, '\n\n').trimEnd() + '\n'
+  return (
+    lines
+      .join('\n')
+      .replace(/\n{3,}/g, '\n\n')
+      .trimEnd() + '\n'
+  )
 }
 
 async function readSystemPrompt(root: string, promptFile: string): Promise<string> {
