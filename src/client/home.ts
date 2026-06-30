@@ -1,5 +1,5 @@
 import MiniSearch from './vendor/minisearch.js'
-import { tokenizeCJK } from '../shared/search-tokenizer.ts'
+import { createSearchOptions } from '../shared/search-options.ts'
 
 function qs(sel) {
   return document.querySelector(sel)
@@ -20,14 +20,7 @@ async function initSearch() {
     fetch(pageBase + '/search-docs.json'),
   ])
   const [idxJson, docsList] = await Promise.all([idxRes.json(), docsRes.json()])
-  const opts = {
-    fields: ['name', 'id', 'description', 'tags', 'keywords'],
-    storeFields: ['id', 'name', 'description', 'tags', 'keywords', 'slug', 'hasDemo'],
-    idField: 'id',
-    searchOptions: { boost: { name: 5, id: 4, tags: 3, keywords: 2, description: 2 } },
-    tokenize: tokenizeCJK,
-  }
-  mini = MiniSearch.loadJS(idxJson, opts)
+  mini = MiniSearch.loadJS(idxJson, createSearchOptions())
   allDocs = docsList
 }
 
