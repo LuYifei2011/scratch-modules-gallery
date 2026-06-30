@@ -94,13 +94,34 @@ function importedScriptSuccess(
   }
 }
 
+function resolveImportLine(idMap: Map<string, ModuleRecord>, line: string, stackRoot: string): ImportedModuleScript | null {
+  const match = line.match(importLineRe)
+  if (!match) return null
+
+  const refId = match[1]
+  const specifiedIndex = match[2] ? parseInt(match[2], 10) : undefined
+  const targetModule = idMap.get(refId)
+  if (!targetModule) {
+    return importedScriptFailure(refId, `// 导入失败: 未找到模块 ${refId}`, refId, specifiedIndex || 1)
+  }
+
+  const { script: targetScript, error, index1 } = getScriptObj(targetModule, specifiedIndex)
+  if (error) {
+    return importedScriptFailure(refId, `// 导入失败: ${error}`, targetModule.name || refId, specifiedIndex || 1)
+  }
+
+  const key = refId + ':' + index1
+  const expanded = fullyExpandContent(idMap, targetScript.content, [stackRoot, key])
+  return importedScriptSuccess(refId, expanded, targetModule.name || refId, index1, targetScript.id || undefined)
+}
+
 export function resolveImports(modules: ModuleRecord[]): void {
   const idMap = new Map<string, ModuleRecord>(modules.flatMap((m) => (m.id ? ([[m.id, m]] as const) : [])))
 
   for (const mod of modules) {
-    let modChanged = false // 仅用于内部判断（当前未输出日志）
     if (!mod.scripts) continue
     const newScripts: ResolvedModuleScript[] = []
+    const stackRoot = (mod.id || 'unknown') + ':root'
     for (const original of mod.scripts) {
       const content = original.content || ''
       const lines = content.split(/\r?\n/)
@@ -108,41 +129,19 @@ export function resolveImports(modules: ModuleRecord[]): void {
       let i = 0
       // 收集顶部连续 import
       for (; i < lines.length; i++) {
-        const mTop = lines[i].match(importLineRe)
-        if (!mTop) break
-        modChanged = true
-        const refId = mTop[1]
-        const specifiedIndex = mTop[2] ? parseInt(mTop[2], 10) : undefined
-        const targetModule = idMap.get(refId)
-        if (!targetModule) {
-          leadingImports.push(
-            importedScriptFailure(refId, `// 导入失败: 未找到模块 ${refId}`, refId, specifiedIndex || 1)
-          )
-          continue
-        }
-        const { script: targetScript, error, index1 } = getScriptObj(targetModule, specifiedIndex)
-        if (error) {
-          leadingImports.push(
-            importedScriptFailure(refId, `// 导入失败: ${error}`, targetModule.name || refId, specifiedIndex || 1)
-          )
-          continue
-        }
-        const key = refId + ':' + index1
-        const expanded = fullyExpandContent(idMap, targetScript.content, [(mod.id || 'unknown') + ':root', key])
-        leadingImports.push(
-          importedScriptSuccess(refId, expanded, targetModule.name || refId, index1, targetScript.id || undefined)
-        )
+        const importedScript = resolveImportLine(idMap, lines[i], stackRoot)
+        if (!importedScript) break
+        leadingImports.push(importedScript)
       }
       let buffer: string[] = []
       let mainBlockAdded = false
       for (; i < lines.length; i++) {
         const line = lines[i]
-        const m = line.match(importLineRe)
-        if (!m) {
+        const importedScript = resolveImportLine(idMap, line, stackRoot)
+        if (!importedScript) {
           buffer.push(line)
           continue
         }
-        modChanged = true
         // 遇到正文中的 import
         if (!mainBlockAdded) {
           const ownScript: ModuleOwnScript = {
@@ -155,25 +154,7 @@ export function resolveImports(modules: ModuleRecord[]): void {
           mainBlockAdded = true
           buffer = []
         }
-        const refId = m[1]
-        const specifiedIndex = m[2] ? parseInt(m[2], 10) : undefined
-        const targetModule = idMap.get(refId)
-        if (!targetModule) {
-          newScripts.push(importedScriptFailure(refId, `// 导入失败: 未找到模块 ${refId}`, refId, specifiedIndex || 1))
-          continue
-        }
-        const { script: targetScript, error, index1 } = getScriptObj(targetModule, specifiedIndex)
-        if (error) {
-          newScripts.push(
-            importedScriptFailure(refId, `// 导入失败: ${error}`, targetModule.name || refId, specifiedIndex || 1)
-          )
-          continue
-        }
-        const key = refId + ':' + index1
-        const expanded = fullyExpandContent(idMap, targetScript.content, [(mod.id || 'unknown') + ':root', key])
-        newScripts.push(
-          importedScriptSuccess(refId, expanded, targetModule.name || refId, index1, targetScript.id || undefined)
-        )
+        newScripts.push(importedScript)
       }
       // 收尾: 若正文块尚未添加，则现在添加（包含可能的 leadingImports）
       if (!mainBlockAdded) {
@@ -188,18 +169,7 @@ export function resolveImports(modules: ModuleRecord[]): void {
         // mainBlock 已添加，还有尾部代码
         newScripts.push({ id: undefined, title: '', content: buffer.join('\n') })
       }
-      if (!modChanged) {
-        // 没有任何 import，保持原对象
-        if (
-          newScripts.length &&
-          newScripts[newScripts.length - 1].content === original.content &&
-          !newScripts[newScripts.length - 1].leadingImports
-        ) {
-          // nothing
-        }
-      }
     }
     mod.scripts = newScripts
-    // modChanged 目前不做输出
   }
 }
