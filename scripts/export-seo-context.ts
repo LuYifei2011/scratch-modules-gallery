@@ -1,20 +1,12 @@
 import fs from 'fs-extra'
 import path from 'path'
-import { pathToFileURL } from 'url'
-import { loadScratchblocksLanguages } from './lib/scratch-utils.ts'
-import { loadModules } from './lib/module-loader.ts'
-import { resolveImports } from './lib/import-resolver.ts'
-import { loadGlobalTags, loadI18n, loadModuleDefaults } from './lib/i18n-loader.ts'
-import { translateModulesForLocale } from './lib/i18n-engine.ts'
-import { translateScriptText } from './lib/script-translator.ts'
+import { loadLocalizedModules, loadSiteConfig, loadSiteData } from './lib/site-pipeline.ts'
 import type {
   Contributor,
   LocalizedModuleRecord,
   LocalizedModuleScript,
-  ModuleRecord,
   ModuleReference,
   ModuleVariable,
-  SiteConfig,
 } from './lib/types.ts'
 
 const DEFAULT_LOCALE = 'zh-cn'
@@ -256,27 +248,14 @@ async function readSystemPrompt(root: string, promptFile: string): Promise<strin
 }
 
 async function loadLocalizedModule(root: string, moduleId: string, locale: string): Promise<SeoModule> {
-  loadScratchblocksLanguages()
+  const config = await loadSiteConfig(root)
+  const siteData = await loadSiteData({ root, config, isDev: true })
 
-  const configModule = await import(pathToFileURL(path.join(root, 'site.config.ts')).href)
-  const config = (configModule.default || configModule) as SiteConfig
-  const [dict, globalTags, moduleDefaults] = await Promise.all([loadI18n(), loadGlobalTags(), loadModuleDefaults()])
-  const { modules, errorsAll } = await loadModules({ root, config, isDev: true })
-
-  if (errorsAll.length) {
-    console.error(`Warning: module loading reported ${errorsAll.length} issue(s).`)
+  if (siteData.errorsAll.length) {
+    console.error(`Warning: module loading reported ${siteData.errorsAll.length} issue(s).`)
   }
 
-  resolveImports(modules)
-
-  const localizedModules = await translateModulesForLocale(
-    modules,
-    dict,
-    locale,
-    globalTags,
-    { skipMissingCheck: true, moduleDefaults },
-    { translateScriptText }
-  )
+  const localizedModules = await loadLocalizedModules(siteData, locale, { skipMissingCheck: true })
 
   const module = localizedModules.find((entry) => entry.id === moduleId || entry.slug === moduleId)
   if (!module) {

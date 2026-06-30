@@ -2,18 +2,13 @@ import fs from 'fs-extra'
 import path from 'path'
 import fg from 'fast-glob'
 import nunjucks from 'nunjucks'
-import { loadScratchblocksLanguages } from './lib/scratch-utils.ts'
-import { pathToFileURL } from 'url'
 import * as scratchblocks from 'scratchblocks-plus/syntax/index.js'
 import simpleGit from 'simple-git'
 import { favicons as generateFavicons } from 'favicons'
-import { translateModulesForLocale } from './lib/i18n-engine.ts'
 import { escapeHtml, maybeMinify, generateShareLinks } from './lib/html-utils.ts'
 import { buildSearchIndex } from './lib/search.ts'
-import { resolveImports } from './lib/import-resolver.ts'
-import { loadModules } from './lib/module-loader.ts'
-import { translateScriptText } from './lib/script-translator.ts'
-import { loadI18n, loadGlobalTags, loadModuleDefaults, pickConfigForLocale } from './lib/i18n-loader.ts'
+import { pickConfigForLocale } from './lib/i18n-loader.ts'
+import { loadLocalizedModules, loadSiteConfig, loadSiteData, type SiteData } from './lib/site-pipeline.ts'
 import { loadSiteCoverTemplate, generateSiteCover, generateModuleCover } from './lib/cover-generator.ts'
 import log, { c, paint, formatDuration, timeNow } from './lib/logger.ts'
 import type {
@@ -29,13 +24,7 @@ import type {
 const root = path.resolve('.')
 // 模块级 favicon HTML 片段，由 render() 生成后供 nunjucks.render monkey-patch 注入
 let _faviconHtml = ''
-// 动态 ESM 导入配置
-const configModule = await import(pathToFileURL(path.join(root, 'site.config.ts')).href)
-const config = (configModule.default || configModule) as SiteConfig & {
-  baseUrl: string
-  outDir: string
-  siteName: string
-}
+const config = (await loadSiteConfig(root)) as SiteConfig & { baseUrl: string; outDir: string; siteName: string }
 // 覆盖 baseUrl 与开发模式标记
 const isDev = String(process.env.IS_DEV || '').toLowerCase() === 'true' || process.env.IS_DEV === '1'
 // 快速构建模式：跳过耗时的资源生成（favicon PNG、封面图、HTML 压缩），与 IS_DEV 独立
@@ -44,39 +33,9 @@ const isFast =
   String(process.env.FAST_BUILD || '').toLowerCase() === 'true' ||
   process.env.FAST_BUILD === '1' ||
   process.argv.includes('--fast')
-if (process.env.BASE_URL) {
-  try {
-    // 只替换 baseUrl 字段，不引入额外复杂度
-    config.baseUrl = process.env.BASE_URL
-  } catch {
-    // 保持配置文件中的原始 baseUrl。
-  }
-} else if (process.env.CF_PAGES_URL) {
-  // Cloudflare Pages 提供的环境变量，主要用于非生产环境的预览部署，生产环境已通过 BASE_URL 设置正确的 URL
-  config.baseUrl = process.env.CF_PAGES_URL
-}
-// 为每个镜像站计算 isCurrent，供模板区分当前站与外链
-if (Array.isArray(config.mirrors)) {
-  const currentUrl = (config.baseUrl || '').replace(/\/$/, '').toLowerCase()
-  for (const mirror of config.mirrors) {
-    mirror.isCurrent = (mirror.url || '').replace(/\/$/, '').toLowerCase() === currentUrl
-  }
-}
-
-// 同步加载所有 scratchblocks 语言
-try {
-  loadScratchblocksLanguages()
-} catch (e) {
-  log.warn('scratchblocks', `读取 locales 目录失败: ${e?.message || e}`)
-}
 
 // 构建所有可用的 scratchblocks 语言列表
-const scratchblocksLanguages = Object.entries(scratchblocks.allLanguages)
-  .map(([code, info]) => ({
-    code,
-    name: info.name || code,
-  }))
-  .sort((a, b) => a.code.localeCompare(b.code))
+let scratchblocksLanguages: Array<{ code: string; name: string }> = []
 
 const templatesPath = path.join(root, 'src', 'templates')
 nunjucks.configure(templatesPath, { autoescape: true })
@@ -97,7 +56,9 @@ function summarizeIssues(issues: BuildIssue[]): BuildIssuesSummary {
   )
 }
 
-async function render(modules: ModuleRecord[], _allTags: string) {
+async function render(siteData: SiteData) {
+  let { modules } = siteData
+  const { dict } = siteData
   const outDir = path.join(root, config.outDir)
   await fs.emptyDir(outDir)
 
@@ -115,6 +76,7 @@ async function render(modules: ModuleRecord[], _allTags: string) {
     // 使用过滤后的模块列表替换原始列表
     modules = validModules
   }
+  const renderSiteData: SiteData = { ...siteData, modules }
 
   // 计算 basePath (用于相对资源路径) —— 例如 https://user.github.io/repo => /repo
   let basePath = ''
@@ -386,7 +348,6 @@ async function render(modules: ModuleRecord[], _allTags: string) {
   // 搜索与文档列表将按语言分别生成
 
   // render pages per locale（对每个 locale 复用翻译结果，避免重复计算）
-  const [dict, globalTags, moduleDefaults] = await Promise.all([loadI18n(), loadGlobalTags(), loadModuleDefaults()])
   const locales = Object.keys(dict)
   const localeConfigCache = new Map<string, SiteConfig>()
   // 每种语言的 hreflang 标记（优先使用 i18n.meta.languageTag）
@@ -425,17 +386,10 @@ async function render(modules: ModuleRecord[], _allTags: string) {
     for (const loc of locales) {
       if (loc === 'en') continue
       try {
-        const translated = await translateModulesForLocale(
-          modules,
-          dict,
-          loc,
-          globalTags,
-          {
-            skipMissingCheck: false,
-            moduleDefaults,
-          },
-          { translateScriptText, reportIssue }
-        )
+        const translated = await loadLocalizedModules(renderSiteData, loc, {
+          skipMissingCheck: false,
+          reportIssue,
+        })
         translatedCache.set(loc, translated)
       } catch {
         // 失败时不缓存，后续渲染阶段仍可单独重试
@@ -451,17 +405,7 @@ async function render(modules: ModuleRecord[], _allTags: string) {
     // 针对当前语言，生成脚本文本与元信息已翻译的模块数据（不影响其他语言）
     let modulesForLoc = translatedCache.get(loc)
     if (!modulesForLoc) {
-      modulesForLoc = await translateModulesForLocale(
-        modules,
-        dict,
-        loc,
-        globalTags,
-        {
-          skipMissingCheck: true,
-          moduleDefaults,
-        },
-        { translateScriptText }
-      )
+      modulesForLoc = await loadLocalizedModules(renderSiteData, loc, { skipMissingCheck: true })
       translatedCache.set(loc, modulesForLoc)
     }
 
@@ -718,11 +662,16 @@ function reportIssue(type: BuildIssueType, message: string, details: Record<stri
   const buildStart = Date.now()
   const modeFlags = [isDev && 'dev', isFast && 'fast'].filter(Boolean)
   log.info('build', `开始构建${modeFlags.length ? paint(c.dim, ` (${modeFlags.join(', ')})`) : ''}…`)
-  const { modules, errorsAll, allTags } = await loadModules({ root, config, isDev })
+  const siteData = await loadSiteData({ root, config, isDev })
+  const { modules, errorsAll } = siteData
+  scratchblocksLanguages = Object.entries(scratchblocks.allLanguages)
+    .map(([code, info]) => ({
+      code,
+      name: info.name || code,
+    }))
+    .sort((a, b) => a.code.localeCompare(b.code))
   // 将 loadModules 的结构化错误加入 collectedIssues
   for (const msg of errorsAll) reportIssue('error', msg)
-  // 解析 !import 指令
-  resolveImports(modules)
   // 在渲染前把 issues 注入 nunjucks 全局或通过参数传递
   // 这里采用环境变量对象传递：扩展 nunjucks.render 上下文
   // 修改 render 调用：封装一层以包含 buildIssues
@@ -750,11 +699,8 @@ function reportIssue(type: BuildIssueType, message: string, details: Record<stri
     }
     return origRender.apply(this, args)
   }
-  const { locales } = await (async () => {
-    const d = await loadI18n()
-    return { locales: Object.keys(d) }
-  })()
-  await render(modules, allTags)
+  const locales = Object.keys(siteData.dict)
+  await render(siteData)
   const buildDuration = Date.now() - buildStart
   log.success(
     'build',

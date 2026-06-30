@@ -18,28 +18,11 @@
 import fs from 'fs-extra'
 import path from 'path'
 import fg from 'fast-glob'
-import { pathToFileURL } from 'url'
-import { loadScratchblocksLanguages } from './lib/scratch-utils.ts'
-import { translateModulesForLocale } from './lib/i18n-engine.ts'
-import { loadModules } from './lib/module-loader.ts'
-import { translateScriptText } from './lib/script-translator.ts'
-import { loadI18n, loadGlobalTags, loadModuleDefaults } from './lib/i18n-loader.ts'
-import { resolveImports } from './lib/import-resolver.ts'
+import { loadSiteConfig, loadSiteData, loadLocalizedModules } from './lib/site-pipeline.ts'
 
 const root = path.resolve('.')
 const SOURCE_LOCALE = 'en'
 const EXCLUDED_I18N_FILES = new Set(['tags.json', 'module-defaults.json'])
-
-// Load scratchblocks languages (required for translateScriptText to detect
-// missing procedure/param/comment translations via AST parsing)
-try {
-  loadScratchblocksLanguages()
-} catch (e) {
-  console.warn(
-    'Warning: failed to load scratchblocks languages, procedure/param/comment detection may be incomplete:',
-    e?.message || e
-  )
-}
 
 // ── Helpers ────────────────────────────────────────────────
 
@@ -171,11 +154,8 @@ async function checkTags(locales) {
  * - comments (from actual script content)
  */
 async function checkModulesViaBuild(locales) {
-  const configModule = await import(pathToFileURL(path.join(root, 'site.config.ts')).href)
-  const config = configModule.default || configModule
-  const [dict, globalTags, moduleDefaults] = await Promise.all([loadI18n(), loadGlobalTags(), loadModuleDefaults()])
-  const { modules } = await loadModules({ root, config, isDev: true })
-  resolveImports(modules)
+  const config = await loadSiteConfig(root)
+  const siteData = await loadSiteData({ root, config, isDev: true })
 
   const issues = []
   for (const locale of locales) {
@@ -183,14 +163,7 @@ async function checkModulesViaBuild(locales) {
     const reportIssue = (_type, message, details = {}) => {
       collected.push({ message, ...details })
     }
-    await translateModulesForLocale(
-      modules,
-      dict,
-      locale,
-      globalTags,
-      { skipMissingCheck: false, moduleDefaults },
-      { translateScriptText, reportIssue }
-    )
+    await loadLocalizedModules(siteData, locale, { skipMissingCheck: false, reportIssue })
 
     for (const entry of collected) {
       if (entry.code === 'i18n-missing') {
