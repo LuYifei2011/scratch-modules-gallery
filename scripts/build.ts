@@ -14,7 +14,6 @@ import { resolveImports } from './lib/import-resolver.ts'
 import { loadModules } from './lib/module-loader.ts'
 import { translateScriptText } from './lib/script-translator.ts'
 import { loadI18n, loadGlobalTags, loadModuleDefaults, pickConfigForLocale } from './lib/i18n-loader.ts'
-import type { I18nDictionary } from './lib/i18n-loader.ts'
 import { loadSiteCoverTemplate, generateSiteCover, generateModuleCover } from './lib/cover-generator.ts'
 import log, { c, paint, formatDuration, timeNow } from './lib/logger.ts'
 import type {
@@ -394,6 +393,32 @@ async function render(modules: ModuleRecord[], _allTags: string) {
   const langTags: Record<string, string> = Object.fromEntries(
     locales.map((loc) => [loc, (dict[loc]?.meta && dict[loc].meta.languageTag) || loc])
   )
+  const getLocaleConfig = (loc: string): SiteConfig => {
+    let locConfig = localeConfigCache.get(loc)
+    if (!locConfig) {
+      locConfig = pickConfigForLocale(config, loc, dict)
+      localeConfigCache.set(loc, locConfig)
+    }
+    return locConfig
+  }
+  const createPageContext = (loc: string, pagePath: string, extras: Record<string, unknown> = {}) => {
+    const locConfig = getLocaleConfig(loc)
+    return {
+      config: locConfig,
+      basePath,
+      assetBase: basePath || '',
+      pageBase: (basePath ? basePath : '') + '/' + loc,
+      pagePath,
+      IS_DEV: isDev,
+      t: dict[loc],
+      locale: loc,
+      canonical: '/' + loc + pagePath,
+      locales,
+      langTags,
+      i18n: dict,
+      ...extras,
+    }
+  }
   // 预先一次性收集所有语言的缺失翻译警告，确保之后所有页面的 buildIssuesSummary 一致
   const translatedCache = new Map<string, LocalizedModuleRecord[]>()
   if (isDev) {
@@ -421,10 +446,7 @@ async function render(modules: ModuleRecord[], _allTags: string) {
   for (const loc of locales) {
     const locOut = path.join(outDir, loc)
     await fs.ensureDir(locOut)
-    const locConfig = pickConfigForLocale(config, loc, dict)
-    localeConfigCache.set(loc, locConfig)
-    const assetBase = basePath || ''
-    const pageBase = (basePath ? basePath : '') + '/' + loc
+    const locConfig = getLocaleConfig(loc)
     const $t = dict[loc]
     // 针对当前语言，生成脚本文本与元信息已翻译的模块数据（不影响其他语言）
     let modulesForLoc = translatedCache.get(loc)
@@ -479,49 +501,25 @@ async function render(modules: ModuleRecord[], _allTags: string) {
       }
     }
 
-    const indexHtml = nunjucks.render('layouts/home.njk', {
+    const indexHtml = nunjucks.render('layouts/home.njk', createPageContext(loc, '/', {
       modules: modulesForLoc,
-      config: locConfig,
-      basePath,
-      assetBase,
-      pageBase,
-      pagePath: '/',
-      IS_DEV: isDev,
-      t: $t,
-      locale: loc,
-      canonical: '/' + loc + '/',
-      locales,
-      langTags,
-      i18n: dict,
       shareLinks: generateShareLinks({
         url: locConfig.baseUrl + '/' + loc + '/',
         title: locConfig.siteName,
         description: locConfig.description,
       }),
-    })
+    }))
     await fs.outputFile(path.join(locOut, 'index.html'), await maybeMinify(indexHtml, isFast), 'utf8')
 
     // 生成关于页面
-    const aboutHtml = nunjucks.render('layouts/about.njk', {
-      config: locConfig,
-      basePath,
-      assetBase,
-      pageBase,
-      pagePath: '/about/',
-      IS_DEV: isDev,
-      t: $t,
-      locale: loc,
-      canonical: '/' + loc + '/about/',
-      locales,
-      langTags,
-      i18n: dict,
+    const aboutHtml = nunjucks.render('layouts/about.njk', createPageContext(loc, '/about/', {
       shareLinks: generateShareLinks({
         // 关于页面的分享链接与主页相同，因为关于页面的分享按钮为推广站点而非单页面，因此仍使用主页信息
         url: locConfig.baseUrl + '/' + loc + '/',
         title: locConfig.siteName,
         description: locConfig.description,
       }),
-    })
+    }))
     const aboutDir = path.join(locOut, 'about')
     await fs.ensureDir(aboutDir)
     await fs.writeFile(path.join(aboutDir, 'index.html'), await maybeMinify(aboutHtml, isFast), 'utf8')
@@ -529,26 +527,15 @@ async function render(modules: ModuleRecord[], _allTags: string) {
     for (const m of modules) {
       const moduleData = modulesForLoc.find((x) => x.id === m.id) || m
       const moduleUrl = locConfig.baseUrl + '/' + loc + '/modules/' + m.slug + '/'
-      const html = nunjucks.render('layouts/module.njk', {
+      const html = nunjucks.render('layouts/module.njk', createPageContext(loc, '/modules/' + m.slug + '/', {
         module: moduleData,
-        config: locConfig,
-        basePath,
-        assetBase,
-        pageBase,
-        pagePath: '/modules/' + m.slug + '/',
-        IS_DEV: isDev,
-        t: $t,
-        locale: loc,
-        locales,
-        langTags,
-        i18n: dict,
         scratchblocksLanguages,
         shareLinks: generateShareLinks({
           url: moduleUrl,
           title: moduleData.name || m.id,
           description: moduleData.description,
         }),
-      })
+      }))
       const moduleDir = path.join(locOut, 'modules', m.slug)
       await fs.ensureDir(moduleDir)
       await fs.writeFile(path.join(moduleDir, 'index.html'), await maybeMinify(html, isFast), 'utf8')
@@ -683,16 +670,8 @@ async function render(modules: ModuleRecord[], _allTags: string) {
 
   // 在所有语言与模块页面渲染完成后，再统一生成 issues 页面，确保每个语言目录看到的是全集合
   if (isDev) {
-    // 统一使用最终 collectedIssues（通过 nunjucks.render monkey patch 注入到模板）
-    const dict: I18nDictionary = await loadI18n()
-    const locales = Object.keys(dict)
-    const langTags = Object.fromEntries(
-      locales.map((loc) => [loc, (dict[loc]?.meta && dict[loc].meta.languageTag) || loc])
-    )
+    // 统一使用最终 collectedIssues，并复用本次 render 阶段已加载的 i18n 数据。
     for (const loc of locales) {
-      const locConfig = pickConfigForLocale(config, loc, dict)
-      const pageBase = (basePath ? basePath : '') + '/' + loc
-      const assetBase = basePath || ''
       // 由于我们在统一生成阶段调用 render，此时 monkey patch 仍会注入 buildIssues & summary。
       // 但为稳妥（避免某些运行路径失效），这里显式计算一次并覆盖（模板优先使用传入值）。
       const summary = summarizeIssues(collectedIssues)
@@ -703,23 +682,12 @@ async function render(modules: ModuleRecord[], _allTags: string) {
             .replace('{errors}', String(summary.errors))
             .replace('{warnings}', String(summary.warnings))
         : ''
-      const issuesHtml = nunjucks.render('layouts/issues.njk', {
+      const issuesHtml = nunjucks.render('layouts/issues.njk', createPageContext(loc, '/issues/', {
         modules: [],
-        config: locConfig,
-        basePath,
-        assetBase,
-        pageBase,
-        pagePath: '/issues/',
-        IS_DEV: isDev,
-        t: dict[loc],
-        locale: loc,
-        locales,
-        langTags,
-        i18n: dict,
         buildIssues: collectedIssues,
         buildIssuesSummary: summary,
         buildIssuesSummaryText: summaryText,
-      })
+      }))
       const locOut = path.join(outDir, loc)
       const issuesDir = path.join(locOut, 'issues')
       await fs.ensureDir(issuesDir)
