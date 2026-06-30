@@ -3,6 +3,7 @@ import fs from 'fs-extra'
 import { fileURLToPath } from 'url'
 import formidable from 'formidable'
 import log from './logger.ts'
+import { isStrictlyInside } from './path-safety.ts'
 import { formatScriptFileName, isScriptTextFile, naturalCompare, parseScriptFileName } from './script-files.ts'
 
 const __filename = fileURLToPath(import.meta.url)
@@ -13,11 +14,6 @@ const localePattern = /^[a-z]{2}(-[a-z]{2})?$/
 const allowedAssetExtensions = ['.png', '.jpg', '.jpeg', '.gif', '.svg', '.pdf']
 
 // ==================== 工具函数 ====================
-
-function assertPathInside(parentDir, childPath) {
-  const relative = path.relative(parentDir, childPath)
-  return relative !== '' && !relative.startsWith('..') && !path.isAbsolute(relative)
-}
 
 /**
  * 验证模块 ID 是否合法（防止目录穿越攻击）
@@ -32,7 +28,7 @@ function validateModuleId(moduleId) {
   if (moduleId === '.' || moduleId === '..' || moduleId.includes('/') || moduleId.includes('\\')) {
     throw new Error('Invalid module ID: directory traversal detected')
   }
-  if (!assertPathInside(modulesDir, path.resolve(modulesDir, moduleId))) {
+  if (!isStrictlyInside(modulesDir, path.resolve(modulesDir, moduleId))) {
     throw new Error('Invalid module ID: directory traversal detected')
   }
   return moduleId
@@ -55,7 +51,7 @@ function validateScriptId(scriptId) {
   if (trimmed.toLowerCase().endsWith('.txt')) {
     throw new Error('Invalid script id: do not include .txt suffix')
   }
-  if (!assertPathInside(modulesDir, path.resolve(modulesDir, trimmed))) {
+  if (!isStrictlyInside(modulesDir, path.resolve(modulesDir, trimmed))) {
     throw new Error('Invalid script id: directory traversal detected')
   }
   return trimmed
@@ -761,7 +757,7 @@ export async function uploadAsset(req, res, moduleId) {
       const filename = validateAssetFilename(uploadedFile.originalFilename)
       const targetPath = path.resolve(assetsDir, filename)
 
-      if (!assertPathInside(assetsDir, targetPath)) {
+      if (!isStrictlyInside(assetsDir, targetPath)) {
         return sendError(res, 400, 'Invalid asset filename: directory traversal detected')
       }
 

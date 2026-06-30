@@ -8,6 +8,7 @@ import readline from 'readline'
 import * as editorApi from './lib/editor-api.ts'
 import { injectDevClient } from './lib/dev-html.ts'
 import log, { c, paint, formatDuration, timeNow, setLogMode } from './lib/logger.ts'
+import { isInsideOrEqual } from './lib/path-safety.ts'
 
 // 轻量开发服务器，支持：
 // - 基于 chokidar 监听内容与模板变更 -> 自动执行构建
@@ -103,14 +104,9 @@ let lastBuildResult: { time: string; duration: number; success: boolean } | null
 const SMALL_FILE_LIMIT = 256 * 1024
 const fileCache = new Map<string, any>() // key: absPath -> { mtimeMs, data: Buffer|string, isHTML }
 
-function isPathInside(parentDir: string, childPath: string) {
-  const relative = path.relative(parentDir, childPath)
-  return relative === '' || (!relative.startsWith('..') && !path.isAbsolute(relative))
-}
-
 function resolveStaticPath(rootDir: string, requestPath: string) {
   const resolved = path.resolve(rootDir, requestPath.replace(/^\/+/, ''))
-  return isPathInside(rootDir, resolved) ? resolved : null
+  return isInsideOrEqual(rootDir, resolved) ? resolved : null
 }
 
 function getCachedFile(absPath: string, stat: fs.Stats) {
@@ -376,7 +372,7 @@ const requestHandler = (req, res) => {
   }
 
   const sendFile = (absPath) => {
-    if (!isPathInside(staticRoot, path.resolve(absPath))) {
+    if (!isInsideOrEqual(staticRoot, path.resolve(absPath))) {
       serve404(res)
       return
     }
