@@ -12,7 +12,9 @@ function initNativeShare(nativeRow: HTMLElement | null, nativeBtn: HTMLButtonEle
   if (navigator.share) {
     nativeRow.hidden = false
     nativeBtn.onclick = () => {
-      navigator.share({ title: document.title, url: location.href }).catch(() => { /* empty */ })
+      navigator.share({ title: document.title, url: location.href }).catch(() => {
+        /* empty */
+      })
     }
     return
   }

@@ -41,7 +41,11 @@ const FONT_SUFFIX_NAME: Record<string, string> = { SC: 'Noto Sans SC', TC: 'Noto
  * @returns {string}
  */
 function getFontFamily(langTag: string) {
-  return getFontOrder(langTag).map((s) => FONT_SUFFIX_NAME[s]).join(', ') + ', sans-serif'
+  return (
+    getFontOrder(langTag)
+      .map((s) => FONT_SUFFIX_NAME[s])
+      .join(', ') + ', sans-serif'
+  )
 }
 
 /**

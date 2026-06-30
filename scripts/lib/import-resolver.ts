@@ -94,7 +94,11 @@ function importedScriptSuccess(
   }
 }
 
-function resolveImportLine(idMap: Map<string, ModuleRecord>, line: string, stackRoot: string): ImportedModuleScript | null {
+function resolveImportLine(
+  idMap: Map<string, ModuleRecord>,
+  line: string,
+  stackRoot: string
+): ImportedModuleScript | null {
   const match = line.match(importLineRe)
   if (!match) return null
 

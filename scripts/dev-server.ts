@@ -234,7 +234,9 @@ async function serve404() {
 }
 
 function createEditorRequest(request: Request, body: Buffer) {
-  const headers = Object.fromEntries(Array.from(request.headers.entries()).map(([key, value]) => [key.toLowerCase(), value]))
+  const headers = Object.fromEntries(
+    Array.from(request.headers.entries()).map(([key, value]) => [key.toLowerCase(), value])
+  )
   const req = Readable.from(body.length ? [body] : [])
   Object.assign(req, {
     headers,
@@ -390,7 +392,8 @@ async function serveStatic(pathnameRaw: string) {
     if (stat.isDirectory()) return serveStaticFile(path.join(requestedPath, 'index.html'), staticRoot, pathname)
     return serveStaticFile(requestedPath, staticRoot, pathname)
   } catch {
-    if (!path.extname(requestedPath)) return serveStaticFile(path.join(requestedPath, 'index.html'), staticRoot, pathname)
+    if (!path.extname(requestedPath))
+      return serveStaticFile(path.join(requestedPath, 'index.html'), staticRoot, pathname)
     return serve404()
   }
 }
@@ -419,7 +422,10 @@ const server = Bun.serve({
   tls: tlsOptions,
   routes: {
     '/api/build/status': {
-      GET: (req) => runEditorHandler(req, (nodeReq, res) => editorApi.getBuildStatus(nodeReq, res, { building, pending, lastBuildStart })),
+      GET: (req) =>
+        runEditorHandler(req, (nodeReq, res) =>
+          editorApi.getBuildStatus(nodeReq, res, { building, pending, lastBuildStart })
+        ),
     },
     '/api/modules': {
       GET: (req) => runEditorHandler(req, editorApi.getModuleList),
@@ -431,14 +437,27 @@ const server = Bun.serve({
     },
     '/api/modules/:moduleId/scripts/:scriptId': {
       PUT: (req) =>
-        runEditorHandler(req, (nodeReq, res) => editorApi.updateScript(nodeReq, res, req.params.moduleId, req.params.scriptId)),
+        runEditorHandler(req, (nodeReq, res) =>
+          editorApi.updateScript(nodeReq, res, req.params.moduleId, req.params.scriptId)
+        ),
       DELETE: (req) =>
-        runEditorHandler(req, (nodeReq, res) => editorApi.deleteScript(nodeReq, res, req.params.moduleId, req.params.scriptId)),
+        runEditorHandler(req, (nodeReq, res) =>
+          editorApi.deleteScript(nodeReq, res, req.params.moduleId, req.params.scriptId)
+        ),
     },
     '/api/modules/:moduleId/i18n/:locale': {
-      GET: (req) => runEditorHandler(req, (nodeReq, res) => editorApi.getI18n(nodeReq, res, req.params.moduleId, req.params.locale)),
-      PUT: (req) => runEditorHandler(req, (nodeReq, res) => editorApi.updateI18n(nodeReq, res, req.params.moduleId, req.params.locale)),
-      DELETE: (req) => runEditorHandler(req, (nodeReq, res) => editorApi.deleteI18n(nodeReq, res, req.params.moduleId, req.params.locale)),
+      GET: (req) =>
+        runEditorHandler(req, (nodeReq, res) =>
+          editorApi.getI18n(nodeReq, res, req.params.moduleId, req.params.locale)
+        ),
+      PUT: (req) =>
+        runEditorHandler(req, (nodeReq, res) =>
+          editorApi.updateI18n(nodeReq, res, req.params.moduleId, req.params.locale)
+        ),
+      DELETE: (req) =>
+        runEditorHandler(req, (nodeReq, res) =>
+          editorApi.deleteI18n(nodeReq, res, req.params.moduleId, req.params.locale)
+        ),
     },
     '/api/modules/:moduleId/demo': {
       POST: (req) => runEditorHandler(req, (nodeReq, res) => editorApi.uploadDemo(nodeReq, res, req.params.moduleId)),
@@ -449,14 +468,18 @@ const server = Bun.serve({
     },
     '/api/modules/:moduleId/assets/:assetFile': {
       DELETE: (req) =>
-        runEditorHandler(req, (nodeReq, res) => editorApi.deleteAsset(nodeReq, res, req.params.moduleId, req.params.assetFile)),
+        runEditorHandler(req, (nodeReq, res) =>
+          editorApi.deleteAsset(nodeReq, res, req.params.moduleId, req.params.assetFile)
+        ),
     },
     '/api/modules/:moduleId/meta': {
-      PUT: (req) => runEditorHandler(req, (nodeReq, res) => editorApi.updateModuleMeta(nodeReq, res, req.params.moduleId)),
+      PUT: (req) =>
+        runEditorHandler(req, (nodeReq, res) => editorApi.updateModuleMeta(nodeReq, res, req.params.moduleId)),
     },
     '/api/modules/:moduleId': {
       GET: (req) => runEditorHandler(req, (nodeReq, res) => editorApi.getModule(nodeReq, res, req.params.moduleId)),
-      DELETE: (req) => runEditorHandler(req, (nodeReq, res) => editorApi.deleteModule(nodeReq, res, req.params.moduleId)),
+      DELETE: (req) =>
+        runEditorHandler(req, (nodeReq, res) => editorApi.deleteModule(nodeReq, res, req.params.moduleId)),
     },
     '/api/*': apiNotFound,
     '/__dev/sse': handleSse,

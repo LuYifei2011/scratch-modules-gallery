@@ -471,11 +471,9 @@ export async function createScript(req, res, moduleId) {
     let fileOrder = order
     if (fileOrder === undefined) {
       const files = await fs.readdir(scriptsDir)
-      const orders = files
-        .filter(isScriptTextFile)
-        .map((f) => {
-          return parseScriptFileName(f).order
-        })
+      const orders = files.filter(isScriptTextFile).map((f) => {
+        return parseScriptFileName(f).order
+      })
       fileOrder = orders.length > 0 ? Math.max(...orders) + 1 : 1
     }
 

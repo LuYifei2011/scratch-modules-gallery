@@ -6,13 +6,7 @@ import { loadModules } from './module-loader.ts'
 import { translateScriptText } from './script-translator.ts'
 import { loadGlobalTags, loadI18n, loadModuleDefaults } from './i18n-loader.ts'
 import { resolveImports } from './import-resolver.ts'
-import type {
-  BuildIssueType,
-  LocalizedModuleRecord,
-  ModuleRecord,
-  SiteConfig,
-  TranslateScriptText,
-} from './types.ts'
+import type { BuildIssueType, LocalizedModuleRecord, ModuleRecord, SiteConfig, TranslateScriptText } from './types.ts'
 import type { I18nDictionary } from './i18n-loader.ts'
 
 export interface LoadSiteConfigOptions {
@@ -40,10 +34,7 @@ export interface LoadLocalizedModulesOptions {
   translateScriptText?: TranslateScriptText
 }
 
-export async function loadSiteConfig(
-  root: string,
-  options: LoadSiteConfigOptions = {}
-): Promise<SiteConfig> {
+export async function loadSiteConfig(root: string, options: LoadSiteConfigOptions = {}): Promise<SiteConfig> {
   const configModule = await import(pathToFileURL(path.join(root, 'site.config.ts')).href)
   const config = (configModule.default || configModule) as SiteConfig
 

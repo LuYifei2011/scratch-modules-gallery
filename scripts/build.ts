@@ -462,25 +462,31 @@ async function render(siteData: SiteData) {
       }
     }
 
-    const indexHtml = nunjucks.render('layouts/home.njk', createPageContext(loc, '/', {
-      modules: modulesForLoc,
-      shareLinks: generateShareLinks({
-        url: locConfig.baseUrl + '/' + loc + '/',
-        title: locConfig.siteName,
-        description: locConfig.description,
-      }),
-    }))
+    const indexHtml = nunjucks.render(
+      'layouts/home.njk',
+      createPageContext(loc, '/', {
+        modules: modulesForLoc,
+        shareLinks: generateShareLinks({
+          url: locConfig.baseUrl + '/' + loc + '/',
+          title: locConfig.siteName,
+          description: locConfig.description,
+        }),
+      })
+    )
     await fs.outputFile(path.join(locOut, 'index.html'), await maybeMinify(indexHtml, isFast), 'utf8')
 
     // 生成关于页面
-    const aboutHtml = nunjucks.render('layouts/about.njk', createPageContext(loc, '/about/', {
-      shareLinks: generateShareLinks({
-        // 关于页面的分享链接与主页相同，因为关于页面的分享按钮为推广站点而非单页面，因此仍使用主页信息
-        url: locConfig.baseUrl + '/' + loc + '/',
-        title: locConfig.siteName,
-        description: locConfig.description,
-      }),
-    }))
+    const aboutHtml = nunjucks.render(
+      'layouts/about.njk',
+      createPageContext(loc, '/about/', {
+        shareLinks: generateShareLinks({
+          // 关于页面的分享链接与主页相同，因为关于页面的分享按钮为推广站点而非单页面，因此仍使用主页信息
+          url: locConfig.baseUrl + '/' + loc + '/',
+          title: locConfig.siteName,
+          description: locConfig.description,
+        }),
+      })
+    )
     const aboutDir = path.join(locOut, 'about')
     await fs.ensureDir(aboutDir)
     await fs.writeFile(path.join(aboutDir, 'index.html'), await maybeMinify(aboutHtml, isFast), 'utf8')
@@ -488,15 +494,18 @@ async function render(siteData: SiteData) {
     for (const m of modules) {
       const moduleData = localizedModuleSet.byId.get(m.id) || m
       const moduleUrl = locConfig.baseUrl + '/' + loc + '/modules/' + m.slug + '/'
-      const html = nunjucks.render('layouts/module.njk', createPageContext(loc, '/modules/' + m.slug + '/', {
-        module: moduleData,
-        scratchblocksLanguages,
-        shareLinks: generateShareLinks({
-          url: moduleUrl,
-          title: moduleData.name || m.id,
-          description: moduleData.description,
-        }),
-      }))
+      const html = nunjucks.render(
+        'layouts/module.njk',
+        createPageContext(loc, '/modules/' + m.slug + '/', {
+          module: moduleData,
+          scratchblocksLanguages,
+          shareLinks: generateShareLinks({
+            url: moduleUrl,
+            title: moduleData.name || m.id,
+            description: moduleData.description,
+          }),
+        })
+      )
       const moduleDir = path.join(locOut, 'modules', m.slug)
       await fs.ensureDir(moduleDir)
       await fs.writeFile(path.join(moduleDir, 'index.html'), await maybeMinify(html, isFast), 'utf8')
@@ -643,12 +652,15 @@ async function render(siteData: SiteData) {
             .replace('{errors}', String(summary.errors))
             .replace('{warnings}', String(summary.warnings))
         : ''
-      const issuesHtml = nunjucks.render('layouts/issues.njk', createPageContext(loc, '/issues/', {
-        modules: [],
-        buildIssues: collectedIssues,
-        buildIssuesSummary: summary,
-        buildIssuesSummaryText: summaryText,
-      }))
+      const issuesHtml = nunjucks.render(
+        'layouts/issues.njk',
+        createPageContext(loc, '/issues/', {
+          modules: [],
+          buildIssues: collectedIssues,
+          buildIssuesSummary: summary,
+          buildIssuesSummaryText: summaryText,
+        })
+      )
       const locOut = path.join(outDir, loc)
       const issuesDir = path.join(locOut, 'issues')
       await fs.ensureDir(issuesDir)

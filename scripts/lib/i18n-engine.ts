@@ -48,10 +48,7 @@ type MergedModuleRecord = ModuleRecord & {
 
 // ── 内部辅助函数 ──────────────────────────────────────────
 
-function pickByLocalePriority<T>(
-  localePriority: string[],
-  getter: (locale: string) => T | undefined | null
-): T | null {
+function pickByLocalePriority<T>(localePriority: string[], getter: (locale: string) => T | undefined | null): T | null {
   for (const loc of localePriority) {
     const value = getter(loc)
     if (value) return value
