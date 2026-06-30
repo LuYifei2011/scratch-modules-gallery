@@ -780,8 +780,10 @@ export async function deleteAsset(req, res, moduleId, filename) {
   try {
     validateModuleId(moduleId)
 
-    if (filename.includes('/') || filename.includes('\\') || filename.includes('..')) {
-      return sendError(res, 400, 'Invalid filename')
+    try {
+      validateAssetFilename(filename)
+    } catch (e) {
+      return sendError(res, 400, e.message)
     }
 
     const assetPath = path.join(modulesDir, moduleId, 'assets', filename)

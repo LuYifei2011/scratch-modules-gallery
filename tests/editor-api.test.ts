@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'bun:test'
 import { Readable } from 'stream'
 import path from 'path'
 import fs from 'fs-extra'
-import { createScript, deleteI18n, getModule, getScripts, updateScript } from '../scripts/lib/editor-api.ts'
+import { createScript, deleteAsset, deleteI18n, getModule, getScripts, updateScript } from '../scripts/lib/editor-api.ts'
 
 const root = path.resolve('.')
 const modulesDir = path.join(root, 'content', 'modules')
@@ -154,5 +154,35 @@ describe('editor-api i18n deletion', () => {
 
     const missing = await call(deleteI18n, testModuleId, 'zh-cn')
     expect(missing.statusCode).toBe(404)
+  })
+})
+
+describe('editor-api asset deletion', () => {
+  it('deletes assets with upload-compatible filenames', async () => {
+    await writeModule({ '01-main.txt': 'say [main]\n' })
+    const assetsDir = path.join(testModuleDir, 'assets')
+    const assetPath = path.join(assetsDir, 'preview.png')
+    await fs.ensureDir(assetsDir)
+    await fs.writeFile(assetPath, 'image')
+
+    const res = await call(deleteAsset, testModuleId, 'preview.png')
+    expect(res.statusCode).toBe(200)
+    expect(await fs.pathExists(assetPath)).toBe(false)
+  })
+
+  it('rejects asset filenames that uploads would not accept', async () => {
+    await writeModule({ '01-main.txt': 'say [main]\n' })
+
+    for (const filename of ['', '.', '..', '../x.png', 'nested/x.png', 'nested\\x.png', 'bad name.png', 'bad.exe']) {
+      const res = await call(deleteAsset, testModuleId, filename)
+      expect(res.statusCode).toBe(400)
+    }
+  })
+
+  it('returns 404 for missing assets with valid filenames', async () => {
+    await writeModule({ '01-main.txt': 'say [main]\n' })
+
+    const res = await call(deleteAsset, testModuleId, 'missing.svg')
+    expect(res.statusCode).toBe(404)
   })
 })
