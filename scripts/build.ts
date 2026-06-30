@@ -1,6 +1,5 @@
 import fs from 'fs-extra'
 import path from 'path'
-import fg from 'fast-glob'
 import nunjucks from 'nunjucks'
 import * as scratchblocks from 'scratchblocks-plus/syntax/index.js'
 import simpleGit from 'simple-git'
@@ -10,6 +9,7 @@ import { buildSearchIndex } from './lib/search.ts'
 import { pickConfigForLocale } from './lib/i18n-loader.ts'
 import { loadLocalizedModules, loadSiteConfig, loadSiteData, type SiteData } from './lib/site-pipeline.ts'
 import { loadSiteCoverTemplate, generateSiteCover, generateModuleCover } from './lib/cover-generator.ts'
+import { globFiles } from './lib/bun-utils.ts'
 import log, { c, paint, formatDuration, timeNow } from './lib/logger.ts'
 import type {
   BuildIssue,
@@ -199,10 +199,7 @@ async function render(siteData: SiteData) {
   const thirdpartyDir = path.join(root, 'thirdparty')
   if (await fs.pathExists(thirdpartyDir)) await fs.copy(thirdpartyDir, path.join(outDir, 'thirdparty'))
   // copy client resources: TypeScript entry points are compiled to browser JS via Bun's built-in transpiler.
-  const clientFiles = await fg(['*.{ts,css}'], {
-    cwd: path.join(root, 'src', 'client'),
-    onlyFiles: true,
-  })
+  const clientFiles = await globFiles('*.{ts,css}', path.join(root, 'src', 'client'))
   for (const file of clientFiles) {
     const srcPath = path.join(root, 'src', 'client', file)
     if (file.endsWith('.ts')) {
@@ -259,7 +256,7 @@ async function render(siteData: SiteData) {
   try {
     const localesSourceDir = path.join(root, 'node_modules', 'scratchblocks-plus', 'locales')
     const langVendorDir = path.join(vendorDir, 'sb-langs')
-    const localeFiles = await fg(['*.json'], { cwd: localesSourceDir, onlyFiles: true })
+    const localeFiles = await globFiles('*.json', localesSourceDir)
     if (localeFiles.length > 0) {
       await fs.ensureDir(langVendorDir)
       for (const file of localeFiles) {
