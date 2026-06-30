@@ -22,49 +22,7 @@
         <script>
             var base ='{{ basePath or '' }}';
             var locales = {{ redirectLocales | safe }};
-            function pickLocale(browserLangs) {
-                if (!Array.isArray(browserLangs)) 
-                    browserLangs = [navigator.language || ''];
-                
-                var ls = browserLangs.map(function (l) {
-                    return String(l || '').toLowerCase()
-                });
-                // 优先精确匹配
-                for (var i = 0; i < ls.length; i++) {
-                    if (locales.includes(ls[i])) 
-                        return ls[i];
-                    
-                }
-                // 特殊处理中文简繁体
-                for (var i = 0; i < ls.length; i++) {
-                    var l = ls[i];
-                    if (l.startsWith('zh')) {
-                        if ((/-tw|-hk|-mo|hant/).test(l) && locales.includes('zh-tw')) 
-                            return 'zh-tw';
-                        
-                        if (locales.includes('zh-cn')) 
-                            return 'zh-cn';
-                        
-                        var z = locales.find(function (x) {
-                            return x.toLowerCase().startsWith('zh-')
-                        });
-                        if (z) 
-                            return z;
-                        
-                    }
-                }
-                // 主语言前缀匹配，如 en-US -> en
-                for (var i = 0; i < ls.length; i++) {
-                    var primary = ls[i].split('-')[0];
-                    var hit = locales.find(function (x) {
-                        return x.split('-')[0] === primary
-                    });
-                    if (hit) 
-                        return hit;
-                    
-                }
-                return '{{ defaultLocale }}';
-            }
+            {% include "partials/locale-picker.njk" %}
             var pref = '';
             var rememberLang = false;
             try {
@@ -76,7 +34,7 @@
                 : (
                     locales.includes(pref)
                     ? pref
-                    : pickLocale(navigator.languages || [navigator.language || '']));
+                    : pickLocale(navigator.languages || [navigator.language || ''], locales, '{{ defaultLocale }}'));
             var dest = (
                 base
                 ? base

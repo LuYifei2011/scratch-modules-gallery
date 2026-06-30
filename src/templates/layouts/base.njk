@@ -292,31 +292,11 @@
                     try {
                         if (sessionStorage.getItem('hint-lang-dismissed')) return;
                     } catch (e) {}
-                    function pickLocale(browserLangs) {
-                        var ls = browserLangs.map(function (l) { return String(l || '').toLowerCase(); });
-                        for (var i = 0; i < ls.length; i++) {
-                            if (locales.indexOf(ls[i]) !== -1) return ls[i];
-                        }
-                        for (var j = 0; j < ls.length; j++) {
-                            var l = ls[j];
-                            if (l.indexOf('zh') === 0) {
-                                if ((/-tw|-hk|-mo|hant/).test(l) && locales.indexOf('zh-tw') !== -1) return 'zh-tw';
-                                if (locales.indexOf('zh-cn') !== -1) return 'zh-cn';
-                                var z = locales.filter(function (x) { return x.toLowerCase().indexOf('zh-') === 0; })[0];
-                                if (z) return z;
-                            }
-                        }
-                        for (var k = 0; k < ls.length; k++) {
-                            var primary = ls[k].split('-')[0];
-                            var hit = locales.filter(function (x) { return x.split('-')[0] === primary; })[0];
-                            if (hit) return hit;
-                        }
-                        return null;
-                    }
+                    {% include "partials/locale-picker.njk" %}
                     var browserLangs = (navigator.languages && navigator.languages.length)
                         ? Array.prototype.slice.call(navigator.languages)
                         : [navigator.language || ''];
-                    var suggested = pickLocale(browserLangs);
+                    var suggested = pickLocale(browserLangs, locales, null);
                     if (!suggested || suggested === currentLocale) return;
                     var localeNames = window.LOCALE_NAMES || {};
                     var suggestedLangName = (localeNames[suggested] && localeNames[suggested].meta && localeNames[suggested].meta.languageName) || suggested;

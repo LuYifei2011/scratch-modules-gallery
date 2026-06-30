@@ -129,49 +129,7 @@
             var base = '{{ basePath or '' }}';
             var locales = {{ redirectLocales | safe }};
             var i18nData = {{ i18nJSON | safe }};
-            
-            function pickLocale(browserLangs) {
-                if (!Array.isArray(browserLangs)) 
-                    browserLangs = [navigator.language || ''];
-                
-                var ls = browserLangs.map(function (l) {
-                    return String(l || '').toLowerCase()
-                });
-                
-                // 优先精确匹配
-                for (var i = 0; i < ls.length; i++) {
-                    if (locales.includes(ls[i])) 
-                        return ls[i];
-                }
-                
-                // 特殊处理中文简繁体
-                for (var i = 0; i < ls.length; i++) {
-                    var l = ls[i];
-                    if (l.startsWith('zh')) {
-                        if ((/-tw|-hk|-mo|hant/).test(l) && locales.includes('zh-tw')) 
-                            return 'zh-tw';
-                        if (locales.includes('zh-cn')) 
-                            return 'zh-cn';
-                        var z = locales.find(function (x) {
-                            return x.toLowerCase().startsWith('zh-')
-                        });
-                        if (z) 
-                            return z;
-                    }
-                }
-                
-                // 前缀匹配
-                for (var i = 0; i < ls.length; i++) {
-                    var prefix = ls[i].split('-')[0];
-                    var match = locales.find(function (loc) {
-                        return loc.toLowerCase().startsWith(prefix)
-                    });
-                    if (match) 
-                        return match;
-                }
-                
-                return '{{ defaultLocale }}';
-            }
+            {% include "partials/locale-picker.njk" %}
             
             function detectLocale() {
                 // 1. 读取 localStorage
@@ -188,7 +146,7 @@
                 else if (navigator.language) 
                     langs = [navigator.language];
                 
-                return pickLocale(langs);
+                return pickLocale(langs, locales, '{{ defaultLocale }}');
             }
             
             function extractSearchTerm() {
