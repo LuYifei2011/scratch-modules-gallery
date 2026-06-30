@@ -13,59 +13,154 @@ import log from './lib/logger.ts'
 
 const root = path.resolve('.')
 
-// 比较两个脚本 AST 是否等价
-function compareAsts(ast1, ast2) {
-  if (!ast1 || !ast2) return ast1 === ast2
-
-  // 比较脚本数量
-  if (ast1.scripts.length !== ast2.scripts.length) return false
-
-  // 逐个脚本比较
-  for (let i = 0; i < ast1.scripts.length; i++) {
-    const script1 = ast1.scripts[i]
-    const script2 = ast2.scripts[i]
-
-    // 比较块数量
-    if (script1.blocks.length !== script2.blocks.length) return false
-
-    // 递归比较块结构（通过 stringify 比对块内容更可靠）
-    const blocks1Str = JSON.stringify(serializeBlocks(script1.blocks))
-    const blocks2Str = JSON.stringify(serializeBlocks(script2.blocks))
-
-    if (blocks1Str !== blocks2Str) return false
-  }
-
-  return true
+type FormatScriptResult = {
+  formatted: string
+  changed: boolean
+  valid: boolean
+  reason?: 'parse-error' | 'validation-error' | 'no-languages' | 'not-string'
+  error?: string
 }
 
-// 序列化块结构用于比较
-function serializeBlocks(blocks) {
-  return blocks.map((block) => ({
-    opcode: block.opcode,
-    fields: block.fields ? Object.entries(block.fields).map(([k, v]) => [k, v?.[0]]) : [],
-    inputs: block.inputs ? Object.keys(block.inputs).sort() : [],
-    next: !!block.next,
-    parent: !!block.parent,
-    children: block.blocks ? serializeBlocks(block.blocks) : [],
-  }))
+// 比较两个脚本 AST 是否等价
+export function compareAsts(ast1, ast2) {
+  if (!ast1 || !ast2) return ast1 === ast2
+
+  return JSON.stringify(serializeAst(ast1)) === JSON.stringify(serializeAst(ast2))
+}
+
+function serializeAst(ast) {
+  return {
+    scripts: (ast.scripts || []).map(serializeScript),
+  }
+}
+
+function serializeScript(script) {
+  return {
+    blocks: (script.blocks || []).map(serializeNode),
+  }
+}
+
+// 序列化 scratchblocks-plus AST 的语义字段，排除位置、渲染缓存、语言对象等易变字段。
+function serializeNode(node) {
+  if (!node) return null
+
+  if (node.isLabel) {
+    return {
+      type: 'label',
+      value: node.value,
+      cls: node.cls || '',
+    }
+  }
+
+  if (node.isIcon) {
+    return {
+      type: 'icon',
+      name: node.name,
+    }
+  }
+
+  if (node.isMatrix) {
+    return {
+      type: 'matrix',
+      rows: node.rows,
+    }
+  }
+
+  if (node.isInput) {
+    return {
+      type: 'input',
+      shape: node.shape,
+      value: serializeInputValue(node.value),
+      menu: node.menu || null,
+    }
+  }
+
+  if (node.isComment) {
+    return {
+      type: 'comment',
+      value: node.label?.value ?? '',
+      hasBlock: Boolean(node.hasBlock),
+    }
+  }
+
+  if (node.isGlow) {
+    return {
+      type: 'glow',
+      child: serializeNode(node.child),
+    }
+  }
+
+  if (node.isScript) {
+    return {
+      type: 'script',
+      blocks: (node.blocks || []).map(serializeNode),
+    }
+  }
+
+  if (node.isBlock) {
+    return {
+      type: 'block',
+      info: serializeBlockInfo(node.info),
+      diff: node.diff || null,
+      comment: node.comment ? serializeNode(node.comment) : null,
+      children: (node.children || []).map(serializeNode),
+    }
+  }
+
+  return {
+    type: node.constructor?.name || 'unknown',
+    value: String(node),
+  }
+}
+
+function serializeInputValue(value) {
+  if (value && typeof value === 'object' && value.isMatrix) {
+    return serializeNode(value)
+  }
+  return value ?? null
+}
+
+function serializeBlockInfo(info) {
+  if (!info) return null
+  return {
+    id: info.id || null,
+    selector: info.selector || null,
+    shape: info.shape || null,
+    category: info.category || null,
+    categoryIsDefault: info.categoryIsDefault ?? null,
+    shapeIsDefault: info.shapeIsDefault ?? null,
+    isReset: info.isReset ?? null,
+    isRTL: info.isRTL ?? null,
+  }
 }
 
 // 格式化脚本文本
-function formatScript(raw) {
+export function formatScript(raw): FormatScriptResult {
   if (!raw || typeof raw !== 'string') {
-    return raw
+    return {
+      formatted: raw,
+      changed: false,
+      valid: typeof raw === 'string',
+      reason: typeof raw === 'string' ? undefined : 'not-string',
+    }
   }
 
   const allKeys = Object.keys(scratchblocks.allLanguages || {})
   if (!allKeys.length) {
-    return raw
+    return {
+      formatted: raw,
+      changed: false,
+      valid: false,
+      reason: 'no-languages',
+    }
   }
 
+  // 替换 CRLF 为 LF
+  const normalizedRaw = raw.replace(/\r\n?/g, '\n')
+
   try {
-    // 替换 CRLF 为 LF
-    raw = raw.replace(/\r\n?/g, '\n')
     // 第一次解析
-    const doc = scratchblocks.parse(raw, { languages: allKeys })
+    const doc = scratchblocks.parse(normalizedRaw, { languages: allKeys })
     const formatted = doc.stringify()
 
     // 校验：重新解析格式化后的文本，确保 AST 等价
@@ -73,13 +168,27 @@ function formatScript(raw) {
 
     // 比较两个 AST
     if (!compareAsts(doc, docReparse)) {
-      log.warn('validate', 'AST 校验失败，返回原始内容')
-      return raw
+      return {
+        formatted: normalizedRaw,
+        changed: normalizedRaw !== raw,
+        valid: false,
+        reason: 'validation-error',
+      }
     }
 
-    return formatted
+    return {
+      formatted,
+      changed: raw !== formatted,
+      valid: true,
+    }
   } catch (error) {
-    return raw
+    return {
+      formatted: normalizedRaw,
+      changed: normalizedRaw !== raw,
+      valid: false,
+      reason: 'parse-error',
+      error: error?.message || String(error),
+    }
   }
 }
 
@@ -116,30 +225,19 @@ async function main() {
       const scriptPath = path.join(modulesDir, scriptRelPath)
       try {
         const originalContent = await fs.readFile(scriptPath, 'utf8')
+        const result = formatScript(originalContent)
 
-        // 预校验：检查格式化是否会改变 AST
-        const allKeys = Object.keys(scratchblocks.allLanguages || {})
-        const docOriginal = scratchblocks.parse(originalContent, { languages: allKeys })
-        const formatted = formatScript(originalContent)
-
-        // 如果 formatScript 返回原始内容，说明校验失败
-        if (formatted === originalContent) {
-          // 检查是否真的需要格式化但校验失败
-          try {
-            const docFormatted = scratchblocks.parse(originalContent, { languages: allKeys })
-            const testFormat = docFormatted.stringify()
-            if (testFormat !== originalContent) {
-              validationFailed.push(scriptRelPath)
-              continue
-            }
-          } catch (e) {
-            // 解析失败，跳过
-            continue
+        if (!result.valid) {
+          if (result.reason === 'validation-error') {
+            validationFailed.push(scriptRelPath)
+          } else if (result.reason === 'parse-error') {
+            log.warn('format', `跳过无法解析的脚本 ${scriptRelPath}: ${result.error}`)
           }
+          continue
         }
 
-        if (originalContent !== formatted) {
-          await fs.writeFile(scriptPath, formatted, 'utf8')
+        if (result.changed) {
+          await fs.writeFile(scriptPath, result.formatted, 'utf8')
           log.info('format', scriptRelPath)
           changedCount++
         }
@@ -166,7 +264,9 @@ async function main() {
   }
 }
 
-main().catch((error) => {
-  log.error('format', error.message)
-  process.exit(1)
-})
+if (import.meta.main) {
+  main().catch((error) => {
+    log.error('format', error.message)
+    process.exit(1)
+  })
+}
