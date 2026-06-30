@@ -35,7 +35,7 @@ const isFast =
   process.argv.includes('--fast')
 
 // 构建所有可用的 scratchblocks 语言列表
-let scratchblocksLanguages: Array<{ code: string; name: string }> = []
+let scratchblocksLanguages: { code: string; name: string }[] = []
 
 const templatesPath = path.join(root, 'src', 'templates')
 nunjucks.configure(templatesPath, { autoescape: true })

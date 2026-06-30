@@ -355,9 +355,8 @@ export async function translateModulesForLocale(
     const ownNameMaps = buildNameMapsForModule(mergedM, localePriority)
     // notes 处理：先翻译其中的 scratchblocks 块，再转换为 HTML
     if (m.notesMap && typeof m.notesMap === 'object' && Object.keys(m.notesMap).length) {
-      let rawNotes: string | null = null
       let selectedNotesLocale: string | null = null
-      rawNotes = pickByLocalePriority(localePriority, (loc) => {
+      let rawNotes = pickByLocalePriority(localePriority, (loc) => {
         if (!m.notesMap[loc]) return null
         selectedNotesLocale = loc
         return m.notesMap[loc]
