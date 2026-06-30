@@ -398,63 +398,6 @@
                 </div>
             </div>
         </dialog>
-        <script>
-            function openShareModal() {
-                var modal = document.getElementById('share-modal');
-                var urlInput = document.getElementById('share-url-input');
-                var copyBtn = document.getElementById('share-copy-btn');
-                var copyLabel = document.getElementById('share-copy-label');
-                var nativeRow = document.getElementById('share-native-row');
-                var nativeBtn = document.getElementById('share-native-btn');
-                if (!modal) return;
-                var url = window.location.origin + window.PAGE_BASE;
-                url += window.PAGE_PATH === "/about/" ? '/' : window.PAGE_PATH;
-                var i18n = window.__I18N || {};
-                var copyUrlText = (i18n.base && i18n.base.shareCopyUrl) || '{{ t.base.shareCopyUrl }}';
-                var copyOkText = (i18n.module && i18n.module.copySuccess) || '{{ t.module.copySuccess }}';
-                copyLabel.textContent = copyUrlText;
-                copyBtn.classList.remove('btn-success', 'btn-outline-success');
-                if (navigator.share) {
-                    nativeRow.hidden = false;
-                    nativeBtn.onclick = function () {
-                        navigator.share({ title: document.title, url: location.href }).catch(function () {});
-                    };
-                } else {
-                    nativeRow.hidden = true;
-                }
-                copyBtn.onclick = function () {
-                    var url = urlInput.value;
-                    function onCopied() {
-                        copyLabel.textContent = copyOkText;
-                        copyBtn.classList.add('btn-success');
-                        copyBtn.classList.remove('btn-outline');
-                        setTimeout(function () {
-                            copyLabel.textContent = copyUrlText;
-                            copyBtn.classList.remove('btn-success');
-                            copyBtn.classList.add('btn-outline');
-                        }, 2000);
-                    }
-                    if (navigator.clipboard && navigator.clipboard.writeText) {
-                        navigator.clipboard.writeText(url).then(onCopied).catch(function () {
-                            urlInput.select();
-                            document.execCommand('copy');
-                            onCopied();
-                        });
-                    } else {
-                        urlInput.select();
-                        document.execCommand('copy');
-                        onCopied();
-                    }
-                };
-                modal.showModal();
-                // urlInput.select();
-            }
-            (function () {
-                var modal = document.getElementById('share-modal');
-                if (!modal) return;
-                modal.querySelector('.share-dialog-close').addEventListener('click', function () { modal.close(); });
-                modal.addEventListener('click', function (e) { if (e.target === modal) modal.close(); });
-            })();
-        </script>
+        <script type="module" src="{{ assetBase }}/share.js"></script>
     </body>
 </html>

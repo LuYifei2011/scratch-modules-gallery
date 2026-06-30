@@ -1,4 +1,5 @@
 import scratchblocks from './vendor/scratchblocks-plus.min.es.js'
+import { copyTextToClipboard, showCopyResult } from './clipboard'
 
 type ScratchblocksBlockEntry = {
   el: HTMLPreElement | HTMLElement
@@ -47,63 +48,6 @@ function downloadFile(url: string, filename: string): void {
   a.remove()
 }
 
-async function copyTextToClipboard(text: string): Promise<boolean> {
-  if (!text) return false
-  let ok = false
-  if (navigator.clipboard && navigator.clipboard.writeText) {
-    try {
-      await navigator.clipboard.writeText(text)
-      ok = true
-    } catch {
-      ok = false
-    }
-  }
-  if (!ok) {
-    const ta = document.createElement('textarea')
-    ta.value = text
-    ta.style.position = 'fixed'
-    ta.style.left = '-9999px'
-    document.body.appendChild(ta)
-    ta.select()
-    try {
-      ok = document.execCommand('copy')
-    } catch {
-      ok = false
-    }
-    ta.remove()
-  }
-  return ok
-}
-
-function showCopyResult(btn: HTMLElement | null, ok: boolean, originalLabel: string): void {
-  if (!btn) return
-  const succ = window.__I18N.module.copySuccess || 'Copied!'
-  const fail = window.__I18N.module.copyFail || 'Copy failed'
-
-  if (ok) {
-    btn.classList.remove('failed')
-    btn.classList.add('copied')
-    btn.setAttribute('aria-label', succ)
-    btn.setAttribute('title', succ)
-    setTimeout(() => {
-      btn.classList.remove('copied')
-      btn.setAttribute('aria-label', originalLabel)
-      btn.setAttribute('title', originalLabel)
-    }, 1400)
-    return
-  }
-
-  btn.classList.remove('copied')
-  btn.classList.add('failed')
-  btn.setAttribute('aria-label', fail)
-  btn.setAttribute('title', fail)
-  setTimeout(() => {
-    btn.classList.remove('failed')
-    btn.setAttribute('aria-label', originalLabel)
-    btn.setAttribute('title', originalLabel)
-  }, 1400)
-}
-
 // 初始化脚本渲染：先加载语言，再 parse
 async function initScratchblocks(): Promise<void> {
   // 先加载页面语言（非英语时）
@@ -144,7 +88,7 @@ async function initScratchblocks(): Promise<void> {
         ev.preventDefault()
         const text = obj.doc.stringify() || obj.el.textContent || ''
         const ok = await copyTextToClipboard(text)
-        showCopyResult(btn, ok, originalLabel)
+        showCopyResult({ button: btn, ok, originalLabel })
       })
     } catch (e) {
       const message = e instanceof Error ? e.message : String(e)
@@ -311,7 +255,7 @@ function initVariablesAndLists(): (style: string) => void {
       copyBtn.addEventListener('click', async (ev: MouseEvent) => {
         ev.preventDefault()
         const ok = await copyTextToClipboard(type === 'cloud' ? '☁ ' + displayName : displayName)
-        showCopyResult(copyBtn, ok, label)
+        showCopyResult({ button: copyBtn, ok, originalLabel: label })
       })
     }
 
