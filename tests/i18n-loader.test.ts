@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'bun:test'
-import { pickConfigForLocale, loadI18n, loadModuleDefaults, loadGlobalTags } from '../scripts/lib/i18n-loader.ts'
+import {
+  completeI18nDictionary,
+  pickConfigForLocale,
+  loadI18n,
+  loadModuleDefaults,
+  loadGlobalTags,
+} from '../scripts/lib/i18n-loader.ts'
 
 describe('pickConfigForLocale', () => {
   const baseConfig = {
@@ -74,6 +80,61 @@ describe('loadI18n', () => {
     for (const [locale, data] of Object.entries(dict)) {
       expect(data.meta).toBeTruthy()
     }
+  })
+})
+
+describe('completeI18nDictionary', () => {
+  it('fills missing global UI fields from the source locale', () => {
+    const dict = completeI18nDictionary({
+      en: {
+        meta: {
+          languageTag: 'en',
+          languageName: 'English',
+        },
+        home: {
+          onlineDemoBadge: 'Live Demo',
+          noResults: 'No results',
+        },
+        module: {
+          copyScript: 'Copy',
+          copySuccess: 'Copied!',
+          copyFail: 'Copy failed',
+        },
+      },
+      'zh-cn': {
+        meta: {
+          languageTag: 'zh-CN',
+        },
+        home: {
+          noResults: '无结果',
+        },
+      },
+    })
+
+    expect(dict['zh-cn'].meta?.languageTag).toBe('zh-CN')
+    expect(dict['zh-cn'].meta?.languageName).toBe('English')
+    expect((dict['zh-cn'].home as Record<string, string>).onlineDemoBadge).toBe('Live Demo')
+    expect((dict['zh-cn'].home as Record<string, string>).noResults).toBe('无结果')
+    expect((dict['zh-cn'].module as Record<string, string>).copyScript).toBe('Copy')
+  })
+
+  it('keeps target locale arrays and primitive values when present', () => {
+    const dict = completeI18nDictionary({
+      en: {
+        meta: {
+          keywords: ['Scratch', 'modules'],
+          description: 'English description',
+        },
+      },
+      'zh-cn': {
+        meta: {
+          keywords: ['Scratch', '模块'],
+        },
+      },
+    })
+
+    expect(dict['zh-cn'].meta?.keywords).toEqual(['Scratch', '模块'])
+    expect(dict['zh-cn'].meta?.description).toBe('English description')
   })
 })
 

@@ -79,7 +79,7 @@ async function initScratchblocks(): Promise<void> {
       if (!wrapper) return
       const btn = wrapper.querySelector<HTMLButtonElement>('.sb-copy')
       if (!btn) return
-      const label = window.__I18N.module.copyScript || 'Copy'
+      const label = window.__I18N.module.copyScript
       btn.setAttribute('aria-label', label)
       btn.setAttribute('title', label)
       const originalLabel = label
@@ -249,7 +249,7 @@ function initVariablesAndLists(): (style: string) => void {
 
     const copyBtn = row.querySelector<HTMLButtonElement>('.var-copy')
     if (copyBtn) {
-      const label = window.__I18N.module.copyScript || 'Copy'
+      const label = window.__I18N.module.copyScript
       copyBtn.setAttribute('aria-label', label)
       copyBtn.setAttribute('title', label)
       copyBtn.addEventListener('click', async (ev: MouseEvent) => {

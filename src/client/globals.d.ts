@@ -25,16 +25,16 @@ interface Window {
       languageTag: string
     }
     home: {
-      onlineDemoBadge?: string
-      noResults?: string
+      onlineDemoBadge: string
+      noResults: string
     }
     base: {
-      shareCopyUrl?: string
+      shareCopyUrl: string
     }
     module: {
-      copySuccess?: string
-      copyFail?: string
-      copyScript?: string
+      copySuccess: string
+      copyFail: string
+      copyScript: string
     }
   }
   ASSET_BASE: string

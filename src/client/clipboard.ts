@@ -56,8 +56,8 @@ export function showCopyResult({
 }: CopyFeedbackOptions): void {
   if (!button) return
 
-  const succ = successLabel || window.__I18N.module.copySuccess || 'Copied!'
-  const fail = failureLabel || window.__I18N.module.copyFail || 'Copy failed'
+  const succ = successLabel || window.__I18N.module.copySuccess
+  const fail = failureLabel || window.__I18N.module.copyFail
   const activeClass = ok ? successClass : failureClass
   const inactiveClass = ok ? failureClass : successClass
   const activeLabel = ok ? succ : fail

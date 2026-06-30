@@ -30,6 +30,40 @@ export type I18nDictionary = Record<LocaleCode, LocaleDictionary>
 export type ModuleDefaultsDictionary = Record<LocaleCode, ModuleTranslation>
 export type GlobalTagsDictionary = Record<string, Record<LocaleCode, string>>
 
+function isPlainObject(value: unknown): value is Record<string, unknown> {
+  return Boolean(value) && typeof value === 'object' && !Array.isArray(value)
+}
+
+function deepMergeMissing<T extends Record<string, unknown>>(base: T, override: Record<string, unknown>): T {
+  const out: Record<string, unknown> = { ...base }
+  for (const [key, value] of Object.entries(override)) {
+    const baseValue = out[key]
+    if (isPlainObject(baseValue) && isPlainObject(value)) {
+      out[key] = deepMergeMissing(baseValue, value)
+    } else {
+      out[key] = value
+    }
+  }
+  return out as T
+}
+
+/**
+ * 使用源语言补齐其它全局 UI i18n 字典的缺失字段。
+ *
+ * 构建端会把补齐后的当前语言字典注入 `window.__I18N`，因此前端不需要再维护
+ * 一套硬编码英文 UI fallback。
+ */
+export function completeI18nDictionary(dict: I18nDictionary, sourceLocale: LocaleCode = 'en'): I18nDictionary {
+  const source = dict[sourceLocale]
+  if (!source) return dict
+
+  const completed: I18nDictionary = {}
+  for (const [locale, data] of Object.entries(dict)) {
+    completed[locale] = locale === sourceLocale ? data : deepMergeMissing(source, data)
+  }
+  return completed
+}
+
 /**
  * 加载 i18n 词典（自动扫描 src/i18n/*.json，排除 tags.json 和 module-defaults.json）
  */
@@ -48,7 +82,7 @@ export async function loadI18n(): Promise<I18nDictionary> {
       log.warn('i18n', `解析失败，跳过 ${f}: ${e instanceof Error ? e.message : e}`)
     }
   }
-  return dict
+  return completeI18nDictionary(dict)
 }
 
 /**

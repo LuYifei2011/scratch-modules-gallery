@@ -26,10 +26,7 @@ async function initSearch() {
 
 function renderList(docs) {
   if (!resultsDiv) return
-  const t = window.__I18N.home || {
-    onlineDemoBadge: 'Live Demo',
-    noResults: 'No results',
-  }
+  const t = window.__I18N.home
   if (!docs.length) {
     resultsDiv.innerHTML = '<p>' + t.noResults + '</p>'
     return

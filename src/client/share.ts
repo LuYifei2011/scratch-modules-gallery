@@ -33,9 +33,9 @@ function openShareModal(): void {
   if (!modal || !urlInput || !copyBtn || !copyLabel) return
 
   const i18n = window.__I18N
-  const copyUrlText = i18n.base.shareCopyUrl || 'Copy URL'
-  const copyOkText = i18n.module.copySuccess || 'Copied!'
-  const copyFailText = i18n.module.copyFail || 'Copy failed'
+  const copyUrlText = i18n.base.shareCopyUrl
+  const copyOkText = i18n.module.copySuccess
+  const copyFailText = i18n.module.copyFail
 
   urlInput.value = getShareUrl()
   copyLabel.textContent = copyUrlText
