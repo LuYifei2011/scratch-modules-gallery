@@ -6,6 +6,7 @@ import url from 'url'
 import { spawn } from 'child_process'
 import readline from 'readline'
 import * as editorApi from './lib/editor-api.ts'
+import { injectDevClient } from './lib/dev-html.ts'
 import log, { c, paint, formatDuration, timeNow, setLogMode } from './lib/logger.ts'
 
 // 轻量开发服务器，支持：
@@ -215,12 +216,7 @@ function serve404(res: any) {
     res.statusCode = 404
     if (!err) {
       res.setHeader('Content-Type', 'text/html')
-      let html = buf.toString('utf8')
-      // 注入自动刷新脚本
-      const inject = `\n<script src="/__dev/client.js"></script>\n`
-      if (html.includes('</body>')) html = html.replace('</body>', `${inject}</body>`)
-      else html += inject
-      res.end(html)
+      res.end(injectDevClient(buf.toString('utf8')))
     } else {
       // 如果404.html不存在（构建失败），返回简单消息
       res.setHeader('Content-Type', 'text/plain; charset=utf-8')
@@ -425,14 +421,7 @@ const requestHandler = (req, res) => {
             return
           }
           if (ext === '.html') {
-            let html = buf.toString('utf8')
-            // 编辑器页面不注入自动刷新脚本（已有自己的 SSE 监听）
-            const isEditorPage = pathname.includes('__dev/editor')
-            if (!isEditorPage) {
-              const inject = `\n<script src="/__dev/client.js"></script>\n`
-              if (html.includes('</body>')) html = html.replace('</body>', `${inject}</body>`)
-              else html += inject
-            }
+            const html = injectDevClient(buf.toString('utf8'), pathname)
             setCachedFile(absPath, stat, { data: html, isHTML: true })
             res.end(html)
             return
@@ -450,15 +439,7 @@ const requestHandler = (req, res) => {
             serve404(res)
             return
           }
-          let html = buf.toString('utf8')
-          // 编辑器页面不注入自动刷新脚本（已有自己的 SSE 监听）
-          const isEditorPage = pathname.includes('__dev/editor')
-          if (!isEditorPage) {
-            const inject = `\n<script src="/__dev/client.js"></script>\n`
-            if (html.includes('</body>')) html = html.replace('</body>', `${inject}</body>`)
-            else html += inject
-          }
-          res.end(html)
+          res.end(injectDevClient(buf.toString('utf8'), pathname))
         })
         return
       }
