@@ -6,8 +6,8 @@
 
 import fs from 'fs-extra'
 import path from 'path'
-import fg from 'fast-glob'
 import log from './logger.ts'
+import { globFiles, readJsonFile } from './bun-utils.ts'
 import type { LocaleCode, ModuleTranslation, SiteConfig } from './types.ts'
 
 const root = path.resolve('.')
@@ -70,14 +70,14 @@ export function completeI18nDictionary(dict: I18nDictionary, sourceLocale: Local
 export async function loadI18n(): Promise<I18nDictionary> {
   const i18nDir = path.join(root, 'src', 'i18n')
   const EXCLUDED = new Set(['tags.json', 'module-defaults.json'])
-  const files = (await fg(['*.json'], { cwd: i18nDir, onlyFiles: true }))
+  const files = (await globFiles('*.json', i18nDir))
     .filter((f) => !EXCLUDED.has(f)) // 排除全局 tags 字典与模块默认翻译，只加载语言文件
     .sort((a, b) => a.localeCompare(b, 'en', { numeric: true }))
   const dict: I18nDictionary = {}
   for (const f of files) {
     const loc = path.basename(f, '.json')
     try {
-      dict[loc] = JSON.parse(await fs.readFile(path.join(i18nDir, f), 'utf8'))
+      dict[loc] = await readJsonFile(path.join(i18nDir, f))
     } catch (e) {
       log.warn('i18n', `解析失败，跳过 ${f}: ${e instanceof Error ? e.message : e}`)
     }
@@ -95,7 +95,7 @@ export async function loadModuleDefaults(): Promise<ModuleDefaultsDictionary> {
   const defaultsFile = path.join(root, 'src', 'i18n', 'module-defaults.json')
   try {
     if (await fs.pathExists(defaultsFile)) {
-      return JSON.parse(await fs.readFile(defaultsFile, 'utf8'))
+      return await readJsonFile<ModuleDefaultsDictionary>(defaultsFile)
     }
   } catch (e) {
     log.warn('module-defaults', `加载模块默认翻译失败: ${e instanceof Error ? e.message : e}`)
@@ -110,7 +110,7 @@ export async function loadGlobalTags(): Promise<GlobalTagsDictionary> {
   const tagsFile = path.join(root, 'src', 'i18n', 'tags.json')
   try {
     if (await fs.pathExists(tagsFile)) {
-      return JSON.parse(await fs.readFile(tagsFile, 'utf8'))
+      return await readJsonFile<GlobalTagsDictionary>(tagsFile)
     }
   } catch (e) {
     log.warn('tags', `加载全局 tags 字典失败: ${e instanceof Error ? e.message : e}`)

@@ -17,8 +17,8 @@
 
 import fs from 'fs-extra'
 import path from 'path'
-import fg from 'fast-glob'
 import { loadSiteConfig, loadSiteData, loadLocalizedModules } from './lib/site-pipeline.ts'
+import { globFiles, readJsonFile } from './lib/bun-utils.ts'
 
 const root = path.resolve('.')
 const SOURCE_LOCALE = 'en'
@@ -63,15 +63,13 @@ function getByPath(obj, keyPath) {
  */
 async function checkGlobalI18n() {
   const i18nDir = path.join(root, 'src', 'i18n')
-  const files = (await fg(['*.json'], { cwd: i18nDir, onlyFiles: true }))
-    .filter((f) => !EXCLUDED_I18N_FILES.has(f))
-    .sort()
+  const files = (await globFiles('*.json', i18nDir)).filter((f) => !EXCLUDED_I18N_FILES.has(f)).sort()
 
   const localeData = {}
   for (const f of files) {
     const locale = path.basename(f, '.json')
     try {
-      localeData[locale] = JSON.parse(await fs.readFile(path.join(i18nDir, f), 'utf8'))
+      localeData[locale] = await readJsonFile(path.join(i18nDir, f))
     } catch {
       /* skip unparseable */
     }
@@ -124,7 +122,7 @@ async function checkTags(locales) {
   const tagsFile = path.join(root, 'src', 'i18n', 'tags.json')
   if (!(await fs.pathExists(tagsFile))) return []
 
-  const tags = JSON.parse(await fs.readFile(tagsFile, 'utf8'))
+  const tags = await readJsonFile(tagsFile)
   const issues = []
 
   for (const [tagId, translations] of Object.entries(tags)) {
@@ -181,14 +179,16 @@ async function checkModulesViaBuild(locales) {
 
   // Also check for missing notes files
   const contentDir = path.join(root, 'content', 'modules')
-  const moduleDirs = (await fg(['*'], { cwd: contentDir, onlyDirectories: true }))
+  const moduleDirs = (await fs.readdir(contentDir, { withFileTypes: true }))
+    .filter((entry) => entry.isDirectory())
+    .map((entry) => entry.name)
     .filter((d) => !d.startsWith('.'))
     .sort()
 
   for (const moduleId of moduleDirs) {
     const notesDir = path.join(contentDir, moduleId, 'notes')
     if (await fs.pathExists(notesDir)) {
-      const noteFiles = await fg(['*.md'], { cwd: notesDir, onlyFiles: true })
+      const noteFiles = await globFiles('*.md', notesDir)
       const existingLocales = noteFiles.map((f) => path.basename(f, '.md'))
 
       if (existingLocales.includes(SOURCE_LOCALE)) {

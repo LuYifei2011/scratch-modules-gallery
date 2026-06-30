@@ -6,10 +6,10 @@
 
 import fs from 'fs-extra'
 import path from 'path'
-import fg from 'fast-glob'
 import { buildModuleRecord } from './schema.ts'
 import log from './logger.ts'
 import { naturalCompare, parseScriptFileName } from './script-files.ts'
+import { globFiles, readJsonFile, readTextFile } from './bun-utils.ts'
 import type { ModuleMeta, ModuleRecord, ModuleScript, ModuleTranslation, SiteConfig } from './types.ts'
 
 interface LoadModulesOptions {
@@ -32,7 +32,9 @@ interface LoadModulesResult {
  */
 export async function loadModules({ root, config, isDev }: LoadModulesOptions): Promise<LoadModulesResult> {
   const baseDir = path.join(root, config.contentDir)
-  const dirs = await fg(['*'], { cwd: baseDir, onlyDirectories: true, dot: true })
+  const dirs = (await fs.readdir(baseDir, { withFileTypes: true }))
+    .filter((entry) => entry.isDirectory())
+    .map((entry) => entry.name)
   const modules: ModuleRecord[] = []
   const errorsAll: string[] = []
   for (const dir of dirs) {
@@ -44,7 +46,7 @@ export async function loadModules({ root, config, isDev }: LoadModulesOptions): 
       if (!(await fs.pathExists(metaFile))) continue // skip
       let meta: ModuleMeta
       try {
-        meta = JSON.parse(await fs.readFile(metaFile, 'utf8')) as ModuleMeta
+        meta = await readJsonFile<ModuleMeta>(metaFile)
       } catch (e) {
         errorsAll.push(`${dir}: meta.json parse error ${e instanceof Error ? e.message : String(e)}`)
         continue
@@ -54,10 +56,10 @@ export async function loadModules({ root, config, isDev }: LoadModulesOptions): 
       // scripts/ 目录下若存在 *.txt，按文件名自然排序
       const scriptsDir = path.join(moduleDir, 'scripts')
       if (await fs.pathExists(scriptsDir)) {
-        const files = (await fg(['*.txt'], { cwd: scriptsDir, onlyFiles: true })).sort(naturalCompare)
+        const files = (await globFiles('*.txt', scriptsDir)).sort(naturalCompare)
         for (const f of files) {
           const full = path.join(scriptsDir, f)
-          const content = await fs.readFile(full, 'utf8')
+          const content = await readTextFile(full)
           const { id } = parseScriptFileName(f)
           scripts.push({ id, content })
         }
@@ -77,10 +79,10 @@ export async function loadModules({ root, config, isDev }: LoadModulesOptions): 
       const notesMap: Record<string, string> = {}
       const notesDirPath = path.join(moduleDir, 'notes')
       if (await fs.pathExists(notesDirPath)) {
-        const noteFiles = await fg(['*.md'], { cwd: notesDirPath, onlyFiles: true })
+        const noteFiles = await globFiles('*.md', notesDirPath)
         for (const f of noteFiles) {
           const loc = path.basename(f, '.md')
-          const raw = await fs.readFile(path.join(notesDirPath, f), 'utf8')
+          const raw = await readTextFile(path.join(notesDirPath, f))
           notesMap[loc] = raw
         }
       }
@@ -89,11 +91,11 @@ export async function loadModules({ root, config, isDev }: LoadModulesOptions): 
       const translations: Record<string, ModuleTranslation> = {}
       const i18nDir = path.join(moduleDir, 'i18n')
       if (await fs.pathExists(i18nDir)) {
-        const files = (await fg(['*.json'], { cwd: i18nDir, onlyFiles: true })).sort(naturalCompare)
+        const files = (await globFiles('*.json', i18nDir)).sort(naturalCompare)
         for (const f of files) {
           const loc = path.basename(f, '.json')
           try {
-            const obj = JSON.parse(await fs.readFile(path.join(i18nDir, f), 'utf8'))
+            const obj = await readJsonFile(path.join(i18nDir, f))
             if (obj && typeof obj === 'object') {
               const one: Record<string, unknown> = {}
               const source = obj as Record<string, unknown>

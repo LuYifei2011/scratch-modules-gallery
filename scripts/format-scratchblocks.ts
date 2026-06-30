@@ -8,7 +8,7 @@ import fs from 'fs-extra'
 import path from 'path'
 import * as scratchblocks from 'scratchblocks-plus/syntax/index.js'
 import { loadScratchblocksLanguages } from './lib/scratch-utils.ts'
-import fg from 'fast-glob'
+import { globFiles, readTextFile } from './lib/bun-utils.ts'
 import log from './lib/logger.ts'
 
 const root = path.resolve('.')
@@ -204,10 +204,7 @@ async function main() {
   }
 
   try {
-    const modules = await fg(['*/scripts/*.txt'], {
-      cwd: modulesDir,
-      onlyFiles: true,
-    })
+    const modules = await globFiles('*/scripts/*.txt', modulesDir)
 
     if (!modules.length) {
       log.info('format', '没有与给定模式匹配的文件')
@@ -224,7 +221,7 @@ async function main() {
     for (const scriptRelPath of modules) {
       const scriptPath = path.join(modulesDir, scriptRelPath)
       try {
-        const originalContent = await fs.readFile(scriptPath, 'utf8')
+        const originalContent = await readTextFile(scriptPath)
         const result = formatScript(originalContent)
 
         if (!result.valid) {
