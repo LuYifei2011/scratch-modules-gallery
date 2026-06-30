@@ -428,6 +428,98 @@ describe('translateModulesForLocale', () => {
     expect(importedScript.fromTitle).toBe('主脚本')
   })
 
+  it('falls back between zh-cn and zh-tw for imported module names and script titles', async () => {
+    const dictWithTw = {
+      ...dict,
+      'zh-tw': { meta: { languageTag: 'zh-TW' } },
+    }
+    const sourceModule = {
+      id: 'source',
+      name: 'Source',
+      description: 'source',
+      tags: [],
+      keywords: [],
+      scripts: [{ id: 'main', content: 'say [hi]' }],
+      variables: [],
+      notesMap: {},
+      scriptTitles: { main: 'Main' },
+      translations: {
+        'zh-cn': {
+          name: '来源模块',
+          scriptTitles: { main: '主脚本' },
+        },
+      },
+    }
+    const consumerModule = {
+      id: 'consumer',
+      name: 'Consumer',
+      description: 'uses source',
+      tags: [],
+      keywords: [],
+      scripts: [
+        {
+          imported: true as true,
+          content: 'say [hi]',
+          fromId: 'source',
+          fromName: 'Source',
+          fromIndex: 1,
+          fromTitle: '',
+          fromScriptId: 'main',
+        },
+      ],
+      variables: [],
+      notesMap: {},
+      scriptTitles: {},
+      translations: { 'zh-tw': { name: '使用者' } },
+    }
+    const result = await translateModulesForLocale([sourceModule, consumerModule], dictWithTw, 'zh-tw')
+    const consumer = result.find((m) => m.id === 'consumer')
+    const importedScript = consumer.scripts.find((s) => s.imported)
+    expect(importedScript.fromName).toBe('来源模块')
+    expect(importedScript.fromTitle).toBe('主脚本')
+  })
+
+  it('preserves existing imported fromTitle before falling back to scriptTitles', async () => {
+    const sourceModule = {
+      id: 'source',
+      name: 'Source',
+      description: 'source',
+      tags: [],
+      keywords: [],
+      scripts: [{ id: 'main', content: 'say [hi]' }],
+      variables: [],
+      notesMap: {},
+      scriptTitles: { main: 'Main From Meta' },
+      translations: {},
+    }
+    const consumerModule = {
+      id: 'consumer',
+      name: 'Consumer',
+      description: 'uses source',
+      tags: [],
+      keywords: [],
+      scripts: [
+        {
+          imported: true as true,
+          content: 'say [hi]',
+          fromId: 'source',
+          fromName: 'Source',
+          fromIndex: 1,
+          fromTitle: 'Existing Title',
+          fromScriptId: 'main',
+        },
+      ],
+      variables: [],
+      notesMap: {},
+      scriptTitles: {},
+      translations: { 'zh-cn': { name: '使用者' } },
+    }
+    const result = await translateModulesForLocale([sourceModule, consumerModule], dict, 'zh-cn')
+    const consumer = result.find((m) => m.id === 'consumer')
+    const importedScript = consumer.scripts.find((s) => s.imported)
+    expect(importedScript.fromTitle).toBe('Existing Title')
+  })
+
   it('translates scratchblocks in notes markdown when notes come from a fallback locale', async () => {
     const translatedTexts = []
     const mockTranslate = (raw, langKey, nameMaps) => {

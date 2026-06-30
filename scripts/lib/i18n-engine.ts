@@ -48,6 +48,59 @@ type MergedModuleRecord = ModuleRecord & {
 
 // ── 内部辅助函数 ──────────────────────────────────────────
 
+function pickByLocalePriority<T>(
+  localePriority: string[],
+  getter: (locale: string) => T | undefined | null
+): T | null {
+  for (const loc of localePriority) {
+    const value = getter(loc)
+    if (value) return value
+  }
+  return null
+}
+
+function localizeModuleName(mod: MergedModuleRecord, localePriority: string[], fallbackName = ''): string {
+  const per = mod.translations || {}
+  const nameMap = mod.name_i18n || {}
+  return pickByLocalePriority(localePriority, (loc) => per[loc]?.name ?? nameMap[loc]) || fallbackName || mod.name
+}
+
+function localizeScriptTitle(
+  mod: MergedModuleRecord,
+  localePriority: string[],
+  scriptId: string | undefined,
+  fallbackTitle = '',
+  index1?: number,
+  preferFallbackTitle = false
+): string {
+  const enTitles = mod.scriptTitles || {}
+  const localized = pickByLocalePriority(localePriority, (loc) => {
+    const titles = mod.translations?.[loc]?.scriptTitles
+    return scriptId && titles ? titles[scriptId] : undefined
+  })
+  if (localized) return localized
+  if (preferFallbackTitle && fallbackTitle) return fallbackTitle
+  if (scriptId && enTitles[scriptId]) return enTitles[scriptId]
+  return fallbackTitle || scriptId || (index1 != null ? '#' + index1 : '')
+}
+
+function buildScriptNameMaps(
+  mod: MergedModuleRecord,
+  localePriority: string[],
+  baseMaps?: NameMaps
+): NameMaps | undefined {
+  const nameMaps = buildNameMapsForModule(mod, localePriority) || baseMaps
+  const procMaps = buildProcedureMaps(mod, localePriority)
+  const commentsMap = buildCommentsMap(mod, localePriority)
+  if (!procMaps && !commentsMap) return nameMaps
+
+  const mergedMaps = nameMaps || {}
+  if (procMaps?.paramMap) mergedMaps.params = procMaps.paramMap
+  if (procMaps?.procMap) mergedMaps.procs = procMaps.procMap
+  if (commentsMap) mergedMaps.comments = commentsMap
+  return mergedMaps
+}
+
 /**
  * 将 Markdown 文本中的 <scratchblocks> 块和 <sb> 内联块翻译为目标语言。
  *
@@ -86,11 +139,7 @@ function buildNameMapsForModule(mod: MergedModuleRecord, localePriority: string[
   const maps: Required<Pick<NameMaps, 'vars' | 'lists' | 'events'>> = { vars: {}, lists: {}, events: {} }
 
   function pickByPriority(fieldName: 'variables' | 'lists', key: string): string | null {
-    for (const loc of localePriority) {
-      const map = per[loc]?.[fieldName]
-      if (map && map[key]) return map[key]
-    }
-    return null
+    return pickByLocalePriority(localePriority, (loc) => per[loc]?.[fieldName]?.[key])
   }
 
   const varsArr = Array.isArray(mod.variables) ? mod.variables : []
@@ -128,11 +177,10 @@ function buildNameMapsForModule(mod: MergedModuleRecord, localePriority: string[
  */
 function buildCommentsMap(mod: MergedModuleRecord, localePriority: string[]): Record<string, string> | null {
   const per = mod.translations || {}
-  for (const loc of localePriority) {
+  return pickByLocalePriority(localePriority, (loc) => {
     const map = per[loc]?.comments
-    if (map && typeof map === 'object') return map
-  }
-  return null
+    return map && typeof map === 'object' ? map : null
+  })
 }
 
 /**
@@ -140,20 +188,14 @@ function buildCommentsMap(mod: MergedModuleRecord, localePriority: string[]): Re
  */
 function buildProcedureMaps(mod: MergedModuleRecord, localePriority: string[]): ProcedureMaps | undefined {
   const per = mod.translations || {}
-  const procMap = (() => {
-    for (const loc of localePriority) {
-      const map = per[loc]?.procedures
-      if (map && typeof map === 'object') return map
-    }
-    return null
-  })()
-  const paramMap = (() => {
-    for (const loc of localePriority) {
-      const map = per[loc]?.procedureParams
-      if (map && typeof map === 'object') return map
-    }
-    return null
-  })()
+  const procMap = pickByLocalePriority(localePriority, (loc) => {
+    const map = per[loc]?.procedures
+    return map && typeof map === 'object' ? map : null
+  })
+  const paramMap = pickByLocalePriority(localePriority, (loc) => {
+    const map = per[loc]?.procedureParams
+    return map && typeof map === 'object' ? map : null
+  })
   if (!procMap && !paramMap) return undefined
   return { procMap, paramMap }
 }
@@ -276,35 +318,15 @@ export async function translateModulesForLocale(
     const per = mergeModuleTranslations(moduleDefaults, rawPer)
     // mergedM：携带合并后翻译的模块对象，供辅助函数（buildNameMapsForModule 等）使用
     const mergedM = { ...m, translations: per }
-    const enScriptTitles = m.scriptTitles || {}
     function pickStr(base: 'name' | 'description' | 'seoDescription', map?: Record<string, string>) {
-      for (const loc of localePriority) {
-        const val = per[loc]?.[base] ?? (map && map[loc])
-        if (val) return val
-      }
-      return nm[base]
+      return pickByLocalePriority(localePriority, (loc) => per[loc]?.[base] ?? (map && map[loc])) || nm[base]
     }
     function pickArr(base: 'tags' | 'keywords', map?: Record<string, string[]>) {
-      for (const loc of localePriority) {
-        const val = per[loc]?.[base] ?? (map && map[loc])
-        if (val) return val
-      }
-      return nm[base]
+      return pickByLocalePriority(localePriority, (loc) => per[loc]?.[base] ?? (map && map[loc])) || nm[base]
     }
     function pickKeywords(base: 'keywords', map?: Record<string, string[]>) {
       const val = pickArr(base, map)
       return Array.isArray(val) ? val : []
-    }
-    function pickTitleForScript(scriptId: string | undefined, index1: number) {
-      // 按优先级查找脚本标题
-      for (const loc of localePriority) {
-        const titles = per[loc]?.scriptTitles
-        if (titles && titles[scriptId]) return titles[scriptId]
-      }
-      // 回退到元信息中的英文权威标题
-      if (enScriptTitles[scriptId]) return enScriptTitles[scriptId]
-      // 最后的默认值
-      return scriptId || (index1 != null ? '#' + index1 : '')
     }
     if (m.name_i18n || per[locale] || per['en'] || per['zh-cn'] || per['zh-tw']) {
       nm.name = pickStr('name', m.name_i18n)
@@ -335,13 +357,11 @@ export async function translateModulesForLocale(
     if (m.notesMap && typeof m.notesMap === 'object' && Object.keys(m.notesMap).length) {
       let rawNotes: string | null = null
       let selectedNotesLocale: string | null = null
-      for (const loc of localePriority) {
-        if (m.notesMap[loc]) {
-          rawNotes = m.notesMap[loc]
-          selectedNotesLocale = loc
-          break
-        }
-      }
+      rawNotes = pickByLocalePriority(localePriority, (loc) => {
+        if (!m.notesMap[loc]) return null
+        selectedNotesLocale = loc
+        return m.notesMap[loc]
+      })
       if (rawNotes) {
         // 仅当备注来自与目标语言不同的回退语言时才翻译 scratchblocks（已有目标语言备注则无需翻译）
         if (selectedNotesLocale !== locale && !isEnglishLocale && translateScriptText) {
@@ -390,16 +410,8 @@ export async function translateModulesForLocale(
             let targetForProc: MergedModuleRecord | undefined
             if (isImportedScript(s) && s.fromId) {
               targetForProc = mergedModulesMap.get(s.fromId)
-              if (targetForProc) mapsForThis = buildNameMapsForModule(targetForProc, localePriority) || mapsForThis
             }
-            const procMaps = buildProcedureMaps(targetForProc || mergedM, localePriority)
-            const commentsMap = buildCommentsMap(targetForProc || mergedM, localePriority)
-            if (procMaps || commentsMap) {
-              mapsForThis = mapsForThis || {}
-              if (procMaps?.paramMap) mapsForThis.params = procMaps.paramMap
-              if (procMaps?.procMap) mapsForThis.procs = procMaps.procMap
-              if (commentsMap) mapsForThis.comments = commentsMap
-            }
+            mapsForThis = buildScriptNameMaps(targetForProc || mergedM, localePriority, mapsForThis)
             // 通过 AST（translateScriptFields）完成自定义块定义/调用及注释的本地化翻译
             if (translateScriptText) {
               const {
@@ -428,56 +440,24 @@ export async function translateModulesForLocale(
         }
         // 标题本地化（自身脚本）
         if (!isImportedScript(s)) {
-          ns.title = pickTitleForScript(s.id, si + 1)
+          ns.title = localizeScriptTitle(mergedM, localePriority, s.id, '', si + 1)
         }
         if (Array.isArray(s.leadingImports) && s.leadingImports.length) {
           const arr: ImportedModuleScript[] = []
           for (const imp of s.leadingImports) {
-            let localizedFromName = imp.fromName
             const target = mergedModulesMap.get(imp.fromId)
-            if (target) {
-              const perT = target.translations || {}
-              const nameMap = target.name_i18n || {}
-              for (const loc of localePriority) {
-                const name = perT[loc]?.name ?? nameMap[loc]
-                if (name) {
-                  localizedFromName = name
-                  break
-                }
-              }
-              if (!localizedFromName) {
-                localizedFromName = target.name
-              }
-            }
-            const mapsImported = target ? buildNameMapsForModule(target, localePriority) : undefined
             arr.push({
               ...imp,
               content: (function () {
-                const procMaps = buildProcedureMaps(target || mergedM, localePriority)
-                const cm = target ? buildCommentsMap(target, localePriority) : null
-                let mf: NameMaps | undefined = mapsImported
-                if (procMaps || cm) {
-                  mf = mf || {}
-                  if (procMaps?.paramMap) mf.params = procMaps.paramMap
-                  if (procMaps?.procMap) mf.procs = procMaps.procMap
-                  if (cm) mf.comments = cm
-                }
+                const mf = buildScriptNameMaps(target || mergedM, localePriority)
                 const xlResult = translateScriptText ? translateScriptText(imp.content, languageTag, mf) : null
                 const translated = xlResult ? xlResult.text : null
                 return typeof translated === 'string' && translated.trim() ? translated : imp.content
               })(),
-              fromName: localizedFromName,
+              fromName: target ? localizeModuleName(target, localePriority, imp.fromName) : imp.fromName,
               fromTitle:
                 imp.fromScriptId && target
-                  ? (function () {
-                      const enTitles = target.scriptTitles || {}
-                      const perT = target.translations || {}
-                      for (const loc of localePriority) {
-                        const titles = perT[loc]?.scriptTitles
-                        if (titles && titles[imp.fromScriptId]) return titles[imp.fromScriptId]
-                      }
-                      return enTitles[imp.fromScriptId] || imp.fromScriptId
-                    })()
+                  ? localizeScriptTitle(target, localePriority, imp.fromScriptId, imp.fromTitle)
                   : imp.fromTitle,
             })
           }
@@ -487,31 +467,10 @@ export async function translateModulesForLocale(
         if (isImportedScript(s) && s.fromId) {
           const target = mergedModulesMap.get(s.fromId)
           if (target) {
-            // 本地化 fromName
-            let localizedFromName = s.fromName
-            const perT = target.translations || {}
-            const nameMap = target.name_i18n || {}
-            for (const loc of localePriority) {
-              const name = perT[loc]?.name ?? nameMap[loc]
-              if (name) {
-                localizedFromName = name
-                break
-              }
-            }
-            ns.fromName = localizedFromName || target.name || s.fromName
+            ns.fromName = localizeModuleName(target, localePriority, s.fromName)
             // 本地化 fromTitle（仅当 fromScriptId 已知时）
             if (s.fromScriptId) {
-              const enTitles = target.scriptTitles || {}
-              for (const loc of localePriority) {
-                const titles = perT[loc]?.scriptTitles
-                if (titles && titles[s.fromScriptId]) {
-                  ns.fromTitle = titles[s.fromScriptId]
-                  break
-                }
-              }
-              if (!ns.fromTitle) {
-                ns.fromTitle = enTitles[s.fromScriptId] || s.fromScriptId
-              }
+              ns.fromTitle = localizeScriptTitle(target, localePriority, s.fromScriptId, s.fromTitle, undefined, true)
             }
           }
         }
