@@ -15,21 +15,54 @@ const allowedAssetExtensions = ['.png', '.jpg', '.jpeg', '.gif', '.svg', '.pdf']
 
 // ==================== 工具函数 ====================
 
+export class HttpError extends Error {
+  status: number
+
+  constructor(status, message) {
+    super(message)
+    this.name = 'HttpError'
+    this.status = status
+  }
+}
+
+function httpError(status, message) {
+  return new HttpError(status, message)
+}
+
+function badRequest(message) {
+  return httpError(400, message)
+}
+
+function notFound(message) {
+  return httpError(404, message)
+}
+
+function conflict(message) {
+  return httpError(409, message)
+}
+
+function validateLocale(locale) {
+  if (!localePattern.test(locale)) {
+    throw badRequest('Invalid locale format')
+  }
+  return locale
+}
+
 /**
  * 验证模块 ID 是否合法（防止目录穿越攻击）
  */
 function validateModuleId(moduleId) {
   if (!moduleId || typeof moduleId !== 'string') {
-    throw new Error('Invalid module ID')
+    throw badRequest('Invalid module ID')
   }
   if (!/^[a-z0-9.-]+$/.test(moduleId)) {
-    throw new Error('Invalid module ID: only lowercase letters, numbers, hyphens, and dots allowed')
+    throw badRequest('Invalid module ID: only lowercase letters, numbers, hyphens, and dots allowed')
   }
   if (moduleId === '.' || moduleId === '..' || moduleId.includes('/') || moduleId.includes('\\')) {
-    throw new Error('Invalid module ID: directory traversal detected')
+    throw badRequest('Invalid module ID: directory traversal detected')
   }
   if (!isStrictlyInside(modulesDir, path.resolve(modulesDir, moduleId))) {
-    throw new Error('Invalid module ID: directory traversal detected')
+    throw badRequest('Invalid module ID: directory traversal detected')
   }
   return moduleId
 }
@@ -39,27 +72,27 @@ function validateModuleId(moduleId) {
  */
 function validateScriptId(scriptId) {
   if (!scriptId || typeof scriptId !== 'string') {
-    throw new Error('Invalid script id')
+    throw badRequest('Invalid script id')
   }
   const trimmed = scriptId.trim()
   if (!trimmed || trimmed === '.' || trimmed === '..') {
-    throw new Error('Invalid script id')
+    throw badRequest('Invalid script id')
   }
   if (trimmed.includes('\0') || trimmed.includes('/') || trimmed.includes('\\')) {
-    throw new Error('Invalid script id: directory traversal detected')
+    throw badRequest('Invalid script id: directory traversal detected')
   }
   if (trimmed.toLowerCase().endsWith('.txt')) {
-    throw new Error('Invalid script id: do not include .txt suffix')
+    throw badRequest('Invalid script id: do not include .txt suffix')
   }
   if (!isStrictlyInside(modulesDir, path.resolve(modulesDir, trimmed))) {
-    throw new Error('Invalid script id: directory traversal detected')
+    throw badRequest('Invalid script id: directory traversal detected')
   }
   return trimmed
 }
 
 function validateAssetFilename(filename) {
   if (!filename || typeof filename !== 'string') {
-    throw new Error('Invalid asset filename')
+    throw badRequest('Invalid asset filename')
   }
   if (
     filename.includes('\0') ||
@@ -71,10 +104,10 @@ function validateAssetFilename(filename) {
     filename !== path.basename(filename) ||
     filename !== path.win32.basename(filename)
   ) {
-    throw new Error('Invalid asset filename: directory traversal detected')
+    throw badRequest('Invalid asset filename: directory traversal detected')
   }
   if (!allowedAssetExtensions.includes(path.extname(filename).toLowerCase())) {
-    throw new Error('Invalid asset filename: unsupported file type')
+    throw badRequest('Invalid asset filename: unsupported file type')
   }
   return filename
 }
@@ -117,7 +150,7 @@ export async function parseJsonBody(req): Promise<any> {
       try {
         resolve(JSON.parse(body))
       } catch (e) {
-        reject(new Error('Invalid JSON'))
+        reject(badRequest('Invalid JSON'))
       }
     })
     req.on('error', reject)
@@ -138,6 +171,22 @@ export function sendJson(res, status, data) {
  */
 export function sendError(res, status, message) {
   sendJson(res, status, { error: message })
+}
+
+function sendCaughtError(res, error) {
+  if (error instanceof HttpError) {
+    sendError(res, error.status, error.message)
+    return
+  }
+  sendError(res, 500, error?.message || String(error))
+}
+
+async function handleEditorAction(res, action) {
+  try {
+    await action()
+  } catch (e) {
+    sendCaughtError(res, e)
+  }
 }
 
 /**
@@ -203,29 +252,27 @@ async function scanModules() {
  * GET /api/modules - 获取所有模块列表
  */
 export async function getModuleList(req, res) {
-  try {
+  return handleEditorAction(res, async () => {
     const modules = await scanModules()
     sendJson(res, 200, { modules })
-  } catch (e) {
-    sendError(res, 500, e.message)
-  }
+  })
 }
 
 /**
  * GET /api/modules/:id - 获取单个模块详情
  */
 export async function getModule(req, res, moduleId) {
-  try {
+  return handleEditorAction(res, async () => {
     validateModuleId(moduleId)
     const moduleDir = path.join(modulesDir, moduleId)
 
     if (!(await fs.pathExists(moduleDir))) {
-      return sendError(res, 404, 'Module not found')
+      throw notFound('Module not found')
     }
 
     const metaPath = path.join(moduleDir, 'meta.json')
     if (!(await fs.pathExists(metaPath))) {
-      return sendError(res, 404, 'Module meta.json not found')
+      throw notFound('Module meta.json not found')
     }
 
     const meta = await fs.readJson(metaPath)
@@ -269,37 +316,31 @@ export async function getModule(req, res, moduleId) {
       hasDemo,
       assets,
     })
-  } catch (e) {
-    if (e.message.includes('Invalid module ID')) {
-      sendError(res, 400, e.message)
-    } else {
-      sendError(res, 500, e.message)
-    }
-  }
+  })
 }
 
 /**
  * POST /api/modules - 创建新模块
  */
 export async function createModule(req, res) {
-  try {
+  return handleEditorAction(res, async () => {
     const body = await parseJsonBody(req)
     const { id, meta } = body
 
     if (!id || !meta) {
-      return sendError(res, 400, 'Missing id or meta')
+      throw badRequest('Missing id or meta')
     }
 
     validateModuleId(id)
 
     const moduleDir = path.join(modulesDir, id)
     if (await fs.pathExists(moduleDir)) {
-      return sendError(res, 409, 'Module already exists')
+      throw conflict('Module already exists')
     }
 
     // 验证必填字段
     if (!meta.name || !meta.description) {
-      return sendError(res, 400, 'Missing required fields: name, description')
+      throw badRequest('Missing required fields: name, description')
     }
 
     if (!meta.tags || !Array.isArray(meta.tags)) {
@@ -308,7 +349,7 @@ export async function createModule(req, res) {
 
     // 确保 keywords 是数组（如果提供了的话）
     if (meta.keywords && !Array.isArray(meta.keywords)) {
-      return sendError(res, 400, 'keywords must be an array')
+      throw badRequest('keywords must be an array')
     }
     if (!meta.keywords) {
       meta.keywords = []
@@ -327,26 +368,20 @@ export async function createModule(req, res) {
     await fs.writeFile(path.join(moduleDir, 'scripts/01-main.txt'), normalizeScriptContent(defaultScript), 'utf8')
 
     sendJson(res, 201, { id, message: 'Module created successfully' })
-  } catch (e) {
-    if (e.message.includes('Invalid')) {
-      sendError(res, 400, e.message)
-    } else {
-      sendError(res, 500, e.message)
-    }
-  }
+  })
 }
 
 /**
  * PUT /api/modules/:id/meta - 更新模块元信息
  */
 export async function updateModuleMeta(req, res, moduleId) {
-  try {
+  return handleEditorAction(res, async () => {
     validateModuleId(moduleId)
     const moduleDir = path.join(modulesDir, moduleId)
     const metaPath = path.join(moduleDir, 'meta.json')
 
     if (!(await fs.pathExists(metaPath))) {
-      return sendError(res, 404, 'Module not found')
+      throw notFound('Module not found')
     }
 
     const body = await parseJsonBody(req)
@@ -359,62 +394,50 @@ export async function updateModuleMeta(req, res, moduleId) {
     if (!updatedMeta.id) {
       updatedMeta.id = moduleId
     } else if (updatedMeta.id !== moduleId) {
-      return sendError(res, 400, 'Cannot change module id')
+      throw badRequest('Cannot change module id')
     }
 
     // 验证必填字段
     if (!updatedMeta.name || !updatedMeta.description) {
-      return sendError(res, 400, 'Missing required fields: name, description')
+      throw badRequest('Missing required fields: name, description')
     }
 
     // 验证 keywords 是数组（如果提供了的话）
     if (updatedMeta.keywords && !Array.isArray(updatedMeta.keywords)) {
-      return sendError(res, 400, 'keywords must be an array')
+      throw badRequest('keywords must be an array')
     }
 
     // 写入 meta.json
     await fs.writeJson(metaPath, updatedMeta, { spaces: 2, EOL: '\n' })
 
     sendJson(res, 200, { message: 'Module meta updated successfully', meta: updatedMeta })
-  } catch (e) {
-    if (e.message.includes('Invalid')) {
-      sendError(res, 400, e.message)
-    } else {
-      sendError(res, 500, e.message)
-    }
-  }
+  })
 }
 
 /**
  * DELETE /api/modules/:id - 删除模块
  */
 export async function deleteModule(req, res, moduleId) {
-  try {
+  return handleEditorAction(res, async () => {
     validateModuleId(moduleId)
     const moduleDir = path.join(modulesDir, moduleId)
 
     if (!(await fs.pathExists(moduleDir))) {
-      return sendError(res, 404, 'Module not found')
+      throw notFound('Module not found')
     }
 
     // 删除整个目录
     await fs.remove(moduleDir)
 
     sendJson(res, 200, { message: 'Module deleted successfully' })
-  } catch (e) {
-    if (e.message.includes('Invalid')) {
-      sendError(res, 400, e.message)
-    } else {
-      sendError(res, 500, e.message)
-    }
-  }
+  })
 }
 
 /**
  * GET /api/modules/:id/scripts - 获取模块的所有脚本
  */
 export async function getScripts(req, res, moduleId) {
-  try {
+  return handleEditorAction(res, async () => {
     validateModuleId(moduleId)
     const scriptsDir = path.join(modulesDir, moduleId, 'scripts')
 
@@ -423,26 +446,20 @@ export async function getScripts(req, res, moduleId) {
     }
 
     sendJson(res, 200, { scripts: await readScriptsFromDir(scriptsDir) })
-  } catch (e) {
-    if (e.message.includes('Invalid module ID')) {
-      sendError(res, 400, e.message)
-    } else {
-      sendError(res, 500, e.message)
-    }
-  }
+  })
 }
 
 /**
  * POST /api/modules/:id/scripts - 创建新脚本
  */
 export async function createScript(req, res, moduleId) {
-  try {
+  return handleEditorAction(res, async () => {
     validateModuleId(moduleId)
     const body = await parseJsonBody(req)
     const { id, content, order } = body
 
     if (!id) {
-      return sendError(res, 400, 'Missing script id')
+      throw badRequest('Missing script id')
     }
 
     const scriptId = validateScriptId(id)
@@ -467,26 +484,20 @@ export async function createScript(req, res, moduleId) {
     const scriptPath = path.join(scriptsDir, filename)
 
     if (await fs.pathExists(scriptPath)) {
-      return sendError(res, 409, 'Script with this id already exists')
+      throw conflict('Script with this id already exists')
     }
 
     await fs.writeFile(scriptPath, normalizeScriptContent(content || ''), 'utf8')
 
     sendJson(res, 201, { message: 'Script created successfully', id: scriptId, order: fileOrder })
-  } catch (e) {
-    if (e.message.includes('Invalid script id') || e.message.includes('Invalid module ID')) {
-      sendError(res, 400, e.message)
-    } else {
-      sendError(res, 500, e.message)
-    }
-  }
+  })
 }
 
 /**
  * PUT /api/modules/:id/scripts/:scriptId - 更新脚本
  */
 export async function updateScript(req, res, moduleId, scriptId) {
-  try {
+  return handleEditorAction(res, async () => {
     validateModuleId(moduleId)
 
     const body = await parseJsonBody(req)
@@ -498,7 +509,7 @@ export async function updateScript(req, res, moduleId, scriptId) {
     const currentFile = await findScriptFile(scriptsDir, scriptId)
 
     if (!currentFile) {
-      return sendError(res, 404, 'Script not found')
+      throw notFound('Script not found')
     }
 
     const scriptPath = path.join(scriptsDir, currentFile)
@@ -515,7 +526,7 @@ export async function updateScript(req, res, moduleId, scriptId) {
 
       // 检查目标文件是否已存在（且不是当前文件）
       if (newPath !== scriptPath && (await fs.pathExists(newPath))) {
-        return sendError(res, 409, 'Script with this id and order already exists')
+        throw conflict('Script with this id and order already exists')
       }
 
       await fs.rename(scriptPath, newPath)
@@ -537,20 +548,14 @@ export async function updateScript(req, res, moduleId, scriptId) {
       }
       sendJson(res, 200, { message: 'Script updated successfully' })
     }
-  } catch (e) {
-    if (e.message.includes('Invalid script id') || e.message.includes('Invalid module ID')) {
-      sendError(res, 400, e.message)
-    } else {
-      sendError(res, 500, e.message)
-    }
-  }
+  })
 }
 
 /**
  * DELETE /api/modules/:id/scripts/:scriptId - 删除脚本
  */
 export async function deleteScript(req, res, moduleId, scriptId) {
-  try {
+  return handleEditorAction(res, async () => {
     validateModuleId(moduleId)
 
     const scriptsDir = path.join(modulesDir, moduleId, 'scripts')
@@ -560,62 +565,48 @@ export async function deleteScript(req, res, moduleId, scriptId) {
     const targetFile = files.find((f) => isScriptTextFile(f) && parseScriptFileName(f).id === scriptId)
 
     if (!targetFile) {
-      return sendError(res, 404, 'Script not found')
+      throw notFound('Script not found')
     }
 
     // 检查是否至少保留一个脚本
     const txtFiles = files.filter(isScriptTextFile)
     if (txtFiles.length <= 1) {
-      return sendError(res, 400, 'Cannot delete the last script file: modules must have at least one script file')
+      throw badRequest('Cannot delete the last script file: modules must have at least one script file')
     }
 
     const scriptPath = path.join(scriptsDir, targetFile)
     await fs.remove(scriptPath)
 
     sendJson(res, 200, { message: 'Script deleted successfully' })
-  } catch (e) {
-    if (e.message.includes('Invalid module ID')) {
-      sendError(res, 400, e.message)
-    } else {
-      sendError(res, 500, e.message)
-    }
-  }
+  })
 }
 
 /**
  * GET /api/modules/:id/i18n/:locale - 获取翻译文件
  */
 export async function getI18n(req, res, moduleId, locale) {
-  try {
+  return handleEditorAction(res, async () => {
     validateModuleId(moduleId)
-
-    if (!localePattern.test(locale)) {
-      return sendError(res, 400, 'Invalid locale format')
-    }
+    validateLocale(locale)
 
     const i18nPath = path.join(modulesDir, moduleId, 'i18n', `${locale}.json`)
 
     if (!(await fs.pathExists(i18nPath))) {
-      return sendError(res, 404, 'Translation file not found')
+      throw notFound('Translation file not found')
     }
 
     const data = await fs.readJson(i18nPath)
     sendJson(res, 200, data)
-  } catch (e) {
-    sendError(res, 500, e.message)
-  }
+  })
 }
 
 /**
  * PUT /api/modules/:id/i18n/:locale - 更新翻译文件
  */
 export async function updateI18n(req, res, moduleId, locale) {
-  try {
+  return handleEditorAction(res, async () => {
     validateModuleId(moduleId)
-
-    if (!localePattern.test(locale)) {
-      return sendError(res, 400, 'Invalid locale format')
-    }
+    validateLocale(locale)
 
     const body = await parseJsonBody(req)
     const i18nDir = path.join(modulesDir, moduleId, 'i18n')
@@ -625,46 +616,39 @@ export async function updateI18n(req, res, moduleId, locale) {
     await fs.writeJson(i18nPath, body, { spaces: 2, EOL: '\n' })
 
     sendJson(res, 200, { message: 'Translation updated successfully' })
-  } catch (e) {
-    sendError(res, 500, e.message)
-  }
+  })
 }
 
 /**
  * DELETE /api/modules/:id/i18n/:locale - 删除翻译文件
  */
 export async function deleteI18n(req, res, moduleId, locale) {
-  try {
+  return handleEditorAction(res, async () => {
     validateModuleId(moduleId)
-
-    if (!localePattern.test(locale)) {
-      return sendError(res, 400, 'Invalid locale format')
-    }
+    validateLocale(locale)
 
     const i18nPath = path.join(modulesDir, moduleId, 'i18n', `${locale}.json`)
 
     if (!(await fs.pathExists(i18nPath))) {
-      return sendError(res, 404, 'Translation file not found')
+      throw notFound('Translation file not found')
     }
 
     await fs.remove(i18nPath)
 
     sendJson(res, 200, { message: 'Translation deleted successfully' })
-  } catch (e) {
-    sendError(res, 500, e.message)
-  }
+  })
 }
 
 /**
  * POST /api/modules/:id/demo - 上传 demo.sb3
  */
 export async function uploadDemo(req, res, moduleId) {
-  try {
+  return handleEditorAction(res, async () => {
     validateModuleId(moduleId)
     const moduleDir = path.join(modulesDir, moduleId)
 
     if (!(await fs.pathExists(moduleDir))) {
-      return sendError(res, 404, 'Module not found')
+      throw notFound('Module not found')
     }
 
     const form = formidable({
@@ -675,60 +659,60 @@ export async function uploadDemo(req, res, moduleId) {
     })
 
     form.parse(req, async (err, fields, files) => {
-      if (err) {
-        return sendError(res, 400, 'File upload failed: ' + err.message)
-      }
-
-      const file = files.file
-      if (!file || (Array.isArray(file) && file.length === 0)) {
-        return sendError(res, 400, 'No file uploaded')
-      }
-
-      const uploadedFile = Array.isArray(file) ? file[0] : file
-      const demoPath = path.join(moduleDir, 'demo.sb3')
-
       try {
+        if (err) {
+          throw badRequest('File upload failed: ' + err.message)
+        }
+
+        const file = files.file
+        if (!file || (Array.isArray(file) && file.length === 0)) {
+          throw badRequest('No file uploaded')
+        }
+
+        const uploadedFile = Array.isArray(file) ? file[0] : file
+        const demoPath = path.join(moduleDir, 'demo.sb3')
+
         await fs.move(uploadedFile.filepath, demoPath, { overwrite: true })
         sendJson(res, 200, { message: 'Demo uploaded successfully' })
       } catch (e) {
-        sendError(res, 500, 'Failed to save demo file: ' + e.message)
+        if (e instanceof HttpError && e.status < 500) {
+          sendCaughtError(res, e)
+        } else {
+          sendCaughtError(res, httpError(500, 'Failed to save demo file: ' + e.message))
+        }
       }
     })
-  } catch (e) {
-    sendError(res, 500, e.message)
-  }
+  })
 }
 
 /**
  * DELETE /api/modules/:id/demo - 删除 demo.sb3
  */
 export async function deleteDemo(req, res, moduleId) {
-  try {
+  return handleEditorAction(res, async () => {
     validateModuleId(moduleId)
     const demoPath = path.join(modulesDir, moduleId, 'demo.sb3')
 
     if (!(await fs.pathExists(demoPath))) {
-      return sendError(res, 404, 'Demo file not found')
+      throw notFound('Demo file not found')
     }
 
     await fs.remove(demoPath)
 
     sendJson(res, 200, { message: 'Demo deleted successfully' })
-  } catch (e) {
-    sendError(res, 500, e.message)
-  }
+  })
 }
 
 /**
  * POST /api/modules/:id/assets - 上传资源文件
  */
 export async function uploadAsset(req, res, moduleId) {
-  try {
+  return handleEditorAction(res, async () => {
     validateModuleId(moduleId)
     const moduleDir = path.join(modulesDir, moduleId)
 
     if (!(await fs.pathExists(moduleDir))) {
-      return sendError(res, 404, 'Module not found')
+      throw notFound('Module not found')
     }
 
     const assetsDir = path.join(moduleDir, 'assets')
@@ -744,60 +728,55 @@ export async function uploadAsset(req, res, moduleId) {
     })
 
     form.parse(req, async (err, fields, files) => {
-      if (err) {
-        return sendError(res, 400, 'File upload failed: ' + err.message)
-      }
-
-      const file = files.file
-      if (!file || (Array.isArray(file) && file.length === 0)) {
-        return sendError(res, 400, 'No file uploaded')
-      }
-
-      const uploadedFile = Array.isArray(file) ? file[0] : file
-      const filename = validateAssetFilename(uploadedFile.originalFilename)
-      const targetPath = path.resolve(assetsDir, filename)
-
-      if (!isStrictlyInside(assetsDir, targetPath)) {
-        return sendError(res, 400, 'Invalid asset filename: directory traversal detected')
-      }
-
       try {
+        if (err) {
+          throw badRequest('File upload failed: ' + err.message)
+        }
+
+        const file = files.file
+        if (!file || (Array.isArray(file) && file.length === 0)) {
+          throw badRequest('No file uploaded')
+        }
+
+        const uploadedFile = Array.isArray(file) ? file[0] : file
+        const filename = validateAssetFilename(uploadedFile.originalFilename)
+        const targetPath = path.resolve(assetsDir, filename)
+
+        if (!isStrictlyInside(assetsDir, targetPath)) {
+          throw badRequest('Invalid asset filename: directory traversal detected')
+        }
+
         await fs.move(uploadedFile.filepath, targetPath, { overwrite: true })
         sendJson(res, 200, { message: 'Asset uploaded successfully', filename })
       } catch (e) {
-        sendError(res, 500, 'Failed to save asset file: ' + e.message)
+        if (e instanceof HttpError && e.status < 500) {
+          sendCaughtError(res, e)
+        } else {
+          sendCaughtError(res, httpError(500, 'Failed to save asset file: ' + e.message))
+        }
       }
     })
-  } catch (e) {
-    sendError(res, 500, e.message)
-  }
+  })
 }
 
 /**
  * DELETE /api/modules/:id/assets/:filename - 删除资源文件
  */
 export async function deleteAsset(req, res, moduleId, filename) {
-  try {
+  return handleEditorAction(res, async () => {
     validateModuleId(moduleId)
-
-    try {
-      validateAssetFilename(filename)
-    } catch (e) {
-      return sendError(res, 400, e.message)
-    }
+    validateAssetFilename(filename)
 
     const assetPath = path.join(modulesDir, moduleId, 'assets', filename)
 
     if (!(await fs.pathExists(assetPath))) {
-      return sendError(res, 404, 'Asset file not found')
+      throw notFound('Asset file not found')
     }
 
     await fs.remove(assetPath)
 
     sendJson(res, 200, { message: 'Asset deleted successfully' })
-  } catch (e) {
-    sendError(res, 500, e.message)
-  }
+  })
 }
 
 /**

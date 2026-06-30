@@ -2,7 +2,15 @@ import { afterEach, beforeEach, describe, expect, it } from 'bun:test'
 import { Readable } from 'stream'
 import path from 'path'
 import fs from 'fs-extra'
-import { createScript, deleteAsset, deleteI18n, getModule, getScripts, updateScript } from '../scripts/lib/editor-api.ts'
+import {
+  createScript,
+  deleteAsset,
+  deleteI18n,
+  getModule,
+  getScripts,
+  updateModuleMeta,
+  updateScript,
+} from '../scripts/lib/editor-api.ts'
 
 const root = path.resolve('.')
 const modulesDir = path.join(root, 'content', 'modules')
@@ -14,6 +22,10 @@ function jsonReq(body?: unknown) {
     return Readable.from([])
   }
   return Readable.from([JSON.stringify(body)])
+}
+
+function rawReq(body: string) {
+  return Readable.from([body])
 }
 
 function resMock() {
@@ -64,6 +76,12 @@ async function callWithBody(handler: (...args: any[]) => Promise<void>, body: un
   return res
 }
 
+async function callWithRawBody(handler: (...args: any[]) => Promise<void>, body: string, ...args: any[]) {
+  const res = resMock()
+  await handler(rawReq(body), res, ...args)
+  return res
+}
+
 beforeEach(async () => {
   await fs.remove(testModuleDir)
 })
@@ -89,6 +107,16 @@ describe('editor-api module id validation', () => {
       const res = await call(getModule, id)
       expect(res.statusCode).toBe(400)
     }
+  })
+})
+
+describe('editor-api error handling', () => {
+  it('returns 400 for invalid JSON through the shared error wrapper', async () => {
+    await writeModule({ '01-main.txt': 'say [main]\n' })
+
+    const res = await callWithRawBody(updateModuleMeta, '{bad json', testModuleId)
+    expect(res.statusCode).toBe(400)
+    expect(res.json()).toEqual({ error: 'Invalid JSON' })
   })
 })
 
