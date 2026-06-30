@@ -11,6 +11,7 @@
     "dev:https": "bun ./scripts/dev-server-https.ts",
     "format": "prettier --write .",
     "format:scripts": "bun ./scripts/format-scratchblocks.ts --all",
+    "lint": "eslint .",
     "seo:context": "bun ./scripts/export-seo-context.ts",
     "test": "bun test tests/*.test.ts",
     "check-i18n": "bun ./scripts/check-translations.ts",
@@ -40,13 +41,17 @@
     "@codemirror/search": "^6.7.1",
     "@codemirror/state": "^6.7.0",
     "@codemirror/view": "^6.43.4",
+    "@eslint/js": "^10.0.1",
     "@lezer/highlight": "^1.2.3",
     "@types/bun": "^1.3.14",
     "@types/fs-extra": "^11.0.4",
     "@types/nunjucks": "^3.2.6",
     "chokidar": "^3.6.0",
+    "eslint": "^10.6.0",
+    "globals": "^17.7.0",
     "prettier": "^3.9.1",
     "selfsigned": "^5.5.0",
-    "typescript": "^6.0.3"
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.62.1"
   }
 }
