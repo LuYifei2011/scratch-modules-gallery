@@ -23,7 +23,6 @@ export interface SiteData {
   config: SiteConfig
   modules: ModuleRecord[]
   errorsAll: string[]
-  allTags: string
   dict: I18nDictionary
   globalTags: Record<string, Record<string, string>>
   moduleDefaults: Record<string, unknown>
@@ -84,7 +83,7 @@ export async function loadSiteData({ root, config, isDev }: LoadSiteDataOptions)
     loadModules({ root, config, isDev }),
   ])
   const [dict, globalTags, moduleDefaults] = i18nData
-  const { modules, errorsAll, allTags } = modulesData
+  const { modules, errorsAll } = modulesData
 
   resolveImports(modules)
 
@@ -92,7 +91,6 @@ export async function loadSiteData({ root, config, isDev }: LoadSiteDataOptions)
     config,
     modules,
     errorsAll,
-    allTags,
     dict,
     globalTags,
     moduleDefaults,

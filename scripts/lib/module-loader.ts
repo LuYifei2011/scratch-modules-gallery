@@ -21,7 +21,6 @@ interface LoadModulesOptions {
 interface LoadModulesResult {
   modules: ModuleRecord[]
   errorsAll: string[]
-  allTags: string
 }
 
 /**
@@ -29,7 +28,7 @@ interface LoadModulesResult {
  * @param {string} options.root - 项目根目录绝对路径
  * @param {Object} options.config - site.config.ts 配置对象
  * @param {boolean} options.isDev - 是否为开发模式
- * @returns {Promise<{modules: Array, errorsAll: string[], allTags: string}>}
+ * @returns {Promise<{modules: Array, errorsAll: string[]}>}
  */
 export async function loadModules({ root, config, isDev }: LoadModulesOptions): Promise<LoadModulesResult> {
   const baseDir = path.join(root, config.contentDir)
@@ -143,7 +142,5 @@ export async function loadModules({ root, config, isDev }: LoadModulesOptions): 
       }
     }
   }
-  // 统计所有 tags，去重后拼接 keywords
-  const allTags = Array.from(new Set(modules.flatMap((m) => m.tags || []))).join(',')
-  return { modules, errorsAll, allTags }
+  return { modules, errorsAll }
 }

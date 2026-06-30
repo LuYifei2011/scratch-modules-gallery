@@ -31,14 +31,13 @@ beforeAll(async () => {
 
 describe('loadModules', () => {
   it('loads modules from content directory (dev mode)', async () => {
-    const { modules, errorsAll, allTags } = await loadModules({
+    const { modules, errorsAll } = await loadModules({
       root: fixtureRoot,
       config,
       isDev: true,
     })
     expect(Array.isArray(modules)).toBeTruthy()
     expect(modules.length).toBe(2)
-    expect(typeof allTags === 'string').toBeTruthy()
   })
 
   it('each module has required fields', async () => {
@@ -105,13 +104,6 @@ describe('loadModules', () => {
     const scriptIds = testMod.scripts.map((s) => s.id)
     expect(scriptIds.includes('main')).toBeTruthy()
     expect(scriptIds.includes('import')).toBeTruthy()
-  })
-
-  it('collects allTags across modules', async () => {
-    const { allTags } = await loadModules({ root: fixtureRoot, config, isDev: true })
-    expect(allTags.length > 0).toBeTruthy()
-    // fps has "performance" tag
-    expect(allTags.includes('performance')).toBeTruthy()
   })
 
   it('handles missing scripts directory gracefully', async () => {
