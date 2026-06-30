@@ -2,29 +2,29 @@ name: Lint and Typecheck
 
 on:
   push:
-    branches: ["main"]
+    branches: ['main']
     paths:
-      - ".github/workflows/lint.yml"
-      - "eslint.config.js"
-      - "package.json"
-      - "bun.lock"
-      - "tsconfig.json"
-      - "public/**"
-      - "scripts/**"
-      - "src/**"
-      - "tests/**"
+      - '.github/workflows/lint.yml'
+      - 'eslint.config.js'
+      - 'package.json'
+      - 'bun.lock'
+      - 'tsconfig.json'
+      - 'public/**'
+      - 'scripts/**'
+      - 'src/**'
+      - 'tests/**'
   pull_request:
-    branches: ["main"]
+    branches: ['main']
     paths:
-      - ".github/workflows/lint.yml"
-      - "eslint.config.js"
-      - "package.json"
-      - "bun.lock"
-      - "tsconfig.json"
-      - "public/**"
-      - "scripts/**"
-      - "src/**"
-      - "tests/**"
+      - '.github/workflows/lint.yml'
+      - 'eslint.config.js'
+      - 'package.json'
+      - 'bun.lock'
+      - 'tsconfig.json'
+      - 'public/**'
+      - 'scripts/**'
+      - 'src/**'
+      - 'tests/**'
 
 permissions:
   contents: read
