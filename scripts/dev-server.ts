@@ -1,10 +1,8 @@
-import http from 'http'
-import https from 'https'
 import fs from 'fs'
 import path from 'path'
-import url from 'url'
 import { spawn } from 'child_process'
 import readline from 'readline'
+import { Readable } from 'stream'
 import * as editorApi from './lib/editor-api.ts'
 import { injectDevClient } from './lib/dev-html.ts'
 import log, { c, paint, formatDuration, timeNow, setLogMode } from './lib/logger.ts'
@@ -30,15 +28,16 @@ const HTTPS_PFX = process.env.HTTPS_PFX // PFX 路径（可选）
 const HTTPS_PASSPHRASE = process.env.HTTPS_PASSPHRASE // PFX 密码（可选）
 
 let protocol = 'http'
-let httpsOptions: https.ServerOptions | undefined = undefined
+let tlsOptions: Bun.TLSOptions | undefined = undefined
 if (HTTPS_ENABLED) {
   try {
     if (HTTPS_PFX) {
-      httpsOptions = { pfx: fs.readFileSync(path.resolve(HTTPS_PFX)), passphrase: HTTPS_PASSPHRASE }
+      throw new Error('Bun.serve TLS does not support HTTPS_PFX; use HTTPS_KEY and HTTPS_CERT instead')
     } else if (HTTPS_KEY && HTTPS_CERT) {
-      httpsOptions = {
+      tlsOptions = {
         key: fs.readFileSync(path.resolve(HTTPS_KEY)),
         cert: fs.readFileSync(path.resolve(HTTPS_CERT)),
+        passphrase: HTTPS_PASSPHRASE,
       }
     } else {
       // 自动生成自签名证书（开发用途）
@@ -64,7 +63,7 @@ if (HTTPS_ENABLED) {
         fs.writeFileSync(certFile, certStr)
         log.info('dev', `已生成自签名证书: ${certFile}`)
       }
-      httpsOptions = { key: keyStr, cert: certStr }
+      tlsOptions = { key: keyStr, cert: certStr }
     }
     protocol = 'https'
   } catch (e) {
@@ -87,7 +86,7 @@ try {
 // --- 构建队列 ---
 let building = false
 let pending = false
-const sseClients = new Set<any>()
+const sseClients = new Set<ReadableStreamDefaultController<Uint8Array>>()
 
 // 快速构建模式（运行时可通过按键切换）
 let fastBuild = true
@@ -126,11 +125,13 @@ function setCachedFile(absPath: string, stat: fs.Stats, payload: any) {
   fileCache.set(absPath, { mtimeMs: stat.mtimeMs, ...payload })
 }
 
+const encoder = new TextEncoder()
+
 function broadcast(obj: any) {
   const msg = JSON.stringify(obj)
-  for (const res of sseClients) {
+  for (const controller of sseClients) {
     try {
-      res.write(`data: ${msg}\n\n`)
+      controller.enqueue(encoder.encode(`data: ${msg}\n\n`))
     } catch {
       // 忽略已断开的 SSE 客户端。
     }
@@ -206,258 +207,262 @@ watcher.on('all', (event, file) => {
   }, DEBOUNCE_MS)
 })
 
-function serve404(res: any) {
+function createHeaders(contentType: string) {
+  return {
+    'Content-Type': contentType,
+    'Access-Control-Allow-Origin': '*',
+    'Cache-Control': 'no-cache, no-store, must-revalidate',
+    Pragma: 'no-cache',
+    Expires: '0',
+  }
+}
+
+async function serve404() {
   const notFoundPage = path.join(DIST_DIR, '404.html')
-  fs.readFile(notFoundPage, (err, buf) => {
-    res.statusCode = 404
-    if (!err) {
-      res.setHeader('Content-Type', 'text/html')
-      res.end(injectDevClient(buf.toString('utf8')))
-    } else {
-      // 如果404.html不存在（构建失败），返回简单消息
-      res.setHeader('Content-Type', 'text/plain; charset=utf-8')
-      res.end('404 Not Found')
-    }
+  try {
+    const buf = await fs.promises.readFile(notFoundPage)
+    return new Response(injectDevClient(buf.toString('utf8')), {
+      status: 404,
+      headers: createHeaders('text/html; charset=utf-8'),
+    })
+  } catch {
+    return new Response('404 Not Found', {
+      status: 404,
+      headers: createHeaders('text/plain; charset=utf-8'),
+    })
+  }
+}
+
+function createEditorRequest(request: Request, body: Buffer) {
+  const headers = Object.fromEntries(Array.from(request.headers.entries()).map(([key, value]) => [key.toLowerCase(), value]))
+  const req = Readable.from(body.length ? [body] : [])
+  Object.assign(req, {
+    headers,
+    method: request.method,
+    url: new URL(request.url).pathname + new URL(request.url).search,
+  })
+  return req
+}
+
+function createEditorResponse(resolve: (response: Response) => void) {
+  const headers = new Headers()
+  const chunks: Buffer[] = []
+  let statusCode = 200
+  let done = false
+  const toBuffer = (chunk: any) => {
+    if (Buffer.isBuffer(chunk)) return chunk
+    if (chunk instanceof Uint8Array) return Buffer.from(chunk)
+    return Buffer.from(String(chunk))
+  }
+
+  const finish = (chunk?: any) => {
+    if (done) return
+    done = true
+    if (chunk !== undefined) chunks.push(toBuffer(chunk))
+    resolve(new Response(Buffer.concat(chunks), { status: statusCode, headers }))
+  }
+
+  return {
+    get statusCode() {
+      return statusCode
+    },
+    set statusCode(value) {
+      statusCode = value
+    },
+    setHeader(name, value) {
+      headers.set(name, String(value))
+    },
+    getHeader(name) {
+      return headers.get(name)
+    },
+    writeHead(status, headerMap = {}) {
+      statusCode = status
+      for (const [name, value] of Object.entries(headerMap)) {
+        headers.set(name, String(value))
+      }
+    },
+    write(chunk) {
+      chunks.push(toBuffer(chunk))
+      return true
+    },
+    end: finish,
+  }
+}
+
+async function runEditorHandler(request: Request, handler: (req: any, res: any) => void | Promise<void>) {
+  const body = Buffer.from(await request.arrayBuffer())
+
+  return new Promise<Response>((resolve, reject) => {
+    const req = createEditorRequest(request, body)
+    const res = createEditorResponse(resolve)
+    Promise.resolve(handler(req, res)).catch(reject)
   })
 }
 
-const requestHandler = (req, res) => {
-  const parsedUrl = url.parse(req.url)
-  const pathnameRaw = decodeURIComponent(parsedUrl.pathname || '/')
-  const method = req.method
+function handleSse(request: Request, server: Bun.Server<unknown>) {
+  server.timeout(request, 0)
 
-  // ==================== API 路由 ====================
-  if (pathnameRaw.startsWith('/api/')) {
-    // 解析路由参数
-    const moduleMatch = pathnameRaw.match(/^\/api\/modules\/([^/]+)/)
-    const scriptMatch = pathnameRaw.match(/^\/api\/modules\/([^/]+)\/scripts\/([^/]+)/)
-    const i18nMatch = pathnameRaw.match(/^\/api\/modules\/([^/]+)\/i18n\/([^/]+)/)
-    const assetMatch = pathnameRaw.match(/^\/api\/modules\/([^/]+)\/assets\/([^/]+)/)
+  let controllerRef: ReadableStreamDefaultController<Uint8Array>
+  const stream = new ReadableStream<Uint8Array>({
+    start(controller) {
+      controllerRef = controller
+      controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'connected', time: Date.now() })}\n\n`))
+      sseClients.add(controller)
+    },
+    cancel() {
+      sseClients.delete(controllerRef)
+    },
+  })
 
-    // 构建状态 API
-    if (method === 'GET' && pathnameRaw === '/api/build/status') {
-      return editorApi.getBuildStatus(req, res, { building, pending, lastBuildStart })
-    }
-
-    // 模块列表 API
-    if (method === 'GET' && pathnameRaw === '/api/modules') {
-      return editorApi.getModuleList(req, res)
-    }
-
-    if (method === 'POST' && pathnameRaw === '/api/modules') {
-      return editorApi.createModule(req, res)
-    }
-
-    // 单个模块 API
-    if (moduleMatch) {
-      const moduleId = moduleMatch[1]
-
-      // 脚本 API
-      if (scriptMatch) {
-        const scriptFile = decodeURIComponent(scriptMatch[2])
-        if (method === 'GET' && pathnameRaw === `/api/modules/${moduleId}/scripts`) {
-          return editorApi.getScripts(req, res, moduleId)
-        }
-        if (method === 'PUT') {
-          return editorApi.updateScript(req, res, moduleId, scriptFile)
-        }
-        if (method === 'DELETE') {
-          return editorApi.deleteScript(req, res, moduleId, scriptFile)
-        }
-      }
-
-      // 脚本列表和创建
-      if (pathnameRaw === `/api/modules/${moduleId}/scripts`) {
-        if (method === 'GET') {
-          return editorApi.getScripts(req, res, moduleId)
-        }
-        if (method === 'POST') {
-          return editorApi.createScript(req, res, moduleId)
-        }
-      }
-
-      // i18n API
-      if (i18nMatch) {
-        const locale = i18nMatch[2]
-        if (method === 'GET') {
-          return editorApi.getI18n(req, res, moduleId, locale)
-        }
-        if (method === 'PUT') {
-          return editorApi.updateI18n(req, res, moduleId, locale)
-        }
-        if (method === 'DELETE') {
-          return editorApi.deleteI18n(req, res, moduleId, locale)
-        }
-      }
-
-      // Demo API
-      if (pathnameRaw === `/api/modules/${moduleId}/demo`) {
-        if (method === 'POST') {
-          return editorApi.uploadDemo(req, res, moduleId)
-        }
-        if (method === 'DELETE') {
-          return editorApi.deleteDemo(req, res, moduleId)
-        }
-      }
-
-      // Assets API
-      if (pathnameRaw === `/api/modules/${moduleId}/assets`) {
-        if (method === 'POST') {
-          return editorApi.uploadAsset(req, res, moduleId)
-        }
-      }
-
-      if (assetMatch) {
-        const assetFile = decodeURIComponent(assetMatch[2])
-        if (method === 'DELETE') {
-          return editorApi.deleteAsset(req, res, moduleId, assetFile)
-        }
-      }
-
-      // Meta API
-      if (pathnameRaw === `/api/modules/${moduleId}/meta`) {
-        if (method === 'PUT') {
-          return editorApi.updateModuleMeta(req, res, moduleId)
-        }
-      }
-
-      // 模块详情和删除
-      if (pathnameRaw === `/api/modules/${moduleId}`) {
-        if (method === 'GET') {
-          return editorApi.getModule(req, res, moduleId)
-        }
-        if (method === 'DELETE') {
-          return editorApi.deleteModule(req, res, moduleId)
-        }
-      }
-    }
-
-    // 未匹配的 API 路由
-    res.statusCode = 404
-    res.setHeader('Content-Type', 'application/json')
-    res.end(JSON.stringify({ error: 'API endpoint not found' }))
-    return
-  }
-
-  // ==================== 静态文件服务 ====================
-
-  // SSE 端点
-  if (pathnameRaw === '/__dev/sse') {
-    res.writeHead(200, {
+  return new Response(stream, {
+    headers: {
       'Content-Type': 'text/event-stream',
       'Cache-Control': 'no-cache',
       Connection: 'keep-alive',
       'Access-Control-Allow-Origin': '*',
-    })
-    res.write(`data: ${JSON.stringify({ type: 'connected', time: Date.now() })}\n\n`)
-    sseClients.add(res)
-    req.on('close', () => sseClients.delete(res))
-    return
+    },
+  })
+}
+
+async function serveStaticFile(absPath: string, staticRoot: string, pathname: string) {
+  if (!isInsideOrEqual(staticRoot, path.resolve(absPath))) return serve404()
+
+  let stat: fs.Stats
+  try {
+    stat = await fs.promises.stat(absPath)
+  } catch (err: any) {
+    if (!err?.code || err.code !== 'ENOENT') log.warn('dev', `404: ${absPath}`)
+    return serve404()
+  }
+  if (!stat.isFile()) return serve404()
+
+  const ext = path.extname(absPath).toLowerCase()
+  const mime =
+    {
+      '.html': 'text/html; charset=utf-8',
+      '.js': 'application/javascript',
+      '.css': 'text/css',
+      '.json': 'application/json',
+      '.xml': 'application/xml',
+      '.txt': 'text/plain; charset=utf-8',
+      '.png': 'image/png',
+      '.jpg': 'image/jpeg',
+      '.svg': 'image/svg+xml',
+    }[ext] || 'application/octet-stream'
+  const headers = createHeaders(mime)
+
+  if (stat.size <= SMALL_FILE_LIMIT && ['.html', '.js', '.css', '.json', '.txt'].includes(ext)) {
+    const cached = getCachedFile(absPath, stat)
+    if (cached) return new Response(cached.data, { headers })
+
+    const buf = await fs.promises.readFile(absPath)
+    if (ext === '.html') {
+      const html = injectDevClient(buf.toString('utf8'), pathname)
+      setCachedFile(absPath, stat, { data: html, isHTML: true })
+      return new Response(html, { headers })
+    }
+    setCachedFile(absPath, stat, { data: buf, isHTML: false })
+    return new Response(buf, { headers })
   }
 
+  if (ext === '.html') {
+    const buf = await fs.promises.readFile(absPath)
+    return new Response(injectDevClient(buf.toString('utf8'), pathname), { headers })
+  }
+
+  return new Response(Bun.file(absPath), { headers })
+}
+
+async function serveStatic(pathnameRaw: string) {
   let pathname = pathnameRaw
   if (pathname === '/') pathname = '/index.html'
 
-  // node_modules 静态文件服务（用于开发时加载本地包）
   if (pathnameRaw.startsWith('/node_modules/')) {
-    const modulePath = pathnameRaw.replace('/node_modules/', '')
-    pathname = modulePath
+    pathname = pathnameRaw.replace('/node_modules/', '')
   }
 
   const staticRoot = pathnameRaw.startsWith('/node_modules/') ? NODE_MODULES_DIR : DIST_DIR
   const requestedPath = resolveStaticPath(staticRoot, pathname)
+  if (!requestedPath) return serve404()
 
-  if (!requestedPath) {
-    return serve404(res)
+  try {
+    const stat = await fs.promises.stat(requestedPath)
+    if (stat.isDirectory()) return serveStaticFile(path.join(requestedPath, 'index.html'), staticRoot, pathname)
+    return serveStaticFile(requestedPath, staticRoot, pathname)
+  } catch {
+    if (!path.extname(requestedPath)) return serveStaticFile(path.join(requestedPath, 'index.html'), staticRoot, pathname)
+    return serve404()
   }
+}
 
-  const sendFile = (absPath) => {
-    if (!isInsideOrEqual(staticRoot, path.resolve(absPath))) {
-      serve404(res)
-      return
-    }
-
-    fs.stat(absPath, (err, stat) => {
-      if (err || !stat.isFile()) {
-        serve404(res)
-        if (!err?.code || err.code !== 'ENOENT') log.warn('dev', `404: ${absPath}`)
-        return
-      }
-      const ext = path.extname(absPath).toLowerCase()
-      const mime =
-        {
-          '.html': 'text/html',
-          '.js': 'application/javascript',
-          '.css': 'text/css',
-          '.json': 'application/json',
-          '.xml': 'application/xml',
-          '.txt': 'text/plain',
-          '.png': 'image/png',
-          '.jpg': 'image/jpeg',
-          '.svg': 'image/svg+xml',
-        }[ext] || 'application/octet-stream'
-      res.setHeader('Content-Type', mime)
-      res.setHeader('Access-Control-Allow-Origin', '*')
-      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate')
-      res.setHeader('Pragma', 'no-cache')
-      res.setHeader('Expires', '0')
-      res.setHeader('Connection', 'keep-alive')
-      res.setHeader('Keep-Alive', 'timeout=5')
-
-      // 小文件缓存逻辑
-      if (stat.size <= SMALL_FILE_LIMIT && ['.html', '.js', '.css', '.json', '.txt'].includes(ext)) {
-        const cached = getCachedFile(absPath, stat)
-        if (cached) {
-          if (cached.isHTML) return res.end(cached.data)
-          return res.end(cached.data)
-        }
-        fs.readFile(absPath, (er2, buf) => {
-          if (er2) {
-            serve404(res)
-            return
-          }
-          if (ext === '.html') {
-            const html = injectDevClient(buf.toString('utf8'), pathname)
-            setCachedFile(absPath, stat, { data: html, isHTML: true })
-            res.end(html)
-            return
-          }
-          setCachedFile(absPath, stat, { data: buf, isHTML: false })
-          res.end(buf)
-        })
-        return
-      }
-
-      // 大文件使用流式
-      if (ext === '.html') {
-        fs.readFile(absPath, (er2, buf) => {
-          if (er2) {
-            serve404(res)
-            return
-          }
-          res.end(injectDevClient(buf.toString('utf8'), pathname))
-        })
-        return
-      }
-      const stream = fs.createReadStream(absPath)
-      stream.on('error', () => {
-        serve404(res)
-      })
-      stream.pipe(res)
-    })
-  }
-
-  fs.stat(requestedPath, (err, stat) => {
-    if (!err) {
-      if (stat.isDirectory()) return sendFile(path.join(requestedPath, 'index.html'))
-      return sendFile(requestedPath)
-    }
-    if (!path.extname(requestedPath)) return sendFile(path.join(requestedPath, 'index.html'))
-    serve404(res)
+function apiNotFound() {
+  return new Response(JSON.stringify({ error: 'API endpoint not found' }), {
+    status: 404,
+    headers: createHeaders('application/json; charset=utf-8'),
   })
 }
 
-const server = HTTPS_ENABLED ? https.createServer(httpsOptions, requestHandler) : http.createServer(requestHandler)
+async function requestHandler(request: Request) {
+  let pathnameRaw: string
+  try {
+    pathnameRaw = decodeURIComponent(new URL(request.url).pathname || '/')
+  } catch {
+    return new Response('Bad Request', { status: 400, headers: createHeaders('text/plain; charset=utf-8') })
+  }
+
+  return serveStatic(pathnameRaw)
+}
+
+const server = Bun.serve({
+  port: PORT,
+  hostname: HOST,
+  tls: tlsOptions,
+  routes: {
+    '/api/build/status': {
+      GET: (req) => runEditorHandler(req, (nodeReq, res) => editorApi.getBuildStatus(nodeReq, res, { building, pending, lastBuildStart })),
+    },
+    '/api/modules': {
+      GET: (req) => runEditorHandler(req, editorApi.getModuleList),
+      POST: (req) => runEditorHandler(req, editorApi.createModule),
+    },
+    '/api/modules/:moduleId/scripts': {
+      GET: (req) => runEditorHandler(req, (nodeReq, res) => editorApi.getScripts(nodeReq, res, req.params.moduleId)),
+      POST: (req) => runEditorHandler(req, (nodeReq, res) => editorApi.createScript(nodeReq, res, req.params.moduleId)),
+    },
+    '/api/modules/:moduleId/scripts/:scriptId': {
+      PUT: (req) =>
+        runEditorHandler(req, (nodeReq, res) => editorApi.updateScript(nodeReq, res, req.params.moduleId, req.params.scriptId)),
+      DELETE: (req) =>
+        runEditorHandler(req, (nodeReq, res) => editorApi.deleteScript(nodeReq, res, req.params.moduleId, req.params.scriptId)),
+    },
+    '/api/modules/:moduleId/i18n/:locale': {
+      GET: (req) => runEditorHandler(req, (nodeReq, res) => editorApi.getI18n(nodeReq, res, req.params.moduleId, req.params.locale)),
+      PUT: (req) => runEditorHandler(req, (nodeReq, res) => editorApi.updateI18n(nodeReq, res, req.params.moduleId, req.params.locale)),
+      DELETE: (req) => runEditorHandler(req, (nodeReq, res) => editorApi.deleteI18n(nodeReq, res, req.params.moduleId, req.params.locale)),
+    },
+    '/api/modules/:moduleId/demo': {
+      POST: (req) => runEditorHandler(req, (nodeReq, res) => editorApi.uploadDemo(nodeReq, res, req.params.moduleId)),
+      DELETE: (req) => runEditorHandler(req, (nodeReq, res) => editorApi.deleteDemo(nodeReq, res, req.params.moduleId)),
+    },
+    '/api/modules/:moduleId/assets': {
+      POST: (req) => runEditorHandler(req, (nodeReq, res) => editorApi.uploadAsset(nodeReq, res, req.params.moduleId)),
+    },
+    '/api/modules/:moduleId/assets/:assetFile': {
+      DELETE: (req) =>
+        runEditorHandler(req, (nodeReq, res) => editorApi.deleteAsset(nodeReq, res, req.params.moduleId, req.params.assetFile)),
+    },
+    '/api/modules/:moduleId/meta': {
+      PUT: (req) => runEditorHandler(req, (nodeReq, res) => editorApi.updateModuleMeta(nodeReq, res, req.params.moduleId)),
+    },
+    '/api/modules/:moduleId': {
+      GET: (req) => runEditorHandler(req, (nodeReq, res) => editorApi.getModule(nodeReq, res, req.params.moduleId)),
+      DELETE: (req) => runEditorHandler(req, (nodeReq, res) => editorApi.deleteModule(nodeReq, res, req.params.moduleId)),
+    },
+    '/api/*': apiNotFound,
+    '/__dev/sse': handleSse,
+  },
+  fetch: requestHandler,
+})
 
 // ── 状态行打印 ────────────────────────────────────────────────────────────────
 function printStatusLine() {
@@ -528,43 +533,39 @@ function shutdown() {
       // 某些 stdin 实现不支持 raw mode。
     }
   }
-  server.close()
-  watcher.close()
-  process.exit(0)
+  void Promise.all([server.stop(true), watcher.close()]).finally(() => process.exit(0))
 }
 
-server.listen(PORT, HOST, () => {
-  const urlStr = `${protocol}://${HOST}:${PORT}/`
-  // OSC 8 超链接（支持的终端点击可跳转，不支持的忽略转义序列）
-  const linked = process.stdout.isTTY ? `\x1b]8;;${urlStr}\x07${paint(c.cyan + c.bold, urlStr)}\x1b]8;;\x07` : urlStr
-  log.banner([
-    paint(c.bold, 'Scratch Modules Gallery') + paint(c.dim, '  Dev Server'),
-    '',
-    paint(c.dim, '  URL  ') + linked,
-    paint(c.dim, '  协议 ') + (HTTPS_ENABLED ? paint(c.green, 'HTTPS') : paint(c.dim, 'HTTP')),
-    paint(c.dim, '  端口 ') + paint(c.white, String(PORT)),
-    '',
-    paint(c.dim, '  IS_DEV    ') + paint(c.green, 'ON'),
-    paint(c.dim, '  快速构建  ') + (fastBuild ? paint(c.cyan, 'ON') : paint(c.dim, 'OFF')),
-    paint(c.dim, '  日志模式  ') + (verboseMode ? paint(c.cyan, '详细') : paint(c.dim, '简略')),
-    '',
-    paint(c.dim, '  [') +
-      paint(c.cyan, 'f') +
-      paint(c.dim, '] 切换快速构建   ') +
-      paint(c.dim, '[') +
-      paint(c.cyan, 'l') +
-      paint(c.dim, '] 切换日志级别   ') +
-      paint(c.dim, '[') +
-      paint(c.cyan, 'r') +
-      paint(c.dim, '] 立即构建   ') +
-      paint(c.dim, '[') +
-      paint(c.cyan, 'q') +
-      paint(c.dim, '] 退出'),
-  ])
-  setupKeyboard()
-  // 启动后自动触发首次构建
-  runBuild('startup')
-})
+const urlStr = `${protocol}://${HOST}:${PORT}/`
+// OSC 8 超链接（支持的终端点击可跳转，不支持的忽略转义序列）
+const linked = process.stdout.isTTY ? `\x1b]8;;${urlStr}\x07${paint(c.cyan + c.bold, urlStr)}\x1b]8;;\x07` : urlStr
+log.banner([
+  paint(c.bold, 'Scratch Modules Gallery') + paint(c.dim, '  Dev Server'),
+  '',
+  paint(c.dim, '  URL  ') + linked,
+  paint(c.dim, '  协议 ') + (HTTPS_ENABLED ? paint(c.green, 'HTTPS') : paint(c.dim, 'HTTP')),
+  paint(c.dim, '  端口 ') + paint(c.white, String(PORT)),
+  '',
+  paint(c.dim, '  IS_DEV    ') + paint(c.green, 'ON'),
+  paint(c.dim, '  快速构建  ') + (fastBuild ? paint(c.cyan, 'ON') : paint(c.dim, 'OFF')),
+  paint(c.dim, '  日志模式  ') + (verboseMode ? paint(c.cyan, '详细') : paint(c.dim, '简略')),
+  '',
+  paint(c.dim, '  [') +
+    paint(c.cyan, 'f') +
+    paint(c.dim, '] 切换快速构建   ') +
+    paint(c.dim, '[') +
+    paint(c.cyan, 'l') +
+    paint(c.dim, '] 切换日志级别   ') +
+    paint(c.dim, '[') +
+    paint(c.cyan, 'r') +
+    paint(c.dim, '] 立即构建   ') +
+    paint(c.dim, '[') +
+    paint(c.cyan, 'q') +
+    paint(c.dim, '] 退出'),
+])
+setupKeyboard()
+// 启动后自动触发首次构建
+runBuild('startup')
 
 // --- SSE 心跳：避免某些代理或浏览器在长时间无数据时断开，导致前端进入 Pending 状态 ---
 setInterval(() => {
