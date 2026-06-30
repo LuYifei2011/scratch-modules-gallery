@@ -1,5 +1,5 @@
 import MiniSearch from 'minisearch'
-import { tokenizeCJK } from './scratch-utils.ts'
+import { tokenizeCJK } from '../../src/shared/search-tokenizer.ts'
 import type { ModuleRecord } from './types.ts'
 
 type SearchDocument = Pick<ModuleRecord, 'id' | 'name' | 'description' | 'tags' | 'keywords' | 'slug' | 'hasDemo'>

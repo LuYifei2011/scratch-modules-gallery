@@ -5,22 +5,8 @@ import type { ScratchblocksBlock } from 'scratchblocks-plus/syntax/index.js'
 
 const root = path.resolve('.')
 
-export function tokenizeCJK(text?: string | null): string[] {
-  if (!text) return []
-  const baseTokens = text.match(/[\p{L}\p{N}\p{M}\p{Pc}\-']+/gu) || []
-  const out: string[] = []
-  for (const tok of baseTokens) {
-    out.push(tok)
-    if (/^[\u4e00-\u9fff]+$/.test(tok) && tok.length > 1) {
-      const chars = Array.from(tok)
-      for (const c of chars) out.push(c)
-      for (let i = 0; i < chars.length - 1; i++) {
-        out.push(chars[i]! + chars[i + 1]!)
-      }
-    }
-  }
-  return Array.from(new Set(out))
-}
+// TODO: 移除此导出，改为从共享文件导入
+export { tokenizeCJK } from '../../src/shared/search-tokenizer.ts'
 
 /**
  * Scratch 3.0 标准积木类别颜色（取自 scratchblocks-plus/scratch3/style.css.js）
