@@ -1,7 +1,6 @@
 {% extends "layouts/base.njk" %}
 {# home页不需要重写 title 块：base 已提供默认站点名，若需要可保留此块 #}
 {% block title %}{{ config.siteName }}{% endblock %}
-{# Nunjucks 无 unique 过滤器，直接拼接所有 tags，可能有重复 #}
 {% block meta_keywords %}<meta name="keywords" content="{{ config.keywords }}" />{% endblock %}
 {% block content %}
     <section style="display:flex;flex-direction:column">
