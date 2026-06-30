@@ -1,7 +1,7 @@
 /* 模块页专属样式 */
 pre.scratchblocks {
-  background: var(--panel);
-  border: 1px solid var(--panel-border-strong);
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border-medium);
   padding: var(--space-md);
   border-radius: var(--radius-lg);
   overflow: auto;
@@ -28,9 +28,9 @@ code.scratchblocks {
   width: 36px;
   height: 36px;
   padding: 0;
-  background: var(--panel);
-  color: var(--text);
-  border: 1px solid var(--panel-border-strong);
+  background: var(--color-bg-secondary);
+  color: var(--color-text-primary);
+  border: 1px solid var(--color-border-medium);
   border-radius: var(--radius-lg);
   cursor: pointer;
   transition:
@@ -81,9 +81,9 @@ code.scratchblocks {
   justify-content: center;
   width: 36px;
   height: 36px;
-  background: var(--panel);
-  color: var(--text);
-  border: 1px solid var(--panel-border-strong);
+  background: var(--color-bg-secondary);
+  color: var(--color-text-primary);
+  border: 1px solid var(--color-border-medium);
   border-radius: var(--radius-lg);
   cursor: pointer;
   text-decoration: none;
@@ -111,20 +111,20 @@ code.scratchblocks {
 }
 details.imported-script {
   margin: var(--space-lg) 0;
-  border: 1px solid var(--panel-border);
+  border: 1px solid var(--color-border-light);
   border-radius: var(--radius-md);
-  background: var(--panel);
+  background: var(--color-bg-secondary);
   padding: var(--space-sm) var(--space-md);
 }
 details.imported-script[open] {
-  background: var(--panel);
+  background: var(--color-bg-secondary);
 }
 details.imported-script summary {
   cursor: pointer;
   outline: none;
   font-size: var(--font-size-base);
   font-weight: var(--font-weight-semibold);
-  color: var(--accent);
+  color: var(--color-brand);
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-xs);
@@ -134,22 +134,22 @@ details.imported-script summary::-webkit-details-marker {
   display: none;
 }
 details.imported-script summary:focus {
-  outline: 2px solid var(--accent);
+  outline: 2px solid var(--color-brand);
   outline-offset: 2px;
 }
 details.imported-script a {
-  color: var(--accent);
+  color: var(--color-brand);
   transition: color var(--transition-fast);
 }
 details.imported-script a:hover {
-  color: var(--accent-hover);
+  color: var(--color-brand-hover);
 }
 /* 保证脚本块中的 action 按钮不继承 imported 区域的蓝色链接样式 */
 details.imported-script .sb-actions .sb-action {
-  color: var(--text);
+  color: var(--color-text-primary);
 }
 details.imported-script .sb-actions .sb-action:hover {
-  color: var(--text);
+  color: var(--color-text-primary);
 }
 details.imported-script pre {
   margin-top: var(--space-sm);
@@ -163,7 +163,7 @@ table {
 }
 th,
 td {
-  border: 1px solid var(--panel-border);
+  border: 1px solid var(--color-border-light);
   padding: var(--space-xs) var(--space-sm);
 }
 .variables th,
@@ -265,7 +265,7 @@ th {
   aspect-ratio: 482 / 412;
   height: auto;
   border: none;
-  background: var(--panel);
+  background: var(--color-bg-secondary);
   border-radius: var(--radius-lg);
 }
 
@@ -307,9 +307,9 @@ th {
   padding: var(--space-lg) 6px;
   min-height: 80px;
   width: 28px;
-  background: var(--panel);
+  background: var(--color-bg-secondary);
   color: var(--color-brand);
-  border: 1px solid var(--panel-border);
+  border: 1px solid var(--color-border-light);
   border-right: none;
   border-radius: var(--radius-lg) 0 0 var(--radius-lg);
   cursor: pointer;
@@ -350,8 +350,8 @@ th {
   width: 0;
   max-height: 80vh;
   overflow: hidden;
-  background: var(--panel);
-  border: 0 solid var(--panel-border);
+  background: var(--color-bg-secondary);
+  border: 0 solid var(--color-border-light);
   border-right: none;
   border-radius: var(--radius-lg) 0 0 var(--radius-lg);
   transition:
@@ -449,8 +449,8 @@ th {
     z-index: 1;
     max-height: calc(100vh - 120px);
     overflow-y: auto;
-    background: var(--panel);
-    border: 1px solid var(--panel-border);
+    background: var(--color-bg-secondary);
+    border: 1px solid var(--color-border-light);
     border-radius: var(--radius-lg);
     box-shadow: none;
   }
