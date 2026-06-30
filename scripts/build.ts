@@ -381,7 +381,27 @@ async function render(siteData: SiteData) {
     }
   }
   // 预先一次性收集所有语言的缺失翻译警告，确保之后所有页面的 buildIssuesSummary 一致
-  const translatedCache = new Map<string, LocalizedModuleRecord[]>()
+  type LocalizedModuleSet = {
+    modules: LocalizedModuleRecord[]
+    byId: Map<string, LocalizedModuleRecord>
+    bySlug: Map<string, LocalizedModuleRecord>
+  }
+  const localizedModuleCache = new Map<string, LocalizedModuleSet>()
+  const createLocalizedModuleSet = (localizedModules: LocalizedModuleRecord[]): LocalizedModuleSet => ({
+    modules: localizedModules,
+    byId: new Map(localizedModules.map((module) => [module.id, module])),
+    bySlug: new Map(localizedModules.map((module) => [module.slug, module])),
+  })
+  const getLocalizedModuleSet = async (loc: string): Promise<LocalizedModuleSet> => {
+    let localizedModuleSet = localizedModuleCache.get(loc)
+    if (!localizedModuleSet) {
+      localizedModuleSet = createLocalizedModuleSet(
+        await loadLocalizedModules(renderSiteData, loc, { skipMissingCheck: true })
+      )
+      localizedModuleCache.set(loc, localizedModuleSet)
+    }
+    return localizedModuleSet
+  }
   if (isDev) {
     for (const loc of locales) {
       if (loc === 'en') continue
@@ -390,7 +410,7 @@ async function render(siteData: SiteData) {
           skipMissingCheck: false,
           reportIssue,
         })
-        translatedCache.set(loc, translated)
+        localizedModuleCache.set(loc, createLocalizedModuleSet(translated))
       } catch {
         // 失败时不缓存，后续渲染阶段仍可单独重试
       }
@@ -403,11 +423,8 @@ async function render(siteData: SiteData) {
     const locConfig = getLocaleConfig(loc)
     const $t = dict[loc]
     // 针对当前语言，生成脚本文本与元信息已翻译的模块数据（不影响其他语言）
-    let modulesForLoc = translatedCache.get(loc)
-    if (!modulesForLoc) {
-      modulesForLoc = await loadLocalizedModules(renderSiteData, loc, { skipMissingCheck: true })
-      translatedCache.set(loc, modulesForLoc)
-    }
+    const localizedModuleSet = await getLocalizedModuleSet(loc)
+    const modulesForLoc = localizedModuleSet.modules
 
     // 每种语言目录写入搜索数据（使用本地化后的模块）
     const searchIndex = buildSearchIndex(modulesForLoc)
@@ -469,7 +486,7 @@ async function render(siteData: SiteData) {
     await fs.writeFile(path.join(aboutDir, 'index.html'), await maybeMinify(aboutHtml, isFast), 'utf8')
 
     for (const m of modules) {
-      const moduleData = modulesForLoc.find((x) => x.id === m.id) || m
+      const moduleData = localizedModuleSet.byId.get(m.id) || m
       const moduleUrl = locConfig.baseUrl + '/' + loc + '/modules/' + m.slug + '/'
       const html = nunjucks.render('layouts/module.njk', createPageContext(loc, '/modules/' + m.slug + '/', {
         module: moduleData,
@@ -560,8 +577,8 @@ async function render(siteData: SiteData) {
       const moduleLastMod = await getModuleLastMod(m.slug)
       for (const loc of locales) {
         const imagePath = `/${loc}/modules/${m.slug}/cover.png`
-        const modulesForLoc = translatedCache.get(loc)
-        const localizedModule = (modulesForLoc && modulesForLoc.find((item) => item.slug === m.slug)) || m
+        const localizedModuleSet = await getLocalizedModuleSet(loc)
+        const localizedModule = localizedModuleSet.bySlug.get(m.slug) || m
         const locConfig = localeConfigCache.get(loc)
         const moduleLabel = localizedModule?.name || localizedModule?.description || m.name || m.description || m.id
         const siteLabel = locConfig?.siteName || config.siteName
