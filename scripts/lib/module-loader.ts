@@ -9,6 +9,7 @@ import path from 'path'
 import fg from 'fast-glob'
 import { buildModuleRecord } from './schema.ts'
 import log from './logger.ts'
+import { naturalCompare, parseScriptFileName } from './script-files.ts'
 import type { ModuleMeta, ModuleRecord, ModuleScript, ModuleTranslation, SiteConfig } from './types.ts'
 
 interface LoadModulesOptions {
@@ -54,16 +55,11 @@ export async function loadModules({ root, config, isDev }: LoadModulesOptions): 
       // scripts/ 目录下若存在 *.txt，按文件名自然排序
       const scriptsDir = path.join(moduleDir, 'scripts')
       if (await fs.pathExists(scriptsDir)) {
-        const files = (await fg(['*.txt'], { cwd: scriptsDir, onlyFiles: true })).sort((a, b) =>
-          a.localeCompare(b, 'en', { numeric: true })
-        )
+        const files = (await fg(['*.txt'], { cwd: scriptsDir, onlyFiles: true })).sort(naturalCompare)
         for (const f of files) {
           const full = path.join(scriptsDir, f)
           const content = await fs.readFile(full, 'utf8')
-          const base = path.basename(f, '.txt')
-          // 新标准：序号+id，例如 01-main.txt；无序号时，整个 base 为 id
-          const m = base.match(/^(\d+)[ _-](.+)$/)
-          const id = (m ? m[2]! : base).trim()
+          const { id } = parseScriptFileName(f)
           scripts.push({ id, content })
         }
         // 若目录存在但为空，视为错误
@@ -94,9 +90,7 @@ export async function loadModules({ root, config, isDev }: LoadModulesOptions): 
       const translations: Record<string, ModuleTranslation> = {}
       const i18nDir = path.join(moduleDir, 'i18n')
       if (await fs.pathExists(i18nDir)) {
-        const files = (await fg(['*.json'], { cwd: i18nDir, onlyFiles: true })).sort((a, b) =>
-          a.localeCompare(b, 'en', { numeric: true })
-        )
+        const files = (await fg(['*.json'], { cwd: i18nDir, onlyFiles: true })).sort(naturalCompare)
         for (const f of files) {
           const loc = path.basename(f, '.json')
           try {

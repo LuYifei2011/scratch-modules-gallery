@@ -3,6 +3,7 @@ import fs from 'fs-extra'
 import { fileURLToPath } from 'url'
 import formidable from 'formidable'
 import log from './logger.ts'
+import { formatScriptFileName, isScriptTextFile, naturalCompare, parseScriptFileName } from './script-files.ts'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -91,22 +92,10 @@ function isAllowedAssetFilename(filename) {
   }
 }
 
-function naturalCompare(a, b) {
-  return a.localeCompare(b, 'en', { numeric: true })
-}
-
-function parseScriptFileName(file) {
-  const base = path.basename(file, '.txt')
-  const match = base.match(/^(\d+)[ _-](.+)$/)
-  const id = (match ? match[2] : base).trim()
-  const order = match ? parseInt(match[1], 10) : 0
-  return { id, order }
-}
-
 async function readScriptsFromDir(scriptsDir) {
   const files = await fs.readdir(scriptsDir)
   const scripts = []
-  for (const file of files.filter((f) => f.endsWith('.txt')).sort(naturalCompare)) {
+  for (const file of files.filter(isScriptTextFile).sort(naturalCompare)) {
     const content = await fs.readFile(path.join(scriptsDir, file), 'utf8')
     const { id, order } = parseScriptFileName(file)
     scripts.push({ id, order, content })
@@ -116,7 +105,7 @@ async function readScriptsFromDir(scriptsDir) {
 
 async function findScriptFile(scriptsDir, scriptId) {
   const files = await fs.readdir(scriptsDir)
-  return files.find((f) => f.endsWith('.txt') && parseScriptFileName(f).id === scriptId)
+  return files.find((f) => isScriptTextFile(f) && parseScriptFileName(f).id === scriptId)
 }
 
 /**
@@ -183,7 +172,7 @@ async function scanModules() {
         const scriptsDir = path.join(moduleDir, 'scripts')
         const hasScripts = await fs.pathExists(scriptsDir)
         const scriptFiles = hasScripts ? await fs.readdir(scriptsDir) : []
-        const scriptCount = scriptFiles.filter((f) => f.endsWith('.txt')).length
+        const scriptCount = scriptFiles.filter(isScriptTextFile).length
 
         const hasDemo = await fs.pathExists(path.join(moduleDir, 'demo.sb3'))
         const i18nDir = path.join(moduleDir, 'i18n')
@@ -470,14 +459,15 @@ export async function createScript(req, res, moduleId) {
     if (fileOrder === undefined) {
       const files = await fs.readdir(scriptsDir)
       const orders = files
-        .filter((f) => f.endsWith('.txt'))
+        .filter(isScriptTextFile)
         .map((f) => {
           return parseScriptFileName(f).order
         })
       fileOrder = orders.length > 0 ? Math.max(...orders) + 1 : 1
     }
 
-    const filename = `${String(fileOrder).padStart(2, '0')}-${scriptId}.txt`
+    // TODO: Reject duplicate script ids even when the requested order would create a different filename.
+    const filename = formatScriptFileName(scriptId, fileOrder)
     const scriptPath = path.join(scriptsDir, filename)
 
     if (await fs.pathExists(scriptPath)) {
@@ -524,7 +514,7 @@ export async function updateScript(req, res, moduleId, scriptId) {
 
     // 如果 id 或 order 发生变化，需要重命名
     if (finalId !== scriptId || finalOrder !== currentOrder) {
-      const newFilename = `${String(finalOrder).padStart(2, '0')}-${finalId}.txt`
+      const newFilename = formatScriptFileName(finalId, finalOrder)
       const newPath = path.join(scriptsDir, newFilename)
 
       // 检查目标文件是否已存在（且不是当前文件）
@@ -571,14 +561,14 @@ export async function deleteScript(req, res, moduleId, scriptId) {
 
     // 查找脚本文件
     const files = await fs.readdir(scriptsDir)
-    const targetFile = files.find((f) => f.endsWith('.txt') && parseScriptFileName(f).id === scriptId)
+    const targetFile = files.find((f) => isScriptTextFile(f) && parseScriptFileName(f).id === scriptId)
 
     if (!targetFile) {
       return sendError(res, 404, 'Script not found')
     }
 
     // 检查是否至少保留一个脚本
-    const txtFiles = files.filter((f) => f.endsWith('.txt'))
+    const txtFiles = files.filter(isScriptTextFile)
     if (txtFiles.length <= 1) {
       return sendError(res, 400, 'Cannot delete the last script file: modules must have at least one script file')
     }
