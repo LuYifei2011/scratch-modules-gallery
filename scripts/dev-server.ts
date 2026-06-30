@@ -134,7 +134,9 @@ function broadcast(obj: any) {
   for (const res of sseClients) {
     try {
       res.write(`data: ${msg}\n\n`)
-    } catch {}
+    } catch {
+      // 忽略已断开的 SSE 客户端。
+    }
   }
 }
 
@@ -427,7 +429,7 @@ const requestHandler = (req, res) => {
             // 编辑器页面不注入自动刷新脚本（已有自己的 SSE 监听）
             const isEditorPage = pathname.includes('__dev/editor')
             if (!isEditorPage) {
-              const inject = `\n<script src=\"/__dev/client.js\"></script>\n`
+              const inject = `\n<script src="/__dev/client.js"></script>\n`
               if (html.includes('</body>')) html = html.replace('</body>', `${inject}</body>`)
               else html += inject
             }
@@ -452,7 +454,7 @@ const requestHandler = (req, res) => {
           // 编辑器页面不注入自动刷新脚本（已有自己的 SSE 监听）
           const isEditorPage = pathname.includes('__dev/editor')
           if (!isEditorPage) {
-            const inject = `\n<script src=\"/__dev/client.js\"></script>\n`
+            const inject = `\n<script src="/__dev/client.js"></script>\n`
             if (html.includes('</body>')) html = html.replace('</body>', `${inject}</body>`)
             else html += inject
           }
@@ -545,7 +547,9 @@ function shutdown() {
   if (process.stdin.isTTY) {
     try {
       process.stdin.setRawMode(false)
-    } catch {}
+    } catch {
+      // 某些 stdin 实现不支持 raw mode。
+    }
   }
   server.close()
   watcher.close()

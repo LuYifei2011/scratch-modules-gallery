@@ -383,7 +383,7 @@ function initToc() {
     // 视口上方 5% 作为阅读基准线（限制最大 50px）
     const readingLine = Math.min(viewportH * 0.05, 50)
 
-    const candidateIds: Array<{ id: string; rect: DOMRect }> = []
+    const candidateIds: { id: string; rect: DOMRect }[] = []
     for (const id of allIds) {
       const el = document.getElementById(id)
       if (!el) continue

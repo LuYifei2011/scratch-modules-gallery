@@ -49,7 +49,9 @@ if (process.env.BASE_URL) {
   try {
     // 只替换 baseUrl 字段，不引入额外复杂度
     config.baseUrl = process.env.BASE_URL
-  } catch {}
+  } catch {
+    // 保持配置文件中的原始 baseUrl。
+  }
 } else if (process.env.CF_PAGES_URL) {
   // Cloudflare Pages 提供的环境变量，主要用于非生产环境的预览部署，生产环境已通过 BASE_URL 设置正确的 URL
   config.baseUrl = process.env.CF_PAGES_URL
@@ -120,8 +122,8 @@ async function render(modules: ModuleRecord[], _allTags: string) {
   try {
     const u = new URL(config.baseUrl)
     basePath = u.pathname.replace(/\/$/, '') // '' 或 '/subdir'
-  } catch (e) {
-    basePath = ''
+  } catch {
+    // baseUrl 无效时回退到根路径。
   }
   const normalizedBaseUrl = (config.baseUrl || '').replace(/\/$/, '')
   const escapeXml = (value: unknown) =>
@@ -364,7 +366,11 @@ async function render(modules: ModuleRecord[], _allTags: string) {
     // demo.sb3 存在时复制
     if (m.hasDemo) {
       const demoSrc = path.join(srcDir, 'demo.sb3')
-      await fs.copy(demoSrc, path.join(targetDir, 'demo.sb3')).catch(() => {})
+      try {
+        await fs.copy(demoSrc, path.join(targetDir, 'demo.sb3'))
+      } catch (e) {
+        log.warn('render', `复制 demo.sb3 失败 ${m.id}: ${errorMessage(e)}`)
+      }
     }
     // assets 文件夹存在时复制整个目录
     const assetsDir = path.join(srcDir, 'assets')

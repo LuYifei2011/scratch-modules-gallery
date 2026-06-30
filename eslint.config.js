@@ -33,7 +33,7 @@ export default defineConfig([
       "no-unused-vars": "off",
       "@typescript-eslint/no-explicit-any": "off",
       "@typescript-eslint/array-type": "warn",
-      "@typescript-eslint/consistent-type-definitions": "warn",
+      "@typescript-eslint/consistent-type-definitions": "off",
       "@typescript-eslint/no-empty-function": "warn",
       "@typescript-eslint/prefer-as-const": "off",
       "@typescript-eslint/no-unused-vars": "off",

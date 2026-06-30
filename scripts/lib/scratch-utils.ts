@@ -50,7 +50,7 @@ export interface BlockCategorySummary {
  * 统计 scratchblocks 脚本文本中各积木类别的出现次数。
  * 解析所有脚本并递归遍历 AST，统计 block.info.category，按数量降序排列。
  */
-export function analyzeBlockCategories(scriptTexts?: Array<string | null | undefined> | null): BlockCategorySummary[] {
+export function analyzeBlockCategories(scriptTexts?: (string | null | undefined)[] | null): BlockCategorySummary[] {
   const allKeys = Object.keys(scratchblocks.allLanguages || {})
   const counts: Record<string, number> = {}
 

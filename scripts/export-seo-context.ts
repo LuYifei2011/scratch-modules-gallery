@@ -251,7 +251,7 @@ async function readSystemPrompt(root: string, promptFile: string): Promise<strin
     return await fs.readFile(fullPath, 'utf8')
   } catch (e) {
     const message = e instanceof Error ? e.message : String(e)
-    throw new Error(`Unable to read --system-prompt-file ${promptFile}: ${message}`)
+    throw new Error(`Unable to read --system-prompt-file ${promptFile}: ${message}`, { cause: e })
   }
 }
 

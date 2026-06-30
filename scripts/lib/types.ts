@@ -82,7 +82,7 @@ export interface ModuleMeta {
   seoDescription?: string
   tags?: I18nStringArrayOrMap
   keywords?: I18nStringArrayOrMap
-  contributors?: string | Array<string | Contributor>
+  contributors?: string | (string | Contributor)[]
   scriptTitles?: Record<string, string>
   variables?: ModuleVariable[]
   references?: ModuleReference[]
