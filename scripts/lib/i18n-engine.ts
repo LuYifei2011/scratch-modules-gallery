@@ -58,8 +58,7 @@ function pickByLocalePriority<T>(localePriority: string[], getter: (locale: stri
 
 function localizeModuleName(mod: MergedModuleRecord, localePriority: string[], fallbackName = ''): string {
   const per = mod.translations || {};
-  const nameMap = mod.name_i18n || {};
-  return pickByLocalePriority(localePriority, (loc) => per[loc]?.name ?? nameMap[loc]) || fallbackName || mod.name;
+  return pickByLocalePriority(localePriority, (loc) => per[loc]?.name) || fallbackName || mod.name;
 }
 
 function localizeScriptTitle(
@@ -278,15 +277,16 @@ export async function translateModulesForLocale(
   const languageTag = (dict[locale]?.meta?.languageTag || locale || 'en').replace('-', '_').toLowerCase();
   const isEnglishLocale = locale === 'en' || languageTag.startsWith('en');
 
-  // 生成语言优先级顺序：CJK 语言之间互相回退；非 CJK 语言只查自身（+ en），
-  // 最终兜底永远是 meta.json 原始值（pickStr / pickArr 末尾的 nm[base]）。
+  // 生成语言优先级顺序：CJK 语言之间互相回退；非 CJK 语言只查自身。
+  // 英文直接使用 meta.json 基线，最终兜底也永远是 meta.json 原始值。
   const getLocalePriority = () => {
-    if (locale === 'zh-tw') return ['zh-tw', 'zh-cn', 'en'];
-    if (locale === 'zh-cn') return ['zh-cn', 'zh-tw', 'en'];
-    if (locale === 'en') return ['en'];
-    return [locale, 'en'];
+    if (locale === 'zh-tw') return ['zh-tw', 'zh-cn'];
+    if (locale === 'zh-cn') return ['zh-cn', 'zh-tw'];
+    if (isEnglishLocale) return [];
+    return [locale];
   };
   const localePriority = getLocalePriority();
+  const notesLocalePriority = isEnglishLocale ? ['en'] : [...localePriority, 'en'];
 
   const out: LocalizedModuleRecord[] = [];
 
@@ -315,26 +315,26 @@ export async function translateModulesForLocale(
     const per = mergeModuleTranslations(moduleDefaults, rawPer);
     // mergedM：携带合并后翻译的模块对象，供辅助函数（buildNameMapsForModule 等）使用
     const mergedM = { ...m, translations: per };
-    function pickStr(base: 'name' | 'description' | 'seoDescription', map?: Record<string, string>) {
-      return pickByLocalePriority(localePriority, (loc) => per[loc]?.[base] ?? (map && map[loc])) || nm[base];
+    function pickStr(base: 'name' | 'description' | 'seoDescription') {
+      return pickByLocalePriority(localePriority, (loc) => per[loc]?.[base]) || nm[base];
     }
-    function pickArr(base: 'tags' | 'keywords', map?: Record<string, string[]>) {
-      return pickByLocalePriority(localePriority, (loc) => per[loc]?.[base] ?? (map && map[loc])) || nm[base];
+    function pickArr(base: 'tags' | 'keywords') {
+      return pickByLocalePriority(localePriority, (loc) => per[loc]?.[base]) || nm[base];
     }
-    function pickKeywords(base: 'keywords', map?: Record<string, string[]>) {
-      const val = pickArr(base, map);
+    function pickKeywords(base: 'keywords') {
+      const val = pickArr(base);
       return Array.isArray(val) ? val : [];
     }
-    if (m.name_i18n || per[locale] || per['en'] || per['zh-cn'] || per['zh-tw']) {
-      nm.name = pickStr('name', m.name_i18n);
+    if (localePriority.some((loc) => per[loc])) {
+      nm.name = pickStr('name');
     }
-    if (m.description_i18n || per[locale] || per['en'] || per['zh-cn'] || per['zh-tw']) {
-      nm.description = pickStr('description', m.description_i18n);
+    if (localePriority.some((loc) => per[loc])) {
+      nm.description = pickStr('description');
     }
-    if (m.seoDescription_i18n || per[locale] || per['en'] || per['zh-cn'] || per['zh-tw']) {
-      nm.seoDescription = pickStr('seoDescription', m.seoDescription_i18n);
+    if (localePriority.some((loc) => per[loc])) {
+      nm.seoDescription = pickStr('seoDescription');
     }
-    const tv = pickArr('tags', m.tags_i18n);
+    const tv = pickArr('tags');
     if (Array.isArray(tv)) {
       // 使用全局 tags 字典翻译 tags
       nm.tags = tv.map((tag) => {
@@ -344,7 +344,7 @@ export async function translateModulesForLocale(
         return tag;
       });
     }
-    const kw = pickKeywords('keywords', m.keywords_i18n);
+    const kw = pickKeywords('keywords');
     nm.keywords = kw;
 
     // notes: 按语言优先级从 notesMap 中选取，实时转换为 HTML（移至 ownNameMaps 计算后）
@@ -353,7 +353,7 @@ export async function translateModulesForLocale(
     // notes 处理：先翻译其中的 scratchblocks 块，再转换为 HTML
     if (m.notesMap && typeof m.notesMap === 'object' && Object.keys(m.notesMap).length) {
       let selectedNotesLocale: string | null = null;
-      let rawNotes = pickByLocalePriority(localePriority, (loc) => {
+      let rawNotes = pickByLocalePriority(notesLocalePriority, (loc) => {
         if (!m.notesMap[loc]) return null;
         selectedNotesLocale = loc;
         return m.notesMap[loc];

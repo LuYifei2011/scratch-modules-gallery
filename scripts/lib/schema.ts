@@ -1,20 +1,5 @@
 // 简单数据模型 & 工具
-import type {
-  Contributor,
-  I18nStringArrayMap,
-  I18nStringArrayOrMap,
-  I18nStringMap,
-  I18nStringOrMap,
-  ModuleMeta,
-  ModuleRecord,
-  ModuleScript,
-  ModuleTranslation,
-} from './types.ts';
-
-type NormalizedI18nValue<T> = {
-  base: T | undefined;
-  map: Record<string, T> | undefined;
-};
+import type { Contributor, ModuleMeta, ModuleRecord, ModuleScript, ModuleTranslation } from './types.ts';
 
 export function parseContributors(raw: unknown): Contributor[] {
   if (!raw) return [];
@@ -54,46 +39,6 @@ function normalizeOne(entry: unknown): Contributor | null {
   return null;
 }
 
-// 选择多语言映射的默认值（优先 en -> zh-cn -> 第一个）
-function pickDefaultFromMap<T>(map: Record<string, T> | undefined): T | undefined {
-  if (!map || typeof map !== 'object') return undefined;
-  if (map['en']) return map['en'];
-  if (map['zh-cn']) return map['zh-cn'];
-  const keys = Object.keys(map);
-  return keys.length ? map[keys[0]!] : undefined;
-}
-
-function normalizeI18nStringOrMap(v: I18nStringOrMap | undefined): NormalizedI18nValue<string> {
-  if (v == null) return { base: undefined, map: undefined };
-  if (typeof v === 'string') return { base: v, map: undefined };
-
-  if (typeof v === 'object') {
-    const base = pickDefaultFromMap(v);
-    return { base, map: v as I18nStringMap };
-  }
-  return { base: String(v), map: undefined };
-}
-
-function normalizeI18nKeywords(v: I18nStringArrayOrMap | undefined): NormalizedI18nValue<string[]> {
-  if (v == null) return { base: [], map: undefined };
-  if (Array.isArray(v)) return { base: v, map: undefined };
-  if (typeof v === 'object') {
-    const base = pickDefaultFromMap(v);
-    if (Array.isArray(base)) return { base, map: v };
-    return { base: [], map: v as I18nStringArrayMap };
-  }
-  return { base: [], map: undefined };
-}
-
-function normalizeI18nTags(v: I18nStringArrayOrMap | undefined): NormalizedI18nValue<string[]> {
-  if (Array.isArray(v)) return { base: v, map: undefined };
-  if (v && typeof v === 'object') {
-    const base = pickDefaultFromMap(v);
-    return { base: Array.isArray(base) ? base : [], map: v };
-  }
-  return { base: [], map: undefined };
-}
-
 export interface BuildModuleRecordExtra {
   scripts?: ModuleScript[];
   demoFile?: string;
@@ -108,14 +53,9 @@ export function buildModuleRecord(
   const { id, name, description, seoDescription, tags, keywords, contributors } = meta;
   const errors = [];
   if (!id) errors.push('missing id');
-  if (!name) errors.push('missing name');
-  if (!description) errors.push('missing description');
-  if (!(Array.isArray(tags) || (tags && typeof tags === 'object'))) errors.push('tags must be array or i18n map');
-
-  const nameNorm = normalizeI18nStringOrMap(name);
-  const descNorm = normalizeI18nStringOrMap(description);
-  const tagsNorm = normalizeI18nTags(tags);
-  const keywordsNorm = normalizeI18nKeywords(keywords);
+  if (typeof name !== 'string' || !name.trim()) errors.push('missing name');
+  if (typeof description !== 'string' || !description.trim()) errors.push('missing description');
+  if (!Array.isArray(tags)) errors.push('tags must be array');
   // 脚本标题（英文，按脚本 id -> 标题）
   const scriptTitles =
     meta && typeof meta.scriptTitles === 'object' && !Array.isArray(meta.scriptTitles) ? meta.scriptTitles : {};
@@ -123,11 +63,11 @@ export function buildModuleRecord(
   const record: ModuleRecord = {
     id,
     slug: id, // slug 直接使用 id
-    name: nameNorm.base,
-    description: descNorm.base,
+    name,
+    description,
     seoDescription: typeof seoDescription === 'string' ? seoDescription : undefined,
-    tags: Array.isArray(tagsNorm.base) ? tagsNorm.base : [],
-    keywords: Array.isArray(keywordsNorm.base) ? keywordsNorm.base : [],
+    tags: Array.isArray(tags) ? tags : [],
+    keywords: Array.isArray(keywords) ? keywords : [],
     // 新增：脚本标题（英文）
     scriptTitles,
     contributors: parseContributors(contributors),

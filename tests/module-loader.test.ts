@@ -67,6 +67,7 @@ describe('loadModules', () => {
     const { modules } = await loadModules({ root: fixtureRoot, config, isDev: true });
     const fps = modules.find((m) => m.id === 'fps');
     expect(fps.translations).toBeTruthy();
+    expect(fps.translations.en).toBe(undefined);
     expect(fps.translations['zh-cn']).toBeTruthy();
     expect(fps.translations['zh-cn'].name).toBe('帧率计数器');
     expect(fps.translations['zh-cn'].description).toBe('计算帧率（FPS）。');

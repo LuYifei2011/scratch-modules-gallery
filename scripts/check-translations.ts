@@ -146,7 +146,7 @@ async function checkTags(locales) {
  * (translateModulesForLocale + translateScriptText). This detects all the same
  * missing translations that the build process reports, including:
  * - name, description
- * - scriptTitles (based on actual scripts, not just en.json)
+ * - scriptTitles (based on actual scripts and meta.json baseline)
  * - variables, lists (based on meta.json definitions, with >1 char filter)
  * - procedures, procedureParams (from actual script AST parsing)
  * - comments (from actual script content)

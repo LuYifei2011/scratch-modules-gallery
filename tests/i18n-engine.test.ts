@@ -184,34 +184,29 @@ describe('translateModulesForLocale', () => {
     expect(result[0].name).toBe('测试模块'); // Falls back to zh-cn
   });
 
-  it('fills in name from translation when meta name is empty', async () => {
+  it('falls back to meta baseline when locale translation is missing', async () => {
     const mod = {
       ...baseModule,
-      name: '', // 空的 metadata name
-      translations: {
-        'zh-cn': {
-          name: '翻译补全的名称',
-          description: '翻译补全的描述',
-        },
-      },
+      translations: {},
     };
     const result = await translateModulesForLocale([mod], dict, 'zh-cn');
-    expect(result[0].name).toBe('翻译补全的名称');
+    expect(result[0].name).toBe('Test Module');
+    expect(result[0].description).toBe('A test module');
   });
 
-  it('fills in description from translation when meta description is empty', async () => {
+  it('does not use en module translations as a second meta source', async () => {
     const mod = {
       ...baseModule,
-      description: '', // 空的 metadata description
       translations: {
-        'zh-cn': {
-          name: '名称',
-          description: '翻译补全的描述',
+        en: {
+          name: 'English Override Name',
+          description: 'English Override Desc',
         },
       },
     };
     const result = await translateModulesForLocale([mod], dict, 'zh-cn');
-    expect(result[0].description).toBe('翻译补全的描述');
+    expect(result[0].name).toBe('Test Module');
+    expect(result[0].description).toBe('A test module');
   });
 
   it('fills in variable displayName from translation even when meta has no name value', async () => {
@@ -241,25 +236,6 @@ describe('translateModulesForLocale', () => {
     };
     const result = await translateModulesForLocale([mod], dict, 'zh-cn');
     expect(result[0].scripts[0].title).toBe('翻译标题');
-  });
-
-  it('uses en translation to fill missing meta fields when no locale translation', async () => {
-    const mod = {
-      ...baseModule,
-      name: '',
-      description: '',
-      translations: {
-        en: {
-          name: 'English Fallback Name',
-          description: 'English Fallback Desc',
-        },
-        // no zh-cn translation
-      },
-    };
-    const result = await translateModulesForLocale([mod], dict, 'zh-cn');
-    // Should fall back to en translation
-    expect(result[0].name).toBe('English Fallback Name');
-    expect(result[0].description).toBe('English Fallback Desc');
   });
 
   it('localizes fromName for inline imported scripts (top-level s.imported)', async () => {

@@ -106,17 +106,16 @@ describe('buildModuleRecord', () => {
     expect(errors.some((e) => e.includes('tags'))).toBeTruthy();
   });
 
-  it('handles i18n map for name field', () => {
-    const meta = {
+  it('rejects i18n maps in meta baseline fields', () => {
+    const meta: any = {
       id: 'i18n-mod',
       name: { en: 'English Name', 'zh-cn': '中文名称' },
       description: 'desc',
       tags: ['test'],
     };
     const extra = { scripts: [], notesMap: {} };
-    const { record } = buildModuleRecord(meta, extra);
-    // pickDefaultFromMap picks 'en' first
-    expect(record.name).toBe('English Name');
+    const { errors } = buildModuleRecord(meta, extra);
+    expect(errors.includes('missing name')).toBeTruthy();
   });
 
   it('handles contributors in meta', () => {

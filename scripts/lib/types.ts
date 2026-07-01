@@ -1,10 +1,5 @@
 export type LocaleCode = string;
 
-export type I18nStringMap = Record<LocaleCode, string>;
-export type I18nStringArrayMap = Record<LocaleCode, string[]>;
-export type I18nStringOrMap = string | I18nStringMap;
-export type I18nStringArrayOrMap = string[] | I18nStringArrayMap;
-
 export interface Contributor {
   name: string;
   url?: string;
@@ -77,11 +72,11 @@ export interface ModuleTranslation {
 
 export interface ModuleMeta {
   id?: string;
-  name?: I18nStringOrMap;
-  description?: I18nStringOrMap;
+  name?: string;
+  description?: string;
   seoDescription?: string;
-  tags?: I18nStringArrayOrMap;
-  keywords?: I18nStringArrayOrMap;
+  tags?: string[];
+  keywords?: string[];
   contributors?: string | (string | Contributor)[];
   scriptTitles?: Record<string, string>;
   variables?: ModuleVariable[];
@@ -92,15 +87,10 @@ export interface ModuleRecord {
   id?: string;
   slug?: string;
   name?: string;
-  name_i18n?: I18nStringMap;
   description?: string;
-  description_i18n?: I18nStringMap;
   seoDescription?: string;
-  seoDescription_i18n?: I18nStringMap;
   tags: string[];
-  tags_i18n?: I18nStringArrayMap;
   keywords: string[];
-  keywords_i18n?: I18nStringArrayMap;
   scriptTitles?: Record<string, string>;
   contributors?: Contributor[];
   scripts: ResolvedModuleScript[];

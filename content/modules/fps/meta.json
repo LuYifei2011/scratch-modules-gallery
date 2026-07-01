@@ -2,6 +2,7 @@
   "id": "fps",
   "name": "FPS Counter",
   "description": "Calculate FPS.",
+  "seoDescription": "Calculate FPS based on Scratch timer and custom blocks. By recording the tick30 variable at 30-frame intervals, calculating the time difference from the previous frame, and dividing 30 by the time difference to get an approximate frame rate, which is then rounded and displayed. Suitable for real-time rendering performance monitoring.",
   "tags": ["performance"],
   "keywords": ["frame rate", "rendering", "delta time", "fps"],
   "contributors": "gh/LuYifei2011",

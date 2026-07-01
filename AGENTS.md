@@ -9,7 +9,7 @@
    - Sitemap 使用 `simple-git` 从提交历史提取文件修改时间（CI 需 `fetch-depth: 0`）
 2. **数据模型 `scripts/lib/schema.ts`**：统一字段 (id, slug, name, description, tags, contributors[], scripts[], hasDemo, variables[], notesMap, references)。任何字段变更需评估链路：schema → build → 模板 → 搜索 → 前端脚本。
    - `parseContributors`: 支持 `gh/user` / `sc/user` 自动生成链接，或普通字符串/对象数组
-   - i18n 字段可为字符串或 locale map 对象；自动选择默认值 (en → zh-cn → 首个 key)
+   - `meta.json` 中的 `name` / `description` / `seoDescription` 是英文基线；非英文文本放入模块 `i18n/<locale>.json` 覆盖，禁止用 locale map 混写
 3. **模板 Nunjucks**：`src/templates/layouts/{base,home,module}.njk` 只做展示；上下文：`config,module,t,locale,pageBase,assetBase,pagePath,locales,year,IS_DEV,langTags,buildIssues,buildIssuesSummary`。
    - 禁止模板中直接调用时间或访问浏览器环境
 
@@ -41,10 +41,11 @@
   - 结构：`{ tagId: { en: "...", zh-cn: "...", zh-tw: "..." }, ... }`
   - 构建时自动应用，模块 i18n 文件无需包含 `tags` 字段
   - 新增 tag：仅需在 `tags.json` 中添加一次翻译，所有使用该 tag 的模块自动获得本地化
-- **模块局部**：`content/modules/<id>/i18n/<locale>.json` 可覆盖：name, description, variables, lists, events, scriptTitles, procedures, procedureParams, comments
+- **模块局部**：`content/modules/<id>/i18n/<locale>.json` 可覆盖：name, description, seoDescription, variables, lists, events, scriptTitles, procedures, procedureParams, comments
+  - 英文基础文案统一写在 `meta.json`；通常不需要 `i18n/en.json`，避免与 `meta.json` 重复
   - **备注文件**：`content/modules/<id>/notes/<lang-code>.md`；构建时按语言优先级选取，转换为 `notesHtml` 写入模组上下文；`notesMap`（原始 Markdown 映射）存储在 schema 中
   - **不再需要翻译 tags**：直接在全局 tags.json 中维护
-  - 变量/列表/事件：构建时计算 `displayName`（不改变原始 name），优先级（示例 zh-cn）：当前语言 > 同类中文变体 > 英文
+  - 变量/列表/事件：构建时计算 `displayName`（不改变原始 name），优先级（示例 zh-cn）：当前语言 > 同类中文变体 > 英文原名
   - 示例：`fps` 模块的 `zh-cn.json` 将 `FPS` 变量映射为 "帧率"
 - **自定义块本地化（方案A）**：
   1. 脚本源统一英文 `define xxx (param :: custom-arg) ...`
@@ -85,15 +86,15 @@
 
 ### 常见修改指南
 
-| 目标                 | 入口                         | 注意点                                       |
-| -------------------- | ---------------------------- | -------------------------------------------- |
-| 新增模块             | `content/modules/<id>/`      | 至少 1 个脚本；补齐 meta 与（可选）i18n      |
-| 扩展数据字段         | `schema.ts`                  | 同步模板 & 搜索 & 前端依赖字段               |
-| 新语言               | 复制一份 `src/i18n/en.json`  | 如果需要模块级翻译，新增对应 i18n JSON       |
-| 新增 tag             | `src/i18n/tags.json`         | 添加所有支持语言的翻译，所有模块自动获得     |
-| 添加或更新备注       | `notes/<lang-code>.md`       | 每个语言独立文件；构建时按语言优先级选取     |
-| 自定义块新增 pattern | 模块 i18n `procedures`       | 保持英文源脚本同步；`_` 数量需与参数个数一致 |
-| SEO 调整             | `site.config.ts` + 模板 head | 确保 `hreflang`、canonical 含语言段          |
+| 目标                 | 入口                         | 注意点                                                                  |
+| -------------------- | ---------------------------- | ----------------------------------------------------------------------- |
+| 新增模块             | `content/modules/<id>/`      | 至少 1 个脚本；`meta.json` 必须包含英文 name/description；非英文放 i18n |
+| 扩展数据字段         | `schema.ts`                  | 同步模板 & 搜索 & 前端依赖字段                                          |
+| 新语言               | 复制一份 `src/i18n/en.json`  | 如果需要模块级翻译，新增对应 i18n JSON                                  |
+| 新增 tag             | `src/i18n/tags.json`         | 添加所有支持语言的翻译，所有模块自动获得                                |
+| 添加或更新备注       | `notes/<lang-code>.md`       | 每个语言独立文件；构建时按语言优先级选取                                |
+| 自定义块新增 pattern | 模块 i18n `procedures`       | 保持英文源脚本同步；`_` 数量需与参数个数一致                            |
+| SEO 调整             | `site.config.ts` + 模板 head | 确保 `hreflang`、canonical 含语言段                                     |
 
 ### 验证清单（提交前）
 
@@ -130,19 +131,19 @@
   - 模块内容变更（`content/modules/**`）**不触发**测试工作流
 - **覆盖范围**：
 
-  | 测试文件                    | 被测模块                           | 主要测试内容                                                   |
-  | --------------------------- | ---------------------------------- | -------------------------------------------------------------- |
-  | `schema.test.ts`            | `scripts/lib/schema.ts`            | `parseContributors`、`buildModuleRecord`（必填校验、i18n map） |
-  | `import-resolver.test.ts`   | `scripts/lib/import-resolver.ts`   | 导入解析、循环引用检测、缺失模块、越界索引                     |
-  | `html-utils.test.ts`        | `scripts/lib/html-utils.ts`        | `escapeHtml`、`maybeMinify`、`generateShareLinks`              |
-  | `scratch-utils.test.ts`     | `scripts/lib/scratch-utils.ts`     | `tokenizeCJK`、`CATEGORY_COLORS`、`analyzeBlockCategories`     |
-  | `i18n-loader.test.ts`       | `scripts/lib/i18n-loader.ts`       | `pickConfigForLocale` 回退与覆盖                               |
-  | `i18n-engine.test.ts`       | `scripts/lib/i18n-engine.ts`       | 元信息本地化、变量名映射、脚本标题、tags、notes、翻译字段补全  |
-  | `script-translator.test.ts` | `scripts/lib/script-translator.ts` | AST 翻译、变量/列表/自定义块名称映射、多参数重排序             |
-  | `markdown.test.ts`          | `scripts/lib/markdown.ts`          | Markdown 转 HTML、scratchblocks/go-to-block 自定义扩展         |
-  | `search.test.ts`            | `scripts/lib/search.ts`            | MiniSearch 索引构建、CJK 内容                                  |
-  | `logger.test.ts`            | `scripts/lib/logger.ts`            | `truncate`、`formatDuration`、`timeNow`                        |
-  | `module-loader.test.ts`     | `scripts/lib/module-loader.ts`     | 集成测试（从磁盘加载 .test + fps 模块、翻译、notes、错误处理） |
+  | 测试文件                    | 被测模块                           | 主要测试内容                                                       |
+  | --------------------------- | ---------------------------------- | ------------------------------------------------------------------ |
+  | `schema.test.ts`            | `scripts/lib/schema.ts`            | `parseContributors`、`buildModuleRecord`（必填校验、英文基线字段） |
+  | `import-resolver.test.ts`   | `scripts/lib/import-resolver.ts`   | 导入解析、循环引用检测、缺失模块、越界索引                         |
+  | `html-utils.test.ts`        | `scripts/lib/html-utils.ts`        | `escapeHtml`、`maybeMinify`、`generateShareLinks`                  |
+  | `scratch-utils.test.ts`     | `scripts/lib/scratch-utils.ts`     | `tokenizeCJK`、`CATEGORY_COLORS`、`analyzeBlockCategories`         |
+  | `i18n-loader.test.ts`       | `scripts/lib/i18n-loader.ts`       | `pickConfigForLocale` 回退与覆盖                                   |
+  | `i18n-engine.test.ts`       | `scripts/lib/i18n-engine.ts`       | 元信息本地化、变量名映射、脚本标题、tags、notes、翻译字段补全      |
+  | `script-translator.test.ts` | `scripts/lib/script-translator.ts` | AST 翻译、变量/列表/自定义块名称映射、多参数重排序                 |
+  | `markdown.test.ts`          | `scripts/lib/markdown.ts`          | Markdown 转 HTML、scratchblocks/go-to-block 自定义扩展             |
+  | `search.test.ts`            | `scripts/lib/search.ts`            | MiniSearch 索引构建、CJK 内容                                      |
+  | `logger.test.ts`            | `scripts/lib/logger.ts`            | `truncate`、`formatDuration`、`timeNow`                            |
+  | `module-loader.test.ts`     | `scripts/lib/module-loader.ts`     | 集成测试（从磁盘加载 .test + fps 模块、翻译、notes、错误处理）     |
 
 - **编写规范**：
   - 使用 `describe` / `it` 组织测试
