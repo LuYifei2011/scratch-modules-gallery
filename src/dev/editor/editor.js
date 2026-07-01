@@ -1,4 +1,5 @@
 // 编辑器主脚本
+import scratchblocks from 'scratchblocks-plus';
 import { createScratchblocksEditor } from './codemirror-setup.js';
 
 // ==================== Toast 通知系统 ====================
@@ -386,26 +387,8 @@ function renderI18nEditor() {
 }
 
 // ==================== 脚本预览 ====================
-let scratchblocksLoaded = false;
-let scratchblocks = null;
 let currentPreviewDoc = null;
 let currentPreviewStyle = 'scratch3';
-
-async function loadScratchblocks() {
-  if (scratchblocksLoaded) return scratchblocks;
-
-  try {
-    // 动态导入 scratchblocks（注意：需要导入 default）
-    const module = await import('/vendor/scratchblocks-plus.min.es.js');
-    scratchblocks = module.default;
-    scratchblocksLoaded = true;
-    console.log('Scratchblocks loaded successfully');
-    return scratchblocks;
-  } catch (error) {
-    console.error('Failed to load scratchblocks:', error);
-    return null;
-  }
-}
 
 async function renderScriptPreview(content) {
   const previewContainer = document.getElementById('script-preview-content');
@@ -417,15 +400,9 @@ async function renderScriptPreview(content) {
 
   previewContainer.innerHTML = '<p style="color: #999;">正在加载预览...</p>';
 
-  const sb = await loadScratchblocks();
-  if (!sb) {
-    previewContainer.innerHTML = '<p style="color: #ff6680;">预览功能不可用（scratchblocks 未加载）</p>';
-    return;
-  }
-
   try {
     // 参考 module.js 的正确用法
-    currentPreviewDoc = sb.parse(content, { languages: ['en'] });
+    currentPreviewDoc = scratchblocks.parse(content, { languages: ['en'] });
     doRenderPreview(currentPreviewStyle);
   } catch (error) {
     console.error('Scratchblocks render error:', error);

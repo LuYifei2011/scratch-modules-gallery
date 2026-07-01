@@ -1,4 +1,4 @@
-import MiniSearch from './vendor/minisearch.js';
+import MiniSearch from 'minisearch';
 import { createSearchOptions } from '../shared/search-options.ts';
 
 function qs(sel) {

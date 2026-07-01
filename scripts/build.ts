@@ -121,7 +121,6 @@ async function render(siteData: SiteData) {
         target: 'browser',
         format: 'esm',
         splitting: false,
-        external: ['./vendor/*'],
       });
       if (!result.success) {
         for (const message of result.logs) log.error('client', message.message);
@@ -136,36 +135,10 @@ async function render(siteData: SiteData) {
     }
   }
 
-  // vendor: minisearch, scratchblocks
-  const vendorDir = path.join(outDir, 'vendor');
-  await fs.ensureDir(vendorDir);
-
-  // 复制 minisearch ES 模块（标准化路径，无需动态解析）
-  try {
-    const miniEs = path.join(root, 'node_modules', 'minisearch', 'dist', 'es', 'index.js');
-    if (await fs.pathExists(miniEs)) {
-      await fs.copy(miniEs, path.join(vendorDir, 'minisearch.js'));
-    } else {
-      log.warn('vendor', `minisearch ES 文件未找到: ${miniEs}`);
-    }
-  } catch (e) {
-    log.error('vendor', `复制 minisearch 失败: ${e?.message || e}`);
-  }
-
-  // 复制 scratchblocks 核心库
-  try {
-    const sbMinEs = path.join(root, 'node_modules', 'scratchblocks-plus', 'build', 'scratchblocks-plus.min.es.js');
-    if (await fs.pathExists(sbMinEs)) {
-      await fs.copy(sbMinEs, path.join(vendorDir, 'scratchblocks-plus.min.es.js'));
-    }
-  } catch (e) {
-    log.warn('scratchblocks', `复制核心库文件失败: ${e?.message || e}`);
-  }
-
   // 复制 scratchblocks 语言文件到 vendor/sb-langs/
   try {
     const localesSourceDir = path.join(root, 'node_modules', 'scratchblocks-plus', 'locales');
-    const langVendorDir = path.join(vendorDir, 'sb-langs');
+    const langVendorDir = path.join(outDir, 'vendor', 'sb-langs');
     const localeFiles = await globFiles('*.json', localesSourceDir);
     if (localeFiles.length > 0) {
       await fs.ensureDir(langVendorDir);

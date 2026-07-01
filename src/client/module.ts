@@ -1,12 +1,13 @@
-import scratchblocks from './vendor/scratchblocks-plus.min.es.js';
+import scratchblocks from 'scratchblocks-plus';
+import type { Document, DocumentView } from 'scratchblocks-plus';
 import { copyTextToClipboard, showCopyResult } from './clipboard';
 
 type ScratchblocksBlockEntry = {
   el: HTMLPreElement | HTMLElement;
-  doc: ScratchblocksDoc;
+  doc: Document;
   inline: boolean;
   scriptId?: string;
-  view?: ScratchblocksView;
+  view?: DocumentView;
 };
 
 type VariableItem = {
@@ -200,7 +201,7 @@ async function initScratchblocks(): Promise<void> {
   }
 
   // 初始化备注中的跳转积木链接
-  const getViewByScriptId = (scriptId: string | null): ScratchblocksView | null => {
+  const getViewByScriptId = (scriptId: string | null): DocumentView | null => {
     const block = blocks.find((b) => b.scriptId === scriptId);
     return block?.view ?? null;
   };
@@ -265,16 +266,17 @@ function initVariablesAndLists(): (style: string) => void {
   return function renderVars(style: string): void {
     const finalStyle = style || 'scratch3';
     varItems.forEach(({ blockContainer, displayName, type }) => {
-      const doc = new scratchblocks.Document();
-      doc.scripts = [
-        new scratchblocks.Block(
-          {
-            shape: 'reporter',
-            category: type === 'list' ? 'list' : 'variables',
-          },
-          [new scratchblocks.Label(type === 'cloud' ? '☁ ' + displayName : displayName)]
-        ),
-      ];
+      const doc = new scratchblocks.Document([
+        new scratchblocks.Script([
+          new scratchblocks.Block(
+            {
+              shape: 'reporter',
+              category: type === 'list' ? 'list' : 'variables',
+            },
+            [new scratchblocks.Label(type === 'cloud' ? '☁ ' + displayName : displayName)]
+          ),
+        ]),
+      ]);
       const view = scratchblocks.newView(doc, {
         style: finalStyle,
         scale: /^scratch3($|-)/.test(finalStyle) ? 0.675 : 1,
