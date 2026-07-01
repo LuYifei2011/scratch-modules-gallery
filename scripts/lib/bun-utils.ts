@@ -6,11 +6,7 @@
  */
 export async function globFiles(pattern: string, cwd: string): Promise<string[]> {
   const glob = new Bun.Glob(pattern);
-  const files: string[] = [];
-  for await (const file of glob.scan({ cwd, onlyFiles: true })) {
-    files.push(file);
-  }
-  return files;
+  return await Array.fromAsync(glob.scan({ cwd, onlyFiles: true }));
 }
 
 export async function readTextFile(filePath: string): Promise<string> {
