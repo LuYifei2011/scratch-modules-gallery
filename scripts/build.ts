@@ -2,7 +2,6 @@ import fs from 'fs-extra';
 import path from 'path';
 import nunjucks from 'nunjucks';
 import * as scratchblocks from 'scratchblocks-plus/syntax/index.js';
-import simpleGit from 'simple-git';
 import { favicons as generateFavicons } from 'favicons';
 import { escapeHtml, maybeMinify, generateShareLinks } from './lib/html-utils.ts';
 import { buildSearchIndex } from './lib/search.ts';
@@ -10,6 +9,7 @@ import { pickConfigForLocale } from './lib/i18n-loader.ts';
 import { loadLocalizedModules, loadSiteConfig, loadSiteData, type SiteData } from './lib/site-pipeline.ts';
 import { loadSiteCoverTemplate, generateSiteCover, generateModuleCover } from './lib/cover-generator.ts';
 import { globFiles } from './lib/bun-utils.ts';
+import { createGitMtimeResolver } from './lib/git-mtime.ts';
 import log, { c, paint, formatDuration, timeNow } from './lib/logger.ts';
 import type {
   BuildIssue,
@@ -95,99 +95,6 @@ async function render(siteData: SiteData) {
       .replace(/"/g, '&quot;')
       .replace(/'/g, '&apos;');
 
-  // 从 git 历史获取文件的最后修改时间（ISO8601 日期字符串）
-  // 如果获取失败或不在 git 仓库中，回退到当前时间
-  async function getFileLastModDate(relativeFilePath: string): Promise<string> {
-    try {
-      const git = simpleGit(root);
-      const isRepo = await git.checkIsRepo();
-      if (!isRepo) {
-        return new Date().toISOString().split('T')[0];
-      }
-
-      // 检测是否为浅层克隆（GitHub Actions 默认行为）
-      const isDeeplyCloned = await git.revparse(['--is-shallow-repository']).catch(() => 'true');
-      if (isDeeplyCloned === 'true' && isDev) {
-        log.warn('git', '检测到浅层克隆（fetch-depth < 完整历史），git 提交时间可能不准确。');
-        log.warn('git', '对于 GitHub Actions，请在 workflow 中添加：with: { fetch-depth: 0 }');
-      }
-
-      // 获取该文件的最后一次提交时间
-      const gitLog = await git.log({
-        file: relativeFilePath,
-        '--diff-filter': 'M',
-        '--max-count': '1',
-      });
-      if (gitLog.latest) {
-        const commitDate = new Date(gitLog.latest.date).toISOString().split('T')[0];
-        return commitDate;
-      }
-      return new Date().toISOString().split('T')[0];
-    } catch (e) {
-      if (isDev) log.warn('git', `获取 ${relativeFilePath} 的提交时间失败: ${errorMessage(e)}`);
-      return new Date().toISOString().split('T')[0];
-    }
-  }
-
-  // 批量获取模块文件的最后修改时间，缓存结果以避免重复查询
-  // 考虑：scripts/ 目录 + 模块级 i18n 目录 + 全局 i18n 目录
-  const lastModCache = new Map<string, string>();
-  async function getModuleLastMod(moduleSlug: string): Promise<string> {
-    if (lastModCache.has(moduleSlug)) {
-      return lastModCache.get(moduleSlug);
-    }
-
-    try {
-      const git = simpleGit(root);
-      const isRepo = await git.checkIsRepo();
-      if (!isRepo) {
-        const date = new Date().toISOString().split('T')[0];
-        lastModCache.set(moduleSlug, date);
-        return date;
-      }
-
-      // 收集该模块的所有相关文件路径
-      const filePaths = [
-        `${config.contentDir}/${moduleSlug}/scripts`, // 脚本目录（递归）
-        `${config.contentDir}/${moduleSlug}/i18n`, // 模块级翻译目录（递归）
-        'src/i18n', // 全局翻译目录（影响所有页面）
-      ];
-
-      let latestDate = null;
-
-      // 对每个路径获取最后修改时间
-      for (const filePath of filePaths) {
-        try {
-          // 使用 git log 查询指定路径的最后一次修改
-          const log = await git.log({
-            file: filePath,
-            '--diff-filter': 'M',
-            '--max-count': '1',
-          });
-          if (log.latest) {
-            const commitDate = new Date(log.latest.date);
-            if (!latestDate || commitDate > latestDate) {
-              latestDate = commitDate;
-            }
-          }
-        } catch (e) {
-          // 某个路径可能不存在或出错，继续处理其他路径
-          if (isDev) {
-            log.warn('git', `获取 ${moduleSlug}/${filePath} 的提交时间失败: ${errorMessage(e)}`);
-          }
-        }
-      }
-
-      const dateStr = latestDate ? latestDate.toISOString().split('T')[0] : new Date().toISOString().split('T')[0];
-      lastModCache.set(moduleSlug, dateStr);
-      return dateStr;
-    } catch (e) {
-      if (isDev) log.warn('git', `获取模块 ${moduleSlug} 的提交时间失败: ${errorMessage(e)}`);
-      const date = new Date().toISOString().split('T')[0];
-      lastModCache.set(moduleSlug, date);
-      return date;
-    }
-  }
   // copy public
   const publicDir = path.join(root, 'public');
   if (await fs.pathExists(publicDir)) await fs.copy(publicDir, outDir);
@@ -555,12 +462,26 @@ async function render(siteData: SiteData) {
   // 快速模式下跳过生成以节省时间
   if (!isFast) {
     const sitemapUrls: SitemapUrl[] = [];
+    const sitemapMtimePaths = [
+      'site.config.ts',
+      'src/i18n',
+      'src/templates/layouts/about.njk',
+      ...modules.flatMap((m) => [
+        `${config.contentDir}/${m.slug}/scripts`,
+        `${config.contentDir}/${m.slug}/i18n`,
+      ]),
+    ];
+    const gitMtimes = await createGitMtimeResolver({
+      root,
+      paths: sitemapMtimePaths,
+      isDev,
+      warn: (message) => log.warn('git', message),
+    });
 
     // 首页：使用配置文件 + 全局 i18n 文件的最后修改时间
     // 两者中较晚的时间
-    const configLastMod = await getFileLastModDate('site.config.ts');
-    const globalI18nLastMod = await getFileLastModDate('src/i18n');
-    const indexLastMod = configLastMod >= globalI18nLastMod ? configLastMod : globalI18nLastMod;
+    const globalI18nPath = 'src/i18n';
+    const indexLastMod = gitMtimes.getLatestLastMod(['site.config.ts', globalI18nPath]);
     for (const loc of locales) {
       sitemapUrls.push({
         loc: `/${loc}/`,
@@ -569,8 +490,7 @@ async function render(siteData: SiteData) {
     }
 
     // 关于页面：使用模板文件和全局 i18n 的最后修改时间
-    const aboutTemplateLastMod = await getFileLastModDate('src/templates/layouts/about.njk');
-    const aboutLastMod = aboutTemplateLastMod >= globalI18nLastMod ? aboutTemplateLastMod : globalI18nLastMod;
+    const aboutLastMod = gitMtimes.getLatestLastMod(['src/templates/layouts/about.njk', globalI18nPath]);
     for (const loc of locales) {
       sitemapUrls.push({
         loc: `/${loc}/about/`,
@@ -580,7 +500,11 @@ async function render(siteData: SiteData) {
 
     // 模块页面：使用每个模块脚本目录 + 模块级 i18n + 全局 i18n 的最后修改时间
     for (const m of modules) {
-      const moduleLastMod = await getModuleLastMod(m.slug);
+      const moduleLastMod = gitMtimes.getLatestLastMod([
+        `${config.contentDir}/${m.slug}/scripts`,
+        `${config.contentDir}/${m.slug}/i18n`,
+        globalI18nPath,
+      ]);
       for (const loc of locales) {
         const imagePath = `/${loc}/modules/${m.slug}/cover.png`;
         const localizedModuleSet = await getLocalizedModuleSet(loc);
