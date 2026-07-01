@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 /**
  * 格式化 scratchblocks 脚本
- * 用法: bun scripts/format-scratchblocks.ts
+ * 用法: bun scripts/format-scratchblocks.ts [--all|content/modules/<id>/scripts/<file>.txt ...]
  */
 
 import fs from 'fs-extra';
@@ -192,6 +192,47 @@ export function formatScript(raw): FormatScriptResult {
   }
 }
 
+function isModuleScriptPath(filePath: string, modulesDir: string): boolean {
+  const relPath = path.relative(modulesDir, filePath);
+  const parts = relPath.split(path.sep);
+  return (
+    !relPath.startsWith('..') &&
+    !path.isAbsolute(relPath) &&
+    parts.length === 3 &&
+    parts[1] === 'scripts' &&
+    parts[2].endsWith('.txt')
+  );
+}
+
+async function collectScriptFiles(modulesDir: string, args: string[]): Promise<string[]> {
+  const fileArgs = args.filter((arg) => arg !== '--all');
+
+  if (fileArgs.length === 0) {
+    const modules = await globFiles('*/scripts/*.txt', modulesDir);
+    return modules.map((scriptRelPath) => path.join(modulesDir, scriptRelPath));
+  }
+
+  const scriptPaths = [];
+  const invalidPaths = [];
+  for (const arg of fileArgs) {
+    const scriptPath = path.resolve(root, arg);
+    if (!isModuleScriptPath(scriptPath, modulesDir) || !(await fs.pathExists(scriptPath))) {
+      invalidPaths.push(arg);
+      continue;
+    }
+    scriptPaths.push(scriptPath);
+  }
+
+  if (invalidPaths.length > 0) {
+    invalidPaths.forEach((filePath) => {
+      log.error('format', `无效的脚本路径: ${filePath}`);
+    });
+    process.exit(1);
+  }
+
+  return [...new Set(scriptPaths)];
+}
+
 // 主程序
 async function main() {
   loadScratchblocksLanguages();
@@ -204,7 +245,7 @@ async function main() {
   }
 
   try {
-    const modules = await globFiles('*/scripts/*.txt', modulesDir);
+    const modules = await collectScriptFiles(modulesDir, process.argv.slice(2));
 
     if (!modules.length) {
       log.info('format', '没有与给定模式匹配的文件');
@@ -218,8 +259,8 @@ async function main() {
     const validationFailed = [];
 
     // 格式化每个脚本
-    for (const scriptRelPath of modules) {
-      const scriptPath = path.join(modulesDir, scriptRelPath);
+    for (const scriptPath of modules) {
+      const scriptRelPath = path.relative(modulesDir, scriptPath);
       try {
         const originalContent = await readTextFile(scriptPath);
         const result = formatScript(originalContent);

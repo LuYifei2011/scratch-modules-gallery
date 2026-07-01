@@ -20,7 +20,7 @@
 
 - [模块编写指南](./docs/authoring-modules.md) — 如何新增和维护模块
 - [编辑器使用指南](./docs/editor-guide.md) — 开发模式下的可视化编辑器
-- [GitHub 工作流说明](./docs/github-workflows.md) — CI/CD 流程概览
+- [GitHub 工作流说明](./docs/github-workflows.md) — CI/CD 流程与本地 Git 钩子概览
 - [Markdown 扩展语法](./docs/markdown-syntax.md) — 模块备注支持的扩展语法
 
 ## 贡献

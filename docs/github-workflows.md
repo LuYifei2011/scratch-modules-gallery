@@ -109,6 +109,33 @@ bun run check-i18n
 bun run format:scripts && bun run format
 ```
 
+### Git 提交钩子
+
+仓库提供了可追踪的本地 pre-commit hook，安装后每次 `git commit` 会先处理暂存文件：
+
+```bash
+bun run hooks:install
+```
+
+钩子行为：
+
+- 对暂存的代码、模板、Markdown、JSON 等文件运行 Prettier，并自动重新暂存。
+- 对暂存的 `content/modules/**/scripts/*.txt` 运行 scratchblocks 格式化，并自动重新暂存。
+- 如果某个已暂存文件同时存在未暂存改动，会中止提交，避免格式化时把未暂存内容混入提交。
+- 按暂存文件范围运行检查：`bun run lint`、`bun run typecheck`、`bun run test`、`bun run build:fast`。
+
+可手动调试同一套逻辑：
+
+```bash
+bun run precommit
+```
+
+如需停用本地 hook：
+
+```bash
+bun run hooks:uninstall
+```
+
 ---
 
 ## 故障排除
@@ -134,8 +161,9 @@ git push
 ## 配置位置
 
 - 格式化脚本：`scripts/format-scratchblocks.ts`
+- 提交钩子：`.githooks/pre-commit`、`scripts/pre-commit.ts`
 - 工作流配置：`.github/workflows/format.yml`、`.github/workflows/deploy.yml`、`.github/workflows/test.yml`
-- Bun 脚本：`package.json` 中的 `format:scripts`
+- Bun 脚本：`package.json` 中的 `format:scripts`、`hooks:install`、`hooks:uninstall`、`precommit`
 - 镜像站点列表：`site.config.ts` 中的 `mirrors` 数组
 
 ---

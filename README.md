@@ -20,7 +20,7 @@
 
 - [Authoring Modules](./docs/authoring-modules.md) — How to create and maintain modules
 - [Editor Guide](./docs/editor-guide.md) — Visual editor for modules (dev mode)
-- [GitHub Workflows](./docs/github-workflows.md) — CI/CD pipeline overview
+- [GitHub Workflows](./docs/github-workflows.md) — CI/CD pipeline and local Git hook overview
 - [Markdown Syntax](./docs/markdown-syntax.md) — Extended Markdown syntax for module notes
 
 ## Contributing
