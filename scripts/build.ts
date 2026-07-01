@@ -99,6 +99,9 @@ async function render(siteData: SiteData) {
   const publicDir = path.join(root, 'public');
   if (await fs.pathExists(publicDir)) await fs.copy(publicDir, outDir);
 
+  // Dev tools are source-controlled under src/dev and emitted only for IS_DEV builds.
+  if (isDev) await buildDevTools(outDir);
+
   // 读取 cover SVG 模板（用于生成各语言社交预览图）；快速构建模式下跳过
   const coverSvgTemplate: string | null = isFast ? null : await loadSiteCoverTemplate();
 
@@ -586,6 +589,42 @@ async function render(siteData: SiteData) {
       const issuesDir = path.join(locOut, 'issues');
       await fs.ensureDir(issuesDir);
       await fs.writeFile(path.join(issuesDir, 'index.html'), await maybeMinify(issuesHtml, isFast), 'utf8');
+    }
+  }
+}
+
+async function buildDevTools(outDir: string) {
+  const devSrcDir = path.join(root, 'src', 'dev');
+  if (!(await fs.pathExists(devSrcDir))) return;
+
+  const devOutDir = path.join(outDir, '__dev');
+  await fs.ensureDir(devOutDir);
+
+  const staticFiles = await globFiles('**/*.{html,css}', devSrcDir);
+  for (const file of staticFiles) {
+    await fs.copy(path.join(devSrcDir, file), path.join(devOutDir, file));
+  }
+
+  const scriptFiles = ['client.js', 'editor/editor.js'];
+  for (const file of scriptFiles) {
+    const srcPath = path.join(devSrcDir, file);
+    if (!(await fs.pathExists(srcPath))) continue;
+    const outFile = path.join(devOutDir, file);
+    const result = await Bun.build({
+      entrypoints: [srcPath],
+      outdir: path.dirname(outFile),
+      naming: '[name].js',
+      target: 'browser',
+      format: 'esm',
+      splitting: false,
+      minify: isFast,
+    });
+    if (!result.success) {
+      for (const message of result.logs) log.error('dev-tools', message.message);
+      throw new Error(`编译开发工具脚本失败: ${file}`);
+    }
+    if (!(await fs.pathExists(outFile))) {
+      throw new Error(`开发工具脚本未生成预期输出: ${path.relative(root, outFile)}`);
     }
   }
 }

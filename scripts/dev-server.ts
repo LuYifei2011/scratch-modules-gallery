@@ -17,7 +17,6 @@ import { isInsideOrEqual } from './lib/path-safety.ts';
 const PORT = Number(process.env.PORT || 8800);
 const HOST = process.env.HOST || 'localhost';
 const DIST_DIR = path.resolve('dist');
-const NODE_MODULES_DIR = path.resolve('node_modules');
 
 // --- HTTPS 配置 ---
 const HTTPS_ENABLED =
@@ -379,11 +378,7 @@ async function serveStatic(pathnameRaw: string) {
   let pathname = pathnameRaw;
   if (pathname === '/') pathname = '/index.html';
 
-  if (pathnameRaw.startsWith('/node_modules/')) {
-    pathname = pathnameRaw.replace('/node_modules/', '');
-  }
-
-  const staticRoot = pathnameRaw.startsWith('/node_modules/') ? NODE_MODULES_DIR : DIST_DIR;
+  const staticRoot = DIST_DIR;
   const requestedPath = resolveStaticPath(staticRoot, pathname);
   if (!requestedPath) return serve404();
 
