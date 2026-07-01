@@ -9,6 +9,7 @@
     "build:fast": "bun ./scripts/build.ts --fast",
     "dev": "bun ./scripts/dev-server.ts",
     "dev:https": "bun ./scripts/dev-server-https.ts",
+    "module:new": "bun ./scripts/create-module.ts",
     "format": "prettier --write .",
     "format:scripts": "bun ./scripts/format-scratchblocks.ts --all",
     "hooks:install": "git config core.hooksPath .githooks",

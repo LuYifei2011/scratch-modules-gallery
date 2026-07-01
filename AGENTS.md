@@ -68,6 +68,10 @@
   - HTTPS 支持：自动生成自签证书（`.cert/`），或指定 PEM/PFX（环境变量）
   - **模块编辑器**：`/__dev/editor/` 可视化编辑模块（`scripts/lib/editor-api.ts` 处理 API）
   - 路由回退：无扩展名路径 → 相对 `index.html`；目录 → `index.html`
+- **新建模块 CLI**：`bun run module:new -- <id> --name "Name" --description "Description"`
+  - 支持缺少必填项时交互式询问；非交互环境必须传入 id/name/description
+  - 默认生成与 editor 一致的最小结构：`meta.json` + `scripts/01-main.txt`
+  - 可选参数：`--tags a,b`、`--keywords a,b`、`--contributors "gh/user, sc/user"`、`--script-content "..."`
 - **环境变量**：
   - `BASE_URL`：覆盖 `site.config.ts` baseUrl（影响 canonical / sitemap）
   - `IS_DEV`：传入模板与前端（`window.IS_DEV`）；开发服务器自动设置；控制 issues 页面与 sitemap 跳过
@@ -86,15 +90,15 @@
 
 ### 常见修改指南
 
-| 目标                 | 入口                         | 注意点                                                                  |
-| -------------------- | ---------------------------- | ----------------------------------------------------------------------- |
-| 新增模块             | `content/modules/<id>/`      | 至少 1 个脚本；`meta.json` 必须包含英文 name/description；非英文放 i18n |
-| 扩展数据字段         | `schema.ts`                  | 同步模板 & 搜索 & 前端依赖字段                                          |
-| 新语言               | 复制一份 `src/i18n/en.json`  | 如果需要模块级翻译，新增对应 i18n JSON                                  |
-| 新增 tag             | `src/i18n/tags.json`         | 添加所有支持语言的翻译，所有模块自动获得                                |
-| 添加或更新备注       | `notes/<lang-code>.md`       | 每个语言独立文件；构建时按语言优先级选取                                |
-| 自定义块新增 pattern | 模块 i18n `procedures`       | 保持英文源脚本同步；`_` 数量需与参数个数一致                            |
-| SEO 调整             | `site.config.ts` + 模板 head | 确保 `hreflang`、canonical 含语言段                                     |
+| 目标                 | 入口                         | 注意点                                                                     |
+| -------------------- | ---------------------------- | -------------------------------------------------------------------------- |
+| 新增模块             | `bun run module:new -- <id>` | 默认生成最小结构；`meta.json` 必须包含英文 name/description；非英文放 i18n |
+| 扩展数据字段         | `schema.ts`                  | 同步模板 & 搜索 & 前端依赖字段                                             |
+| 新语言               | 复制一份 `src/i18n/en.json`  | 如果需要模块级翻译，新增对应 i18n JSON                                     |
+| 新增 tag             | `src/i18n/tags.json`         | 添加所有支持语言的翻译，所有模块自动获得                                   |
+| 添加或更新备注       | `notes/<lang-code>.md`       | 每个语言独立文件；构建时按语言优先级选取                                   |
+| 自定义块新增 pattern | 模块 i18n `procedures`       | 保持英文源脚本同步；`_` 数量需与参数个数一致                               |
+| SEO 调整             | `site.config.ts` + 模板 head | 确保 `hreflang`、canonical 含语言段                                        |
 
 ### 验证清单（提交前）
 
@@ -144,6 +148,7 @@
   | `search.test.ts`            | `scripts/lib/search.ts`            | MiniSearch 索引构建、CJK 内容                                      |
   | `logger.test.ts`            | `scripts/lib/logger.ts`            | `truncate`、`formatDuration`、`timeNow`                            |
   | `module-loader.test.ts`     | `scripts/lib/module-loader.ts`     | 集成测试（从磁盘加载 .test + fps 模块、翻译、notes、错误处理）     |
+  | `module-creator.test.ts`    | `scripts/lib/module-creator.ts`    | 新建模块脚手架、ID 校验、重复模块、默认脚本                        |
 
 - **编写规范**：
   - 使用 `describe` / `it` 组织测试

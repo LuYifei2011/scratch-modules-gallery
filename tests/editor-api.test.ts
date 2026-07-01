@@ -3,6 +3,7 @@ import { Readable } from 'stream';
 import path from 'path';
 import fs from 'fs-extra';
 import {
+  createModule,
   createScript,
   deleteAsset,
   deleteI18n,
@@ -117,6 +118,33 @@ describe('editor-api error handling', () => {
     const res = await callWithRawBody(updateModuleMeta, '{bad json', testModuleId);
     expect(res.statusCode).toBe(400);
     expect(res.json()).toEqual({ error: 'Invalid JSON' });
+  });
+});
+
+describe('editor-api module creation', () => {
+  it('creates modules through the shared scaffold helper', async () => {
+    const res = await callWithBody(createModule, {
+      id: testModuleId,
+      meta: {
+        name: 'Editor API Test',
+        description: 'Created through the editor API',
+        tags: ['utility'],
+        keywords: [],
+      },
+    });
+
+    expect(res.statusCode).toBe(201);
+    expect(res.json()).toEqual({ id: testModuleId, message: 'Module created successfully' });
+    expect(await fs.readJson(path.join(testModuleDir, 'meta.json'))).toMatchObject({
+      id: testModuleId,
+      name: 'Editor API Test',
+      description: 'Created through the editor API',
+      tags: ['utility'],
+      keywords: [],
+    });
+    expect(await fs.readFile(path.join(testModuleDir, 'scripts', '01-main.txt'), 'utf8')).toBe(
+      'when green flag clicked\nsay [Hello!] for (2) secs\n'
+    );
   });
 });
 

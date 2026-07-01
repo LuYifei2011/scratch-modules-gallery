@@ -5,6 +5,12 @@ import formidable from 'formidable';
 import log from './logger.ts';
 import { isStrictlyInside } from './path-safety.ts';
 import { formatScriptFileName, isScriptTextFile, naturalCompare, parseScriptFileName } from './script-files.ts';
+import {
+  createModuleScaffold,
+  ModuleCreatorError,
+  normalizeScriptContent,
+  validateModuleId as validateModuleIdForDir,
+} from './module-creator.ts';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -52,19 +58,7 @@ function validateLocale(locale) {
  * 验证模块 ID 是否合法（防止目录穿越攻击）
  */
 function validateModuleId(moduleId) {
-  if (!moduleId || typeof moduleId !== 'string') {
-    throw badRequest('Invalid module ID');
-  }
-  if (!/^[a-z0-9.-]+$/.test(moduleId)) {
-    throw badRequest('Invalid module ID: only lowercase letters, numbers, hyphens, and dots allowed');
-  }
-  if (moduleId === '.' || moduleId === '..' || moduleId.includes('/') || moduleId.includes('\\')) {
-    throw badRequest('Invalid module ID: directory traversal detected');
-  }
-  if (!isStrictlyInside(modulesDir, path.resolve(modulesDir, moduleId))) {
-    throw badRequest('Invalid module ID: directory traversal detected');
-  }
-  return moduleId;
+  return validateModuleIdForDir(moduleId, modulesDir);
 }
 
 /**
@@ -174,7 +168,7 @@ export function sendError(res, status, message) {
 }
 
 function sendCaughtError(res, error) {
-  if (error instanceof HttpError) {
+  if (error instanceof HttpError || error instanceof ModuleCreatorError) {
     sendError(res, error.status, error.message);
     return;
   }
@@ -187,14 +181,6 @@ async function handleEditorAction(res, action) {
   } catch (e) {
     sendCaughtError(res, e);
   }
-}
-
-/**
- * 规范化脚本内容（UTF-8 LF）
- */
-function normalizeScriptContent(content) {
-  if (typeof content !== 'string') return '';
-  return content.replace(/\r\n/g, '\n').trim() + '\n';
 }
 
 /**
@@ -331,41 +317,7 @@ export async function createModule(req, res) {
       throw badRequest('Missing id or meta');
     }
 
-    validateModuleId(id);
-
-    const moduleDir = path.join(modulesDir, id);
-    if (await fs.pathExists(moduleDir)) {
-      throw conflict('Module already exists');
-    }
-
-    // 验证必填字段
-    if (!meta.name || !meta.description) {
-      throw badRequest('Missing required fields: name, description');
-    }
-
-    if (!meta.tags || !Array.isArray(meta.tags)) {
-      meta.tags = [];
-    }
-
-    // 确保 keywords 是数组（如果提供了的话）
-    if (meta.keywords && !Array.isArray(meta.keywords)) {
-      throw badRequest('keywords must be an array');
-    }
-    if (!meta.keywords) {
-      meta.keywords = [];
-    }
-
-    // 创建目录和文件
-    await fs.ensureDir(moduleDir);
-    await fs.ensureDir(path.join(moduleDir, 'scripts'));
-
-    // 写入 meta.json（必须包含 id 字段）
-    const metaWithId = { id, ...meta };
-    await fs.writeJson(path.join(moduleDir, 'meta.json'), metaWithId, { spaces: 2, EOL: '\n' });
-
-    // 创建默认脚本
-    const defaultScript = `when green flag clicked\nsay [Hello!] for (2) secs\n`;
-    await fs.writeFile(path.join(moduleDir, 'scripts/01-main.txt'), normalizeScriptContent(defaultScript), 'utf8');
+    await createModuleScaffold({ modulesDir, id, meta });
 
     sendJson(res, 201, { id, message: 'Module created successfully' });
   });

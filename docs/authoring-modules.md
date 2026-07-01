@@ -5,9 +5,19 @@
 ## 快速上手步骤
 
 1. 选择唯一 `id`（目录名同时用作 slug，不含空格；用短横线连接）。
-2. 在 `content/modules/<id>/` 新建目录，创建最少文件：`meta.json` + 脚本目录 `scripts/*.txt`。
+2. 运行 `bun run module:new -- <id> --name "Module name" --description "Module description"` 创建最少文件：`meta.json` + 脚本目录 `scripts/*.txt`。
 3. 运行 `bun run build` 验证生成是否成功（查看控制台是否有 warnings / errors）。
 4. 打开生成的 `dist/modules/<id>/index.html` 或启动本地静态服务查看效果。
+
+也可以不带完整参数运行 `bun run module:new`，在终端里按提示填写 `id`、`name`、`description` 和可选 tags。常用参数：
+
+```bash
+bun run module:new -- my-module \
+  --name "My Module" \
+  --description "Reusable Scratch module." \
+  --tags utility,control \
+  --contributors "gh/yourname"
+```
 
 ## 目录结构示例
 
