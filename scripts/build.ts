@@ -10,6 +10,7 @@ import { loadLocalizedModules, loadSiteConfig, loadSiteData, type SiteData } fro
 import { loadSiteCoverTemplate, generateSiteCover, generateModuleCover } from './lib/cover-generator.ts';
 import { globFiles } from './lib/bun-utils.ts';
 import { createGitMtimeResolver } from './lib/git-mtime.ts';
+import { checkSeoDescriptions, seoIssueToBuildIssue } from './lib/seo-checker.ts';
 import log, { c, paint, formatDuration, timeNow } from './lib/logger.ts';
 import type {
   BuildIssue,
@@ -631,6 +632,13 @@ function reportIssue(type: BuildIssueType, message: string, details: Record<stri
     .sort((a, b) => a.code.localeCompare(b.code));
   // 将 loadModules 的结构化错误加入 collectedIssues
   for (const msg of errorsAll) reportIssue('error', msg);
+  if (isDev) {
+    const seoIssues = checkSeoDescriptions(siteData.modules, { locales: Object.keys(siteData.dict) });
+    for (const issue of seoIssues) {
+      const buildIssue = seoIssueToBuildIssue(issue);
+      reportIssue(buildIssue.type, buildIssue.message, buildIssue.details);
+    }
+  }
   // 在渲染前把 issues 注入 nunjucks 全局或通过参数传递
   // 这里采用环境变量对象传递：扩展 nunjucks.render 上下文
   // 修改 render 调用：封装一层以包含 buildIssues
