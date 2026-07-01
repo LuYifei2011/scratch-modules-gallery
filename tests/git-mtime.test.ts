@@ -5,15 +5,7 @@ const fallbackDate = '2026-07-01';
 
 describe('parseGitLogMtimes', () => {
   it('keeps the newest commit date for each query path', () => {
-    const output = [
-      '1782890061',
-      '',
-      'site.config.ts',
-      '',
-      '1770000000',
-      '',
-      'site.config.ts',
-    ].join('\n');
+    const output = ['1782890061', '', 'site.config.ts', '', '1770000000', '', 'site.config.ts'].join('\n');
 
     const mtimes = parseGitLogMtimes(output, ['site.config.ts'], fallbackDate);
 
@@ -21,12 +13,7 @@ describe('parseGitLogMtimes', () => {
   });
 
   it('matches files under directory queries', () => {
-    const output = [
-      '1775990084',
-      '',
-      'src/i18n/en.json',
-      'src/i18n/zh-cn.json',
-    ].join('\n');
+    const output = ['1775990084', '', 'src/i18n/en.json', 'src/i18n/zh-cn.json'].join('\n');
 
     const mtimes = parseGitLogMtimes(output, ['src/i18n'], fallbackDate);
 

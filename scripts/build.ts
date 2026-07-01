@@ -442,10 +442,7 @@ async function render(siteData: SiteData) {
       'site.config.ts',
       'src/i18n',
       'src/templates/layouts/about.njk',
-      ...modules.flatMap((m) => [
-        `${config.contentDir}/${m.slug}/scripts`,
-        `${config.contentDir}/${m.slug}/i18n`,
-      ]),
+      ...modules.flatMap((m) => [`${config.contentDir}/${m.slug}/scripts`, `${config.contentDir}/${m.slug}/i18n`]),
     ];
     const gitMtimes = await createGitMtimeResolver({
       root,
