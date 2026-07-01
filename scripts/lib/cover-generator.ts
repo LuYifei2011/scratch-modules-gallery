@@ -7,33 +7,33 @@
  * @module cover-generator
  */
 
-import fs from 'fs-extra'
-import path from 'path'
-import { createCanvas, GlobalFonts } from '@napi-rs/canvas'
-import log from './logger.ts'
-import { Resvg } from '@resvg/resvg-js'
-import type { ResvgRenderOptions } from '@resvg/resvg-js'
-import { renderToSVGString } from 'scratchblocks-plus/node-ssr.js'
-import { escapeHtml } from './html-utils.ts'
-import { analyzeBlockCategories } from './scratch-utils.ts'
-import type { ResolvedModuleScript } from './types.ts'
+import fs from 'fs-extra';
+import path from 'path';
+import { createCanvas, GlobalFonts } from '@napi-rs/canvas';
+import log from './logger.ts';
+import { Resvg } from '@resvg/resvg-js';
+import type { ResvgRenderOptions } from '@resvg/resvg-js';
+import { renderToSVGString } from 'scratchblocks-plus/node-ssr.js';
+import { escapeHtml } from './html-utils.ts';
+import { analyzeBlockCategories } from './scratch-utils.ts';
+import type { ResolvedModuleScript } from './types.ts';
 
 export interface CoverModule {
-  id?: string
-  name?: string
-  description?: string
-  tags?: string[]
-  scripts?: ResolvedModuleScript[]
+  id?: string;
+  name?: string;
+  description?: string;
+  tags?: string[];
+  scripts?: ResolvedModuleScript[];
 }
 
-const root = path.resolve('.')
-const fontDirPath = path.join(root, 'src', 'fonts')
+const root = path.resolve('.');
+const fontDirPath = path.join(root, 'src', 'fonts');
 
 // 用于文本宽度精确测量的 canvas 上下文（复用单一实例）
-const _measureCanvas = createCanvas(1, 1)
-const _measureCtx = _measureCanvas.getContext('2d')
+const _measureCanvas = createCanvas(1, 1);
+const _measureCtx = _measureCanvas.getContext('2d');
 /** 字体后缀 → CSS 字体族名称 */
-const FONT_SUFFIX_NAME: Record<string, string> = { SC: 'Noto Sans SC', TC: 'Noto Sans TC', '': 'Noto Sans' }
+const FONT_SUFFIX_NAME: Record<string, string> = { SC: 'Noto Sans SC', TC: 'Noto Sans TC', '': 'Noto Sans' };
 
 /**
  * 根据语言标签返回 CSS font-family 字符串（优先显示当前语言字体）。
@@ -45,7 +45,7 @@ function getFontFamily(langTag: string) {
     getFontOrder(langTag)
       .map((s) => FONT_SUFFIX_NAME[s])
       .join(', ') + ', sans-serif'
-  )
+  );
 }
 
 /**
@@ -55,8 +55,8 @@ function getFontFamily(langTag: string) {
  * @returns {number}
  */
 function measureText(text: string, font: string) {
-  _measureCtx.font = font
-  return _measureCtx.measureText(text).width
+  _measureCtx.font = font;
+  return _measureCtx.measureText(text).width;
 }
 
 /**
@@ -67,49 +67,49 @@ function measureText(text: string, font: string) {
  * @returns {string[]}
  */
 function wrapTextByWidth(text: string, font: string, maxWidth: number) {
-  if (!text) return []
-  _measureCtx.font = font
-  const lines: string[] = []
+  if (!text) return [];
+  _measureCtx.font = font;
+  const lines: string[] = [];
   // 按 CJK 字符边界或空格拆分为 token
-  const tokens = tokenize(text)
-  let line = ''
+  const tokens = tokenize(text);
+  let line = '';
   for (const token of tokens) {
-    const candidate = line ? line + token : token
+    const candidate = line ? line + token : token;
     if (_measureCtx.measureText(candidate).width > maxWidth && line) {
-      lines.push(line)
-      line = token
+      lines.push(line);
+      line = token;
     } else {
-      line = candidate
+      line = candidate;
     }
   }
-  if (line) lines.push(line)
-  return lines
+  if (line) lines.push(line);
+  return lines;
 }
 
 /**
  * 将文本拆为可换行单元（CJK 逐字、英文按词/空格）。
  */
 function tokenize(text: string) {
-  const tokens: string[] = []
-  let buf = ''
+  const tokens: string[] = [];
+  let buf = '';
   for (const ch of text) {
     if (isCJK(ch)) {
       if (buf) {
-        tokens.push(buf)
-        buf = ''
+        tokens.push(buf);
+        buf = '';
       }
-      tokens.push(ch)
+      tokens.push(ch);
     } else {
-      buf += ch
+      buf += ch;
       // 到空格时切断，保留空格在 token 末尾
       if (ch === ' ') {
-        tokens.push(buf)
-        buf = ''
+        tokens.push(buf);
+        buf = '';
       }
     }
   }
-  if (buf) tokens.push(buf)
-  return tokens
+  if (buf) tokens.push(buf);
+  return tokens;
 }
 
 /**
@@ -121,17 +121,17 @@ function tokenize(text: string) {
  * @returns {string[]}
  */
 function getFontOrder(langTag: string) {
-  const normalized = (langTag || '').toLowerCase().replace('_', '-')
-  if (normalized === 'zh-cn') return ['SC', 'TC', '']
-  if (normalized === 'zh-tw') return ['TC', 'SC', '']
-  return ['', 'SC', 'TC']
+  const normalized = (langTag || '').toLowerCase().replace('_', '-');
+  if (normalized === 'zh-cn') return ['SC', 'TC', ''];
+  if (normalized === 'zh-tw') return ['TC', 'SC', ''];
+  return ['', 'SC', 'TC'];
 }
 
 /** Resvg 共用选项 */
 function resvgOpts(langTag: string): ResvgRenderOptions {
   const fontFiles = getFontOrder(langTag)
     .map((suffix) => path.join(fontDirPath, `NotoSans${suffix}-Medium.ttf`))
-    .filter((f) => fs.existsSync(f))
+    .filter((f) => fs.existsSync(f));
   return {
     fitTo: { mode: 'width', value: 1200 },
     font: {
@@ -139,7 +139,7 @@ function resvgOpts(langTag: string): ResvgRenderOptions {
       loadSystemFonts: false,
       sansSerifFamily: 'Noto Sans',
     },
-  }
+  };
 }
 
 // ── 站点封面 ──────────────────────────────────────────────
@@ -149,12 +149,12 @@ function resvgOpts(langTag: string): ResvgRenderOptions {
  * @returns {Promise<string|null>} 模板字符串或 null
  */
 export async function loadSiteCoverTemplate() {
-  const src = path.join(root, 'src', 'cover.svg')
+  const src = path.join(root, 'src', 'cover.svg');
   if (await fs.pathExists(src)) {
-    return fs.readFile(src, 'utf8')
+    return fs.readFile(src, 'utf8');
   }
-  log.warn('cover', '未找到 src/cover.svg，跳过社交预览图生成')
-  return null
+  log.warn('cover', '未找到 src/cover.svg，跳过社交预览图生成');
+  return null;
 }
 
 /**
@@ -165,70 +165,70 @@ export async function loadSiteCoverTemplate() {
  * @param {string} langTag     当前语言的标签
  */
 export async function generateSiteCover(template: string, siteName: string, outputPath: string, langTag: string) {
-  const svg = template.replace('__SITE_TITLE__', escapeHtml(siteName))
+  const svg = template.replace('__SITE_TITLE__', escapeHtml(siteName));
   try {
-    const resvg = new Resvg(svg, resvgOpts(langTag))
-    const pngData = resvg.render()
-    await fs.writeFile(outputPath, pngData.asPng())
+    const resvg = new Resvg(svg, resvgOpts(langTag));
+    const pngData = resvg.render();
+    await fs.writeFile(outputPath, pngData.asPng());
   } catch (e) {
-    log.warn('cover', `站点封面 PNG 渲染失败: ${e?.message || e}`)
+    log.warn('cover', `站点封面 PNG 渲染失败: ${e?.message || e}`);
   }
 }
 
 // ── 模块封面 ──────────────────────────────────────────────
 
 /** 封面尺寸常量 */
-const W = 1200
-const H = 630
-const PAD_X = 56
-const PAD_TOP = 64
-const PAD_BOTTOM = 52
-const LEFT_W = 480
-const RIGHT_X = LEFT_W + PAD_X + 16
-const RIGHT_W = W - RIGHT_X - PAD_X
-const BAR_H = 22
-const BAR_Y = H - BAR_H
-const BG = '#f9f9fb'
-const TEXT_PRIMARY = '#1a1a2e'
-const TEXT_SECONDARY = '#4a4a6a'
-const TAG_BG = '#e8e8f0'
-const TAG_TEXT = '#555570'
+const W = 1200;
+const H = 630;
+const PAD_X = 56;
+const PAD_TOP = 64;
+const PAD_BOTTOM = 52;
+const LEFT_W = 480;
+const RIGHT_X = LEFT_W + PAD_X + 16;
+const RIGHT_W = W - RIGHT_X - PAD_X;
+const BAR_H = 22;
+const BAR_Y = H - BAR_H;
+const BG = '#f9f9fb';
+const TEXT_PRIMARY = '#1a1a2e';
+const TEXT_SECONDARY = '#4a4a6a';
+const TAG_BG = '#e8e8f0';
+const TAG_TEXT = '#555570';
 
 /** 标题字体大小：单行 / 双行 */
-const TITLE_SIZE_1LINE = 60
-const TITLE_SIZE_2LINE = 45
-const DESC_FONT_SIZE = 26
-const DESC_LINE_HEIGHT = 38
-const TAG_FONT_SIZE = 19
-const TAG_H = 36
-const TAG_PAD_X = 17
-const TAG_GAP = 12
+const TITLE_SIZE_1LINE = 60;
+const TITLE_SIZE_2LINE = 45;
+const DESC_FONT_SIZE = 26;
+const DESC_LINE_HEIGHT = 38;
+const TAG_FONT_SIZE = 19;
+const TAG_H = 36;
+const TAG_PAD_X = 17;
+const TAG_GAP = 12;
 
 /** 水印布局常量 */
-const WATERMARK_ICON_SIZE = 42
-const WATERMARK_TEXT_SIZE = 27
-const WATERMARK_CY = BAR_Y - 39
-const WATERMARK_ICON_Y = Math.round(WATERMARK_CY - WATERMARK_ICON_SIZE / 2)
-const WATERMARK_TEXT_Y = Math.round(WATERMARK_CY + WATERMARK_TEXT_SIZE * 0.36)
+const WATERMARK_ICON_SIZE = 42;
+const WATERMARK_TEXT_SIZE = 27;
+const WATERMARK_CY = BAR_Y - 39;
+const WATERMARK_ICON_Y = Math.round(WATERMARK_CY - WATERMARK_ICON_SIZE / 2);
+const WATERMARK_TEXT_Y = Math.round(WATERMARK_CY + WATERMARK_TEXT_SIZE * 0.36);
 
 /**
  * 判断字符是否为 CJK 字符
  */
 function isCJK(ch) {
-  const c = ch.charCodeAt(0)
+  const c = ch.charCodeAt(0);
   return (
     (c >= 0x4e00 && c <= 0x9fff) ||
     (c >= 0x3400 && c <= 0x4dbf) ||
     (c >= 0x3000 && c <= 0x303f) ||
     (c >= 0xff00 && c <= 0xffef)
-  )
+  );
 }
 
 /**
  * 检查换行结果是否每行都不超宽（处理单词不可拆分导致单行溢出的情况）。
  */
 function allLinesFit(lines, font, maxWidth) {
-  return lines.every((line) => measureText(line, font) <= maxWidth)
+  return lines.every((line) => measureText(line, font) <= maxWidth);
 }
 
 /**
@@ -236,28 +236,28 @@ function allLinesFit(lines, font, maxWidth) {
  * 优先使用大字号单行；若溢出则尝试大字号两行且每行不超宽；否则用小字号两行。
  */
 function computeTitleLayout(name, maxWidth, fontFamily) {
-  const font1 = `bold ${TITLE_SIZE_1LINE}px ${fontFamily}`
-  const font2 = `bold ${TITLE_SIZE_2LINE}px ${fontFamily}`
+  const font1 = `bold ${TITLE_SIZE_1LINE}px ${fontFamily}`;
+  const font2 = `bold ${TITLE_SIZE_2LINE}px ${fontFamily}`;
 
   // 尝试单行大字
   if (measureText(name, font1) <= maxWidth) {
-    return { fontSize: TITLE_SIZE_1LINE, lines: [name] }
+    return { fontSize: TITLE_SIZE_1LINE, lines: [name] };
   }
 
   // 尝试大字号两行（每行都不能超宽）
-  const lines1 = wrapTextByWidth(name, font1, maxWidth)
+  const lines1 = wrapTextByWidth(name, font1, maxWidth);
   if (lines1.length <= 2 && allLinesFit(lines1, font1, maxWidth)) {
-    return { fontSize: TITLE_SIZE_1LINE, lines: lines1.slice(0, 2) }
+    return { fontSize: TITLE_SIZE_1LINE, lines: lines1.slice(0, 2) };
   }
 
   // 小字号：先看能否单行
   if (measureText(name, font2) <= maxWidth) {
-    return { fontSize: TITLE_SIZE_2LINE, lines: [name] }
+    return { fontSize: TITLE_SIZE_2LINE, lines: [name] };
   }
 
   // 小字号两行
-  const lines2 = wrapTextByWidth(name, font2, maxWidth)
-  return { fontSize: TITLE_SIZE_2LINE, lines: lines2.slice(0, 2) }
+  const lines2 = wrapTextByWidth(name, font2, maxWidth);
+  return { fontSize: TITLE_SIZE_2LINE, lines: lines2.slice(0, 2) };
 }
 
 /**
@@ -273,77 +273,77 @@ function buildModuleCoverSVG({
   siteName,
   faviconInnerContent,
 }: {
-  name?: string
-  description?: string
-  tags: string[]
-  firstScript: string
-  allScripts: string[]
-  langTag: string
-  siteName?: string
-  faviconInnerContent: string
+  name?: string;
+  description?: string;
+  tags: string[];
+  firstScript: string;
+  allScripts: string[];
+  langTag: string;
+  siteName?: string;
+  faviconInnerContent: string;
 }) {
-  const leftMaxW = LEFT_W
-  const fontFamily = getFontFamily(langTag)
+  const leftMaxW = LEFT_W;
+  const fontFamily = getFontFamily(langTag);
 
   // ── 标题布局 ──
-  const title = computeTitleLayout(name || 'Module', leftMaxW, fontFamily)
-  const titleLineHeight = Math.round(title.fontSize * 1.25)
-  const titleStartY = PAD_TOP + title.fontSize // baseline of first line
-  let titleSvg = ''
+  const title = computeTitleLayout(name || 'Module', leftMaxW, fontFamily);
+  const titleLineHeight = Math.round(title.fontSize * 1.25);
+  const titleStartY = PAD_TOP + title.fontSize; // baseline of first line
+  let titleSvg = '';
   for (let i = 0; i < title.lines.length; i++) {
-    const y = titleStartY + i * titleLineHeight
-    titleSvg += `<text x="${PAD_X}" y="${y}" font-family="${fontFamily}" font-size="${title.fontSize}" font-weight="700" fill="${TEXT_PRIMARY}">${escapeHtml(title.lines[i])}</text>\n  `
+    const y = titleStartY + i * titleLineHeight;
+    titleSvg += `<text x="${PAD_X}" y="${y}" font-family="${fontFamily}" font-size="${title.fontSize}" font-weight="700" fill="${TEXT_PRIMARY}">${escapeHtml(title.lines[i])}</text>\n  `;
   }
-  const titleBottomY = titleStartY + (title.lines.length - 1) * titleLineHeight
+  const titleBottomY = titleStartY + (title.lines.length - 1) * titleLineHeight;
 
   // ── 描述布局 ──
-  const descFont = `${DESC_FONT_SIZE}px ${fontFamily}`
-  const descY = titleBottomY + 44
-  const descLines = wrapTextByWidth(description || '', descFont, leftMaxW).slice(0, 5)
+  const descFont = `${DESC_FONT_SIZE}px ${fontFamily}`;
+  const descY = titleBottomY + 44;
+  const descLines = wrapTextByWidth(description || '', descFont, leftMaxW).slice(0, 5);
   const descTspans = descLines
     .map((line, i) => `<tspan x="${PAD_X}" dy="${i === 0 ? 0 : DESC_LINE_HEIGHT}">${escapeHtml(line)}</tspan>`)
-    .join('')
-  const descBottomY = descY + (descLines.length - 1) * DESC_LINE_HEIGHT
+    .join('');
+  const descBottomY = descY + (descLines.length - 1) * DESC_LINE_HEIGHT;
 
   // ── 标签布局 ──
-  const tagFont = `${TAG_FONT_SIZE}px ${fontFamily}`
+  const tagFont = `${TAG_FONT_SIZE}px ${fontFamily}`;
   // 标签位置：紧跟描述下方，但不超过底部安全区域
-  const tagsIdealY = descBottomY + 40
-  const tagsMaxY = BAR_Y - PAD_BOTTOM - TAG_H
-  const tagsStartY = Math.min(tagsIdealY, tagsMaxY)
-  let tagsSvg = ''
-  let tagX = PAD_X
+  const tagsIdealY = descBottomY + 40;
+  const tagsMaxY = BAR_Y - PAD_BOTTOM - TAG_H;
+  const tagsStartY = Math.min(tagsIdealY, tagsMaxY);
+  let tagsSvg = '';
+  let tagX = PAD_X;
   for (const tag of (tags || []).slice(0, 6)) {
-    const tw = measureText(tag, tagFont)
-    const rectW = tw + TAG_PAD_X * 2
-    if (tagX + rectW > PAD_X + leftMaxW) break
-    tagsSvg += `<rect x="${tagX}" y="${tagsStartY}" width="${rectW}" height="${TAG_H}" rx="${TAG_H / 2}" fill="${TAG_BG}" />`
-    tagsSvg += `<text x="${tagX + TAG_PAD_X}" y="${tagsStartY + TAG_H / 2 + TAG_FONT_SIZE * 0.36}" font-family="${fontFamily}" font-size="${TAG_FONT_SIZE}" fill="${TAG_TEXT}">${escapeHtml(tag)}</text>`
-    tagX += rectW + TAG_GAP
+    const tw = measureText(tag, tagFont);
+    const rectW = tw + TAG_PAD_X * 2;
+    if (tagX + rectW > PAD_X + leftMaxW) break;
+    tagsSvg += `<rect x="${tagX}" y="${tagsStartY}" width="${rectW}" height="${TAG_H}" rx="${TAG_H / 2}" fill="${TAG_BG}" />`;
+    tagsSvg += `<text x="${tagX + TAG_PAD_X}" y="${tagsStartY + TAG_H / 2 + TAG_FONT_SIZE * 0.36}" font-family="${fontFamily}" font-size="${TAG_FONT_SIZE}" fill="${TAG_TEXT}">${escapeHtml(tag)}</text>`;
+    tagX += rectW + TAG_GAP;
   }
 
   // ── 右侧积木 SVG ──
-  let blocksSvg = ''
+  let blocksSvg = '';
   if (firstScript) {
     try {
       const raw = renderToSVGString(firstScript, {
         style: 'scratch3',
         languages: langTag ? [langTag, 'en'] : ['en'],
         scale: 1,
-      })
-      const vbMatch = raw.match(/viewBox="([^"]*)"/)
-      const wMatch = raw.match(/width="([^"]*)"/)
-      const hMatch = raw.match(/height="([^"]*)"/)
-      const viewBox = vbMatch ? vbMatch[1] : '0 0 200 200'
-      const origW = parseFloat(wMatch?.[1]) || 200
-      const origH = parseFloat(hMatch?.[1]) || 200
-      const availH = BAR_Y - PAD_TOP - PAD_BOTTOM
-      const scale = Math.min(RIGHT_W / origW, availH / origH, 1)
-      const renderW = origW * scale
-      const renderH = origH * scale
-      const ox = RIGHT_X + (RIGHT_W - renderW) / 2
-      const oy = PAD_TOP + (availH - renderH) / 2
-      const innerSvg = raw.replace(/<svg[^>]*>/, '').replace(/<\/svg>\s*$/, '')
+      });
+      const vbMatch = raw.match(/viewBox="([^"]*)"/);
+      const wMatch = raw.match(/width="([^"]*)"/);
+      const hMatch = raw.match(/height="([^"]*)"/);
+      const viewBox = vbMatch ? vbMatch[1] : '0 0 200 200';
+      const origW = parseFloat(wMatch?.[1]) || 200;
+      const origH = parseFloat(hMatch?.[1]) || 200;
+      const availH = BAR_Y - PAD_TOP - PAD_BOTTOM;
+      const scale = Math.min(RIGHT_W / origW, availH / origH, 1);
+      const renderW = origW * scale;
+      const renderH = origH * scale;
+      const ox = RIGHT_X + (RIGHT_W - renderW) / 2;
+      const oy = PAD_TOP + (availH - renderH) / 2;
+      const innerSvg = raw.replace(/<svg[^>]*>/, '').replace(/<\/svg>\s*$/, '');
       blocksSvg = `
         <defs>
           <clipPath id="blocks-clip">
@@ -354,33 +354,33 @@ function buildModuleCoverSVG({
           <svg x="${ox}" y="${oy}" width="${renderW}" height="${renderH}" viewBox="${viewBox}">
             ${innerSvg}
           </svg>
-        </g>`
+        </g>`;
     } catch (e) {
-      log.warn('cover', `scratchblocks 渲染失败: ${e?.message || e}`)
+      log.warn('cover', `scratchblocks 渲染失败: ${e?.message || e}`);
     }
   }
 
   // ── 底部颜色条 ──
-  const categories = analyzeBlockCategories(allScripts)
-  let barRects = ''
+  const categories = analyzeBlockCategories(allScripts);
+  let barRects = '';
   if (categories.length > 0) {
-    const total = categories.reduce((s, c) => s + c.count, 0)
-    let x = 0
+    const total = categories.reduce((s, c) => s + c.count, 0);
+    let x = 0;
     for (const cat of categories) {
-      const w = (cat.count / total) * W
-      barRects += `<rect x="${x}" y="${BAR_Y}" width="${w}" height="${BAR_H}" fill="${cat.color}" />`
-      x += w
+      const w = (cat.count / total) * W;
+      barRects += `<rect x="${x}" y="${BAR_Y}" width="${w}" height="${BAR_H}" fill="${cat.color}" />`;
+      x += w;
     }
   } else {
-    barRects = `<rect x="0" y="${BAR_Y}" width="${W}" height="${BAR_H}" fill="#bfbfbf" />`
+    barRects = `<rect x="0" y="${BAR_Y}" width="${W}" height="${BAR_H}" fill="#bfbfbf" />`;
   }
 
   // ── 左右分隔虚线 ──
-  const dividerX = LEFT_W + PAD_X / 2 + 8
-  const divider = `<line x1="${dividerX}" y1="${PAD_TOP}" x2="${dividerX}" y2="${BAR_Y - 12}" stroke="#e0e0e8" stroke-width="1" stroke-dasharray="6,4" />`
+  const dividerX = LEFT_W + PAD_X / 2 + 8;
+  const divider = `<line x1="${dividerX}" y1="${PAD_TOP}" x2="${dividerX}" y2="${BAR_Y - 12}" stroke="#e0e0e8" stroke-width="1" stroke-dasharray="6,4" />`;
 
   // ── 左下角网站水印（logo + 站点名） ──
-  let watermarkSvg = ''
+  let watermarkSvg = '';
   if (siteName && faviconInnerContent) {
     watermarkSvg = `
   <g opacity="0.55">
@@ -388,7 +388,7 @@ function buildModuleCoverSVG({
       ${faviconInnerContent}
     </svg>
     <text x="${PAD_X + WATERMARK_ICON_SIZE + 9}" y="${WATERMARK_TEXT_Y}" font-family="${fontFamily}" font-size="${WATERMARK_TEXT_SIZE}" fill="${TEXT_PRIMARY}">${escapeHtml(siteName)}</text>
-  </g>`
+  </g>`;
   }
 
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">
@@ -400,30 +400,30 @@ function buildModuleCoverSVG({
   ${blocksSvg}
   ${watermarkSvg}
   ${barRects}
-</svg>`
+</svg>`;
 }
 
 /** 当前已注册字体对应的语言（用于按需重新注册） */
-let _registeredFontLang: string | null = null
+let _registeredFontLang: string | null = null;
 
 /** favicon.svg 内层内容缓存（null = 未加载，'' = 不存在） */
-let _faviconInnerContent: string | null = null
+let _faviconInnerContent: string | null = null;
 
 /**
  * 懒加载 src/favicon.svg 的内层 SVG 内容（去掉 xml 声明和外层 svg 标签）。
  * @returns {Promise<string>}
  */
 async function loadFaviconContent() {
-  if (_faviconInnerContent !== null) return _faviconInnerContent
-  const faviconPath = path.join(root, 'src', 'favicon.svg')
+  if (_faviconInnerContent !== null) return _faviconInnerContent;
+  const faviconPath = path.join(root, 'src', 'favicon.svg');
   if (await fs.pathExists(faviconPath)) {
-    const raw = await fs.readFile(faviconPath, 'utf8')
-    const innerMatch = raw.match(/<svg[^>]*>([\s\S]*)<\/svg>/)
-    _faviconInnerContent = innerMatch ? innerMatch[1] : ''
+    const raw = await fs.readFile(faviconPath, 'utf8');
+    const innerMatch = raw.match(/<svg[^>]*>([\s\S]*)<\/svg>/);
+    _faviconInnerContent = innerMatch ? innerMatch[1] : '';
   } else {
-    _faviconInnerContent = ''
+    _faviconInnerContent = '';
   }
-  return _faviconInnerContent
+  return _faviconInnerContent;
 }
 
 /**
@@ -432,16 +432,16 @@ async function loadFaviconContent() {
  * @param {string} langTag
  */
 function ensureFontsRegistered(langTag: string) {
-  const normalized = (langTag || '').toLowerCase().replace('_', '-')
-  if (_registeredFontLang === normalized) return
-  GlobalFonts.removeAll()
+  const normalized = (langTag || '').toLowerCase().replace('_', '-');
+  if (_registeredFontLang === normalized) return;
+  GlobalFonts.removeAll();
   for (const suffix of getFontOrder(normalized)) {
-    const filepath = path.join(fontDirPath, `NotoSans${suffix}-Medium.ttf`)
+    const filepath = path.join(fontDirPath, `NotoSans${suffix}-Medium.ttf`);
     if (fs.existsSync(filepath)) {
-      GlobalFonts.registerFromPath(filepath, 'Helvetica Neue')
+      GlobalFonts.registerFromPath(filepath, 'Helvetica Neue');
     }
   }
-  _registeredFontLang = normalized
+  _registeredFontLang = normalized;
 }
 
 /**
@@ -454,19 +454,19 @@ function ensureFontsRegistered(langTag: string) {
  */
 export async function generateModuleCover(module: CoverModule, langTag: string, outputPath: string, siteName?: string) {
   // 提取第一个非导入脚本的文本
-  const scripts = module.scripts || []
-  const firstNonImport = scripts.find((s) => !s.imported)
-  const firstScript = firstNonImport?.content || scripts[0]?.content || ''
+  const scripts = module.scripts || [];
+  const firstNonImport = scripts.find((s) => !s.imported);
+  const firstScript = firstNonImport?.content || scripts[0]?.content || '';
 
   // 收集所有脚本文本（用于类别统计）
   const allScripts = scripts
     .filter((s) => !s.imported)
     .map((s) => s.content)
-    .filter(Boolean)
+    .filter(Boolean);
 
-  ensureFontsRegistered(langTag)
+  ensureFontsRegistered(langTag);
 
-  const faviconInnerContent = await loadFaviconContent()
+  const faviconInnerContent = await loadFaviconContent();
 
   const svg = buildModuleCoverSVG({
     name: module.name,
@@ -477,14 +477,14 @@ export async function generateModuleCover(module: CoverModule, langTag: string, 
     langTag,
     siteName,
     faviconInnerContent,
-  })
+  });
 
   try {
-    const resvg = new Resvg(svg, resvgOpts(langTag))
-    const pngData = resvg.render()
-    await fs.ensureDir(path.dirname(outputPath))
-    await fs.writeFile(outputPath, pngData.asPng())
+    const resvg = new Resvg(svg, resvgOpts(langTag));
+    const pngData = resvg.render();
+    await fs.ensureDir(path.dirname(outputPath));
+    await fs.writeFile(outputPath, pngData.asPng());
   } catch (e) {
-    log.warn('cover', `模块封面 "${module.id}" 渲染失败: ${e?.message || e}`)
+    log.warn('cover', `模块封面 "${module.id}" 渲染失败: ${e?.message || e}`);
   }
 }

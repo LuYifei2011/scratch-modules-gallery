@@ -82,8 +82,8 @@ def fibonacci(n):
 ```
 
 ```javascript
-const greet = (name) => `你好，${name}！`
-console.log(greet('世界'))
+const greet = (name) => `你好，${name}！`;
+console.log(greet('世界'));
 ```
 
 纯文本块：

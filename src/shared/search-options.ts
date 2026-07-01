@@ -1,15 +1,15 @@
-import { tokenizeCJK } from './search-tokenizer.ts'
+import { tokenizeCJK } from './search-tokenizer.ts';
 
-export const SEARCH_FIELDS = ['name', 'id', 'description', 'tags', 'keywords'] as const
-export const SEARCH_STORE_FIELDS = ['id', 'name', 'description', 'tags', 'keywords', 'slug', 'hasDemo'] as const
-export const SEARCH_ID_FIELD = 'id'
+export const SEARCH_FIELDS = ['name', 'id', 'description', 'tags', 'keywords'] as const;
+export const SEARCH_STORE_FIELDS = ['id', 'name', 'description', 'tags', 'keywords', 'slug', 'hasDemo'] as const;
+export const SEARCH_ID_FIELD = 'id';
 export const SEARCH_BOOST = {
   name: 5,
   id: 4,
   tags: 3,
   keywords: 2,
   description: 2,
-} as const
+} as const;
 
 export function createSearchOptions() {
   return {
@@ -18,5 +18,5 @@ export function createSearchOptions() {
     idField: SEARCH_ID_FIELD,
     searchOptions: { boost: { ...SEARCH_BOOST } },
     tokenize: tokenizeCJK,
-  }
+  };
 }

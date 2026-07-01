@@ -233,12 +233,12 @@
     </div>
 
     <script>
-      const localeSelect = document.getElementById('locale-select')
-      const stats = document.getElementById('stats')
-      const content = document.getElementById('content')
+      const localeSelect = document.getElementById('locale-select');
+      const stats = document.getElementById('stats');
+      const content = document.getElementById('content');
 
-      let modules = []
-      let currentLocale = localeSelect.value
+      let modules = [];
+      let currentLocale = localeSelect.value;
 
       function escapeHtml(value) {
         return String(value ?? '')
@@ -246,34 +246,34 @@
           .replace(/</g, '&lt;')
           .replace(/>/g, '&gt;')
           .replace(/"/g, '&quot;')
-          .replace(/'/g, '&#39;')
+          .replace(/'/g, '&#39;');
       }
 
       async function loadModules() {
         try {
-          const res = await fetch('/api/modules')
-          if (!res.ok) throw new Error(`HTTP ${res.status}`)
-          const data = await res.json()
-          modules = data.modules || []
-          render()
+          const res = await fetch('/api/modules');
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          const data = await res.json();
+          modules = data.modules || [];
+          render();
         } catch (e) {
-          content.innerHTML = `<div class="error-msg">加载模块列表失败：${escapeHtml(e.message)}<br>请确保开发服务器正在运行。</div>`
+          content.innerHTML = `<div class="error-msg">加载模块列表失败：${escapeHtml(e.message)}<br>请确保开发服务器正在运行。</div>`;
         }
       }
 
       function render() {
-        const locale = currentLocale
-        stats.textContent = `共 ${modules.length} 个模块 + 主页`
+        const locale = currentLocale;
+        stats.textContent = `共 ${modules.length} 个模块 + 主页`;
 
         if (!modules.length) {
-          content.innerHTML = '<div class="loading"><span>暂无模块</span></div>'
-          return
+          content.innerHTML = '<div class="loading"><span>暂无模块</span></div>';
+          return;
         }
 
         // 主页封面卡片
-        const homeCoverUrl = `/${locale}/cover.png`
-        const homeUrl = `/${locale}/`
-        const homeName = locale === 'en' ? 'Home' : locale === 'zh-tw' ? '首頁' : '首页'
+        const homeCoverUrl = `/${locale}/cover.png`;
+        const homeUrl = `/${locale}/`;
+        const homeName = locale === 'en' ? 'Home' : locale === 'zh-tw' ? '首頁' : '首页';
         const homeCard = `
           <div class="card" data-id="home">
             <div class="cover-wrap">
@@ -303,17 +303,17 @@
               </div>
             </div>
           </div>
-        `
+        `;
 
         const cards = modules
           .map((mod) => {
-            const safeId = encodeURIComponent(mod.id)
-            const coverUrl = `/${locale}/modules/${safeId}/cover.png`
-            const moduleUrl = `/${locale}/modules/${safeId}/`
-            const name = typeof mod.name === 'object' ? mod.name[locale] || mod.name['en'] || mod.id : mod.name
-            const displayId = escapeHtml(mod.id)
-            const displayName = escapeHtml(name)
-            const displayCoverUrl = escapeHtml(coverUrl)
+            const safeId = encodeURIComponent(mod.id);
+            const coverUrl = `/${locale}/modules/${safeId}/cover.png`;
+            const moduleUrl = `/${locale}/modules/${safeId}/`;
+            const name = typeof mod.name === 'object' ? mod.name[locale] || mod.name['en'] || mod.id : mod.name;
+            const displayId = escapeHtml(mod.id);
+            const displayName = escapeHtml(name);
+            const displayCoverUrl = escapeHtml(coverUrl);
             return `
             <div class="card" data-id="${displayId}">
               <div class="cover-wrap">
@@ -343,41 +343,41 @@
                 </div>
               </div>
             </div>
-          `
+          `;
           })
-          .join('')
+          .join('');
 
-        content.innerHTML = `<div class="grid">${homeCard}${cards}</div>`
-        loadImages()
+        content.innerHTML = `<div class="grid">${homeCard}${cards}</div>`;
+        loadImages();
       }
 
       function loadImages() {
-        const imgs = content.querySelectorAll('img[data-src]')
+        const imgs = content.querySelectorAll('img[data-src]');
         imgs.forEach((img) => {
-          const src = img.dataset.src
-          const wrap = img.closest('.cover-wrap')
-          const placeholder = wrap.querySelector('.cover-placeholder')
-          const errEl = wrap.querySelector('.cover-error')
+          const src = img.dataset.src;
+          const wrap = img.closest('.cover-wrap');
+          const placeholder = wrap.querySelector('.cover-placeholder');
+          const errEl = wrap.querySelector('.cover-error');
 
           img.onload = () => {
-            img.style.display = ''
-            if (placeholder) placeholder.style.display = 'none'
-          }
+            img.style.display = '';
+            if (placeholder) placeholder.style.display = 'none';
+          };
           img.onerror = () => {
-            img.style.display = 'none'
-            if (placeholder) placeholder.style.display = 'none'
-            if (errEl) errEl.style.display = ''
-          }
-          img.src = src
-        })
+            img.style.display = 'none';
+            if (placeholder) placeholder.style.display = 'none';
+            if (errEl) errEl.style.display = '';
+          };
+          img.src = src;
+        });
       }
 
       localeSelect.addEventListener('change', () => {
-        currentLocale = localeSelect.value
-        render()
-      })
+        currentLocale = localeSelect.value;
+        render();
+      });
 
-      loadModules()
+      loadModules();
     </script>
   </body>
 </html>

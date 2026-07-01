@@ -15,14 +15,14 @@
  * @module check-translations
  */
 
-import fs from 'fs-extra'
-import path from 'path'
-import { loadSiteConfig, loadSiteData, loadLocalizedModules } from './lib/site-pipeline.ts'
-import { globFiles, readJsonFile } from './lib/bun-utils.ts'
+import fs from 'fs-extra';
+import path from 'path';
+import { loadSiteConfig, loadSiteData, loadLocalizedModules } from './lib/site-pipeline.ts';
+import { globFiles, readJsonFile } from './lib/bun-utils.ts';
 
-const root = path.resolve('.')
-const SOURCE_LOCALE = 'en'
-const EXCLUDED_I18N_FILES = new Set(['tags.json', 'module-defaults.json'])
+const root = path.resolve('.');
+const SOURCE_LOCALE = 'en';
+const EXCLUDED_I18N_FILES = new Set(['tags.json', 'module-defaults.json']);
 
 // ── Helpers ────────────────────────────────────────────────
 
@@ -31,29 +31,29 @@ const EXCLUDED_I18N_FILES = new Set(['tags.json', 'module-defaults.json'])
  * E.g. { a: { b: 1, c: 2 } } → ['a.b', 'a.c']
  */
 function collectKeyPaths(obj, prefix = '') {
-  const paths = []
+  const paths = [];
   for (const [key, value] of Object.entries(obj)) {
-    const fullKey = prefix ? `${prefix}.${key}` : key
+    const fullKey = prefix ? `${prefix}.${key}` : key;
     if (value && typeof value === 'object' && !Array.isArray(value)) {
-      paths.push(...collectKeyPaths(value, fullKey))
+      paths.push(...collectKeyPaths(value, fullKey));
     } else {
-      paths.push(fullKey)
+      paths.push(fullKey);
     }
   }
-  return paths
+  return paths;
 }
 
 /**
  * Get value at a dot-separated key path from an object.
  */
 function getByPath(obj, keyPath) {
-  const parts = keyPath.split('.')
-  let current = obj
+  const parts = keyPath.split('.');
+  let current = obj;
   for (const part of parts) {
-    if (current == null || typeof current !== 'object') return undefined
-    current = current[part]
+    if (current == null || typeof current !== 'object') return undefined;
+    current = current[part];
   }
-  return current
+  return current;
 }
 
 // ── Checkers ───────────────────────────────────────────────
@@ -62,31 +62,31 @@ function getByPath(obj, keyPath) {
  * Check global UI i18n files (src/i18n/*.json) against the source locale.
  */
 async function checkGlobalI18n() {
-  const i18nDir = path.join(root, 'src', 'i18n')
-  const files = (await globFiles('*.json', i18nDir)).filter((f) => !EXCLUDED_I18N_FILES.has(f)).sort()
+  const i18nDir = path.join(root, 'src', 'i18n');
+  const files = (await globFiles('*.json', i18nDir)).filter((f) => !EXCLUDED_I18N_FILES.has(f)).sort();
 
-  const localeData = {}
+  const localeData = {};
   for (const f of files) {
-    const locale = path.basename(f, '.json')
+    const locale = path.basename(f, '.json');
     try {
-      localeData[locale] = await readJsonFile(path.join(i18nDir, f))
+      localeData[locale] = await readJsonFile(path.join(i18nDir, f));
     } catch {
       /* skip unparseable */
     }
   }
 
-  const sourceData = localeData[SOURCE_LOCALE]
-  if (!sourceData) return { issues: [], locales: [] }
+  const sourceData = localeData[SOURCE_LOCALE];
+  if (!sourceData) return { issues: [], locales: [] };
 
-  const sourceKeys = collectKeyPaths(sourceData)
-  const locales = Object.keys(localeData).filter((l) => l !== SOURCE_LOCALE)
-  const issues = []
+  const sourceKeys = collectKeyPaths(sourceData);
+  const locales = Object.keys(localeData).filter((l) => l !== SOURCE_LOCALE);
+  const issues = [];
 
   for (const locale of locales) {
-    const targetData = localeData[locale]
-    const targetKeys = collectKeyPaths(targetData)
-    const missingKeys = sourceKeys.filter((k) => !targetKeys.includes(k))
-    const extraKeys = targetKeys.filter((k) => !sourceKeys.includes(k))
+    const targetData = localeData[locale];
+    const targetKeys = collectKeyPaths(targetData);
+    const missingKeys = sourceKeys.filter((k) => !targetKeys.includes(k));
+    const extraKeys = targetKeys.filter((k) => !sourceKeys.includes(k));
 
     if (missingKeys.length > 0) {
       issues.push({
@@ -99,7 +99,7 @@ async function checkGlobalI18n() {
           key: k,
           sourceValue: getByPath(sourceData, k),
         })),
-      })
+      });
     }
     if (extraKeys.length > 0) {
       issues.push({
@@ -108,25 +108,25 @@ async function checkGlobalI18n() {
         locale,
         file: `src/i18n/${locale}.json`,
         keys: extraKeys,
-      })
+      });
     }
   }
 
-  return { issues, locales }
+  return { issues, locales };
 }
 
 /**
  * Check global tags translations (src/i18n/tags.json).
  */
 async function checkTags(locales) {
-  const tagsFile = path.join(root, 'src', 'i18n', 'tags.json')
-  if (!(await fs.pathExists(tagsFile))) return []
+  const tagsFile = path.join(root, 'src', 'i18n', 'tags.json');
+  if (!(await fs.pathExists(tagsFile))) return [];
 
-  const tags = await readJsonFile(tagsFile)
-  const issues = []
+  const tags = await readJsonFile(tagsFile);
+  const issues = [];
 
   for (const [tagId, translations] of Object.entries(tags)) {
-    const missingLocales = locales.filter((l) => !translations[l])
+    const missingLocales = locales.filter((l) => !translations[l]);
     if (missingLocales.length > 0) {
       issues.push({
         type: 'missing',
@@ -135,10 +135,10 @@ async function checkTags(locales) {
         tag: tagId,
         sourceValue: translations[SOURCE_LOCALE] || tagId,
         missingLocales,
-      })
+      });
     }
   }
-  return issues
+  return issues;
 }
 
 /**
@@ -152,16 +152,16 @@ async function checkTags(locales) {
  * - comments (from actual script content)
  */
 async function checkModulesViaBuild(locales) {
-  const config = await loadSiteConfig(root)
-  const siteData = await loadSiteData({ root, config, isDev: true })
+  const config = await loadSiteConfig(root);
+  const siteData = await loadSiteData({ root, config, isDev: true });
 
-  const issues = []
+  const issues = [];
   for (const locale of locales) {
-    const collected = []
+    const collected = [];
     const reportIssue = (_type, message, details = {}) => {
-      collected.push({ message, ...details })
-    }
-    await loadLocalizedModules(siteData, locale, { skipMissingCheck: false, reportIssue })
+      collected.push({ message, ...details });
+    };
+    await loadLocalizedModules(siteData, locale, { skipMissingCheck: false, reportIssue });
 
     for (const entry of collected) {
       if (entry.code === 'i18n-missing') {
@@ -172,24 +172,24 @@ async function checkModulesViaBuild(locales) {
           locale: entry.locale,
           file: `content/modules/${entry.moduleId}/i18n/${entry.locale}.json`,
           fields: (entry.fields || []).map((f) => ({ key: f })),
-        })
+        });
       }
     }
   }
 
   // Also check for missing notes files
-  const contentDir = path.join(root, 'content', 'modules')
+  const contentDir = path.join(root, 'content', 'modules');
   const moduleDirs = (await fs.readdir(contentDir, { withFileTypes: true }))
     .filter((entry) => entry.isDirectory())
     .map((entry) => entry.name)
     .filter((d) => !d.startsWith('.'))
-    .sort()
+    .sort();
 
   for (const moduleId of moduleDirs) {
-    const notesDir = path.join(contentDir, moduleId, 'notes')
+    const notesDir = path.join(contentDir, moduleId, 'notes');
     if (await fs.pathExists(notesDir)) {
-      const noteFiles = await globFiles('*.md', notesDir)
-      const existingLocales = noteFiles.map((f) => path.basename(f, '.md'))
+      const noteFiles = await globFiles('*.md', notesDir);
+      const existingLocales = noteFiles.map((f) => path.basename(f, '.md'));
 
       if (existingLocales.includes(SOURCE_LOCALE)) {
         for (const locale of locales) {
@@ -201,14 +201,14 @@ async function checkModulesViaBuild(locales) {
               locale,
               file: `content/modules/${moduleId}/notes/${locale}.md`,
               sourceFile: `content/modules/${moduleId}/notes/${SOURCE_LOCALE}.md`,
-            })
+            });
           }
         }
       }
     }
   }
 
-  return issues
+  return issues;
 }
 
 // ── Report generation ──────────────────────────────────────
@@ -218,95 +218,95 @@ async function checkModulesViaBuild(locales) {
  */
 function formatSourceValue(value, maxLen = 100) {
   if (typeof value === 'object') {
-    const str = JSON.stringify(value)
-    return str.length > maxLen ? str.substring(0, maxLen) + '…' : str
+    const str = JSON.stringify(value);
+    return str.length > maxLen ? str.substring(0, maxLen) + '…' : str;
   }
-  const str = String(value)
-  return str.length > maxLen ? str.substring(0, maxLen) + '…' : str
+  const str = String(value);
+  return str.length > maxLen ? str.substring(0, maxLen) + '…' : str;
 }
 
 function generateMarkdown(allIssues) {
   if (allIssues.length === 0) {
-    return '✅ All translations are complete. No missing translations found.'
+    return '✅ All translations are complete. No missing translations found.';
   }
 
-  const lines = []
-  lines.push('## Translation Completeness Report\n')
+  const lines = [];
+  lines.push('## Translation Completeness Report\n');
 
   // Summary
-  const missingCount = allIssues.filter((i) => i.type === 'missing' || i.type === 'missing-file').length
-  const extraCount = allIssues.filter((i) => i.type === 'extra').length
-  lines.push(`**Found ${missingCount} missing translation issue(s)** and ${extraCount} extra key issue(s).\n`)
+  const missingCount = allIssues.filter((i) => i.type === 'missing' || i.type === 'missing-file').length;
+  const extraCount = allIssues.filter((i) => i.type === 'extra').length;
+  lines.push(`**Found ${missingCount} missing translation issue(s)** and ${extraCount} extra key issue(s).\n`);
 
   // Group by scope
-  const globalIssues = allIssues.filter((i) => i.scope === 'global')
-  const tagIssues = allIssues.filter((i) => i.scope === 'tags')
-  const moduleIssues = allIssues.filter((i) => i.scope === 'module')
-  const notesIssues = allIssues.filter((i) => i.scope === 'notes')
+  const globalIssues = allIssues.filter((i) => i.scope === 'global');
+  const tagIssues = allIssues.filter((i) => i.scope === 'tags');
+  const moduleIssues = allIssues.filter((i) => i.scope === 'module');
+  const notesIssues = allIssues.filter((i) => i.scope === 'notes');
 
   if (globalIssues.length > 0) {
-    lines.push('### Global UI Translations\n')
+    lines.push('### Global UI Translations\n');
     for (const issue of globalIssues) {
       if (issue.type === 'missing') {
-        lines.push(`**\`${issue.file}\`** — ${issue.keys.length} missing key(s):\n`)
+        lines.push(`**\`${issue.file}\`** — ${issue.keys.length} missing key(s):\n`);
         for (const detail of issue.details) {
-          const val = formatSourceValue(detail.sourceValue)
-          lines.push(`- \`${detail.key}\` (English: ${val})`)
+          const val = formatSourceValue(detail.sourceValue);
+          lines.push(`- \`${detail.key}\` (English: ${val})`);
         }
-        lines.push('')
+        lines.push('');
       } else if (issue.type === 'extra') {
-        lines.push(`**\`${issue.file}\`** — ${issue.keys.length} extra key(s) not in source:\n`)
+        lines.push(`**\`${issue.file}\`** — ${issue.keys.length} extra key(s) not in source:\n`);
         for (const key of issue.keys) {
-          lines.push(`- \`${key}\``)
+          lines.push(`- \`${key}\``);
         }
-        lines.push('')
+        lines.push('');
       }
     }
   }
 
   if (tagIssues.length > 0) {
-    lines.push('### Tags Translations\n')
-    lines.push(`File: \`src/i18n/tags.json\`\n`)
+    lines.push('### Tags Translations\n');
+    lines.push(`File: \`src/i18n/tags.json\`\n`);
     for (const issue of tagIssues) {
       lines.push(
         `- Tag **\`${issue.tag}\`** (English: "${issue.sourceValue}") — missing in: ${issue.missingLocales.map((l) => `\`${l}\``).join(', ')}`
-      )
+      );
     }
-    lines.push('')
+    lines.push('');
   }
 
   if (moduleIssues.length > 0) {
-    lines.push('### Module Translations\n')
+    lines.push('### Module Translations\n');
     // Group by module
-    const byModule: Record<string, any[]> = {}
+    const byModule: Record<string, any[]> = {};
     for (const issue of moduleIssues) {
-      ;(byModule[issue.moduleId] ??= []).push(issue)
+      (byModule[issue.moduleId] ??= []).push(issue);
     }
     for (const [moduleId, issues] of Object.entries(byModule)) {
-      lines.push(`#### Module: \`${moduleId}\`\n`)
+      lines.push(`#### Module: \`${moduleId}\`\n`);
       for (const issue of issues) {
         if (issue.type === 'missing-file') {
-          lines.push(`- ❌ Missing file: \`${issue.file}\` (source: \`${issue.sourceFile}\`)`)
+          lines.push(`- ❌ Missing file: \`${issue.file}\` (source: \`${issue.sourceFile}\`)`);
         } else if (issue.type === 'missing') {
-          lines.push(`- **\`${issue.file}\`** — ${issue.fields.length} missing field(s):`)
+          lines.push(`- **\`${issue.file}\`** — ${issue.fields.length} missing field(s):`);
           for (const field of issue.fields) {
-            lines.push(`  - \`${field.key}\``)
+            lines.push(`  - \`${field.key}\``);
           }
         }
       }
-      lines.push('')
+      lines.push('');
     }
   }
 
   if (notesIssues.length > 0) {
-    lines.push('### Module Notes\n')
+    lines.push('### Module Notes\n');
     for (const issue of notesIssues) {
-      lines.push(`- ❌ Missing: \`${issue.file}\` (source: \`${issue.sourceFile}\`)`)
+      lines.push(`- ❌ Missing: \`${issue.file}\` (source: \`${issue.sourceFile}\`)`);
     }
-    lines.push('')
+    lines.push('');
   }
 
-  return lines.join('\n')
+  return lines.join('\n');
 }
 
 function generateJson(allIssues) {
@@ -318,25 +318,25 @@ function generateJson(allIssues) {
     },
     null,
     2
-  )
+  );
 }
 
 // ── Main ───────────────────────────────────────────────────
 
-const args = process.argv.slice(2)
-const formatArg = args.find((a) => a.startsWith('--format='))
-const format = formatArg ? formatArg.split('=')[1] : 'markdown'
+const args = process.argv.slice(2);
+const formatArg = args.find((a) => a.startsWith('--format='));
+const format = formatArg ? formatArg.split('=')[1] : 'markdown';
 
-const { issues: globalIssues, locales } = await checkGlobalI18n()
-const tagIssues = await checkTags(locales)
-const moduleIssues = await checkModulesViaBuild(locales)
+const { issues: globalIssues, locales } = await checkGlobalI18n();
+const tagIssues = await checkTags(locales);
+const moduleIssues = await checkModulesViaBuild(locales);
 
-const allIssues = [...globalIssues, ...tagIssues, ...moduleIssues]
+const allIssues = [...globalIssues, ...tagIssues, ...moduleIssues];
 
 if (format === 'json') {
-  console.log(generateJson(allIssues))
+  console.log(generateJson(allIssues));
 } else {
-  console.log(generateMarkdown(allIssues))
+  console.log(generateMarkdown(allIssues));
 }
 
-process.exit(allIssues.filter((i) => i.type === 'missing' || i.type === 'missing-file').length > 0 ? 1 : 0)
+process.exit(allIssues.filter((i) => i.type === 'missing' || i.type === 'missing-file').length > 0 ? 1 : 0);

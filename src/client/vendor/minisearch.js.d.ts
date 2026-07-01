@@ -1,1 +1,1 @@
-export { default } from 'minisearch'
+export { default } from 'minisearch';

@@ -1,51 +1,51 @@
-import path from 'path'
-import fs from 'fs-extra'
-import { fileURLToPath } from 'url'
-import formidable from 'formidable'
-import log from './logger.ts'
-import { isStrictlyInside } from './path-safety.ts'
-import { formatScriptFileName, isScriptTextFile, naturalCompare, parseScriptFileName } from './script-files.ts'
+import path from 'path';
+import fs from 'fs-extra';
+import { fileURLToPath } from 'url';
+import formidable from 'formidable';
+import log from './logger.ts';
+import { isStrictlyInside } from './path-safety.ts';
+import { formatScriptFileName, isScriptTextFile, naturalCompare, parseScriptFileName } from './script-files.ts';
 
-const __filename = fileURLToPath(import.meta.url)
-const __dirname = path.dirname(__filename)
-const rootDir = path.resolve(__dirname, '../..')
-const modulesDir = path.join(rootDir, 'content/modules')
-const localePattern = /^[a-z]{2}(-[a-z]{2})?$/
-const allowedAssetExtensions = ['.png', '.jpg', '.jpeg', '.gif', '.svg', '.pdf']
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const rootDir = path.resolve(__dirname, '../..');
+const modulesDir = path.join(rootDir, 'content/modules');
+const localePattern = /^[a-z]{2}(-[a-z]{2})?$/;
+const allowedAssetExtensions = ['.png', '.jpg', '.jpeg', '.gif', '.svg', '.pdf'];
 
 // ==================== 工具函数 ====================
 
 export class HttpError extends Error {
-  status: number
+  status: number;
 
   constructor(status, message) {
-    super(message)
-    this.name = 'HttpError'
-    this.status = status
+    super(message);
+    this.name = 'HttpError';
+    this.status = status;
   }
 }
 
 function httpError(status, message) {
-  return new HttpError(status, message)
+  return new HttpError(status, message);
 }
 
 function badRequest(message) {
-  return httpError(400, message)
+  return httpError(400, message);
 }
 
 function notFound(message) {
-  return httpError(404, message)
+  return httpError(404, message);
 }
 
 function conflict(message) {
-  return httpError(409, message)
+  return httpError(409, message);
 }
 
 function validateLocale(locale) {
   if (!localePattern.test(locale)) {
-    throw badRequest('Invalid locale format')
+    throw badRequest('Invalid locale format');
   }
-  return locale
+  return locale;
 }
 
 /**
@@ -53,18 +53,18 @@ function validateLocale(locale) {
  */
 function validateModuleId(moduleId) {
   if (!moduleId || typeof moduleId !== 'string') {
-    throw badRequest('Invalid module ID')
+    throw badRequest('Invalid module ID');
   }
   if (!/^[a-z0-9.-]+$/.test(moduleId)) {
-    throw badRequest('Invalid module ID: only lowercase letters, numbers, hyphens, and dots allowed')
+    throw badRequest('Invalid module ID: only lowercase letters, numbers, hyphens, and dots allowed');
   }
   if (moduleId === '.' || moduleId === '..' || moduleId.includes('/') || moduleId.includes('\\')) {
-    throw badRequest('Invalid module ID: directory traversal detected')
+    throw badRequest('Invalid module ID: directory traversal detected');
   }
   if (!isStrictlyInside(modulesDir, path.resolve(modulesDir, moduleId))) {
-    throw badRequest('Invalid module ID: directory traversal detected')
+    throw badRequest('Invalid module ID: directory traversal detected');
   }
-  return moduleId
+  return moduleId;
 }
 
 /**
@@ -72,27 +72,27 @@ function validateModuleId(moduleId) {
  */
 function validateScriptId(scriptId) {
   if (!scriptId || typeof scriptId !== 'string') {
-    throw badRequest('Invalid script id')
+    throw badRequest('Invalid script id');
   }
-  const trimmed = scriptId.trim()
+  const trimmed = scriptId.trim();
   if (!trimmed || trimmed === '.' || trimmed === '..') {
-    throw badRequest('Invalid script id')
+    throw badRequest('Invalid script id');
   }
   if (trimmed.includes('\0') || trimmed.includes('/') || trimmed.includes('\\')) {
-    throw badRequest('Invalid script id: directory traversal detected')
+    throw badRequest('Invalid script id: directory traversal detected');
   }
   if (trimmed.toLowerCase().endsWith('.txt')) {
-    throw badRequest('Invalid script id: do not include .txt suffix')
+    throw badRequest('Invalid script id: do not include .txt suffix');
   }
   if (!isStrictlyInside(modulesDir, path.resolve(modulesDir, trimmed))) {
-    throw badRequest('Invalid script id: directory traversal detected')
+    throw badRequest('Invalid script id: directory traversal detected');
   }
-  return trimmed
+  return trimmed;
 }
 
 function validateAssetFilename(filename) {
   if (!filename || typeof filename !== 'string') {
-    throw badRequest('Invalid asset filename')
+    throw badRequest('Invalid asset filename');
   }
   if (
     filename.includes('\0') ||
@@ -104,37 +104,37 @@ function validateAssetFilename(filename) {
     filename !== path.basename(filename) ||
     filename !== path.win32.basename(filename)
   ) {
-    throw badRequest('Invalid asset filename: directory traversal detected')
+    throw badRequest('Invalid asset filename: directory traversal detected');
   }
   if (!allowedAssetExtensions.includes(path.extname(filename).toLowerCase())) {
-    throw badRequest('Invalid asset filename: unsupported file type')
+    throw badRequest('Invalid asset filename: unsupported file type');
   }
-  return filename
+  return filename;
 }
 
 function isAllowedAssetFilename(filename) {
   try {
-    validateAssetFilename(filename)
-    return true
+    validateAssetFilename(filename);
+    return true;
   } catch {
-    return false
+    return false;
   }
 }
 
 async function readScriptsFromDir(scriptsDir) {
-  const files = await fs.readdir(scriptsDir)
-  const scripts = []
+  const files = await fs.readdir(scriptsDir);
+  const scripts = [];
   for (const file of files.filter(isScriptTextFile).sort(naturalCompare)) {
-    const content = await fs.readFile(path.join(scriptsDir, file), 'utf8')
-    const { id, order } = parseScriptFileName(file)
-    scripts.push({ id, order, content })
+    const content = await fs.readFile(path.join(scriptsDir, file), 'utf8');
+    const { id, order } = parseScriptFileName(file);
+    scripts.push({ id, order, content });
   }
-  return scripts
+  return scripts;
 }
 
 async function findScriptFile(scriptsDir, scriptId) {
-  const files = await fs.readdir(scriptsDir)
-  return files.find((f) => isScriptTextFile(f) && parseScriptFileName(f).id === scriptId)
+  const files = await fs.readdir(scriptsDir);
+  return files.find((f) => isScriptTextFile(f) && parseScriptFileName(f).id === scriptId);
 }
 
 /**
@@ -142,50 +142,50 @@ async function findScriptFile(scriptsDir, scriptId) {
  */
 export async function parseJsonBody(req): Promise<any> {
   return new Promise((resolve, reject) => {
-    let body = ''
+    let body = '';
     req.on('data', (chunk) => {
-      body += chunk.toString()
-    })
+      body += chunk.toString();
+    });
     req.on('end', () => {
       try {
-        resolve(JSON.parse(body))
+        resolve(JSON.parse(body));
       } catch (e) {
-        reject(badRequest('Invalid JSON'))
+        reject(badRequest('Invalid JSON'));
       }
-    })
-    req.on('error', reject)
-  })
+    });
+    req.on('error', reject);
+  });
 }
 
 /**
  * 发送 JSON 响应
  */
 export function sendJson(res, status, data) {
-  res.statusCode = status
-  res.setHeader('Content-Type', 'application/json; charset=utf-8')
-  res.end(JSON.stringify(data))
+  res.statusCode = status;
+  res.setHeader('Content-Type', 'application/json; charset=utf-8');
+  res.end(JSON.stringify(data));
 }
 
 /**
  * 发送错误响应
  */
 export function sendError(res, status, message) {
-  sendJson(res, status, { error: message })
+  sendJson(res, status, { error: message });
 }
 
 function sendCaughtError(res, error) {
   if (error instanceof HttpError) {
-    sendError(res, error.status, error.message)
-    return
+    sendError(res, error.status, error.message);
+    return;
   }
-  sendError(res, 500, error?.message || String(error))
+  sendError(res, 500, error?.message || String(error));
 }
 
 async function handleEditorAction(res, action) {
   try {
-    await action()
+    await action();
   } catch (e) {
-    sendCaughtError(res, e)
+    sendCaughtError(res, e);
   }
 }
 
@@ -193,8 +193,8 @@ async function handleEditorAction(res, action) {
  * 规范化脚本内容（UTF-8 LF）
  */
 function normalizeScriptContent(content) {
-  if (typeof content !== 'string') return ''
-  return content.replace(/\r\n/g, '\n').trim() + '\n'
+  if (typeof content !== 'string') return '';
+  return content.replace(/\r\n/g, '\n').trim() + '\n';
 }
 
 /**
@@ -202,28 +202,28 @@ function normalizeScriptContent(content) {
  */
 async function scanModules() {
   try {
-    const dirs = await fs.readdir(modulesDir)
-    const modules = []
+    const dirs = await fs.readdir(modulesDir);
+    const modules = [];
     for (const dir of dirs) {
-      const moduleDir = path.join(modulesDir, dir)
-      const stat = await fs.stat(moduleDir)
-      if (!stat.isDirectory()) continue
+      const moduleDir = path.join(modulesDir, dir);
+      const stat = await fs.stat(moduleDir);
+      if (!stat.isDirectory()) continue;
 
-      const metaPath = path.join(moduleDir, 'meta.json')
-      if (!(await fs.pathExists(metaPath))) continue
+      const metaPath = path.join(moduleDir, 'meta.json');
+      if (!(await fs.pathExists(metaPath))) continue;
 
       try {
-        const meta = await fs.readJson(metaPath)
-        const scriptsDir = path.join(moduleDir, 'scripts')
-        const hasScripts = await fs.pathExists(scriptsDir)
-        const scriptFiles = hasScripts ? await fs.readdir(scriptsDir) : []
-        const scriptCount = scriptFiles.filter(isScriptTextFile).length
+        const meta = await fs.readJson(metaPath);
+        const scriptsDir = path.join(moduleDir, 'scripts');
+        const hasScripts = await fs.pathExists(scriptsDir);
+        const scriptFiles = hasScripts ? await fs.readdir(scriptsDir) : [];
+        const scriptCount = scriptFiles.filter(isScriptTextFile).length;
 
-        const hasDemo = await fs.pathExists(path.join(moduleDir, 'demo.sb3'))
-        const i18nDir = path.join(moduleDir, 'i18n')
-        const hasI18n = await fs.pathExists(i18nDir)
-        const i18nFiles = hasI18n ? await fs.readdir(i18nDir) : []
-        const locales = i18nFiles.filter((f) => f.endsWith('.json')).map((f) => f.replace('.json', ''))
+        const hasDemo = await fs.pathExists(path.join(moduleDir, 'demo.sb3'));
+        const i18nDir = path.join(moduleDir, 'i18n');
+        const hasI18n = await fs.pathExists(i18nDir);
+        const i18nFiles = hasI18n ? await fs.readdir(i18nDir) : [];
+        const locales = i18nFiles.filter((f) => f.endsWith('.json')).map((f) => f.replace('.json', ''));
 
         modules.push({
           id: dir,
@@ -234,15 +234,15 @@ async function scanModules() {
           scriptCount,
           hasDemo,
           locales,
-        })
+        });
       } catch (e) {
-        log.warn('editor-api', `Failed to load module ${dir}: ${e.message}`)
+        log.warn('editor-api', `Failed to load module ${dir}: ${e.message}`);
       }
     }
-    return modules
+    return modules;
   } catch (e) {
-    log.error('editor-api', `Failed to scan modules: ${e?.message || e}`)
-    return []
+    log.error('editor-api', `Failed to scan modules: ${e?.message || e}`);
+    return [];
   }
 }
 
@@ -253,9 +253,9 @@ async function scanModules() {
  */
 export async function getModuleList(req, res) {
   return handleEditorAction(res, async () => {
-    const modules = await scanModules()
-    sendJson(res, 200, { modules })
-  })
+    const modules = await scanModules();
+    sendJson(res, 200, { modules });
+  });
 }
 
 /**
@@ -263,48 +263,48 @@ export async function getModuleList(req, res) {
  */
 export async function getModule(req, res, moduleId) {
   return handleEditorAction(res, async () => {
-    validateModuleId(moduleId)
-    const moduleDir = path.join(modulesDir, moduleId)
+    validateModuleId(moduleId);
+    const moduleDir = path.join(modulesDir, moduleId);
 
     if (!(await fs.pathExists(moduleDir))) {
-      throw notFound('Module not found')
+      throw notFound('Module not found');
     }
 
-    const metaPath = path.join(moduleDir, 'meta.json')
+    const metaPath = path.join(moduleDir, 'meta.json');
     if (!(await fs.pathExists(metaPath))) {
-      throw notFound('Module meta.json not found')
+      throw notFound('Module meta.json not found');
     }
 
-    const meta = await fs.readJson(metaPath)
+    const meta = await fs.readJson(metaPath);
 
     // 读取脚本
-    const scriptsDir = path.join(moduleDir, 'scripts')
-    const scripts = []
+    const scriptsDir = path.join(moduleDir, 'scripts');
+    const scripts = [];
     if (await fs.pathExists(scriptsDir)) {
-      scripts.push(...(await readScriptsFromDir(scriptsDir)))
+      scripts.push(...(await readScriptsFromDir(scriptsDir)));
     }
 
     // 读取 i18n
-    const i18nDir = path.join(moduleDir, 'i18n')
-    const i18n = {}
+    const i18nDir = path.join(moduleDir, 'i18n');
+    const i18n = {};
     if (await fs.pathExists(i18nDir)) {
-      const files = await fs.readdir(i18nDir)
+      const files = await fs.readdir(i18nDir);
       for (const file of files) {
-        if (!file.endsWith('.json')) continue
-        const locale = file.replace('.json', '')
-        i18n[locale] = await fs.readJson(path.join(i18nDir, file))
+        if (!file.endsWith('.json')) continue;
+        const locale = file.replace('.json', '');
+        i18n[locale] = await fs.readJson(path.join(i18nDir, file));
       }
     }
 
     // 检查 demo 和资源
-    const hasDemo = await fs.pathExists(path.join(moduleDir, 'demo.sb3'))
-    const assetsDir = path.join(moduleDir, 'assets')
-    const assets = []
+    const hasDemo = await fs.pathExists(path.join(moduleDir, 'demo.sb3'));
+    const assetsDir = path.join(moduleDir, 'assets');
+    const assets = [];
     if (await fs.pathExists(assetsDir)) {
-      const files = await fs.readdir(assetsDir)
+      const files = await fs.readdir(assetsDir);
       for (const file of files) {
-        const stat = await fs.stat(path.join(assetsDir, file))
-        assets.push({ filename: file, size: stat.size })
+        const stat = await fs.stat(path.join(assetsDir, file));
+        assets.push({ filename: file, size: stat.size });
       }
     }
 
@@ -315,8 +315,8 @@ export async function getModule(req, res, moduleId) {
       i18n,
       hasDemo,
       assets,
-    })
-  })
+    });
+  });
 }
 
 /**
@@ -324,51 +324,51 @@ export async function getModule(req, res, moduleId) {
  */
 export async function createModule(req, res) {
   return handleEditorAction(res, async () => {
-    const body = await parseJsonBody(req)
-    const { id, meta } = body
+    const body = await parseJsonBody(req);
+    const { id, meta } = body;
 
     if (!id || !meta) {
-      throw badRequest('Missing id or meta')
+      throw badRequest('Missing id or meta');
     }
 
-    validateModuleId(id)
+    validateModuleId(id);
 
-    const moduleDir = path.join(modulesDir, id)
+    const moduleDir = path.join(modulesDir, id);
     if (await fs.pathExists(moduleDir)) {
-      throw conflict('Module already exists')
+      throw conflict('Module already exists');
     }
 
     // 验证必填字段
     if (!meta.name || !meta.description) {
-      throw badRequest('Missing required fields: name, description')
+      throw badRequest('Missing required fields: name, description');
     }
 
     if (!meta.tags || !Array.isArray(meta.tags)) {
-      meta.tags = []
+      meta.tags = [];
     }
 
     // 确保 keywords 是数组（如果提供了的话）
     if (meta.keywords && !Array.isArray(meta.keywords)) {
-      throw badRequest('keywords must be an array')
+      throw badRequest('keywords must be an array');
     }
     if (!meta.keywords) {
-      meta.keywords = []
+      meta.keywords = [];
     }
 
     // 创建目录和文件
-    await fs.ensureDir(moduleDir)
-    await fs.ensureDir(path.join(moduleDir, 'scripts'))
+    await fs.ensureDir(moduleDir);
+    await fs.ensureDir(path.join(moduleDir, 'scripts'));
 
     // 写入 meta.json（必须包含 id 字段）
-    const metaWithId = { id, ...meta }
-    await fs.writeJson(path.join(moduleDir, 'meta.json'), metaWithId, { spaces: 2, EOL: '\n' })
+    const metaWithId = { id, ...meta };
+    await fs.writeJson(path.join(moduleDir, 'meta.json'), metaWithId, { spaces: 2, EOL: '\n' });
 
     // 创建默认脚本
-    const defaultScript = `when green flag clicked\nsay [Hello!] for (2) secs\n`
-    await fs.writeFile(path.join(moduleDir, 'scripts/01-main.txt'), normalizeScriptContent(defaultScript), 'utf8')
+    const defaultScript = `when green flag clicked\nsay [Hello!] for (2) secs\n`;
+    await fs.writeFile(path.join(moduleDir, 'scripts/01-main.txt'), normalizeScriptContent(defaultScript), 'utf8');
 
-    sendJson(res, 201, { id, message: 'Module created successfully' })
-  })
+    sendJson(res, 201, { id, message: 'Module created successfully' });
+  });
 }
 
 /**
@@ -376,42 +376,42 @@ export async function createModule(req, res) {
  */
 export async function updateModuleMeta(req, res, moduleId) {
   return handleEditorAction(res, async () => {
-    validateModuleId(moduleId)
-    const moduleDir = path.join(modulesDir, moduleId)
-    const metaPath = path.join(moduleDir, 'meta.json')
+    validateModuleId(moduleId);
+    const moduleDir = path.join(modulesDir, moduleId);
+    const metaPath = path.join(moduleDir, 'meta.json');
 
     if (!(await fs.pathExists(metaPath))) {
-      throw notFound('Module not found')
+      throw notFound('Module not found');
     }
 
-    const body = await parseJsonBody(req)
-    const existingMeta = await fs.readJson(metaPath)
+    const body = await parseJsonBody(req);
+    const existingMeta = await fs.readJson(metaPath);
 
     // 合并元信息（部分更新），确保 id 字段不被删除
-    const updatedMeta = { ...existingMeta, ...body }
+    const updatedMeta = { ...existingMeta, ...body };
 
     // 确保 id 字段存在且匹配
     if (!updatedMeta.id) {
-      updatedMeta.id = moduleId
+      updatedMeta.id = moduleId;
     } else if (updatedMeta.id !== moduleId) {
-      throw badRequest('Cannot change module id')
+      throw badRequest('Cannot change module id');
     }
 
     // 验证必填字段
     if (!updatedMeta.name || !updatedMeta.description) {
-      throw badRequest('Missing required fields: name, description')
+      throw badRequest('Missing required fields: name, description');
     }
 
     // 验证 keywords 是数组（如果提供了的话）
     if (updatedMeta.keywords && !Array.isArray(updatedMeta.keywords)) {
-      throw badRequest('keywords must be an array')
+      throw badRequest('keywords must be an array');
     }
 
     // 写入 meta.json
-    await fs.writeJson(metaPath, updatedMeta, { spaces: 2, EOL: '\n' })
+    await fs.writeJson(metaPath, updatedMeta, { spaces: 2, EOL: '\n' });
 
-    sendJson(res, 200, { message: 'Module meta updated successfully', meta: updatedMeta })
-  })
+    sendJson(res, 200, { message: 'Module meta updated successfully', meta: updatedMeta });
+  });
 }
 
 /**
@@ -419,18 +419,18 @@ export async function updateModuleMeta(req, res, moduleId) {
  */
 export async function deleteModule(req, res, moduleId) {
   return handleEditorAction(res, async () => {
-    validateModuleId(moduleId)
-    const moduleDir = path.join(modulesDir, moduleId)
+    validateModuleId(moduleId);
+    const moduleDir = path.join(modulesDir, moduleId);
 
     if (!(await fs.pathExists(moduleDir))) {
-      throw notFound('Module not found')
+      throw notFound('Module not found');
     }
 
     // 删除整个目录
-    await fs.remove(moduleDir)
+    await fs.remove(moduleDir);
 
-    sendJson(res, 200, { message: 'Module deleted successfully' })
-  })
+    sendJson(res, 200, { message: 'Module deleted successfully' });
+  });
 }
 
 /**
@@ -438,15 +438,15 @@ export async function deleteModule(req, res, moduleId) {
  */
 export async function getScripts(req, res, moduleId) {
   return handleEditorAction(res, async () => {
-    validateModuleId(moduleId)
-    const scriptsDir = path.join(modulesDir, moduleId, 'scripts')
+    validateModuleId(moduleId);
+    const scriptsDir = path.join(modulesDir, moduleId, 'scripts');
 
     if (!(await fs.pathExists(scriptsDir))) {
-      return sendJson(res, 200, { scripts: [] })
+      return sendJson(res, 200, { scripts: [] });
     }
 
-    sendJson(res, 200, { scripts: await readScriptsFromDir(scriptsDir) })
-  })
+    sendJson(res, 200, { scripts: await readScriptsFromDir(scriptsDir) });
+  });
 }
 
 /**
@@ -454,41 +454,41 @@ export async function getScripts(req, res, moduleId) {
  */
 export async function createScript(req, res, moduleId) {
   return handleEditorAction(res, async () => {
-    validateModuleId(moduleId)
-    const body = await parseJsonBody(req)
-    const { id, content, order } = body
+    validateModuleId(moduleId);
+    const body = await parseJsonBody(req);
+    const { id, content, order } = body;
 
     if (!id) {
-      throw badRequest('Missing script id')
+      throw badRequest('Missing script id');
     }
 
-    const scriptId = validateScriptId(id)
+    const scriptId = validateScriptId(id);
 
-    const scriptsDir = path.join(modulesDir, moduleId, 'scripts')
-    await fs.ensureDir(scriptsDir)
+    const scriptsDir = path.join(modulesDir, moduleId, 'scripts');
+    await fs.ensureDir(scriptsDir);
 
     // 生成文件名：如果有 order，使用 order；否则找到最大的 order + 1
-    let fileOrder = order
+    let fileOrder = order;
     if (fileOrder === undefined) {
-      const files = await fs.readdir(scriptsDir)
+      const files = await fs.readdir(scriptsDir);
       const orders = files.filter(isScriptTextFile).map((f) => {
-        return parseScriptFileName(f).order
-      })
-      fileOrder = orders.length > 0 ? Math.max(...orders) + 1 : 1
+        return parseScriptFileName(f).order;
+      });
+      fileOrder = orders.length > 0 ? Math.max(...orders) + 1 : 1;
     }
 
     // TODO: Reject duplicate script ids even when the requested order would create a different filename.
-    const filename = formatScriptFileName(scriptId, fileOrder)
-    const scriptPath = path.join(scriptsDir, filename)
+    const filename = formatScriptFileName(scriptId, fileOrder);
+    const scriptPath = path.join(scriptsDir, filename);
 
     if (await fs.pathExists(scriptPath)) {
-      throw conflict('Script with this id already exists')
+      throw conflict('Script with this id already exists');
     }
 
-    await fs.writeFile(scriptPath, normalizeScriptContent(content || ''), 'utf8')
+    await fs.writeFile(scriptPath, normalizeScriptContent(content || ''), 'utf8');
 
-    sendJson(res, 201, { message: 'Script created successfully', id: scriptId, order: fileOrder })
-  })
+    sendJson(res, 201, { message: 'Script created successfully', id: scriptId, order: fileOrder });
+  });
 }
 
 /**
@@ -496,57 +496,57 @@ export async function createScript(req, res, moduleId) {
  */
 export async function updateScript(req, res, moduleId, scriptId) {
   return handleEditorAction(res, async () => {
-    validateModuleId(moduleId)
+    validateModuleId(moduleId);
 
-    const body = await parseJsonBody(req)
-    const { content, newId, newOrder } = body
+    const body = await parseJsonBody(req);
+    const { content, newId, newOrder } = body;
 
-    const scriptsDir = path.join(modulesDir, moduleId, 'scripts')
+    const scriptsDir = path.join(modulesDir, moduleId, 'scripts');
 
     // 查找当前脚本文件
-    const currentFile = await findScriptFile(scriptsDir, scriptId)
+    const currentFile = await findScriptFile(scriptsDir, scriptId);
 
     if (!currentFile) {
-      throw notFound('Script not found')
+      throw notFound('Script not found');
     }
 
-    const scriptPath = path.join(scriptsDir, currentFile)
-    const { order: currentOrder } = parseScriptFileName(currentFile)
+    const scriptPath = path.join(scriptsDir, currentFile);
+    const { order: currentOrder } = parseScriptFileName(currentFile);
 
     // 确定新的 id 和 order
-    const finalId = newId !== undefined ? validateScriptId(newId) : scriptId
-    const finalOrder = newOrder !== undefined ? newOrder : currentOrder
+    const finalId = newId !== undefined ? validateScriptId(newId) : scriptId;
+    const finalOrder = newOrder !== undefined ? newOrder : currentOrder;
 
     // 如果 id 或 order 发生变化，需要重命名
     if (finalId !== scriptId || finalOrder !== currentOrder) {
-      const newFilename = formatScriptFileName(finalId, finalOrder)
-      const newPath = path.join(scriptsDir, newFilename)
+      const newFilename = formatScriptFileName(finalId, finalOrder);
+      const newPath = path.join(scriptsDir, newFilename);
 
       // 检查目标文件是否已存在（且不是当前文件）
       if (newPath !== scriptPath && (await fs.pathExists(newPath))) {
-        throw conflict('Script with this id and order already exists')
+        throw conflict('Script with this id and order already exists');
       }
 
-      await fs.rename(scriptPath, newPath)
+      await fs.rename(scriptPath, newPath);
 
       // 如果同时更新内容
       if (content !== undefined) {
-        await fs.writeFile(newPath, normalizeScriptContent(content), 'utf8')
+        await fs.writeFile(newPath, normalizeScriptContent(content), 'utf8');
       }
 
       sendJson(res, 200, {
         message: 'Script updated successfully',
         id: finalId,
         order: finalOrder,
-      })
+      });
     } else {
       // 只更新内容
       if (content !== undefined) {
-        await fs.writeFile(scriptPath, normalizeScriptContent(content), 'utf8')
+        await fs.writeFile(scriptPath, normalizeScriptContent(content), 'utf8');
       }
-      sendJson(res, 200, { message: 'Script updated successfully' })
+      sendJson(res, 200, { message: 'Script updated successfully' });
     }
-  })
+  });
 }
 
 /**
@@ -554,29 +554,29 @@ export async function updateScript(req, res, moduleId, scriptId) {
  */
 export async function deleteScript(req, res, moduleId, scriptId) {
   return handleEditorAction(res, async () => {
-    validateModuleId(moduleId)
+    validateModuleId(moduleId);
 
-    const scriptsDir = path.join(modulesDir, moduleId, 'scripts')
+    const scriptsDir = path.join(modulesDir, moduleId, 'scripts');
 
     // 查找脚本文件
-    const files = await fs.readdir(scriptsDir)
-    const targetFile = files.find((f) => isScriptTextFile(f) && parseScriptFileName(f).id === scriptId)
+    const files = await fs.readdir(scriptsDir);
+    const targetFile = files.find((f) => isScriptTextFile(f) && parseScriptFileName(f).id === scriptId);
 
     if (!targetFile) {
-      throw notFound('Script not found')
+      throw notFound('Script not found');
     }
 
     // 检查是否至少保留一个脚本
-    const txtFiles = files.filter(isScriptTextFile)
+    const txtFiles = files.filter(isScriptTextFile);
     if (txtFiles.length <= 1) {
-      throw badRequest('Cannot delete the last script file: modules must have at least one script file')
+      throw badRequest('Cannot delete the last script file: modules must have at least one script file');
     }
 
-    const scriptPath = path.join(scriptsDir, targetFile)
-    await fs.remove(scriptPath)
+    const scriptPath = path.join(scriptsDir, targetFile);
+    await fs.remove(scriptPath);
 
-    sendJson(res, 200, { message: 'Script deleted successfully' })
-  })
+    sendJson(res, 200, { message: 'Script deleted successfully' });
+  });
 }
 
 /**
@@ -584,18 +584,18 @@ export async function deleteScript(req, res, moduleId, scriptId) {
  */
 export async function getI18n(req, res, moduleId, locale) {
   return handleEditorAction(res, async () => {
-    validateModuleId(moduleId)
-    validateLocale(locale)
+    validateModuleId(moduleId);
+    validateLocale(locale);
 
-    const i18nPath = path.join(modulesDir, moduleId, 'i18n', `${locale}.json`)
+    const i18nPath = path.join(modulesDir, moduleId, 'i18n', `${locale}.json`);
 
     if (!(await fs.pathExists(i18nPath))) {
-      throw notFound('Translation file not found')
+      throw notFound('Translation file not found');
     }
 
-    const data = await fs.readJson(i18nPath)
-    sendJson(res, 200, data)
-  })
+    const data = await fs.readJson(i18nPath);
+    sendJson(res, 200, data);
+  });
 }
 
 /**
@@ -603,18 +603,18 @@ export async function getI18n(req, res, moduleId, locale) {
  */
 export async function updateI18n(req, res, moduleId, locale) {
   return handleEditorAction(res, async () => {
-    validateModuleId(moduleId)
-    validateLocale(locale)
+    validateModuleId(moduleId);
+    validateLocale(locale);
 
-    const body = await parseJsonBody(req)
-    const i18nDir = path.join(modulesDir, moduleId, 'i18n')
-    await fs.ensureDir(i18nDir)
+    const body = await parseJsonBody(req);
+    const i18nDir = path.join(modulesDir, moduleId, 'i18n');
+    await fs.ensureDir(i18nDir);
 
-    const i18nPath = path.join(i18nDir, `${locale}.json`)
-    await fs.writeJson(i18nPath, body, { spaces: 2, EOL: '\n' })
+    const i18nPath = path.join(i18nDir, `${locale}.json`);
+    await fs.writeJson(i18nPath, body, { spaces: 2, EOL: '\n' });
 
-    sendJson(res, 200, { message: 'Translation updated successfully' })
-  })
+    sendJson(res, 200, { message: 'Translation updated successfully' });
+  });
 }
 
 /**
@@ -622,19 +622,19 @@ export async function updateI18n(req, res, moduleId, locale) {
  */
 export async function deleteI18n(req, res, moduleId, locale) {
   return handleEditorAction(res, async () => {
-    validateModuleId(moduleId)
-    validateLocale(locale)
+    validateModuleId(moduleId);
+    validateLocale(locale);
 
-    const i18nPath = path.join(modulesDir, moduleId, 'i18n', `${locale}.json`)
+    const i18nPath = path.join(modulesDir, moduleId, 'i18n', `${locale}.json`);
 
     if (!(await fs.pathExists(i18nPath))) {
-      throw notFound('Translation file not found')
+      throw notFound('Translation file not found');
     }
 
-    await fs.remove(i18nPath)
+    await fs.remove(i18nPath);
 
-    sendJson(res, 200, { message: 'Translation deleted successfully' })
-  })
+    sendJson(res, 200, { message: 'Translation deleted successfully' });
+  });
 }
 
 /**
@@ -642,45 +642,45 @@ export async function deleteI18n(req, res, moduleId, locale) {
  */
 export async function uploadDemo(req, res, moduleId) {
   return handleEditorAction(res, async () => {
-    validateModuleId(moduleId)
-    const moduleDir = path.join(modulesDir, moduleId)
+    validateModuleId(moduleId);
+    const moduleDir = path.join(modulesDir, moduleId);
 
     if (!(await fs.pathExists(moduleDir))) {
-      throw notFound('Module not found')
+      throw notFound('Module not found');
     }
 
     const form = formidable({
       maxFileSize: 10 * 1024 * 1024, // 10MB
       filter: ({ mimetype, originalFilename }) => {
-        return originalFilename && originalFilename.endsWith('.sb3')
+        return originalFilename && originalFilename.endsWith('.sb3');
       },
-    })
+    });
 
     form.parse(req, async (err, fields, files) => {
       try {
         if (err) {
-          throw badRequest('File upload failed: ' + err.message)
+          throw badRequest('File upload failed: ' + err.message);
         }
 
-        const file = files.file
+        const file = files.file;
         if (!file || (Array.isArray(file) && file.length === 0)) {
-          throw badRequest('No file uploaded')
+          throw badRequest('No file uploaded');
         }
 
-        const uploadedFile = Array.isArray(file) ? file[0] : file
-        const demoPath = path.join(moduleDir, 'demo.sb3')
+        const uploadedFile = Array.isArray(file) ? file[0] : file;
+        const demoPath = path.join(moduleDir, 'demo.sb3');
 
-        await fs.move(uploadedFile.filepath, demoPath, { overwrite: true })
-        sendJson(res, 200, { message: 'Demo uploaded successfully' })
+        await fs.move(uploadedFile.filepath, demoPath, { overwrite: true });
+        sendJson(res, 200, { message: 'Demo uploaded successfully' });
       } catch (e) {
         if (e instanceof HttpError && e.status < 500) {
-          sendCaughtError(res, e)
+          sendCaughtError(res, e);
         } else {
-          sendCaughtError(res, httpError(500, 'Failed to save demo file: ' + e.message))
+          sendCaughtError(res, httpError(500, 'Failed to save demo file: ' + e.message));
         }
       }
-    })
-  })
+    });
+  });
 }
 
 /**
@@ -688,17 +688,17 @@ export async function uploadDemo(req, res, moduleId) {
  */
 export async function deleteDemo(req, res, moduleId) {
   return handleEditorAction(res, async () => {
-    validateModuleId(moduleId)
-    const demoPath = path.join(modulesDir, moduleId, 'demo.sb3')
+    validateModuleId(moduleId);
+    const demoPath = path.join(modulesDir, moduleId, 'demo.sb3');
 
     if (!(await fs.pathExists(demoPath))) {
-      throw notFound('Demo file not found')
+      throw notFound('Demo file not found');
     }
 
-    await fs.remove(demoPath)
+    await fs.remove(demoPath);
 
-    sendJson(res, 200, { message: 'Demo deleted successfully' })
-  })
+    sendJson(res, 200, { message: 'Demo deleted successfully' });
+  });
 }
 
 /**
@@ -706,55 +706,55 @@ export async function deleteDemo(req, res, moduleId) {
  */
 export async function uploadAsset(req, res, moduleId) {
   return handleEditorAction(res, async () => {
-    validateModuleId(moduleId)
-    const moduleDir = path.join(modulesDir, moduleId)
+    validateModuleId(moduleId);
+    const moduleDir = path.join(modulesDir, moduleId);
 
     if (!(await fs.pathExists(moduleDir))) {
-      throw notFound('Module not found')
+      throw notFound('Module not found');
     }
 
-    const assetsDir = path.join(moduleDir, 'assets')
-    await fs.ensureDir(assetsDir)
+    const assetsDir = path.join(moduleDir, 'assets');
+    await fs.ensureDir(assetsDir);
 
     const form = formidable({
       uploadDir: assetsDir,
       keepExtensions: true,
       maxFileSize: 5 * 1024 * 1024, // 5MB
       filter: ({ mimetype, originalFilename }) => {
-        return isAllowedAssetFilename(originalFilename)
+        return isAllowedAssetFilename(originalFilename);
       },
-    })
+    });
 
     form.parse(req, async (err, fields, files) => {
       try {
         if (err) {
-          throw badRequest('File upload failed: ' + err.message)
+          throw badRequest('File upload failed: ' + err.message);
         }
 
-        const file = files.file
+        const file = files.file;
         if (!file || (Array.isArray(file) && file.length === 0)) {
-          throw badRequest('No file uploaded')
+          throw badRequest('No file uploaded');
         }
 
-        const uploadedFile = Array.isArray(file) ? file[0] : file
-        const filename = validateAssetFilename(uploadedFile.originalFilename)
-        const targetPath = path.resolve(assetsDir, filename)
+        const uploadedFile = Array.isArray(file) ? file[0] : file;
+        const filename = validateAssetFilename(uploadedFile.originalFilename);
+        const targetPath = path.resolve(assetsDir, filename);
 
         if (!isStrictlyInside(assetsDir, targetPath)) {
-          throw badRequest('Invalid asset filename: directory traversal detected')
+          throw badRequest('Invalid asset filename: directory traversal detected');
         }
 
-        await fs.move(uploadedFile.filepath, targetPath, { overwrite: true })
-        sendJson(res, 200, { message: 'Asset uploaded successfully', filename })
+        await fs.move(uploadedFile.filepath, targetPath, { overwrite: true });
+        sendJson(res, 200, { message: 'Asset uploaded successfully', filename });
       } catch (e) {
         if (e instanceof HttpError && e.status < 500) {
-          sendCaughtError(res, e)
+          sendCaughtError(res, e);
         } else {
-          sendCaughtError(res, httpError(500, 'Failed to save asset file: ' + e.message))
+          sendCaughtError(res, httpError(500, 'Failed to save asset file: ' + e.message));
         }
       }
-    })
-  })
+    });
+  });
 }
 
 /**
@@ -762,19 +762,19 @@ export async function uploadAsset(req, res, moduleId) {
  */
 export async function deleteAsset(req, res, moduleId, filename) {
   return handleEditorAction(res, async () => {
-    validateModuleId(moduleId)
-    validateAssetFilename(filename)
+    validateModuleId(moduleId);
+    validateAssetFilename(filename);
 
-    const assetPath = path.join(modulesDir, moduleId, 'assets', filename)
+    const assetPath = path.join(modulesDir, moduleId, 'assets', filename);
 
     if (!(await fs.pathExists(assetPath))) {
-      throw notFound('Asset file not found')
+      throw notFound('Asset file not found');
     }
 
-    await fs.remove(assetPath)
+    await fs.remove(assetPath);
 
-    sendJson(res, 200, { message: 'Asset deleted successfully' })
-  })
+    sendJson(res, 200, { message: 'Asset deleted successfully' });
+  });
 }
 
 /**
@@ -785,5 +785,5 @@ export function getBuildStatus(req, res, buildState) {
     building: buildState.building || false,
     pending: buildState.pending || false,
     lastBuildTime: buildState.lastBuildStart || 0,
-  })
+  });
 }

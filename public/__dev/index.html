@@ -279,32 +279,32 @@
 
     <script>
       async function fetchBuildStatus() {
-        const dot = document.getElementById('status-dot')
-        const text = document.getElementById('status-text')
-        const timeEl = document.getElementById('status-time')
+        const dot = document.getElementById('status-dot');
+        const text = document.getElementById('status-text');
+        const timeEl = document.getElementById('status-time');
         try {
-          const res = await fetch('/api/build/status')
-          if (!res.ok) throw new Error(`HTTP ${res.status}`)
-          const data = await res.json()
+          const res = await fetch('/api/build/status');
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          const data = await res.json();
           if (data.building || data.pending) {
-            dot.className = 'status-dot building'
-            text.textContent = data.building ? '构建中…' : '等待构建…'
+            dot.className = 'status-dot building';
+            text.textContent = data.building ? '构建中…' : '等待构建…';
           } else {
-            dot.className = 'status-dot ready'
-            text.textContent = '构建完成，服务已就绪'
+            dot.className = 'status-dot ready';
+            text.textContent = '构建完成，服务已就绪';
           }
           if (data.lastBuildStart) {
-            const d = new Date(data.lastBuildStart)
-            timeEl.textContent = `上次构建：${d.toLocaleTimeString('zh-CN')}`
+            const d = new Date(data.lastBuildStart);
+            timeEl.textContent = `上次构建：${d.toLocaleTimeString('zh-CN')}`;
           }
         } catch (e) {
-          dot.className = 'status-dot error'
-          text.textContent = '无法获取构建状态（开发服务器是否已启动？）'
+          dot.className = 'status-dot error';
+          text.textContent = '无法获取构建状态（开发服务器是否已启动？）';
         }
       }
 
-      fetchBuildStatus()
-      setInterval(fetchBuildStatus, 5000)
+      fetchBuildStatus();
+      setInterval(fetchBuildStatus, 5000);
     </script>
   </body>
 </html>

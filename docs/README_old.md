@@ -100,7 +100,7 @@ HTTPS 支持：
 - `IS_DEV`：构建时传入模板上下文；开发服务器会自动设置为 `true`。模板中可用变量 `IS_DEV`；页面已注入 `window.IS_DEV`，前端 JS 可读取：
   ```js
   if (window.IS_DEV) {
-    console.debug('[dev] 开发模式')
+    console.debug('[dev] 开发模式');
   }
   ```
 

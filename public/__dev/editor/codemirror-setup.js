@@ -1,22 +1,22 @@
 // CodeMirror 配置和初始化
-import { EditorView, keymap, lineNumbers, highlightActiveLineGutter } from '@codemirror/view'
-import { EditorState, Compartment } from '@codemirror/state'
-import { defaultKeymap, history, historyKeymap, indentWithTab, undo, redo } from '@codemirror/commands'
-import { searchKeymap, highlightSelectionMatches } from '@codemirror/search'
-import { autocompletion, completionKeymap, closeBrackets } from '@codemirror/autocomplete'
-import { bracketMatching, indentOnInput, syntaxHighlighting } from '@codemirror/language'
-import { highlightSpecialChars, drawSelection, rectangularSelection } from '@codemirror/view'
-import { classHighlighter } from '@lezer/highlight'
+import { EditorView, keymap, lineNumbers, highlightActiveLineGutter } from '@codemirror/view';
+import { EditorState, Compartment } from '@codemirror/state';
+import { defaultKeymap, history, historyKeymap, indentWithTab, undo, redo } from '@codemirror/commands';
+import { searchKeymap, highlightSelectionMatches } from '@codemirror/search';
+import { autocompletion, completionKeymap, closeBrackets } from '@codemirror/autocomplete';
+import { bracketMatching, indentOnInput, syntaxHighlighting } from '@codemirror/language';
+import { highlightSpecialChars, drawSelection, rectangularSelection } from '@codemirror/view';
+import { classHighlighter } from '@lezer/highlight';
 
 /**
  * 创建 Scratchblocks 编辑器
  * 为 Scratchblocks 脚本提供基础语法高亮和编辑功能
  */
 export function createScratchblocksEditor(container, options = {}) {
-  const { initialContent = '', onChange = null, readOnly = false } = options
+  const { initialContent = '', onChange = null, readOnly = false } = options;
 
   // 主题配置（用于响应式切换）
-  const themeCompartment = new Compartment()
+  const themeCompartment = new Compartment();
 
   // 自定义扩展：简单的 Scratchblocks 高亮
   // 由于没有完整的 Scratchblocks 语言支持，我们使用基础高亮
@@ -54,7 +54,7 @@ export function createScratchblocksEditor(container, options = {}) {
       border: 'none',
       color: 'var(--text-secondary)',
     },
-  })
+  });
 
   // 深色主题适配
   const darkTheme = EditorView.theme(
@@ -78,10 +78,10 @@ export function createScratchblocksEditor(container, options = {}) {
       },
     },
     { dark: true }
-  )
+  );
 
   // 检测系统深色模式
-  const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
+  const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
 
   // 扩展配置
   const extensions = [
@@ -102,52 +102,52 @@ export function createScratchblocksEditor(container, options = {}) {
     keymap.of([...defaultKeymap, ...historyKeymap, ...searchKeymap, ...completionKeymap, indentWithTab]),
     // EditorView.lineWrapping,
     EditorState.tabSize.of(2),
-  ]
+  ];
 
   // 如果有 onChange 回调，添加更新监听器
   if (onChange) {
     extensions.push(
       EditorView.updateListener.of((update) => {
         if (update.docChanged) {
-          onChange(update.state.doc.toString())
+          onChange(update.state.doc.toString());
         }
       })
-    )
+    );
   }
 
   // 只读模式
   if (readOnly) {
-    extensions.push(EditorState.readOnly.of(true))
+    extensions.push(EditorState.readOnly.of(true));
   }
 
   // 创建编辑器状态
   const state = EditorState.create({
     doc: initialContent,
     extensions,
-  })
+  });
 
   // 创建编辑器视图
   const view = new EditorView({
     state,
     parent: container,
     lineSeparator: '\n',
-  })
+  });
 
   // 监听系统主题变化
-  const darkModeQuery = window.matchMedia('(prefers-color-scheme: dark)')
+  const darkModeQuery = window.matchMedia('(prefers-color-scheme: dark)');
   const handleThemeChange = (e) => {
     view.dispatch({
       effects: themeCompartment.reconfigure(e.matches ? darkTheme : []),
-    })
-  }
-  darkModeQuery.addEventListener('change', handleThemeChange)
+    });
+  };
+  darkModeQuery.addEventListener('change', handleThemeChange);
 
   // 返回编辑器实例及辅助方法
   return {
     view,
     // 获取当前内容
     getValue() {
-      return view.state.doc.toString()
+      return view.state.doc.toString();
     },
     // 设置内容
     setValue(content) {
@@ -157,23 +157,23 @@ export function createScratchblocksEditor(container, options = {}) {
           to: view.state.doc.length,
           insert: content,
         },
-      })
+      });
     },
     // 销毁编辑器
     destroy() {
-      darkModeQuery.removeEventListener('change', handleThemeChange)
-      view.destroy()
+      darkModeQuery.removeEventListener('change', handleThemeChange);
+      view.destroy();
     },
     // 聚焦
     focus() {
-      view.focus()
+      view.focus();
     },
     // 撤销/重做
     undo() {
-      undo(view)
+      undo(view);
     },
     redo() {
-      redo(view)
+      redo(view);
     },
-  }
+  };
 }

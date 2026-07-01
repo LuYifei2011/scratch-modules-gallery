@@ -1,29 +1,29 @@
-import { minify } from 'html-minifier-next'
-import log from './logger.ts'
+import { minify } from 'html-minifier-next';
+import log from './logger.ts';
 
 export interface ShareLinkOptions {
-  url: string
-  title: string
-  description?: string
+  url: string;
+  title: string;
+  description?: string;
 }
 
 export interface ShareLinks {
-  url: string
-  coverImage: string
-  twitter: string
-  facebook: string
-  reddit: string
-  weibo: string
-  email: string
+  url: string;
+  coverImage: string;
+  twitter: string;
+  facebook: string;
+  reddit: string;
+  weibo: string;
+  email: string;
 }
 
 export function escapeHtml(str = ''): string {
-  const entities: Record<string, string> = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }
-  return str.replace(/[&<>"]/g, (c) => entities[c] ?? c)
+  const entities: Record<string, string> = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' };
+  return str.replace(/[&<>"]/g, (c) => entities[c] ?? c);
 }
 
 export async function maybeMinify(html: string | null | undefined, skip = false): Promise<string | null | undefined> {
-  if (!html || skip) return html
+  if (!html || skip) return html;
   try {
     return minify(html, {
       collapseWhitespace: true,
@@ -35,18 +35,18 @@ export async function maybeMinify(html: string | null | undefined, skip = false)
       keepClosingSlash: true,
       minifyCSS: true,
       minifyJS: true,
-    })
+    });
   } catch (e) {
-    log.warn('minify', `html-minifier-next 压缩失败，返回原始 HTML: ${e instanceof Error ? e.message : e}`)
-    return html
+    log.warn('minify', `html-minifier-next 压缩失败，返回原始 HTML: ${e instanceof Error ? e.message : e}`);
+    return html;
   }
 }
 
 /** 为页面生成社交分享链接。 */
 export function generateShareLinks({ url, title, description = '' }: ShareLinkOptions): ShareLinks {
-  const safeUrl = encodeURIComponent(url)
-  const shareText = title + (description ? '\n' + description : '')
-  const safeText = encodeURIComponent(shareText + '\n#Scratch #ScratchModulesGallery')
+  const safeUrl = encodeURIComponent(url);
+  const shareText = title + (description ? '\n' + description : '');
+  const safeText = encodeURIComponent(shareText + '\n#Scratch #ScratchModulesGallery');
 
   return {
     url: url,
@@ -56,5 +56,5 @@ export function generateShareLinks({ url, title, description = '' }: ShareLinkOp
     reddit: `https://www.reddit.com/submit?url=${safeUrl}&title=${safeText}`,
     weibo: `https://service.weibo.com/share/share.php?url=${safeUrl}&title=${safeText}`,
     email: `mailto:?subject=${safeText}&body=${safeUrl}`,
-  }
+  };
 }

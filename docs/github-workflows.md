@@ -173,7 +173,7 @@ git push
 mirrors: [
   { url: 'https://luyifei2011.github.io/scratch-modules-gallery', label: 'GitHub Pages' },
   { url: 'https://scratch-modules-gallery.pages.dev', label: 'Cloudflare Pages' },
-]
+];
 ```
 
 构建脚本将当前 `baseUrl`（可由 `BASE_URL` 环境变量覆盖）与各条目进行比对，匹配的条目打上 `isCurrent: true`，模板在页脚高亮显示当前站，其余站点渲染为外链。

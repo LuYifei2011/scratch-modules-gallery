@@ -1,5 +1,5 @@
-import { describe, expect, it } from 'bun:test'
-import { renderSeoContextMarkdown } from '../scripts/export-seo-context.ts'
+import { describe, expect, it } from 'bun:test';
+import { renderSeoContextMarkdown } from '../scripts/export-seo-context.ts';
 
 describe('renderSeoContextMarkdown', () => {
   const module = {
@@ -40,33 +40,33 @@ describe('renderSeoContextMarkdown', () => {
     translations: {},
     notesMap: {},
     hasPartialTranslation: false,
-  }
+  };
 
   it('renders metadata, optional sections, scripts, and system prompt', () => {
     const markdown = renderSeoContextMarkdown({
       module,
       locale: 'zh-cn',
       systemPrompt: 'You are an SEO assistant.',
-    })
+    });
 
-    expect(markdown.includes('# System Prompt')).toBeTruthy()
-    expect(markdown.includes('You are an SEO assistant.')).toBeTruthy()
-    expect(markdown.includes('# Module SEO Context')).toBeTruthy()
-    expect(markdown.includes('- id: sample')).toBeTruthy()
-    expect(markdown.includes('- name: 示例模块')).toBeTruthy()
-    expect(markdown.includes('- tags: 数学, 工具')).toBeTruthy()
-    expect(markdown.includes('- contributors: dev (https://example.com/dev)')).toBeTruthy()
-    expect(markdown.includes('## Variables')).toBeTruthy()
-    expect(markdown.includes('name=result, displayName=结果, type=variable, scope=sprite')).toBeTruthy()
-    expect(markdown.includes('## References')).toBeTruthy()
-    expect(markdown.includes('Reference [docs]: https://example.com/ref')).toBeTruthy()
-    expect(markdown.includes('## Notes')).toBeTruthy()
-    expect(markdown.includes('<p>Use this module when testing.</p>')).toBeTruthy()
-    expect(markdown.includes('### Script 1: 主脚本')).toBeTruthy()
-    expect(markdown.includes('#### Imported Script 1: Helper Module / Helper Script')).toBeTruthy()
-    expect(markdown.includes('```scratchblocks\nwhen flag clicked\nsay [hello]\n```')).toBeTruthy()
-    expect(markdown.includes('## Generation Task')).toBeTruthy()
-  })
+    expect(markdown.includes('# System Prompt')).toBeTruthy();
+    expect(markdown.includes('You are an SEO assistant.')).toBeTruthy();
+    expect(markdown.includes('# Module SEO Context')).toBeTruthy();
+    expect(markdown.includes('- id: sample')).toBeTruthy();
+    expect(markdown.includes('- name: 示例模块')).toBeTruthy();
+    expect(markdown.includes('- tags: 数学, 工具')).toBeTruthy();
+    expect(markdown.includes('- contributors: dev (https://example.com/dev)')).toBeTruthy();
+    expect(markdown.includes('## Variables')).toBeTruthy();
+    expect(markdown.includes('name=result, displayName=结果, type=variable, scope=sprite')).toBeTruthy();
+    expect(markdown.includes('## References')).toBeTruthy();
+    expect(markdown.includes('Reference [docs]: https://example.com/ref')).toBeTruthy();
+    expect(markdown.includes('## Notes')).toBeTruthy();
+    expect(markdown.includes('<p>Use this module when testing.</p>')).toBeTruthy();
+    expect(markdown.includes('### Script 1: 主脚本')).toBeTruthy();
+    expect(markdown.includes('#### Imported Script 1: Helper Module / Helper Script')).toBeTruthy();
+    expect(markdown.includes('```scratchblocks\nwhen flag clicked\nsay [hello]\n```')).toBeTruthy();
+    expect(markdown.includes('## Generation Task')).toBeTruthy();
+  });
 
   it('omits empty optional sections and system prompt', () => {
     const markdown = renderSeoContextMarkdown({
@@ -81,17 +81,17 @@ describe('renderSeoContextMarkdown', () => {
         demoFile: undefined,
       },
       locale: 'en',
-    })
+    });
 
-    expect(markdown.includes('# System Prompt')).toBe(false)
-    expect(markdown.includes('## Variables')).toBe(false)
-    expect(markdown.includes('## References')).toBe(false)
-    expect(markdown.includes('## Notes')).toBe(false)
-    expect(markdown.includes('- contributors: None')).toBeTruthy()
-    expect(markdown.includes('- has demo: no')).toBeTruthy()
-    expect(markdown.includes('No scripts available.')).toBeTruthy()
-  })
-})
+    expect(markdown.includes('# System Prompt')).toBe(false);
+    expect(markdown.includes('## Variables')).toBe(false);
+    expect(markdown.includes('## References')).toBe(false);
+    expect(markdown.includes('## Notes')).toBe(false);
+    expect(markdown.includes('- contributors: None')).toBeTruthy();
+    expect(markdown.includes('- has demo: no')).toBeTruthy();
+    expect(markdown.includes('No scripts available.')).toBeTruthy();
+  });
+});
 
 describe('export-seo-context CLI', () => {
   it('exports an existing module for zh-cn', () => {
@@ -99,27 +99,27 @@ describe('export-seo-context CLI', () => {
       cmd: ['bun', './scripts/export-seo-context.ts', 'exponentiation', '--locale', 'zh-cn'],
       stdout: 'pipe',
       stderr: 'pipe',
-    })
-    const stdout = result.stdout.toString()
+    });
+    const stdout = result.stdout.toString();
 
-    expect(result.exitCode).toBe(0)
-    expect(stdout.includes('# Module SEO Context')).toBeTruthy()
-    expect(stdout.includes('- id: exponentiation')).toBeTruthy()
-    expect(stdout.includes('幂')).toBeTruthy()
-    expect(stdout.includes('```scratchblocks')).toBeTruthy()
-  })
+    expect(result.exitCode).toBe(0);
+    expect(stdout.includes('# Module SEO Context')).toBeTruthy();
+    expect(stdout.includes('- id: exponentiation')).toBeTruthy();
+    expect(stdout.includes('幂')).toBeTruthy();
+    expect(stdout.includes('```scratchblocks')).toBeTruthy();
+  });
 
   it('fails for an unknown module', () => {
     const result = Bun.spawnSync({
       cmd: ['bun', './scripts/export-seo-context.ts', 'not-a-real-module'],
       stdout: 'pipe',
       stderr: 'pipe',
-    })
-    const stderr = result.stderr.toString()
+    });
+    const stderr = result.stderr.toString();
 
-    expect(result.exitCode).toBe(1)
-    expect(stderr.includes('Module not found: not-a-real-module')).toBeTruthy()
-  })
+    expect(result.exitCode).toBe(1);
+    expect(stderr.includes('Module not found: not-a-real-module')).toBeTruthy();
+  });
 
   it('fails when the system prompt file is missing', () => {
     const result = Bun.spawnSync({
@@ -132,10 +132,10 @@ describe('export-seo-context CLI', () => {
       ],
       stdout: 'pipe',
       stderr: 'pipe',
-    })
-    const stderr = result.stderr.toString()
+    });
+    const stderr = result.stderr.toString();
 
-    expect(result.exitCode).toBe(1)
-    expect(stderr.includes('Unable to read --system-prompt-file')).toBeTruthy()
-  })
-})
+    expect(result.exitCode).toBe(1);
+    expect(stderr.includes('Unable to read --system-prompt-file')).toBeTruthy();
+  });
+});

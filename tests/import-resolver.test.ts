@@ -1,6 +1,6 @@
-import { describe, expect, it } from 'bun:test'
-import { resolveImports } from '../scripts/lib/import-resolver.ts'
-import type { ModuleRecord, ModuleScript } from '../scripts/lib/types.ts'
+import { describe, expect, it } from 'bun:test';
+import { resolveImports } from '../scripts/lib/import-resolver.ts';
+import type { ModuleRecord, ModuleScript } from '../scripts/lib/types.ts';
 
 function moduleFixture({ id, name, scripts }: { id: string; name: string; scripts: ModuleScript[] }): ModuleRecord {
   return {
@@ -19,7 +19,7 @@ function moduleFixture({ id, name, scripts }: { id: string; name: string; script
     references: [],
     translations: {},
     hasPartialTranslation: false,
-  }
+  };
 }
 
 describe('resolveImports', () => {
@@ -30,11 +30,11 @@ describe('resolveImports', () => {
         name: 'A',
         scripts: [{ id: 'main', title: '', content: 'when flag clicked\nmove (10) steps' }],
       }),
-    ]
-    resolveImports(modules)
-    expect(modules[0].scripts.length).toBe(1)
-    expect(modules[0].scripts[0].content.includes('move (10) steps')).toBeTruthy()
-  })
+    ];
+    resolveImports(modules);
+    expect(modules[0].scripts.length).toBe(1);
+    expect(modules[0].scripts[0].content.includes('move (10) steps')).toBeTruthy();
+  });
 
   it('resolves a leading import', () => {
     const modules = [
@@ -48,18 +48,18 @@ describe('resolveImports', () => {
         name: 'Consumer',
         scripts: [{ id: 'main', title: '', content: '!import lib\nwhen flag clicked' }],
       }),
-    ]
-    resolveImports(modules)
-    const consumer = modules.find((m) => m.id === 'consumer')
-    const mainScript = consumer.scripts[0]
+    ];
+    resolveImports(modules);
+    const consumer = modules.find((m) => m.id === 'consumer');
+    const mainScript = consumer.scripts[0];
     // The main script should have leadingImports
-    expect(mainScript.leadingImports).toBeTruthy()
-    expect(mainScript.leadingImports.length).toBe(1)
-    expect(mainScript.leadingImports[0].fromId).toBe('lib')
-    expect(mainScript.leadingImports[0].content.includes('define helper')).toBeTruthy()
+    expect(mainScript.leadingImports).toBeTruthy();
+    expect(mainScript.leadingImports.length).toBe(1);
+    expect(mainScript.leadingImports[0].fromId).toBe('lib');
+    expect(mainScript.leadingImports[0].content.includes('define helper')).toBeTruthy();
     // Main body content should be the remaining code
-    expect(mainScript.content.includes('when flag clicked')).toBeTruthy()
-  })
+    expect(mainScript.content.includes('when flag clicked')).toBeTruthy();
+  });
 
   it('resolves import with specific script index', () => {
     const modules = [
@@ -76,11 +76,11 @@ describe('resolveImports', () => {
         name: 'User',
         scripts: [{ id: 'main', title: '', content: '!import multi:2\nwhen flag clicked' }],
       }),
-    ]
-    resolveImports(modules)
-    const user = modules.find((m) => m.id === 'user')
-    expect(user.scripts[0].leadingImports[0].content.includes('say [second]')).toBeTruthy()
-  })
+    ];
+    resolveImports(modules);
+    const user = modules.find((m) => m.id === 'user');
+    expect(user.scripts[0].leadingImports[0].content.includes('say [second]')).toBeTruthy();
+  });
 
   it('handles missing module reference', () => {
     const modules = [
@@ -89,11 +89,11 @@ describe('resolveImports', () => {
         name: 'Bad',
         scripts: [{ id: 'main', title: '', content: '!import nonexistent\nwhen flag clicked' }],
       }),
-    ]
-    resolveImports(modules)
-    const mod = modules[0]
-    expect(mod.scripts[0].leadingImports[0].content.includes('导入失败')).toBeTruthy()
-  })
+    ];
+    resolveImports(modules);
+    const mod = modules[0];
+    expect(mod.scripts[0].leadingImports[0].content.includes('导入失败')).toBeTruthy();
+  });
 
   it('handles out-of-bounds script index', () => {
     const modules = [
@@ -107,11 +107,11 @@ describe('resolveImports', () => {
         name: 'BadIdx',
         scripts: [{ id: 'main', title: '', content: '!import single:5\nwhen flag clicked' }],
       }),
-    ]
-    resolveImports(modules)
-    const mod = modules.find((m) => m.id === 'bad-idx')
-    expect(mod.scripts[0].leadingImports[0].content.includes('导入失败')).toBeTruthy()
-  })
+    ];
+    resolveImports(modules);
+    const mod = modules.find((m) => m.id === 'bad-idx');
+    expect(mod.scripts[0].leadingImports[0].content.includes('导入失败')).toBeTruthy();
+  });
 
   it('handles inline imports (not leading)', () => {
     const modules = [
@@ -131,16 +131,16 @@ describe('resolveImports', () => {
           },
         ],
       }),
-    ]
-    resolveImports(modules)
-    const mod = modules.find((m) => m.id === 'mixed')
+    ];
+    resolveImports(modules);
+    const mod = modules.find((m) => m.id === 'mixed');
     // Should produce multiple script segments
-    expect(mod.scripts.length >= 2).toBeTruthy()
+    expect(mod.scripts.length >= 2).toBeTruthy();
     // One of them should be an imported segment
-    const imported = mod.scripts.find((s) => s.imported)
-    expect(imported).toBeTruthy()
-    expect(imported.content.includes('define foo')).toBeTruthy()
-  })
+    const imported = mod.scripts.find((s) => s.imported);
+    expect(imported).toBeTruthy();
+    expect(imported.content.includes('define foo')).toBeTruthy();
+  });
 
   it('detects circular references', () => {
     const modules = [
@@ -154,12 +154,12 @@ describe('resolveImports', () => {
         name: 'B',
         scripts: [{ id: 'main', title: '', content: '!import a\nwhen flag clicked' }],
       }),
-    ]
-    resolveImports(modules)
+    ];
+    resolveImports(modules);
     // Both should resolve without infinite loop
     // The expanded content of a's import of b should contain a circular ref comment
-    const modA = modules.find((m) => m.id === 'a')
-    const importedContent = modA.scripts[0].leadingImports[0].content
-    expect(importedContent.includes('循环引用') || importedContent.includes('when flag clicked')).toBeTruthy()
-  })
-})
+    const modA = modules.find((m) => m.id === 'a');
+    const importedContent = modA.scripts[0].leadingImports[0].content;
+    expect(importedContent.includes('循环引用') || importedContent.includes('when flag clicked')).toBeTruthy();
+  });
+});

@@ -1,38 +1,38 @@
-import MiniSearch from './vendor/minisearch.js'
-import { createSearchOptions } from '../shared/search-options.ts'
+import MiniSearch from './vendor/minisearch.js';
+import { createSearchOptions } from '../shared/search-options.ts';
 
 function qs(sel) {
-  return document.querySelector(sel)
+  return document.querySelector(sel);
 }
 
-const searchInput = qs('#search')
-const resultsDiv = qs('#results')
-let mini = null
-let allDocs = []
+const searchInput = qs('#search');
+const resultsDiv = qs('#results');
+let mini = null;
+let allDocs = [];
 
 // 资产与页面基路径（由模板注入）
-const assetBase = window.ASSET_BASE || ''
-const pageBase = window.PAGE_BASE || assetBase
+const assetBase = window.ASSET_BASE || '';
+const pageBase = window.PAGE_BASE || assetBase;
 
 async function initSearch() {
   const [idxRes, docsRes] = await Promise.all([
     fetch(pageBase + '/search-index.json'),
     fetch(pageBase + '/search-docs.json'),
-  ])
-  const [idxJson, docsList] = await Promise.all([idxRes.json(), docsRes.json()])
-  mini = MiniSearch.loadJS(idxJson, createSearchOptions())
-  allDocs = docsList
+  ]);
+  const [idxJson, docsList] = await Promise.all([idxRes.json(), docsRes.json()]);
+  mini = MiniSearch.loadJS(idxJson, createSearchOptions());
+  allDocs = docsList;
 }
 
 function renderList(docs) {
-  if (!resultsDiv) return
-  const t = window.__I18N.home
+  if (!resultsDiv) return;
+  const t = window.__I18N.home;
   if (!docs.length) {
-    resultsDiv.innerHTML = '<p>' + t.noResults + '</p>'
-    return
+    resultsDiv.innerHTML = '<p>' + t.noResults + '</p>';
+    return;
   }
   function escapeHtml(str = '') {
-    return str.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c])
+    return str.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
   }
   resultsDiv.innerHTML = docs
     .map(
@@ -45,52 +45,52 @@ function renderList(docs) {
           .map((t) => `<span class=tag>${escapeHtml(t)}</span>`)
           .join('')}</p>\n</article>`
     )
-    .join('\n')
+    .join('\n');
 }
 
 if (searchInput) {
-  await initSearch()
-  let timer = null
+  await initSearch();
+  let timer = null;
 
   function performSearch() {
-    const q = searchInput.value.trim()
+    const q = searchInput.value.trim();
     if (!q) {
-      renderList(allDocs)
-      return
+      renderList(allDocs);
+      return;
     }
-    const exactHits = mini.search(q, { prefix: true, fuzzy: false })
-    const fuzzyHits = mini.search(q, { fuzzy: 0.2 })
-    const merged = []
-    const seen = new Set()
+    const exactHits = mini.search(q, { prefix: true, fuzzy: false });
+    const fuzzyHits = mini.search(q, { fuzzy: 0.2 });
+    const merged = [];
+    const seen = new Set();
     function pushList(list) {
       for (const h of list) {
         if (!seen.has(h.id)) {
-          seen.add(h.id)
-          merged.push(h)
+          seen.add(h.id);
+          merged.push(h);
         }
       }
     }
-    pushList(exactHits)
-    pushList(fuzzyHits)
-    const docs = merged.map((h) => allDocs.find((d) => d.id === h.id)).filter(Boolean)
-    renderList(docs)
+    pushList(exactHits);
+    pushList(fuzzyHits);
+    const docs = merged.map((h) => allDocs.find((d) => d.id === h.id)).filter(Boolean);
+    renderList(docs);
   }
 
   searchInput.addEventListener('input', () => {
-    if (timer) clearTimeout(timer)
-    timer = setTimeout(performSearch, 120)
-  })
+    if (timer) clearTimeout(timer);
+    timer = setTimeout(performSearch, 120);
+  });
 
   // 检查 URL 参数是否有搜索关键词
-  const urlParams = new URLSearchParams(window.location.search)
-  const queryParam = urlParams.get('q')
+  const urlParams = new URLSearchParams(window.location.search);
+  const queryParam = urlParams.get('q');
   if (queryParam) {
-    searchInput.value = queryParam
-    performSearch()
+    searchInput.value = queryParam;
+    performSearch();
     // 聚焦搜索框并滚动到视图
-    searchInput.focus()
-    searchInput.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    searchInput.focus();
+    searchInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
   } else {
-    renderList(allDocs)
+    renderList(allDocs);
   }
 }

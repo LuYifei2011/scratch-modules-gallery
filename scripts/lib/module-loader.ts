@@ -4,23 +4,23 @@
  * @module module-loader
  */
 
-import fs from 'fs-extra'
-import path from 'path'
-import { buildModuleRecord } from './schema.ts'
-import log from './logger.ts'
-import { naturalCompare, parseScriptFileName } from './script-files.ts'
-import { globFiles, readJsonFile, readTextFile } from './bun-utils.ts'
-import type { ModuleMeta, ModuleRecord, ModuleScript, ModuleTranslation, SiteConfig } from './types.ts'
+import fs from 'fs-extra';
+import path from 'path';
+import { buildModuleRecord } from './schema.ts';
+import log from './logger.ts';
+import { naturalCompare, parseScriptFileName } from './script-files.ts';
+import { globFiles, readJsonFile, readTextFile } from './bun-utils.ts';
+import type { ModuleMeta, ModuleRecord, ModuleScript, ModuleTranslation, SiteConfig } from './types.ts';
 
 interface LoadModulesOptions {
-  root: string
-  config: SiteConfig
-  isDev: boolean
+  root: string;
+  config: SiteConfig;
+  isDev: boolean;
 }
 
 interface LoadModulesResult {
-  modules: ModuleRecord[]
-  errorsAll: string[]
+  modules: ModuleRecord[];
+  errorsAll: string[];
 }
 
 /**
@@ -31,99 +31,99 @@ interface LoadModulesResult {
  * @returns {Promise<{modules: Array, errorsAll: string[]}>}
  */
 export async function loadModules({ root, config, isDev }: LoadModulesOptions): Promise<LoadModulesResult> {
-  const baseDir = path.join(root, config.contentDir)
+  const baseDir = path.join(root, config.contentDir);
   const dirs = (await fs.readdir(baseDir, { withFileTypes: true }))
     .filter((entry) => entry.isDirectory())
-    .map((entry) => entry.name)
-  const modules: ModuleRecord[] = []
-  const errorsAll: string[] = []
+    .map((entry) => entry.name);
+  const modules: ModuleRecord[] = [];
+  const errorsAll: string[] = [];
   for (const dir of dirs) {
     try {
       // 生产环境下跳过以 . 开头的模块（用于开发/测试）
-      if (!isDev && dir.startsWith('.')) continue
-      const moduleDir = path.join(baseDir, dir)
-      const metaFile = path.join(moduleDir, 'meta.json')
-      if (!(await fs.pathExists(metaFile))) continue // skip
-      let meta: ModuleMeta
+      if (!isDev && dir.startsWith('.')) continue;
+      const moduleDir = path.join(baseDir, dir);
+      const metaFile = path.join(moduleDir, 'meta.json');
+      if (!(await fs.pathExists(metaFile))) continue; // skip
+      let meta: ModuleMeta;
       try {
-        meta = await readJsonFile<ModuleMeta>(metaFile)
+        meta = await readJsonFile<ModuleMeta>(metaFile);
       } catch (e) {
-        errorsAll.push(`${dir}: meta.json parse error ${e instanceof Error ? e.message : String(e)}`)
-        continue
+        errorsAll.push(`${dir}: meta.json parse error ${e instanceof Error ? e.message : String(e)}`);
+        continue;
       }
 
-      const scripts: ModuleScript[] = []
+      const scripts: ModuleScript[] = [];
       // scripts/ 目录下若存在 *.txt，按文件名自然排序
-      const scriptsDir = path.join(moduleDir, 'scripts')
+      const scriptsDir = path.join(moduleDir, 'scripts');
       if (await fs.pathExists(scriptsDir)) {
-        const files = (await globFiles('*.txt', scriptsDir)).sort(naturalCompare)
+        const files = (await globFiles('*.txt', scriptsDir)).sort(naturalCompare);
         for (const f of files) {
-          const full = path.join(scriptsDir, f)
-          const content = await readTextFile(full)
-          const { id } = parseScriptFileName(f)
-          scripts.push({ id, content })
+          const full = path.join(scriptsDir, f);
+          const content = await readTextFile(full);
+          const { id } = parseScriptFileName(f);
+          scripts.push({ id, content });
         }
         // 若目录存在但为空，视为错误
         if (!scripts.length) {
-          errorsAll.push(`${dir}: scripts/ is empty (expecting *.txt)`)
+          errorsAll.push(`${dir}: scripts/ is empty (expecting *.txt)`);
         }
       } else {
         // 不再兼容旧格式（script.txt 或 script-*.txt）；严格要求 scripts/*.txt
-        errorsAll.push(`${dir}: missing scripts/ directory`)
+        errorsAll.push(`${dir}: missing scripts/ directory`);
       }
 
-      const demoPath = path.join(moduleDir, 'demo.sb3')
-      const demoFile = (await fs.pathExists(demoPath)) ? `modules/${dir}/demo.sb3` : undefined
+      const demoPath = path.join(moduleDir, 'demo.sb3');
+      const demoFile = (await fs.pathExists(demoPath)) ? `modules/${dir}/demo.sb3` : undefined;
 
       // optional notes: notes/<lang-code>.md（按语言国际化）
-      const notesMap: Record<string, string> = {}
-      const notesDirPath = path.join(moduleDir, 'notes')
+      const notesMap: Record<string, string> = {};
+      const notesDirPath = path.join(moduleDir, 'notes');
       if (await fs.pathExists(notesDirPath)) {
-        const noteFiles = await globFiles('*.md', notesDirPath)
+        const noteFiles = await globFiles('*.md', notesDirPath);
         for (const f of noteFiles) {
-          const loc = path.basename(f, '.md')
-          const raw = await readTextFile(path.join(notesDirPath, f))
-          notesMap[loc] = raw
+          const loc = path.basename(f, '.md');
+          const raw = await readTextFile(path.join(notesDirPath, f));
+          notesMap[loc] = raw;
         }
       }
 
       // optional per-module translations: i18n/<locale>.json
-      const translations: Record<string, ModuleTranslation> = {}
-      const i18nDir = path.join(moduleDir, 'i18n')
+      const translations: Record<string, ModuleTranslation> = {};
+      const i18nDir = path.join(moduleDir, 'i18n');
       if (await fs.pathExists(i18nDir)) {
-        const files = (await globFiles('*.json', i18nDir)).sort(naturalCompare)
+        const files = (await globFiles('*.json', i18nDir)).sort(naturalCompare);
         for (const f of files) {
-          const loc = path.basename(f, '.json')
+          const loc = path.basename(f, '.json');
           try {
-            const obj = await readJsonFile(path.join(i18nDir, f))
+            const obj = await readJsonFile(path.join(i18nDir, f));
             if (obj && typeof obj === 'object') {
-              const one: Record<string, unknown> = {}
-              const source = obj as Record<string, unknown>
+              const one: Record<string, unknown> = {};
+              const source = obj as Record<string, unknown>;
               const copyField = (
                 key: keyof ModuleTranslation,
                 validator = (v: unknown) => v !== null && v !== undefined
               ) => {
-                if (validator(source[key])) one[key] = source[key]
-              }
+                if (validator(source[key])) one[key] = source[key];
+              };
               const isPlainObject = (v: unknown): v is Record<string, unknown> =>
-                Boolean(v && typeof v === 'object' && !Array.isArray(v))
+                Boolean(v && typeof v === 'object' && !Array.isArray(v));
 
-              copyField('name', (v) => typeof v === 'string')
-              copyField('description', (v) => typeof v === 'string')
-              copyField('seoDescription', (v) => typeof v === 'string')
-              copyField('tags', (v) => Array.isArray(v))
-              copyField('variables', isPlainObject)
-              copyField('lists', isPlainObject)
-              copyField('events', isPlainObject)
-              copyField('scriptTitles', isPlainObject)
-              copyField('procedures', isPlainObject)
-              copyField('procedureParams', isPlainObject)
-              copyField('comments', isPlainObject)
+              copyField('name', (v) => typeof v === 'string');
+              copyField('description', (v) => typeof v === 'string');
+              copyField('seoDescription', (v) => typeof v === 'string');
+              copyField('tags', (v) => Array.isArray(v));
+              copyField('variables', isPlainObject);
+              copyField('lists', isPlainObject);
+              copyField('events', isPlainObject);
+              copyField('scriptTitles', isPlainObject);
+              copyField('procedures', isPlainObject);
+              copyField('procedureParams', isPlainObject);
+              copyField('comments', isPlainObject);
 
-              translations[loc] = one as ModuleTranslation
+              translations[loc] = one as ModuleTranslation;
             }
           } catch (e) {
-            errorsAll.push(`${dir}: i18n/${f} parse error`)
+            errorsAll.push(`${dir}: i18n/${f} parse error`);
           }
         }
       }
@@ -133,16 +133,16 @@ export async function loadModules({ root, config, isDev }: LoadModulesOptions): 
         demoFile,
         notesMap,
         translations,
-      })
-      if (errors.length) errorsAll.push(`${dir}: ${errors.join(', ')}`)
-      modules.push(record)
+      });
+      if (errors.length) errorsAll.push(`${dir}: ${errors.join(', ')}`);
+      modules.push(record);
     } catch (e) {
-      errorsAll.push(`${dir}: unexpected build error ${e instanceof Error ? e.message : e}`)
+      errorsAll.push(`${dir}: unexpected build error ${e instanceof Error ? e.message : e}`);
       if (isDev) {
         // 保留堆栈便于调试
-        log.error('loader', String(e instanceof Error ? e.stack || e.message : e))
+        log.error('loader', String(e instanceof Error ? e.stack || e.message : e));
       }
     }
   }
-  return { modules, errorsAll }
+  return { modules, errorsAll };
 }

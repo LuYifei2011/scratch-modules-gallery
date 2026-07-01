@@ -7,38 +7,38 @@
  *   - 详细：显示所有，包括 warn 和 verbose 调试信息
  */
 
-const IS_TTY = process.stdout.isTTY === true
+const IS_TTY = process.stdout.isTTY === true;
 
 // ── 日志模式 ──────────────────────────────────────────────────────────────────
 // 模式字符：simple(s) → 简略, verbose(v) → 详细
-type LogMode = 's' | 'v' | 'simple' | 'verbose'
-type NormalizedLogMode = 's' | 'v'
-type LogLevel = 'error' | 'warn' | 'info' | 'verbose'
+type LogMode = 's' | 'v' | 'simple' | 'verbose';
+type NormalizedLogMode = 's' | 'v';
+type LogLevel = 'error' | 'warn' | 'info' | 'verbose';
 
-const _MODE_MAP = { simple: 's', verbose: 'v' } as const
-let _currentMode: NormalizedLogMode = (process.env.LOG_MODE || 's').toLowerCase() === 'v' ? 'v' : 's'
-const _LEVEL_MAP: Record<LogLevel, number> = { error: 0, warn: 1, info: 2, verbose: 3 }
+const _MODE_MAP = { simple: 's', verbose: 'v' } as const;
+let _currentMode: NormalizedLogMode = (process.env.LOG_MODE || 's').toLowerCase() === 'v' ? 'v' : 's';
+const _LEVEL_MAP: Record<LogLevel, number> = { error: 0, warn: 1, info: 2, verbose: 3 };
 
 export function setLogMode(mode: LogMode): void {
-  _currentMode = mode === 'v' || mode === 'verbose' ? 'v' : 's'
+  _currentMode = mode === 'v' || mode === 'verbose' ? 'v' : 's';
 }
 
 function _shouldLog(level: LogLevel): boolean {
-  const levelNum = _LEVEL_MAP[level] ?? 0
+  const levelNum = _LEVEL_MAP[level] ?? 0;
   // 简略模式：只显示 info(2)、success、error(0)
   // 详细模式：显示所有（包括 warn 和 verbose）
   if (_currentMode === 's') {
-    return levelNum === 0 || levelNum === 2 // error(0) 和 info(2) 均可见
+    return levelNum === 0 || levelNum === 2; // error(0) 和 info(2) 均可见
   }
   // 详细模式：全部可见
-  return true
+  return true;
 }
 
 // ── ANSI 转义辅助 ──────────────────────────────────────────────────────────────
-const RESET = IS_TTY ? '\x1b[0m' : ''
+const RESET = IS_TTY ? '\x1b[0m' : '';
 
 function ansi(code: string): string {
-  return IS_TTY ? `\x1b[${code}m` : ''
+  return IS_TTY ? `\x1b[${code}m` : '';
 }
 
 // 颜色 / 样式常量
@@ -63,40 +63,40 @@ export const c = {
   bgYellow: ansi('43'),
   bgBlue: ansi('44'),
   bgCyan: ansi('46'),
-}
+};
 
 // ── 工具函数 ───────────────────────────────────────────────────────────────────
 
 /** 用给定样式包裹文本，末尾自动重置 */
 export function paint(style: string, text: string): string {
-  if (!IS_TTY) return text
-  return `${style}${text}${RESET}`
+  if (!IS_TTY) return text;
+  return `${style}${text}${RESET}`;
 }
 
 /** 超出宽度时右侧截断并加省略号 */
 export function truncate(text: string, maxLen = 60): string {
-  if (text.length <= maxLen) return text
-  return text.slice(0, maxLen - 1) + '…'
+  if (text.length <= maxLen) return text;
+  return text.slice(0, maxLen - 1) + '…';
 }
 
 /** 格式化毫秒数为可读字符串（< 1000ms 显示 ms，否则显示 s） */
 export function formatDuration(ms: number): string {
-  if (ms < 1000) return `${ms}ms`
-  return `${(ms / 1000).toFixed(2)}s`
+  if (ms < 1000) return `${ms}ms`;
+  return `${(ms / 1000).toFixed(2)}s`;
 }
 
 /** 当前时间字符串 HH:MM:SS */
 export function timeNow(): string {
-  return new Date().toLocaleTimeString('zh-CN', { hour12: false })
+  return new Date().toLocaleTimeString('zh-CN', { hour12: false });
 }
 
 // ── 终端尺寸 ───────────────────────────────────────────────────────────────────
 function termWidth(): number {
-  return (IS_TTY ? process.stdout.columns : 0) || 80
+  return (IS_TTY ? process.stdout.columns : 0) || 80;
 }
 
 function hr(char = '─', width?: number): string {
-  return char.repeat(width ?? termWidth())
+  return char.repeat(width ?? termWidth());
 }
 
 // ── 可见宽度计算（支持 ANSI、OSC 8 超链接、CJK 双宽字符）────────────────────
@@ -106,7 +106,7 @@ function hr(char = '─', width?: number): string {
  * 覆盖 CJK 统一表意文字、全角符号、片假名 / 平假名、谚文等常见范围。
  */
 function isCJKWide(ch: string): boolean {
-  const cp = ch.codePointAt(0) ?? 0
+  const cp = ch.codePointAt(0) ?? 0;
   return (
     (cp >= 0x1100 && cp <= 0x115f) || // Hangul Jamo
     (cp >= 0x2e80 && cp <= 0x303e) || // CJK 部首 / 符号标点
@@ -121,7 +121,7 @@ function isCJKWide(ch: string): boolean {
     (cp >= 0xffe0 && cp <= 0xffe6) || // 全角符号
     (cp >= 0x20000 && cp <= 0x2fffd) || // CJK 扩展 B–F
     (cp >= 0x30000 && cp <= 0x3fffd) // CJK 扩展 G+
-  )
+  );
 }
 
 /**
@@ -132,14 +132,14 @@ function isCJKWide(ch: string): boolean {
  */
 function visLen(s: string): number {
   // 剥离 ANSI CSI 序列（ESC [ ... m）
-  let t = s.replace(/\x1b\[[^m]*m/g, '')
+  let t = s.replace(/\x1b\[[^m]*m/g, '');
   // 剥离 OSC 序列（ESC ] ... BEL 或 ESC ] ... ESC \）
-  t = t.replace(/\x1b\][^\x07\x1b]*(?:\x07|\x1b\\)/g, '')
-  let len = 0
+  t = t.replace(/\x1b\][^\x07\x1b]*(?:\x07|\x1b\\)/g, '');
+  let len = 0;
   for (const ch of t) {
-    len += isCJKWide(ch) ? 2 : 1
+    len += isCJKWide(ch) ? 2 : 1;
   }
-  return len
+  return len;
 }
 
 // ── 日志级别输出 ────────────────────────────────────────────────────────────────
@@ -150,9 +150,9 @@ function visLen(s: string): number {
  * @param {string} msg     消息正文
  */
 export function info(prefix: string, msg: string): void {
-  if (!_shouldLog('info')) return
-  const tag = paint(c.cyan, `[${prefix}]`)
-  console.log(`${tag} ${msg}`)
+  if (!_shouldLog('info')) return;
+  const tag = paint(c.cyan, `[${prefix}]`);
+  console.log(`${tag} ${msg}`);
 }
 
 /**
@@ -161,8 +161,8 @@ export function info(prefix: string, msg: string): void {
  * @param {string} msg
  */
 export function success(prefix: string, msg: string): void {
-  const tag = paint(c.green + c.bold, `[${prefix}]`)
-  console.log(`${tag} ${paint(c.green, msg)}`)
+  const tag = paint(c.green + c.bold, `[${prefix}]`);
+  console.log(`${tag} ${paint(c.green, msg)}`);
 }
 
 /**
@@ -171,9 +171,9 @@ export function success(prefix: string, msg: string): void {
  * @param {string} msg
  */
 export function warn(prefix: string, msg: string): void {
-  if (!_shouldLog('warn')) return
-  const tag = paint(c.yellow, `[${prefix}]`)
-  console.warn(`${tag} ${paint(c.yellow, '⚠')} ${msg}`)
+  if (!_shouldLog('warn')) return;
+  const tag = paint(c.yellow, `[${prefix}]`);
+  console.warn(`${tag} ${paint(c.yellow, '⚠')} ${msg}`);
 }
 
 /**
@@ -182,8 +182,8 @@ export function warn(prefix: string, msg: string): void {
  * @param {string} msg
  */
 export function error(prefix: string, msg: string): void {
-  const tag = paint(c.red + c.bold, `[${prefix}]`)
-  console.error(`${tag} ${paint(c.red, '✖')} ${msg}`)
+  const tag = paint(c.red + c.bold, `[${prefix}]`);
+  console.error(`${tag} ${paint(c.red, '✖')} ${msg}`);
 }
 
 /**
@@ -191,8 +191,8 @@ export function error(prefix: string, msg: string): void {
  * @param {string} msg
  */
 export function dim(msg: string): void {
-  if (!_shouldLog('verbose')) return
-  console.log(paint(c.dim + c.gray, msg))
+  if (!_shouldLog('verbose')) return;
+  console.log(paint(c.dim + c.gray, msg));
 }
 
 // ── Banner（启动时用，始终显示）─────────────────────────────────────────────────
@@ -202,37 +202,37 @@ export function dim(msg: string): void {
  * @param {string[]} lines  每行内容（不含边框），传入空行 '' 作分隔线
  */
 export function banner(lines: string[]): void {
-  const width = termWidth()
-  const maxContent = Math.min(Math.max(...lines.map((l) => visLen(l))) + 4, width - 2)
+  const width = termWidth();
+  const maxContent = Math.min(Math.max(...lines.map((l) => visLen(l))) + 4, width - 2);
 
-  const topBorder = IS_TTY ? `${c.blue}╭${'─'.repeat(maxContent)}╮${RESET}` : `┌${'─'.repeat(maxContent)}┐`
-  const botBorder = IS_TTY ? `${c.blue}╰${'─'.repeat(maxContent)}╯${RESET}` : `└${'─'.repeat(maxContent)}┘`
-  const side = IS_TTY ? `${c.blue}│${RESET}` : '│'
+  const topBorder = IS_TTY ? `${c.blue}╭${'─'.repeat(maxContent)}╮${RESET}` : `┌${'─'.repeat(maxContent)}┐`;
+  const botBorder = IS_TTY ? `${c.blue}╰${'─'.repeat(maxContent)}╯${RESET}` : `└${'─'.repeat(maxContent)}┘`;
+  const side = IS_TTY ? `${c.blue}│${RESET}` : '│';
 
-  console.log('')
-  console.log(topBorder)
+  console.log('');
+  console.log(topBorder);
   for (const line of lines) {
     if (line === '') {
       // 空行 → 分隔线
-      const sep = IS_TTY ? `${c.blue}├${'─'.repeat(maxContent)}┤${RESET}` : `├${'─'.repeat(maxContent)}┤`
-      console.log(sep)
+      const sep = IS_TTY ? `${c.blue}├${'─'.repeat(maxContent)}┤${RESET}` : `├${'─'.repeat(maxContent)}┤`;
+      console.log(sep);
     } else {
-      const pad = maxContent - visLen(line) - 2
-      console.log(`${side} ${line}${' '.repeat(Math.max(0, pad))} ${side}`)
+      const pad = maxContent - visLen(line) - 2;
+      console.log(`${side} ${line}${' '.repeat(Math.max(0, pad))} ${side}`);
     }
   }
-  console.log(botBorder)
-  console.log('')
+  console.log(botBorder);
+  console.log('');
 }
 
 // ── Dev 状态行（始终显示）────────────────────────────────────────────────────────
 
 /** 开发服务器状态行所需的当前状态。 */
 export interface DevStatusLineState {
-  ready: boolean
-  fastBuild: boolean
-  logLevel?: string
-  lastBuild?: { time: string; duration: number }
+  ready: boolean;
+  fastBuild: boolean;
+  logLevel?: string;
+  lastBuild?: { time: string; duration: number };
 }
 
 /**
@@ -241,39 +241,39 @@ export interface DevStatusLineState {
  * @param withHints 是否显示按键提示
  */
 export function statusLine(state: DevStatusLineState, withHints = true): void {
-  const w = termWidth()
-  const sep = paint(c.dim, hr('─', w))
+  const w = termWidth();
+  const sep = paint(c.dim, hr('─', w));
 
-  const readyDot = state.ready ? paint(c.green + c.bold, '●') : paint(c.yellow + c.bold, '◌')
-  const readyText = state.ready ? paint(c.green + c.bold, 'Ready') : paint(c.yellow, 'Building…')
+  const readyDot = state.ready ? paint(c.green + c.bold, '●') : paint(c.yellow + c.bold, '◌');
+  const readyText = state.ready ? paint(c.green + c.bold, 'Ready') : paint(c.yellow, 'Building…');
 
-  const fastLabel = state.fastBuild ? paint(c.cyan, 'Fast Build: ON ') : paint(c.dim, 'Fast Build: OFF')
+  const fastLabel = state.fastBuild ? paint(c.cyan, 'Fast Build: ON ') : paint(c.dim, 'Fast Build: OFF');
 
   const logLevelLabel = state.logLevel
     ? `${paint(c.dim, '│')}  ${paint(c.dim, '日志:')} ${paint(c.cyan, state.logLevel)}`
-    : ''
+    : '';
 
-  let lastInfo = ''
+  let lastInfo = '';
   if (state.lastBuild) {
-    const t = paint(c.gray, state.lastBuild.time)
-    const d = paint(c.gray, `(${formatDuration(state.lastBuild.duration)})`)
-    lastInfo = `  ${paint(c.dim, '│')}  最后构建: ${t} ${d}`
+    const t = paint(c.gray, state.lastBuild.time);
+    const d = paint(c.gray, `(${formatDuration(state.lastBuild.duration)})`);
+    lastInfo = `  ${paint(c.dim, '│')}  最后构建: ${t} ${d}`;
   }
 
-  const statusRow = ` ${readyDot} ${readyText}  ${paint(c.dim, '│')}  ${fastLabel}${logLevelLabel}${lastInfo}`
+  const statusRow = ` ${readyDot} ${readyText}  ${paint(c.dim, '│')}  ${fastLabel}${logLevelLabel}${lastInfo}`;
 
-  console.log(sep)
-  console.log(statusRow)
+  console.log(sep);
+  console.log(statusRow);
   if (withHints) {
     const hints = [
       paint(c.dim, '[') + paint(c.cyan, 'f') + paint(c.dim, ']') + paint(c.dim, ' 快速构建'),
       paint(c.dim, '[') + paint(c.cyan, 'l') + paint(c.dim, ']') + paint(c.dim, ' 日志级别'),
       paint(c.dim, '[') + paint(c.cyan, 'r') + paint(c.dim, ']') + paint(c.dim, ' 立即构建'),
       paint(c.dim, '[') + paint(c.cyan, 'q') + paint(c.dim, ']') + paint(c.dim, ' 退出'),
-    ].join(paint(c.dim, '  '))
-    console.log(` ${hints}`)
+    ].join(paint(c.dim, '  '));
+    console.log(` ${hints}`);
   }
-  console.log(sep)
+  console.log(sep);
 }
 
 export default {
@@ -289,4 +289,4 @@ export default {
   truncate,
   formatDuration,
   timeNow,
-}
+};

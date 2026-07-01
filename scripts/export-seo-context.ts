@@ -1,30 +1,30 @@
-import fs from 'fs-extra'
-import path from 'path'
-import { loadLocalizedModules, loadSiteConfig, loadSiteData } from './lib/site-pipeline.ts'
+import fs from 'fs-extra';
+import path from 'path';
+import { loadLocalizedModules, loadSiteConfig, loadSiteData } from './lib/site-pipeline.ts';
 import type {
   Contributor,
   LocalizedModuleRecord,
   LocalizedModuleScript,
   ModuleReference,
   ModuleVariable,
-} from './lib/types.ts'
+} from './lib/types.ts';
 
-const DEFAULT_LOCALE = 'zh-cn'
+const DEFAULT_LOCALE = 'zh-cn';
 
 interface CliOptions {
-  moduleId?: string
-  locale: string
-  systemPromptFile?: string
-  help: boolean
+  moduleId?: string;
+  locale: string;
+  systemPromptFile?: string;
+  help: boolean;
 }
 
-type SeoScript = LocalizedModuleScript
-type SeoModule = LocalizedModuleRecord
+type SeoScript = LocalizedModuleScript;
+type SeoModule = LocalizedModuleRecord;
 
 export interface RenderSeoContextOptions {
-  module: SeoModule
-  locale: string
-  systemPrompt?: string
+  module: SeoModule;
+  locale: string;
+  systemPrompt?: string;
 }
 
 function usage(): string {
@@ -36,188 +36,188 @@ function usage(): string {
     `  --locale <locale>              Locale to export. Defaults to ${DEFAULT_LOCALE}.`,
     '  --system-prompt-file <path>    Optional UTF-8 system prompt file to include.',
     '  --help                         Show this help message.',
-  ].join('\n')
+  ].join('\n');
 }
 
 function parseArgs(argv: string[]): CliOptions {
-  const options: CliOptions = { locale: DEFAULT_LOCALE, help: false }
+  const options: CliOptions = { locale: DEFAULT_LOCALE, help: false };
 
   for (let i = 0; i < argv.length; i++) {
-    const arg = argv[i]
-    if (!arg) continue
+    const arg = argv[i];
+    if (!arg) continue;
 
     if (arg === '--help' || arg === '-h') {
-      options.help = true
-      continue
+      options.help = true;
+      continue;
     }
 
     if (arg === '--locale') {
-      const value = argv[++i]
-      if (!value) throw new Error('Missing value for --locale')
-      options.locale = value
-      continue
+      const value = argv[++i];
+      if (!value) throw new Error('Missing value for --locale');
+      options.locale = value;
+      continue;
     }
 
     if (arg.startsWith('--locale=')) {
-      const value = arg.slice('--locale='.length)
-      if (!value) throw new Error('Missing value for --locale')
-      options.locale = value
-      continue
+      const value = arg.slice('--locale='.length);
+      if (!value) throw new Error('Missing value for --locale');
+      options.locale = value;
+      continue;
     }
 
     if (arg === '--system-prompt-file') {
-      const value = argv[++i]
-      if (!value) throw new Error('Missing value for --system-prompt-file')
-      options.systemPromptFile = value
-      continue
+      const value = argv[++i];
+      if (!value) throw new Error('Missing value for --system-prompt-file');
+      options.systemPromptFile = value;
+      continue;
     }
 
     if (arg.startsWith('--system-prompt-file=')) {
-      const value = arg.slice('--system-prompt-file='.length)
-      if (!value) throw new Error('Missing value for --system-prompt-file')
-      options.systemPromptFile = value
-      continue
+      const value = arg.slice('--system-prompt-file='.length);
+      if (!value) throw new Error('Missing value for --system-prompt-file');
+      options.systemPromptFile = value;
+      continue;
     }
 
     if (arg.startsWith('-')) {
-      throw new Error(`Unknown option: ${arg}`)
+      throw new Error(`Unknown option: ${arg}`);
     }
 
     if (options.moduleId) {
-      throw new Error(`Unexpected extra argument: ${arg}`)
+      throw new Error(`Unexpected extra argument: ${arg}`);
     }
-    options.moduleId = arg
+    options.moduleId = arg;
   }
 
-  return options
+  return options;
 }
 
 function clean(value: unknown): string {
-  return String(value ?? '').trim()
+  return String(value ?? '').trim();
 }
 
 function listText(values: unknown[] | undefined): string {
-  if (!Array.isArray(values) || values.length === 0) return 'None'
+  if (!Array.isArray(values) || values.length === 0) return 'None';
   return (
     values
       .map((value) => clean(value))
       .filter(Boolean)
       .join(', ') || 'None'
-  )
+  );
 }
 
 function contributorText(contributor: Contributor): string {
-  if (contributor.url) return `${contributor.name} (${contributor.url})`
-  return contributor.name
+  if (contributor.url) return `${contributor.name} (${contributor.url})`;
+  return contributor.name;
 }
 
 function referenceText(reference: ModuleReference): string {
-  const type = reference.type ? ` [${reference.type}]` : ''
-  return `${reference.title}${type}: ${reference.url}`
+  const type = reference.type ? ` [${reference.type}]` : '';
+  return `${reference.title}${type}: ${reference.url}`;
 }
 
 function variableText(variable: ModuleVariable): string {
-  const parts = [`name=${variable.name}`]
-  if (variable.displayName && variable.displayName !== variable.name) parts.push(`displayName=${variable.displayName}`)
-  if (variable.type) parts.push(`type=${variable.type}`)
-  if (variable.scope) parts.push(`scope=${variable.scope}`)
-  return parts.join(', ')
+  const parts = [`name=${variable.name}`];
+  if (variable.displayName && variable.displayName !== variable.name) parts.push(`displayName=${variable.displayName}`);
+  if (variable.type) parts.push(`type=${variable.type}`);
+  if (variable.scope) parts.push(`scope=${variable.scope}`);
+  return parts.join(', ');
 }
 
 function scriptLabel(script: SeoScript, index: number): string {
   if (script.imported) {
-    const source = script.fromName || script.fromId || 'unknown module'
-    const title = script.fromTitle || script.fromScriptId || (script.fromIndex ? `#${script.fromIndex}` : '')
-    return `Imported Script ${index}: ${[source, title].filter(Boolean).join(' / ')}`
+    const source = script.fromName || script.fromId || 'unknown module';
+    const title = script.fromTitle || script.fromScriptId || (script.fromIndex ? `#${script.fromIndex}` : '');
+    return `Imported Script ${index}: ${[source, title].filter(Boolean).join(' / ')}`;
   }
-  const title = script.title || script.id || `#${index}`
-  return `Script ${index}: ${title}`
+  const title = script.title || script.id || `#${index}`;
+  return `Script ${index}: ${title}`;
 }
 
 function scriptMetadata(script: SeoScript): string[] {
-  const lines: string[] = []
-  if (script.id) lines.push(`- id: ${script.id}`)
-  if (script.title) lines.push(`- title: ${script.title}`)
-  if (script.imported) lines.push('- imported: true')
-  if (script.fromId) lines.push(`- source module id: ${script.fromId}`)
-  if (script.fromName) lines.push(`- source module name: ${script.fromName}`)
-  if (script.fromScriptId) lines.push(`- source script id: ${script.fromScriptId}`)
-  if (script.fromTitle) lines.push(`- source script title: ${script.fromTitle}`)
-  if (script.fromIndex) lines.push(`- source script index: ${script.fromIndex}`)
-  return lines
+  const lines: string[] = [];
+  if (script.id) lines.push(`- id: ${script.id}`);
+  if (script.title) lines.push(`- title: ${script.title}`);
+  if (script.imported) lines.push('- imported: true');
+  if (script.fromId) lines.push(`- source module id: ${script.fromId}`);
+  if (script.fromName) lines.push(`- source module name: ${script.fromName}`);
+  if (script.fromScriptId) lines.push(`- source script id: ${script.fromScriptId}`);
+  if (script.fromTitle) lines.push(`- source script title: ${script.fromTitle}`);
+  if (script.fromIndex) lines.push(`- source script index: ${script.fromIndex}`);
+  return lines;
 }
 
 function appendScript(lines: string[], script: SeoScript, index: number, headingLevel = 3): void {
-  const heading = '#'.repeat(headingLevel)
-  lines.push(`${heading} ${scriptLabel(script, index)}`)
+  const heading = '#'.repeat(headingLevel);
+  lines.push(`${heading} ${scriptLabel(script, index)}`);
 
-  const metadata = scriptMetadata(script)
+  const metadata = scriptMetadata(script);
   if (metadata.length) {
-    lines.push(...metadata)
-    lines.push('')
+    lines.push(...metadata);
+    lines.push('');
   }
 
   if (Array.isArray(script.leadingImports) && script.leadingImports.length) {
-    lines.push(`${heading} Leading Imports`)
+    lines.push(`${heading} Leading Imports`);
     script.leadingImports.forEach((imported, importIndex) => {
-      appendScript(lines, imported, importIndex + 1, headingLevel + 1)
-    })
+      appendScript(lines, imported, importIndex + 1, headingLevel + 1);
+    });
   }
 
-  lines.push('```scratchblocks')
-  lines.push(script.content || '')
-  lines.push('```')
-  lines.push('')
+  lines.push('```scratchblocks');
+  lines.push(script.content || '');
+  lines.push('```');
+  lines.push('');
 }
 
 export function renderSeoContextMarkdown({ module, locale, systemPrompt }: RenderSeoContextOptions): string {
-  const lines: string[] = []
+  const lines: string[] = [];
 
   if (systemPrompt && systemPrompt.trim()) {
-    lines.push('# System Prompt', '', systemPrompt.trim(), '')
+    lines.push('# System Prompt', '', systemPrompt.trim(), '');
   }
 
-  lines.push('# Module SEO Context', '')
+  lines.push('# Module SEO Context', '');
 
-  lines.push('## Metadata')
-  lines.push(`- locale: ${locale}`)
-  lines.push(`- id: ${module.id || ''}`)
-  lines.push(`- slug: ${module.slug || module.id || ''}`)
-  lines.push(`- name: ${module.name || ''}`)
-  lines.push(`- description: ${module.description || ''}`)
-  lines.push(`- tags: ${listText(module.tags)}`)
-  lines.push(`- keywords: ${listText(module.keywords)}`)
-  lines.push(`- contributors: ${listText(module.contributors.map(contributorText))}`)
-  lines.push(`- has demo: ${module.hasDemo ? 'yes' : 'no'}`)
-  if (module.demoFile) lines.push(`- demo file: ${module.demoFile}`)
-  lines.push('')
+  lines.push('## Metadata');
+  lines.push(`- locale: ${locale}`);
+  lines.push(`- id: ${module.id || ''}`);
+  lines.push(`- slug: ${module.slug || module.id || ''}`);
+  lines.push(`- name: ${module.name || ''}`);
+  lines.push(`- description: ${module.description || ''}`);
+  lines.push(`- tags: ${listText(module.tags)}`);
+  lines.push(`- keywords: ${listText(module.keywords)}`);
+  lines.push(`- contributors: ${listText(module.contributors.map(contributorText))}`);
+  lines.push(`- has demo: ${module.hasDemo ? 'yes' : 'no'}`);
+  if (module.demoFile) lines.push(`- demo file: ${module.demoFile}`);
+  lines.push('');
 
   if (Array.isArray(module.variables) && module.variables.length) {
-    lines.push('## Variables')
-    module.variables.forEach((variable) => lines.push(`- ${variableText(variable)}`))
-    lines.push('')
+    lines.push('## Variables');
+    module.variables.forEach((variable) => lines.push(`- ${variableText(variable)}`));
+    lines.push('');
   }
 
   if (Array.isArray(module.references) && module.references.length) {
-    lines.push('## References')
-    module.references.forEach((reference) => lines.push(`- ${referenceText(reference)}`))
-    lines.push('')
+    lines.push('## References');
+    module.references.forEach((reference) => lines.push(`- ${referenceText(reference)}`));
+    lines.push('');
   }
 
   if (module.notesHtml && module.notesHtml.trim()) {
-    lines.push('## Notes')
-    lines.push(module.notesHtml.trim())
-    lines.push('')
+    lines.push('## Notes');
+    lines.push(module.notesHtml.trim());
+    lines.push('');
   }
 
-  lines.push('## Scripts')
+  lines.push('## Scripts');
   if (Array.isArray(module.scripts) && module.scripts.length) {
-    module.scripts.forEach((script, index) => appendScript(lines, script, index + 1))
+    module.scripts.forEach((script, index) => appendScript(lines, script, index + 1));
   } else {
-    lines.push('No scripts available.', '')
+    lines.push('No scripts available.', '');
   }
 
-  lines.push('## Generation Task')
+  lines.push('## Generation Task');
   lines.push(
     // 'Generate concise SEO description content for this Scratch module using the localized metadata, variables, references, notes, and scripts above. Focus on what the module does without inventing unsupported behavior. Output the result in plain text, not Markdown, and do not include any additional commentary or explanation.'
     `基于上方 Scratch 模块的详细代码和元数据，生成一段简洁的SEO描述。
@@ -227,65 +227,65 @@ export function renderSeoContextMarkdown({ module, locale, systemPrompt }: Rende
 - 严格忠于模块实际功能，不要添加未支持的行为。
 - 长度控制在100-140字，适合用作SEO介绍。
 - 只输出纯文本。`
-  )
+  );
 
   return (
     lines
       .join('\n')
       .replace(/\n{3,}/g, '\n\n')
       .trimEnd() + '\n'
-  )
+  );
 }
 
 async function readSystemPrompt(root: string, promptFile: string): Promise<string> {
-  const fullPath = path.resolve(root, promptFile)
+  const fullPath = path.resolve(root, promptFile);
   try {
-    return await fs.readFile(fullPath, 'utf8')
+    return await fs.readFile(fullPath, 'utf8');
   } catch (e) {
-    const message = e instanceof Error ? e.message : String(e)
-    throw new Error(`Unable to read --system-prompt-file ${promptFile}: ${message}`, { cause: e })
+    const message = e instanceof Error ? e.message : String(e);
+    throw new Error(`Unable to read --system-prompt-file ${promptFile}: ${message}`, { cause: e });
   }
 }
 
 async function loadLocalizedModule(root: string, moduleId: string, locale: string): Promise<SeoModule> {
-  const config = await loadSiteConfig(root)
-  const siteData = await loadSiteData({ root, config, isDev: true })
+  const config = await loadSiteConfig(root);
+  const siteData = await loadSiteData({ root, config, isDev: true });
 
   if (siteData.errorsAll.length) {
-    console.error(`Warning: module loading reported ${siteData.errorsAll.length} issue(s).`)
+    console.error(`Warning: module loading reported ${siteData.errorsAll.length} issue(s).`);
   }
 
-  const localizedModules = await loadLocalizedModules(siteData, locale, { skipMissingCheck: true })
+  const localizedModules = await loadLocalizedModules(siteData, locale, { skipMissingCheck: true });
 
-  const module = localizedModules.find((entry) => entry.id === moduleId || entry.slug === moduleId)
+  const module = localizedModules.find((entry) => entry.id === moduleId || entry.slug === moduleId);
   if (!module) {
-    throw new Error(`Module not found: ${moduleId}`)
+    throw new Error(`Module not found: ${moduleId}`);
   }
 
-  return module
+  return module;
 }
 
 async function main(): Promise<void> {
-  const root = path.resolve('.')
-  const options = parseArgs(Bun.argv.slice(2))
+  const root = path.resolve('.');
+  const options = parseArgs(Bun.argv.slice(2));
 
   if (options.help) {
-    console.log(usage())
-    return
+    console.log(usage());
+    return;
   }
 
   if (!options.moduleId) {
-    throw new Error('Missing module id.\n\n' + usage())
+    throw new Error('Missing module id.\n\n' + usage());
   }
 
-  const systemPrompt = options.systemPromptFile ? await readSystemPrompt(root, options.systemPromptFile) : undefined
-  const module = await loadLocalizedModule(root, options.moduleId, options.locale)
-  process.stdout.write(renderSeoContextMarkdown({ module, locale: options.locale, systemPrompt }))
+  const systemPrompt = options.systemPromptFile ? await readSystemPrompt(root, options.systemPromptFile) : undefined;
+  const module = await loadLocalizedModule(root, options.moduleId, options.locale);
+  process.stdout.write(renderSeoContextMarkdown({ module, locale: options.locale, systemPrompt }));
 }
 
 if (import.meta.main) {
   main().catch((e) => {
-    console.error(e instanceof Error ? e.message : String(e))
-    process.exit(1)
-  })
+    console.error(e instanceof Error ? e.message : String(e));
+    process.exit(1);
+  });
 }

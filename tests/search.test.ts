@@ -1,5 +1,5 @@
-import { describe, expect, it } from 'bun:test'
-import { buildSearchIndex } from '../scripts/lib/search.ts'
+import { describe, expect, it } from 'bun:test';
+import { buildSearchIndex } from '../scripts/lib/search.ts';
 
 describe('buildSearchIndex', () => {
   it('builds a valid search index from modules', () => {
@@ -22,12 +22,12 @@ describe('buildSearchIndex', () => {
         slug: 'math-pow',
         hasDemo: true,
       },
-    ]
-    const index = buildSearchIndex(modules)
+    ];
+    const index = buildSearchIndex(modules);
     // Should return a JSON-serializable object (MiniSearch index)
-    expect(index).toBeTruthy()
-    expect(typeof index === 'object').toBeTruthy()
-  })
+    expect(index).toBeTruthy();
+    expect(typeof index === 'object').toBeTruthy();
+  });
 
   it('returns valid JSON-serializable output', () => {
     const modules = [
@@ -40,20 +40,20 @@ describe('buildSearchIndex', () => {
         slug: 'test',
         hasDemo: false,
       },
-    ]
-    const index = buildSearchIndex(modules)
+    ];
+    const index = buildSearchIndex(modules);
     // Should be JSON-serializable
-    const json = JSON.stringify(index)
-    expect(json.length > 0).toBeTruthy()
-    const parsed = JSON.parse(json)
-    expect(typeof parsed === 'object').toBeTruthy()
-  })
+    const json = JSON.stringify(index);
+    expect(json.length > 0).toBeTruthy();
+    const parsed = JSON.parse(json);
+    expect(typeof parsed === 'object').toBeTruthy();
+  });
 
   it('handles empty modules array', () => {
-    const index = buildSearchIndex([])
-    expect(index).toBeTruthy()
-    expect(typeof index === 'object').toBeTruthy()
-  })
+    const index = buildSearchIndex([]);
+    expect(index).toBeTruthy();
+    expect(typeof index === 'object').toBeTruthy();
+  });
 
   it('handles modules with CJK content', () => {
     const modules = [
@@ -66,8 +66,8 @@ describe('buildSearchIndex', () => {
         slug: 'cjk-test',
         hasDemo: false,
       },
-    ]
-    const index = buildSearchIndex(modules)
-    expect(index).toBeTruthy()
-  })
-})
+    ];
+    const index = buildSearchIndex(modules);
+    expect(index).toBeTruthy();
+  });
+});
