@@ -1,26 +1,23 @@
-<% layout('/layouts/base'); %>
+<% layout("/layouts/base") %>
 <% block("title", () => { %><%= it.config.siteName %><% }) %>
-<% block("meta_keywords", () => { %><meta
-  name="keywords"
-  content="<%= it.config.keywords %>"
-/><% }) %>
+<% block("meta_keywords", () => { %><meta name="keywords" content="<%= it.config.keywords %>" /><% }) %>
 
-<section style="display: flex; flex-direction: column">
-  <input id="search" class="input search-input" type="text" placeholder="<%= it.t.home.searchPlaceholder %>" />
-  <div id="results" class="module-list">
-    <% for (const m of it.modules) { %>
-    <article class="module-item">
-      <h2>
-        <a href="<%= it.pageBase %>/modules/<%= m.slug %>/"><%= m.name %></a>
-        <% if (m.hasDemo) { %><span class="badge"><%= it.t.home.onlineDemoBadge %></span><% } %>
-      </h2>
-      <p><%= m.description %></p>
-      <p class="tags"><% for (const tag of m.tags) { %><span class="tag"><%= tag %></span><% } %></p>
-    </article>
-    <% } %>
-  </div>
+<section style="display:flex;flex-direction:column">
+    <input id="search" class="input search-input" type="text" placeholder="<%= it.t.home.searchPlaceholder %>" />
+    <div id="results" class="module-list">
+        <% for (const m of it.modules) { %>
+            <article class="module-item">
+                <h2>
+                    <a href="<%= it.pageBase %>/modules/<%= m.slug %>/"><%= m.name %></a>
+                    <% if (m.hasDemo) { %><span class="badge"><%= it.t.home.onlineDemoBadge %></span><% } %>
+                </h2>
+                <p><%= m.description %></p>
+                <p class="tags">
+                    <% for (const tag of m.tags) { %><span class="tag"><%= tag %></span><% } %>
+                </p>
+            </article>
+        <% } %>
+    </div>
 </section>
 
-<% block("page_scripts", () => { %>
-<script type="module" src="<%= it.assetBase %>/home.js"></script>
-<% }) %>
+<% block("page_scripts", () => { %><script type="module" src="<%= it.assetBase %>/home.js"></script><% }) %>

@@ -1,208 +1,191 @@
 <!DOCTYPE html>
 <html lang="<%= it.lang || 'en' %>">
-  <head>
-    <meta charset="utf-8" />
-    <meta http-equiv="Cache-Control" content="no-store" />
-    <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <meta name="darkreader-lock" content="true" />
-    <title>404 - Page Not Found</title>
-    <link rel="stylesheet" href="<%= it.basePath || '' %>/style.css" />
-    <style>
-      :root {
-        --color-bg-primary: #f7f9fb;
-        --color-bg-secondary: #fff;
-        --color-text-primary: #222;
-        --color-text-secondary: #666;
-        --color-text-tertiary: #999;
-        --color-brand: #1747a6;
-        --color-brand-hover: #0d3180;
-        --color-border-light: #e3e7ee;
-        color-scheme: light dark;
-      }
+    <head>
+        <meta charset="utf-8" />
+        <meta http-equiv="Cache-Control" content="no-store" />
+        <meta name="viewport" content="width=device-width,initial-scale=1" />
+        <meta name="darkreader-lock" content="true" />
+        <title>404 - Page Not Found</title>
+        <link rel="stylesheet" href="<%= it.basePath || '' %>/style.css" />
+        <style>
+            :root {
+                --color-bg-primary: #f7f9fb;
+                --color-bg-secondary: #fff;
+                --color-text-primary: #222;
+                --color-text-secondary: #666;
+                --color-text-tertiary: #999;
+                --color-brand: #1747a6;
+                --color-brand-hover: #0d3180;
+                --color-border-light: #e3e7ee;
+                color-scheme: light dark;
+            }
 
-      @media (prefers-color-scheme: dark) {
-        :root {
-          --color-bg-primary: #0f1722;
-          --color-bg-secondary: #182232;
-          --color-text-primary: #e2e8f0;
-          --color-text-secondary: #9ca3af;
-          --color-text-tertiary: #6b7280;
-          --color-brand: #4da3ff;
-          --color-brand-hover: #79bbff;
-          --color-border-light: #263244;
-        }
-      }
+            @media (prefers-color-scheme: dark) {
+                :root {
+                    --color-bg-primary: #0f1722;
+                    --color-bg-secondary: #182232;
+                    --color-text-primary: #e2e8f0;
+                    --color-text-secondary: #9ca3af;
+                    --color-text-tertiary: #6b7280;
+                    --color-brand: #4da3ff;
+                    --color-brand-hover: #79bbff;
+                    --color-border-light: #263244;
+                }
+            }
 
-      body {
-        font-family:
-          system-ui,
-          -apple-system,
-          Segoe UI,
-          Roboto,
-          Helvetica,
-          Arial,
-          sans-serif;
-        margin: 0;
-        padding: 2rem;
-        background: var(--color-bg-primary);
-        color: var(--color-text-primary);
-      }
-      .container {
-        max-width: 600px;
-        margin: 10vh auto;
-        text-align: center;
-      }
-      .error-code {
-        font-size: 6rem;
-        font-weight: 700;
-        color: var(--color-text-tertiary);
-        margin: 0;
-        line-height: 1;
-      }
-      .error-message {
-        font-size: 1.5rem;
-        margin: 1rem 0 2rem;
-        color: var(--color-text-secondary);
-      }
-      .actions {
-        display: flex;
-        gap: 1rem;
-        justify-content: center;
-        flex-wrap: wrap;
-      }
-      .button {
-        padding: 0.75rem 1.5rem;
-        background: var(--color-brand);
-        color: white;
-        text-decoration: none;
-        border-radius: 4px;
-        font-weight: 600;
-        transition: background 0.2s;
-      }
-      .button:hover {
-        background: var(--color-brand-hover);
-      }
-      .button-secondary {
-        background: var(--color-bg-secondary);
-        color: var(--color-brand);
-        border: 2px solid var(--color-brand);
-      }
-      .button-secondary:hover {
-        background: var(--color-brand);
-        color: white;
-      }
-      .lang-list {
-        margin-top: 2rem;
-        padding-top: 2rem;
-        border-top: 1px solid var(--color-border-light);
-      }
-      .lang-links {
-        display: flex;
-        gap: 1rem;
-        justify-content: center;
-        flex-wrap: wrap;
-      }
-      .lang-links a {
-        color: var(--color-brand);
-        text-decoration: none;
-      }
-      .lang-links a:hover {
-        text-decoration: underline;
-      }
-    </style>
-  </head>
-  <body>
-    <div class="container">
-      <div class="error-code">404</div>
-      <p class="error-message" id="error-msg">Page Not Found</p>
-      <div class="actions">
-        <a href="<%= it.basePath || '' %>/<%= it.defaultLocale %>/" class="button" id="home-link">Back to Home</a>
-        <a
-          href="<%= it.basePath || '' %>/<%= it.defaultLocale %>/"
-          class="button button-secondary"
-          id="search-link"
-          style="display: none"
-          >Search</a
-        >
-      </div>
-      <div class="lang-list">
-        <div class="lang-links">
-          <% for (const locale of it.locales) { %>
-          <a href="<%= it.basePath || '' %>/<%= locale %>/" data-locale="<%= locale %>"
-            ><%= it.languageNames[locale] %></a
-          >
-          <% } %>
+            body {
+                font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+                margin: 0;
+                padding: 2rem;
+                background: var(--color-bg-primary);
+                color: var(--color-text-primary);
+            }
+            .container {
+                max-width: 600px;
+                margin: 10vh auto;
+                text-align: center;
+            }
+            .error-code {
+                font-size: 6rem;
+                font-weight: 700;
+                color: var(--color-text-tertiary);
+                margin: 0;
+                line-height: 1;
+            }
+            .error-message {
+                font-size: 1.5rem;
+                margin: 1rem 0 2rem;
+                color: var(--color-text-secondary);
+            }
+            .actions {
+                display: flex;
+                gap: 1rem;
+                justify-content: center;
+                flex-wrap: wrap;
+            }
+            .button {
+                padding: 0.75rem 1.5rem;
+                background: var(--color-brand);
+                color: white;
+                text-decoration: none;
+                border-radius: 4px;
+                font-weight: 600;
+                transition: background 0.2s;
+            }
+            .button:hover {
+                background: var(--color-brand-hover);
+            }
+            .button-secondary {
+                background: var(--color-bg-secondary);
+                color: var(--color-brand);
+                border: 2px solid var(--color-brand);
+            }
+            .button-secondary:hover {
+                background: var(--color-brand);
+                color: white;
+            }
+            .lang-list {
+                margin-top: 2rem;
+                padding-top: 2rem;
+                border-top: 1px solid var(--color-border-light);
+            }
+            .lang-links {
+                display: flex;
+                gap: 1rem;
+                justify-content: center;
+                flex-wrap: wrap;
+            }
+            .lang-links a {
+                color: var(--color-brand);
+                text-decoration: none;
+            }
+            .lang-links a:hover {
+                text-decoration: underline;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="error-code">404</div>
+            <p class="error-message" id="error-msg">Page Not Found</p>
+            <div class="actions">
+                <a href="<%= it.basePath || '' %>/<%= it.defaultLocale %>/" class="button" id="home-link">Back to Home</a>
+                <a href="<%= it.basePath || '' %>/<%= it.defaultLocale %>/" class="button button-secondary" id="search-link" style="display:none">Search</a>
+            </div>
+            <div class="lang-list">
+                <div class="lang-links">
+                    <% for (const locale of it.locales) { %>
+                        <a href="<%= it.basePath || '' %>/<%= locale %>/" data-locale="<%= locale %>"><%= it.languageNames[locale] %></a>
+                    <% } %>
+                </div>
+            </div>
         </div>
-      </div>
-    </div>
-    <script>
-      var base = '<%= it.basePath || '' %>';
-      var locales = <%~ it.redirectLocales %>;
-      var i18nData = <%~ it.i18nJSON %>;
-      ETAPROTECT96283BF5LINE2X;
+        <script>
+            var base = '<%= it.basePath || '' %>';
+            var locales = <%~ it.redirectLocales %>;
+            var i18nData = <%~ it.i18nJSON %>;
+            <%~ include("/partials/locale-picker") %>
 
-      function detectLocale() {
-        try {
-          var stored = localStorage.getItem('preferred-locale');
-          if (stored && locales.includes(stored)) return stored;
-        } catch (e) {}
+            function detectLocale() {
+                try {
+                    var stored = localStorage.getItem('preferred-locale');
+                    if (stored && locales.includes(stored)) return stored;
+                } catch (e) {}
 
-        var langs = [];
-        if (navigator.languages) langs = Array.from(navigator.languages);
-        else if (navigator.language) langs = [navigator.language];
+                var langs = [];
+                if (navigator.languages) langs = Array.from(navigator.languages);
+                else if (navigator.language) langs = [navigator.language];
 
-        return pickLocale(langs, locales, '<%= it.defaultLocale %>');
-      }
+                return pickLocale(langs, locales, '<%= it.defaultLocale %>');
+            }
 
-      function extractSearchTerm() {
-        var path = location.pathname;
-        if (base) path = path.replace(base, '');
-        path = path.replace(/^\/(en|zh-cn|zh-tw)(\/|$)/, '');
-        var segments = path.split('/').filter(function (s) {
-          return s && s !== 'index.html';
-        });
-        if (segments.length === 0) return null;
-        var lastSegment = segments[segments.length - 1];
-        return lastSegment.replace(/\.(html|htm)$/, '');
-      }
+            function extractSearchTerm() {
+                var path = location.pathname;
+                if (base) path = path.replace(base, '');
+                path = path.replace(/^\/(en|zh-cn|zh-tw)(\/|$)/, '');
+                var segments = path.split('/').filter(function(s) { return s && s !== 'index.html'; });
+                if (segments.length === 0) return null;
+                var lastSegment = segments[segments.length - 1];
+                return lastSegment.replace(/\.(html|htm)$/, '');
+            }
 
-      function updateContent(locale) {
-        var t = i18nData[locale];
-        if (!t || !t['404']) return;
+            function updateContent(locale) {
+                var t = i18nData[locale];
+                if (!t || !t['404']) return;
 
-        var errorMsg = document.getElementById('error-msg');
-        var homeLink = document.getElementById('home-link');
-        var searchLink = document.getElementById('search-link');
+                var errorMsg = document.getElementById('error-msg');
+                var homeLink = document.getElementById('home-link');
+                var searchLink = document.getElementById('search-link');
 
-        if (errorMsg && t['404'].text) errorMsg.textContent = t['404'].text;
+                if (errorMsg && t['404'].text) errorMsg.textContent = t['404'].text;
 
-        if (homeLink) {
-          if (t['404'].home) homeLink.textContent = t['404'].home;
-          homeLink.href = base + '/' + locale + '/';
-        }
+                if (homeLink) {
+                    if (t['404'].home) homeLink.textContent = t['404'].home;
+                    homeLink.href = base + '/' + locale + '/';
+                }
 
-        var searchTerm = extractSearchTerm();
-        if (searchLink && searchTerm) {
-          searchLink.href = base + '/' + locale + '/?q=' + encodeURIComponent(searchTerm);
-          searchLink.style.display = 'inline-block';
-          if (locale === 'zh-cn') {
-            searchLink.textContent = '搜索 "' + searchTerm + '"';
-          } else if (locale === 'zh-tw') {
-            searchLink.textContent = '搜尋 "' + searchTerm + '"';
-          } else {
-            searchLink.textContent = 'Search "' + searchTerm + '"';
-          }
-        }
-      }
+                var searchTerm = extractSearchTerm();
+                if (searchLink && searchTerm) {
+                    searchLink.href = base + '/' + locale + '/?q=' + encodeURIComponent(searchTerm);
+                    searchLink.style.display = 'inline-block';
+                    if (locale === 'zh-cn') {
+                        searchLink.textContent = '搜索 "' + searchTerm + '"';
+                    } else if (locale === 'zh-tw') {
+                        searchLink.textContent = '搜尋 "' + searchTerm + '"';
+                    } else {
+                        searchLink.textContent = 'Search "' + searchTerm + '"';
+                    }
+                }
+            }
 
-      var detectedLocale = detectLocale();
-      updateContent(detectedLocale);
+            var detectedLocale = detectLocale();
+            updateContent(detectedLocale);
 
-      try {
-        if (!localStorage.getItem('preferred-locale')) {
-          localStorage.setItem('preferred-locale', detectedLocale);
-        }
-      } catch (e) {}
-    </script>
-  </body>
+            try {
+                if (!localStorage.getItem('preferred-locale')) {
+                    localStorage.setItem('preferred-locale', detectedLocale);
+                }
+            } catch (e) {}
+        </script>
+    </body>
 </html>
