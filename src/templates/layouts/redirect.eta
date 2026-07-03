@@ -1,42 +1,48 @@
 <!DOCTYPE html>
 <html lang="<%= it.lang || 'en' %>">
-    <head>
-        <meta charset="utf-8" />
-        <meta http-equiv="Cache-Control" content="no-store" />
-        <meta name="viewport" content="width=device-width,initial-scale=1" />
-        <meta name="robots" content="noindex" />
-        <title>Redirecting...</title>
-        <noscript>
-            <meta http-equiv="refresh" content="0; url=<%= it.basePath || '' %>/<%= it.defaultLocale %>/" />
-            <link rel="canonical" href="<%= it.configBaseUrl %>/<%= it.defaultLocale %>/" />
-            <style>
-                body {
-                    font-family: system-ui, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
-                    padding: 2rem
-                }
-            </style>
-        </noscript>
-    </head>
-    <body>
-        <script>
-            var base = '<%= it.basePath || '' %>';
-            var locales = <%~ it.redirectLocales %>;
-            <%~ include("/partials/locale-picker") %>
-            var pref = '';
-            var rememberLang = false;
-            try {
-                pref = localStorage.getItem('preferred-locale') || '';
-                rememberLang = localStorage.getItem('remember-language') === 'true';
-            } catch (e) {}
-            var target = (rememberLang && locales.includes(pref))
-                ? pref
-                : (
-                    locales.includes(pref)
-                    ? pref
-                    : pickLocale(navigator.languages || [navigator.language || ''], locales, '<%= it.defaultLocale %>'));
-            var dest = (base ? base : '') + '/' + target + '/';
-            location.replace(dest);
-        </script>
-        <p>Redirecting...</p>
-    </body>
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="Cache-Control" content="no-store" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="robots" content="noindex" />
+    <title>Redirecting...</title>
+    <noscript>
+      <meta http-equiv="refresh" content="0; url=<%= it.basePath || '' %>/<%= it.defaultLocale %>/" />
+      <link rel="canonical" href="<%= it.configBaseUrl %>/<%= it.defaultLocale %>/" />
+      <style>
+        body {
+          font-family:
+            system-ui,
+            Segoe UI,
+            Roboto,
+            Helvetica,
+            Arial,
+            sans-serif;
+          padding: 2rem;
+        }
+      </style>
+    </noscript>
+  </head>
+  <body>
+    <script>
+      var base = '<%= it.basePath || '' %>';
+      var locales = <%~ it.redirectLocales %>;
+      ETAPROTECT4BAFF558LINE0X;
+      var pref = '';
+      var rememberLang = false;
+      try {
+        pref = localStorage.getItem('preferred-locale') || '';
+        rememberLang = localStorage.getItem('remember-language') === 'true';
+      } catch (e) {}
+      var target =
+        rememberLang && locales.includes(pref)
+          ? pref
+          : locales.includes(pref)
+            ? pref
+            : pickLocale(navigator.languages || [navigator.language || ''], locales, '<%= it.defaultLocale %>');
+      var dest = (base ? base : '') + '/' + target + '/';
+      location.replace(dest);
+    </script>
+    <p>Redirecting...</p>
+  </body>
 </html>

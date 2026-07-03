@@ -1,314 +1,439 @@
 <!DOCTYPE html>
 <html lang="<%= it.config.language %>">
-    <head>
-        <% const shareLinks = it.shareLinks || {}; %>
-        <meta charset="utf-8" />
-        <meta name="viewport" content="width=device-width,initial-scale=1" />
-        <title><%~ block("title", () => { %><%= it.config.siteName %><% }) %></title>
-        <meta name="description" content="<%~ block("meta_description", () => { %><%= it.config.description %><% }) %>" />
-        <%~ block("meta_keywords", () => { %><meta name="keywords" content="<%= it.config.keywords || '' %>" /><% }) %>
-        <meta property="og:type" content="website" />
-        <meta property="og:site_name" content="<%= it.config.siteName %>" />
-        <meta property="og:title" content="<%~ block("og_title", () => { %><%= it.config.siteName %><% }) %>" />
-        <meta property="og:description" content="<%~ block("og_description", () => { %><%= it.config.description %><% }) %>" />
-        <meta property="og:url" content="<%= it.config.baseUrl %><%= it.canonical || '/' %>" />
-        <% if (it.locale) { %>
-            <meta property="og:image" content="<%~ block("og_image", () => { %><%= it.config.baseUrl %>/<%= it.locale %>/cover.png<% }) %>" />
-            <meta property="og:image:width" content="1200" />
-            <meta property="og:image:height" content="630" />
-            <meta name="twitter:card" content="summary_large_image" />
-            <meta name="twitter:title" content="<%~ block("twitter_title", () => { %><%= it.config.siteName %><% }) %>" />
-            <meta name="twitter:description" content="<%~ block("twitter_description", () => { %><%= it.config.description %><% }) %>" />
-            <meta name="twitter:image" content="<%~ block("twitter_image", () => { %><%= it.config.baseUrl %>/<%= it.locale %>/cover.png<% }) %>" />
-        <% } %>
-        <meta name="darkreader-lock" content="true" />
-        <meta name="theme-color" content="#1747a6" media="(prefers-color-scheme: light)">
-        <meta name="theme-color" content="#0d1e33" media="(prefers-color-scheme: dark)">
-        <link rel="canonical" href="<%= it.config.baseUrl %><%= it.canonical || '/' %>" />
-        <% if (it.locales && it.locale && it.pagePath) { %>
-            <% for (const loc of it.locales) { %>
-                <link rel="alternate" href="<%= it.config.baseUrl %>/<%= loc %><%= it.pagePath %>" hreflang="<%= (it.langTags && it.langTags[loc]) || loc %>" />
-            <% } %>
-            <link rel="alternate" href="<%= it.config.baseUrl %>/<%= it.locale %><%= it.pagePath %>" hreflang="x-default" />
-        <% } %>
+  <head>
+    <% const shareLinks = it.shareLinks || {}; %>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title><%~  block("title", () => { %><%= it.config.siteName %><% }) %></title>
+    <meta name="description" content="<%~  block("meta_description", () => { %><%= it.config.description %><% }) %>" />
+    <%~  block("meta_keywords", () => { %>
+    <meta name="keywords" content="<%= it.config.keywords || '' %>" />
+    <% }) %>
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="<%= it.config.siteName %>" />
+    <meta property="og:title" content="<%~  block("og_title", () => { %><%= it.config.siteName %><% }) %>" />
+    <meta
+      property="og:description"
+      content="<%~  block("og_description", () => { %><%= it.config.description %><% }) %>"
+      />
+    <meta property="og:url" content="<%= it.config.baseUrl %><%= it.canonical || '/' %>" />
+    <% if (it.locale) { %>
+    <meta
+      property="og:image"
+      content="<%~  block("og_image", () => { %><%= it.config.baseUrl %>/<%= it.locale %>/cover.png<% }) %>"
+    />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="<%~  block("twitter_title", () => { %><%= it.config.siteName %><% }) %>" />
+    <meta
+      name="twitter:description"
+      content="<%~  block("twitter_description", () => { %><%= it.config.description %><% }) %>"
+      />
+    <meta
+      name="twitter:image"
+      content="<%~  block("twitter_image", () => { %><%= it.config.baseUrl %>/<%= it.locale %>/cover.png<% }) %>"
+    />
+    <% } %>
+    <meta name="darkreader-lock" content="true" />
+    <meta name="theme-color" content="#1747a6" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#0d1e33" media="(prefers-color-scheme: dark)" />
+    <link rel="canonical" href="<%= it.config.baseUrl %><%= it.canonical || '/' %>" />
+    <% if (it.locales && it.locale && it.pagePath) { %>
+    <% for (const loc of it.locales) { %>
+    <link
+      rel="alternate"
+      href="<%= it.config.baseUrl %>/<%= loc %><%= it.pagePath %>"
+      hreflang="<%= (it.langTags && it.langTags[loc]) || loc %>"
+    />
+    <% } %>
+    <link
+      rel="alternate"
+      href="<%= it.config.baseUrl %>/<%= it.locale %><%= it.pagePath %>"
+      hreflang="x-default"
+    />
+      <% } %>
         <% if (it.faviconHtml) { %><%~ it.faviconHtml %><% } %>
-        <% if (it.config.mirrors && it.pagePath) { %>
-            <% for (const mirror of it.config.mirrors) { %>
-                <% if (!mirror.isCurrent) { %>
-                    <link rel="alternate" href="<%= mirror.url %>/<%= it.locale %><%= it.pagePath %>" title="<%= mirror.label %>" />
-                <% } %>
-            <% } %>
+                <% if (it.config.mirrors && it.pagePath) { %>
+    <% for (const mirror of it.config.mirrors) { %>
+    <% if (!mirror.isCurrent) { %>
+    <link
+      rel="alternate"
+      href="<%= mirror.url %>/<%= it.locale %><%= it.pagePath %>"
+      title="<%= mirror.label %>"
+    />
+    <% } %>
         <% } %>
-        <link rel="stylesheet" href="<%= it.assetBase %>/style.css" />
-        <link rel="stylesheet" href="<%= it.assetBase %>/components.css" />
-        <%~ block("head_extra") %>
-    </head>
-    <body>
-        <header>
-            <div class="site-title">
-                <a href="<%= it.pageBase || it.basePath %>/">
-                    <img src="<%= it.assetBase %>/icons/favicon.svg" alt="" width="24" height="24" class="site-logo" aria-hidden="true" />
-                    <%= it.config.siteName %>
-                </a>
-            </div>
-            <nav class="top-actions">
-                <% if (it.IS_DEV && it.buildIssuesSummary && it.buildIssuesSummary.total > 0) { %>
-                    <div id="__issues-banner" class="issue-banner <%= it.buildIssuesSummary.errors > 0 ? 'issue-banner-error' : 'issue-banner-warning' %>" style="padding:var(--space-xs) var(--space-md); font-size:var(--font-size-xs); margin:0">
-                        <strong style="font-weight:var(--font-weight-semibold);">
-                            <%= it.buildIssuesSummary.errors > 0 ? it.t.issues.bannerErrors : it.t.issues.bannerWarnings %>
-                        </strong>
-                        <span style="opacity:.8;"><%= it.t.issues.bannerCounts.replace('{errors}', it.buildIssuesSummary.errors).replace('{warnings}', it.buildIssuesSummary.warnings) %></span>
-                        <a href="<%= it.pageBase %>/issues/" style="color:var(--color-primary); margin-left:var(--space-md)"><%= it.t.issues.bannerView %></a>
-                        <button id="__issues-banner-close" style="margin-left:var(--space-sm); cursor:pointer">x</button>
-                    </div>
-                    <script>
-                        (function () {
-                            var b = document.getElementById('__issues-banner');
-                            var c = document.getElementById('__issues-banner-close');
-                            if (c) c.addEventListener('click', function () { if (b) b.remove(); });
-                        })();
-                    </script>
-                <% } %>
-                <div class="lang-switch">
-                    <button id="lang-btn" class="lang-btn" aria-label="<%= it.t.base.languageSwitchTitle %>" aria-expanded="false">
-                        <%~ it.icons.iconLanguage() %>
-                        <span class="lang-current"><%= (it.i18n?.[it.locale]?.meta?.languageName) || it.locale %></span>
-                        <%~ it.icons.iconChevronDown(16, 16, "lang-arrow") %>
-                    </button>
-                    <div id="lang-menu" class="lang-menu" hidden>
-                        <% for (const loc of it.locales || []) { %>
-                            <button class="lang-option <%= it.locale === loc ? 'lang-option-active' : '' %>" data-locale="<%= loc %>">
-                                <%= (it.i18n?.[loc]?.meta?.languageName) || loc %>
-                            </button>
-                        <% } %>
-                        <div class="lang-divider"></div>
-                        <label class="lang-remember">
-                            <input type="checkbox" id="lang-remember-checkbox" />
-                            <span><%= it.t.base.rememberLanguage %></span>
-                            <span class="lang-remember-tooltip" title="<%= it.t.base.rememberLanguageTooltip %>">
-                                <%~ it.icons.iconCircleQuestionMark(14, 14, "icon-tooltip") %>
-                            </span>
-                        </label>
-                    </div>
-                </div>
-            </nav>
-        </header>
-        <div id="hint-bar" class="hint-bar"><%~ block("hints") %></div>
-        <main>
-            <%~ it.body %>
-        </main>
-        <footer>
-            <% if (Array.isArray(it.modules) && !it.module) { %>
-                <p class="site-module-count"><%= it.t.base.moduleCount.replace('{count}', it.modules.length) %></p>
-            <% } %>
-            <div class="footer-links">
-                <a class="nav-link" href="<%= it.pageBase %>/about/"><%= it.t.base.aboutLink %></a>
-                |
-                <p>
-                    &copy; 2025-2026
-                    <a href="https://github.com/LuYifei2011" target="_blank">Lu Yifei</a>
-                </p>
-                |
-                <a href="<%= it.config.repoUrl %>" target="_blank" rel="noopener"><%= it.t.base.sourceCode %></a>
-                <% if (it.IS_DEV) { %>
-                    |
-                    <a class="nav-link" href="/__dev/" target="_blank">Dev Tools</a>
-                <% } %>
-            </div>
-            <% if (it.config.mirrors && it.config.mirrors.length > 0) { %>
-                <div class="mirror-sites">
-                    <span class="mirror-label"><%= it.t.base.mirrorSites %>:</span>
-                    <% it.config.mirrors.forEach((mirror, index) => { %>
-                        <% if (mirror.isCurrent) { %>
-                            <span class="mirror-item mirror-current"><%= mirror.label %><span class="mirror-badge"> (<%= it.t.base.mirrorCurrent %>)</span></span>
-                        <% } else { %>
-                            <a href="<%= mirror.url %><%= it.locale && it.pagePath ? '/' + it.locale + it.pagePath : '' %>" class="mirror-item" target="_blank" rel="noopener"><%= mirror.label %></a>
-                        <% } %>
-                        <% if (index < it.config.mirrors.length - 1) { %><span class="mirror-sep">|</span><% } %>
-                    <% }) %>
-                </div>
-            <% } %>
-            <% if (it.pagePath !== '/about/') { %>
-                <div class="support-section">
-                    <button class="btn btn-primary btn-support-share" onclick="openShareModal()">
-                        <%~ it.icons.iconShare() %>
-                        <%= it.t.base.sharePage %>
-                    </button>
-                    <a class="btn btn-kofi" href="https://ko-fi.com/H2H21ME5VO" target="_blank">
-                        <img src="<%= it.assetBase %>/assets/donate/ko-fi-cup.webp" width="22" height="15" class="btn-kofi-cup" />
-                        <%= it.t.base.supportKoFi %>
-                    </a>
-                    <a href="<%= it.pageBase %>/about/#support" class="support-more"><%= it.t.base.supportMore %></a>
-                </div>
-            <% } %>
-        </footer>
+    <% } %>
+    <link rel="stylesheet" href="<%= it.assetBase %>/style.css" />
+    <link rel="stylesheet" href="<%= it.assetBase %>/components.css" />
+    <%~ block('head_extra') %>
+  </head>
+  <body>
+    <header>
+      <div class="site-title">
+        <a href="<%= it.pageBase || it.basePath %>/">
+          <img
+            src="<%= it.assetBase %>/icons/favicon.svg"
+            alt=""
+            width="24"
+            height="24"
+            class="site-logo"
+            aria-hidden="true"
+          />
+          <%= it.config.siteName %>
+        </a>
+      </div>
+      <nav class="top-actions">
+        <% if (it.IS_DEV && it.buildIssuesSummary && it.buildIssuesSummary.total > 0) { %>
+        <div
+          id="__issues-banner"
+          class="issue-banner <%= it.buildIssuesSummary.errors > 0 ? 'issue-banner-error' : 'issue-banner-warning' %>"
+          style="padding: var(--space-xs) var(--space-md); font-size: var(--font-size-xs); margin: 0"
+        >
+          <strong style="font-weight: var(--font-weight-semibold)"> ETAPROTECT4F821E4CLINE7X </strong>
+          <span style="opacity: 0.8"><%=
+it.t.issues.bannerCounts
+  .replace('{errors}', it.buildIssuesSummary.errors)
+  .replace('{warnings}', it.buildIssuesSummary.warnings)
+%></span>
+          <a href="<%= it.pageBase %>/issues/" style="color: var(--color-primary); margin-left: var(--space-md)"
+            ><%= it.t.issues.bannerView %></a
+          >
+          <button id="__issues-banner-close" style="margin-left: var(--space-sm); cursor: pointer">x</button>
+        </div>
         <script>
-            window.__I18N = <%~ it.helpers.json(it.t || {}) %>;
-            window.IS_DEV = <%= it.IS_DEV ? 'true' : 'false' %>;
-            window.PAGE_BASE = '<%= it.pageBase || it.assetBase %>';
-            window.ASSET_BASE = '<%= it.assetBase %>';
-            window.PAGE_PATH = '<%= it.pagePath %>';
-            window.LOCALES = <%~ it.helpers.json(it.locales || []) %>;
-            window.CURRENT_LOCALE = '<%= it.locale %>';
-            window.LOCALE_NAMES = <%~ it.helpers.json(it.i18n || {}) %>;
-            (function () {
-                try {
-                    var rememberLang = localStorage.getItem('remember-language') === 'true';
-                    var preferredLocale = localStorage.getItem('preferred-locale');
-                    var currentLocale = '<%= it.locale %>';
-                    if (rememberLang && preferredLocale && preferredLocale !== currentLocale) {
-                        var locales = <%~ it.helpers.json(it.locales || []) %>;
-                        if (locales.includes(preferredLocale)) {
-                            var base = ('<%= it.pageBase || it.assetBase %>').replace(/\/$/, '').replace(/\/[A-Za-z0-9_-]+$/, '');
-                            var to = base + '/' + preferredLocale + '/';
-                            var localesPattern = '<%= (it.locales || []).join('|') %>';
-                            var m = location.pathname.match(new RegExp('/(' + localesPattern + ')/(.*)$'));
-                            var rest = m && m[2] ? m[2] : '';
-                            location.replace(to + rest);
-                            return;
-                        }
-                    }
-                } catch (e) {}
-            })();
-            (function () {
-                var btn = document.getElementById('lang-btn');
-                var menu = document.getElementById('lang-menu');
-                var remember = document.getElementById('lang-remember-checkbox');
-                if (!btn || !menu) return;
-                try {
-                    var rememberPref = localStorage.getItem('remember-language') === 'true';
-                    if (remember) remember.checked = rememberPref;
-                } catch (e) {}
-                btn.addEventListener('click', function (e) {
-                    e.stopPropagation();
-                    var isExpanded = btn.getAttribute('aria-expanded') === 'true';
-                    btn.setAttribute('aria-expanded', !isExpanded);
-                    menu.hidden = isExpanded;
-                });
-                document.addEventListener('click', function () {
-                    btn.setAttribute('aria-expanded', 'false');
-                    menu.hidden = true;
-                });
-                menu.addEventListener('click', function (e) { e.stopPropagation(); });
-                if (remember) {
-                    remember.addEventListener('change', function () {
-                        try {
-                            localStorage.setItem('remember-language', remember.checked);
-                            if (remember.checked) localStorage.setItem('preferred-locale', '<%= it.locale %>');
-                        } catch (e) {}
-                    });
-                }
-                var options = menu.querySelectorAll('.lang-option');
-                options.forEach(function (opt) {
-                    opt.addEventListener('click', function () {
-                        var loc = opt.getAttribute('data-locale');
-                        try { localStorage.setItem('preferred-locale', loc); } catch (e) {}
-                        var base = ('<%= it.pageBase || it.assetBase %>').replace(/\/$/, '').replace(/\/[A-Za-z0-9_-]+$/, '');
-                        var to = base + '/' + loc + '/';
-                        var localesPattern = '<%= (it.locales || []).join('|') %>';
-                        var m = location.pathname.match(new RegExp('/(' + localesPattern + ')/(.*)$'));
-                        var rest = m && m[2] ? m[2] : '';
-                        location.href = to + rest;
-                    });
-                });
-            })();
-            (function () {
-                var i18n = window.__I18N || {};
-                var hints = i18n.hints || {};
-                var locales = window.LOCALES || [];
-                var currentLocale = window.CURRENT_LOCALE || '';
-                try {
-                    var rememberLang = localStorage.getItem('remember-language') === 'true';
-                    var preferredLocale = localStorage.getItem('preferred-locale');
-                    if (rememberLang && preferredLocale === currentLocale) return;
-                } catch (e) {}
-                try { if (sessionStorage.getItem('hint-lang-dismissed')) return; } catch (e) {}
-                <%~ include("/partials/locale-picker") %>
-                var browserLangs = (navigator.languages && navigator.languages.length) ? Array.prototype.slice.call(navigator.languages) : [navigator.language || ''];
-                var suggested = pickLocale(browserLangs, locales, null);
-                if (!suggested || suggested === currentLocale) return;
-                var localeNames = window.LOCALE_NAMES || {};
-                var suggestedLangName = (localeNames[suggested] && localeNames[suggested].meta && localeNames[suggested].meta.languageName) || suggested;
-                var currentLangName = (localeNames[currentLocale] && localeNames[currentLocale].meta && localeNames[currentLocale].meta.languageName) || currentLocale;
-                var msg = (hints.langSuggest || 'This page is also available in {langName}.').replace('{langName}', suggestedLangName);
-                var switchText = (hints.langSuggestSwitchTo || 'Switch to {langName}').replace('{langName}', suggestedLangName);
-                var stayText = (hints.langSuggestStayIn || 'Stay in {currentLangName}').replace('{currentLangName}', currentLangName);
-                var hintBar = document.getElementById('hint-bar');
-                if (!hintBar) return;
-                var div = document.createElement('div');
-                div.className = 'hint-item hint-item-info';
-                var span = document.createElement('span');
-                span.className = 'hint-item-text';
-                span.textContent = msg;
-                div.appendChild(span);
-                var switchBtn = document.createElement('button');
-                switchBtn.className = 'hint-item-action';
-                switchBtn.textContent = switchText;
-                switchBtn.addEventListener('click', function () {
-                    var base = (window.PAGE_BASE || '').replace(/\/$/, '').replace(/\/[A-Za-z0-9_-]+$/, '');
-                    var localesPattern = locales.join('|');
-                    var m = location.pathname.match(new RegExp('/(' + localesPattern + ')/(.*)$'));
-                    var rest = m && m[2] ? m[2] : '';
-                    location.href = base + '/' + suggested + '/' + rest;
-                });
-                div.appendChild(switchBtn);
-                var stayBtn = document.createElement('button');
-                stayBtn.className = 'hint-item-action hint-item-action-secondary';
-                stayBtn.textContent = stayText;
-                stayBtn.addEventListener('click', function () {
-                    try { sessionStorage.setItem('hint-lang-dismissed', '1'); } catch (e) {}
-                    div.remove();
-                });
-                div.appendChild(stayBtn);
-                hintBar.appendChild(div);
-            })();
-            (function () {
-                var hint = document.getElementById('hint-partial-translation');
-                if (!hint) return;
-                var moduleId = hint.getAttribute('data-module') || '';
-                var key = 'hint-pt-' + moduleId;
-                try { if (sessionStorage.getItem(key)) { hint.style.display = 'none'; return; } } catch (e) {}
-                var btn = hint.querySelector('.hint-item-dismiss');
-                if (btn) {
-                    btn.addEventListener('click', function () {
-                        try { sessionStorage.setItem(key, '1'); } catch (e) {}
-                        hint.style.display = 'none';
-                    });
-                }
-            })();
+          (function () {
+            var b = document.getElementById('__issues-banner');
+            var c = document.getElementById('__issues-banner-close');
+            if (c)
+              c.addEventListener('click', function () {
+                if (b) b.remove();
+              });
+          })();
         </script>
-        <%~ block("page_scripts") %>
-        <dialog id="share-modal" class="share-dialog" aria-labelledby="share-modal-title">
-            <div class="share-dialog-header">
-                <h2 id="share-modal-title" class="share-dialog-title"><%= it.t.base.shareTitle %></h2>
-                <button type="button" class="btn btn-ghost btn-sm share-dialog-close" aria-label="<%= it.t.base.shareClose %>">
-                    <%~ it.icons.iconX() %>
-                </button>
-            </div>
-            <div class="share-dialog-body">
-                <div class="share-url-row">
-                    <input type="text" readonly id="share-url-input" class="input share-url-input" value="<%= shareLinks.url || '' %>" />
-                    <button type="button" class="btn btn-outline btn-sm" id="share-copy-btn">
-                        <%~ it.icons.iconCopy() %>
-                        <span id="share-copy-label"><%= it.t.base.shareCopyUrl %></span>
-                    </button>
-                </div>
-                <div class="share-buttons">
-                    <a id="share-btn-twitter" href="<%= shareLinks.twitter || '' %>" target="_blank" rel="noopener" class="btn share-btn-twitter" aria-label="Twitter / X"><%~ it.icons.iconTwitter() %></a>
-                    <a id="share-btn-facebook" href="<%= shareLinks.facebook || '' %>" target="_blank" rel="noopener" class="btn share-btn-facebook" aria-label="Facebook"><%~ it.icons.iconFacebook() %></a>
-                    <a id="share-btn-reddit" href="<%= shareLinks.reddit || '' %>" target="_blank" rel="noopener" class="btn share-btn-reddit" aria-label="Reddit"><%~ it.icons.iconReddit() %></a>
-                    <a id="share-btn-weibo" href="<%= shareLinks.weibo || '' %>" target="_blank" rel="noopener" class="btn share-btn-weibo" aria-label="Weibo"><%~ it.icons.iconWeibo() %></a>
-                    <a id="share-btn-email" href="<%= shareLinks.email || '' %>" class="btn share-btn-email" aria-label="Email"><%~ it.icons.iconEmail() %></a>
-                </div>
-                <img id="share-cover-preview" alt="Cover Preview" src="<%= shareLinks.coverImage || '' %>" loading="lazy" />
-                <div id="share-native-row" hidden>
-                    <button type="button" class="btn btn-primary share-native-btn" id="share-native-btn">
-                        <%~ it.icons.iconShare() %>
+        <% } %>
+        <div class="lang-switch">
+          <button
+            id="lang-btn"
+            class="lang-btn"
+            aria-label="<%= it.t.base.languageSwitchTitle %>"
+            aria-expanded="false">
+            <%~ it.icons.iconLanguage() %>
+            <span class="lang-current"><%= it.i18n?.[it.locale]?.meta?.languageName || it.locale %></span>
+            <%~ it.icons.iconChevronDown(16, 16, 'lang-arrow') %>
+          </button>
+          <div id="lang-menu" class="lang-menu" hidden>
+            <% for (const loc of it.locales || []) { %>
+            <button class="lang-option <%= it.locale === loc ? 'lang-option-active' : '' %>" data-locale="<%= loc %>">
+              <%= it.i18n?.[loc]?.meta?.languageName || loc %>
+            </button>
+            <% } %>
+            <div class="lang-divider"></div>
+            <label class="lang-remember">
+              <input type="checkbox" id="lang-remember-checkbox" />
+              <span><%= it.t.base.rememberLanguage %></span>
+              <span
+                class="lang-remember-tooltip"
+                title="<%= it.t.base.rememberLanguageTooltip %>"> ETAPROTECT4F821E4CLINE14X </span>
+            </label>
+          </div>
+        </div>
+      </nav>
+    </header>
+    <div id="hint-bar" class="hint-bar"><%~ block('hints') %></div>
+    <main>ETAPROTECT4F821E4CLINE15X</main>
+    <footer>
+      <% if (Array.isArray(it.modules) && !it.module) { %>
+      <p class="site-module-count"><%=
+it.t.base.moduleCount.replace(
+  '{count}',
+  it.modules.length
+)
+%></p>
+      <% } %>
+      <div class="footer-links">
+        <a class="nav-link" href="<%= it.pageBase %>/about/"><%= it.t.base.aboutLink %></a>
+        |
+        <p>
+          &copy; 2025-2026
+          <a href="https://github.com/LuYifei2011" target="_blank">Lu Yifei</a>
+        </p>
+        |
+        <a href="<%= it.config.repoUrl %>" target="_blank" rel="noopener"><%= it.t.base.sourceCode %></a>
+        ETAPROTECT4F821E4CLINE18X |
+        <a class="nav-link" href="/__dev/" target="_blank">Dev Tools</a>
+        <% } %>
+      </div>
+      <% if (it.config.mirrors && it.config.mirrors.length > 0) { %>
+      <div class="mirror-sites">
+        <span class="mirror-label"><%= it.t.base.mirrorSites %>:</span>
+        <% it.config.mirrors.forEach((mirror, index) => { %>
+        <% if (mirror.isCurrent) { %>
+        <span class="mirror-item mirror-current"
+          ><%= mirror.label %><span class="mirror-badge"> (<%= it.t.base.mirrorCurrent %>)</span></span
+        >
+        <% } else { %>
+        <a href="<%= mirror.url %><%= it.locale && it.pagePath ? '/' + it.locale + it.pagePath : '' %>" class="mirror-item" target="_blank" rel="noopener"
+          ><%= mirror.label %></a
+        >
+                      <% } %>
+                        <% if (index < it.config.mirrors.length - 1) { %><span class="mirror-sep">|</span
+        ><% } %>
+        <% }) %>
+      </div>
+      <% } %>
+      <% if (it.pagePath !== '/about/') { %>
+      <div class="support-section">
+        <button class="btn btn-primary btn-support-share" onclick="openShareModal()">
+          <%~ it.icons.iconShare() %>
+                        <%= it.t.base.sharePage %>
+        </button>
+        <a class="btn btn-kofi" href="https://ko-fi.com/H2H21ME5VO" target="_blank">
+          <img src="<%= it.assetBase %>/assets/donate/ko-fi-cup.webp" width="22" height="15" class="btn-kofi-cup" />
+          <%= it.t.base.supportKoFi %>
+        </a>
+        <a href="<%= it.pageBase %>/about/#support" class="support-more"><%= it.t.base.supportMore %></a>
+      </div>
+      <% } %>
+    </footer>
+    <script>
+      window.__I18N = <%~ it.helpers.json(it.t || {}) %>;
+      window.IS_DEV = <%= it.IS_DEV ? 'true' : 'false' %>;
+      window.PAGE_BASE = '<%= it.pageBase || it.assetBase %>';
+      window.ASSET_BASE = '<%= it.assetBase %>';
+      window.PAGE_PATH = '<%= it.pagePath %>';
+      window.LOCALES = <%~ it.helpers.json(it.locales || []) %>;
+      window.CURRENT_LOCALE = '<%= it.locale %>';
+      window.LOCALE_NAMES = <%~ it.helpers.json(it.i18n || {}) %>;
+      (function () {
+        try {
+          var rememberLang = localStorage.getItem('remember-language') === 'true';
+          var preferredLocale = localStorage.getItem('preferred-locale');
+          var currentLocale = '<%= it.locale %>';
+          if (rememberLang && preferredLocale && preferredLocale !== currentLocale) {
+            var locales = <%~ it.helpers.json(it.locales || []) %>;
+            if (locales.includes(preferredLocale)) {
+              var base = '<%= it.pageBase || it.assetBase %>'.replace(/\/$/, '').replace(/\/[A-Za-z0-9_-]+$/, '');
+              var to = base + '/' + preferredLocale + '/';
+              var localesPattern = '<%= (it.locales || []).join('|') %>';
+              var m = location.pathname.match(new RegExp('/(' + localesPattern + ')/(.*)$'));
+              var rest = m && m[2] ? m[2] : '';
+              location.replace(to + rest);
+              return;
+            }
+          }
+        } catch (e) {}
+      })();
+      (function () {
+        var btn = document.getElementById('lang-btn');
+        var menu = document.getElementById('lang-menu');
+        var remember = document.getElementById('lang-remember-checkbox');
+        if (!btn || !menu) return;
+        try {
+          var rememberPref = localStorage.getItem('remember-language') === 'true';
+          if (remember) remember.checked = rememberPref;
+        } catch (e) {}
+        btn.addEventListener('click', function (e) {
+          e.stopPropagation();
+          var isExpanded = btn.getAttribute('aria-expanded') === 'true';
+          btn.setAttribute('aria-expanded', !isExpanded);
+          menu.hidden = isExpanded;
+        });
+        document.addEventListener('click', function () {
+          btn.setAttribute('aria-expanded', 'false');
+          menu.hidden = true;
+        });
+        menu.addEventListener('click', function (e) {
+          e.stopPropagation();
+        });
+        if (remember) {
+          remember.addEventListener('change', function () {
+            try {
+              localStorage.setItem('remember-language', remember.checked);
+              if (remember.checked) localStorage.setItem('preferred-locale', '<%= it.locale %>');
+            } catch (e) {}
+          });
+        }
+        var options = menu.querySelectorAll('.lang-option');
+        options.forEach(function (opt) {
+          opt.addEventListener('click', function () {
+            var loc = opt.getAttribute('data-locale');
+            try {
+              localStorage.setItem('preferred-locale', loc);
+            } catch (e) {}
+            var base = '<%= it.pageBase || it.assetBase %>'.replace(/\/$/, '').replace(/\/[A-Za-z0-9_-]+$/, '');
+            var to = base + '/' + loc + '/';
+            var localesPattern = '<%= (it.locales || []).join('|') %>';
+            var m = location.pathname.match(new RegExp('/(' + localesPattern + ')/(.*)$'));
+            var rest = m && m[2] ? m[2] : '';
+            location.href = to + rest;
+          });
+        });
+      })();
+      (function () {
+        var i18n = window.__I18N || {};
+        var hints = i18n.hints || {};
+        var locales = window.LOCALES || [];
+        var currentLocale = window.CURRENT_LOCALE || '';
+        try {
+          var rememberLang = localStorage.getItem('remember-language') === 'true';
+          var preferredLocale = localStorage.getItem('preferred-locale');
+          if (rememberLang && preferredLocale === currentLocale) return;
+        } catch (e) {}
+        try {
+          if (sessionStorage.getItem('hint-lang-dismissed')) return;
+        } catch (e) {}
+        ETAPROTECT4F821E4CLINE24X;
+        var browserLangs =
+          navigator.languages && navigator.languages.length
+            ? Array.prototype.slice.call(navigator.languages)
+            : [navigator.language || ''];
+        var suggested = pickLocale(browserLangs, locales, null);
+        if (!suggested || suggested === currentLocale) return;
+        var localeNames = window.LOCALE_NAMES || {};
+        var suggestedLangName =
+          (localeNames[suggested] && localeNames[suggested].meta && localeNames[suggested].meta.languageName) ||
+          suggested;
+        var currentLangName =
+          (localeNames[currentLocale] &&
+            localeNames[currentLocale].meta &&
+            localeNames[currentLocale].meta.languageName) ||
+          currentLocale;
+        var msg = (hints.langSuggest || 'This page is also available in {langName}.').replace(
+          '{langName}',
+          suggestedLangName
+        );
+        var switchText = (hints.langSuggestSwitchTo || 'Switch to {langName}').replace('{langName}', suggestedLangName);
+        var stayText = (hints.langSuggestStayIn || 'Stay in {currentLangName}').replace(
+          '{currentLangName}',
+          currentLangName
+        );
+        var hintBar = document.getElementById('hint-bar');
+        if (!hintBar) return;
+        var div = document.createElement('div');
+        div.className = 'hint-item hint-item-info';
+        var span = document.createElement('span');
+        span.className = 'hint-item-text';
+        span.textContent = msg;
+        div.appendChild(span);
+        var switchBtn = document.createElement('button');
+        switchBtn.className = 'hint-item-action';
+        switchBtn.textContent = switchText;
+        switchBtn.addEventListener('click', function () {
+          var base = (window.PAGE_BASE || '').replace(/\/$/, '').replace(/\/[A-Za-z0-9_-]+$/, '');
+          var localesPattern = locales.join('|');
+          var m = location.pathname.match(new RegExp('/(' + localesPattern + ')/(.*)$'));
+          var rest = m && m[2] ? m[2] : '';
+          location.href = base + '/' + suggested + '/' + rest;
+        });
+        div.appendChild(switchBtn);
+        var stayBtn = document.createElement('button');
+        stayBtn.className = 'hint-item-action hint-item-action-secondary';
+        stayBtn.textContent = stayText;
+        stayBtn.addEventListener('click', function () {
+          try {
+            sessionStorage.setItem('hint-lang-dismissed', '1');
+          } catch (e) {}
+          div.remove();
+        });
+        div.appendChild(stayBtn);
+        hintBar.appendChild(div);
+      })();
+      (function () {
+        var hint = document.getElementById('hint-partial-translation');
+        if (!hint) return;
+        var moduleId = hint.getAttribute('data-module') || '';
+        var key = 'hint-pt-' + moduleId;
+        try {
+          if (sessionStorage.getItem(key)) {
+            hint.style.display = 'none';
+            return;
+          }
+        } catch (e) {}
+        var btn = hint.querySelector('.hint-item-dismiss');
+        if (btn) {
+          btn.addEventListener('click', function () {
+            try {
+              sessionStorage.setItem(key, '1');
+            } catch (e) {}
+            hint.style.display = 'none';
+          });
+        }
+      })();
+    </script>
+    <%~ block('page_scripts') %>
+    <dialog id="share-modal" class="share-dialog" aria-labelledby="share-modal-title">
+      <div class="share-dialog-header">
+        <h2 id="share-modal-title" class="share-dialog-title"><%= it.t.base.shareTitle %></h2>
+        <button type="button" class="btn btn-ghost btn-sm share-dialog-close" aria-label="<%= it.t.base.shareClose %>">
+          <%~ it.icons.iconX() %>
+        </button>
+      </div>
+      <div class="share-dialog-body">
+        <div class="share-url-row">
+          <input
+            type="text"
+            readonly
+            id="share-url-input"
+            class="input share-url-input"
+            value="<%= shareLinks.url || '' %>"
+          />
+          <button type="button" class="btn btn-outline btn-sm" id="share-copy-btn">
+            <%~ it.icons.iconCopy() %>
+            <span id="share-copy-label"><%= it.t.base.shareCopyUrl %></span>
+          </button>
+        </div>
+        <div class="share-buttons">
+          <a
+            id="share-btn-twitter"
+            href="<%= shareLinks.twitter || '' %>"
+            target="_blank"
+            rel="noopener"
+            class="btn share-btn-twitter"
+            aria-label="Twitter / X"
+            ><%~ it.icons.iconTwitter() %></a
+          >
+          <a
+            id="share-btn-facebook"
+            href="<%= shareLinks.facebook || '' %>"
+            target="_blank"
+            rel="noopener"
+            class="btn share-btn-facebook"
+            aria-label="Facebook"
+            ><%~ it.icons.iconFacebook() %></a
+          >
+          <a
+            id="share-btn-reddit"
+            href="<%= shareLinks.reddit || '' %>"
+            target="_blank"
+            rel="noopener"
+            class="btn share-btn-reddit"
+            aria-label="Reddit"
+            ><%~ it.icons.iconReddit() %></a
+          >
+          <a
+            id="share-btn-weibo"
+            href="<%= shareLinks.weibo || '' %>"
+            target="_blank"
+            rel="noopener"
+            class="btn share-btn-weibo"
+            aria-label="Weibo"
+            ><%~ it.icons.iconWeibo() %></a
+          >
+          <a id="share-btn-email" href="<%= shareLinks.email || '' %>" class="btn share-btn-email" aria-label="Email"
+            ><%~ it.icons.iconEmail() %></a
+          >
+        </div>
+        <img id="share-cover-preview" alt="Cover Preview" src="<%= shareLinks.coverImage || '' %>" loading="lazy" />
+        <div id="share-native-row" hidden>
+          <button type="button" class="btn btn-primary share-native-btn" id="share-native-btn">
+            <%~ it.icons.iconShare() %>
                         <%= it.t.base.shareNative %>
-                    </button>
-                </div>
-            </div>
-        </dialog>
-        <script type="module" src="<%= it.assetBase %>/share.js"></script>
-    </body>
+          </button>
+        </div>
+      </div>
+    </dialog>
+    <script type="module" src="<%= it.assetBase %>/share.js"></script>
+  </body>
 </html>

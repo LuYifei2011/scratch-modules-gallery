@@ -1,17 +1,20 @@
-<% layout("/layouts/base") %>
-<% block("title", () => { %><%= it.t.issues.pageTitle %> - <%= it.config.siteName %><% }) %>
+<% layout('/layouts/base'); %>
+<% block("title", () => { %><%= it.t.issues.pageTitle %> -
+<%= it.config.siteName %><% }) %>
 
 <h1><%= it.t.issues.heading %></h1>
 <% if (it.IS_DEV && it.buildIssuesSummary && it.buildIssuesSummary.total > 0) { %>
-  <p class="text-secondary" style="font-size: var(--font-size-sm);"><%= it.buildIssuesSummaryText %></p>
-  <ul style="list-style:none;padding:0;margin:var(--space-lg) 0;">
-    <% for (const issue of it.buildIssues) { %>
-      <li class="issue-banner <%= issue.type === 'error' ? 'issue-banner-error' : 'issue-banner-warning' %>">
-        <span style="display:inline-block; min-width:52px; font-weight:var(--font-weight-semibold)"><%= String(issue.type).toUpperCase() %></span>
-        <span><%= issue.message %></span>
-      </li>
-    <% } %>
-  </ul>
+<p class="text-secondary" style="font-size: var(--font-size-sm)"><%= it.buildIssuesSummaryText %></p>
+<ul style="list-style: none; padding: 0; margin: var(--space-lg) 0">
+  <% for (const issue of it.buildIssues) { %>
+  <li class="issue-banner <%= issue.type === 'error' ? 'issue-banner-error' : 'issue-banner-warning' %>">
+    <span style="display: inline-block; min-width: 52px; font-weight: var(--font-weight-semibold)"
+      ><%= String(issue.type).toUpperCase() %></span
+    >
+    <span><%= issue.message %></span>
+  </li>
+  <% } %>
+</ul>
 <% } else { %>
-  <p><%= it.t.issues.none %></p>
+<p><%= it.t.issues.none %></p>
 <% } %>

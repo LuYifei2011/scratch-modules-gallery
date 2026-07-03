@@ -1,71 +1,12 @@
-function pickLocale(browserLangs, locales, defaultLocale) {
-    if (!Array.isArray(browserLangs)) {
-        browserLangs = [navigator.language || ''];
-    }
-    if (!Array.isArray(locales)) {
-        locales = [];
-    }
-
-    var ls = browserLangs.map(function (l) {
-        return String(l || '').toLowerCase();
-    });
-
-    function findLocale(match) {
-        for (var i = 0; i < locales.length; i++) {
-            var loc = String(locales[i] || '');
-            if (match(loc, loc.toLowerCase())) {
-                return loc;
-            }
-        }
-        return null;
-    }
-
-    for (var i = 0; i < ls.length; i++) {
-        var exact = findLocale(function (_loc, lowerLoc) {
-            return lowerLoc === ls[i];
-        });
-        if (exact) {
-            return exact;
-        }
-    }
-
-    for (var j = 0; j < ls.length; j++) {
-        var l = ls[j];
-        if (l.indexOf('zh') === 0) {
-            if ((/-tw|-hk|-mo|hant/).test(l)) {
-                var traditional = findLocale(function (_loc, lowerLoc) {
-                    return lowerLoc === 'zh-tw';
-                });
-                if (traditional) {
-                    return traditional;
-                }
-            }
-
-            var simplified = findLocale(function (_loc, lowerLoc) {
-                return lowerLoc === 'zh-cn';
-            });
-            if (simplified) {
-                return simplified;
-            }
-
-            var chinese = findLocale(function (_loc, lowerLoc) {
-                return lowerLoc.indexOf('zh-') === 0;
-            });
-            if (chinese) {
-                return chinese;
-            }
-        }
-    }
-
-    for (var k = 0; k < ls.length; k++) {
-        var primary = ls[k].split('-')[0];
-        var hit = findLocale(function (_loc, lowerLoc) {
-            return lowerLoc.split('-')[0] === primary;
-        });
-        if (hit) {
-            return hit;
-        }
-    }
-
-    return defaultLocale || null;
-}
+function pickLocale(browserLangs, locales, defaultLocale) { if (!Array.isArray(browserLangs)) { browserLangs =
+[navigator.language || '']; } if (!Array.isArray(locales)) { locales = []; } var ls = browserLangs.map(function (l) {
+return String(l || '').toLowerCase(); }); function findLocale(match) { for (var i = 0; i < locales.length; i++) { var
+loc = String(locales[i] || ''); if (match(loc, loc.toLowerCase())) { return loc; } } return null; } for (var i = 0; i <
+ls.length; i++) { var exact = findLocale(function (_loc, lowerLoc) { return lowerLoc === ls[i]; }); if (exact) { return
+exact; } } for (var j = 0; j < ls.length; j++) { var l = ls[j]; if (l.indexOf('zh') === 0) { if
+((/-tw|-hk|-mo|hant/).test(l)) { var traditional = findLocale(function (_loc, lowerLoc) { return lowerLoc === 'zh-tw';
+}); if (traditional) { return traditional; } } var simplified = findLocale(function (_loc, lowerLoc) { return lowerLoc
+=== 'zh-cn'; }); if (simplified) { return simplified; } var chinese = findLocale(function (_loc, lowerLoc) { return
+lowerLoc.indexOf('zh-') === 0; }); if (chinese) { return chinese; } } } for (var k = 0; k < ls.length; k++) { var
+primary = ls[k].split('-')[0]; var hit = findLocale(function (_loc, lowerLoc) { return lowerLoc.split('-')[0] ===
+primary; }); if (hit) { return hit; } } return defaultLocale || null; }

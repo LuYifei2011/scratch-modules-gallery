@@ -1,195 +1,194 @@
-<% layout("/layouts/base") %>
-<% block("title", () => { %><%= it.t.about.title %> - <%= it.config.siteName %><% }) %>
+<% layout('/layouts/base'); %>
+<% block("title", () => { %><%= it.t.about.title %> -
+<%= it.config.siteName %><% }) %>
 <% block("meta_description", () => { %><%= it.t.about.description %><% }) %>
 
 <main class="container">
-    <article class="about-content">
-        <h1><%= it.t.about.title %></h1>
+  <article class="about-content">
+    <h1><%= it.t.about.title %></h1>
 
-        <section class="about-section">
-            <h2><%= it.t.about.whatIsThis %></h2>
-            <p><%= it.t.about.whatIsThisContent %></p>
-        </section>
+    <section class="about-section">
+      <h2><%= it.t.about.whatIsThis %></h2>
+      <p><%= it.t.about.whatIsThisContent %></p>
+    </section>
 
-        <section class="about-section">
-            <h2><%= it.t.about.howToUse %></h2>
-            <p><%= it.t.about.howToUseContent %></p>
-            <ol>
-                <li><%= it.t.about.step1 %></li>
-                <li><%= it.t.about.step2 %></li>
-                <li><%~ it.t.about.step3 %></li>
-            </ol>
-        </section>
+    <section class="about-section">
+      <h2><%= it.t.about.howToUse %></h2>
+      <p><%= it.t.about.howToUseContent %></p>
+      <ol>
+        <li><%= it.t.about.step1 %></li>
+        <li><%= it.t.about.step2 %></li>
+        <li><%~ it.t.about.step3 %></li>
+      </ol>
+    </section>
 
-        <section class="about-section">
-            <h2><%= it.t.about.contribute %></h2>
-            <p><%= it.t.about.contributeContent %></p>
-            <% if (it.config.repoUrl) { %>
-            <p>
-                <a href="<%= it.config.repoUrl %>" target="_blank" rel="noopener" class="btn btn-primary">
-                    <%= it.t.about.viewOnGitHub %>
-                </a>
-            </p>
-            <% } %>
-        </section>
+    <section class="about-section">
+      <h2><%= it.t.about.contribute %></h2>
+      <p><%= it.t.about.contributeContent %></p>
+      <% if (it.config.repoUrl) { %>
+      <p>
+        <a href="<%= it.config.repoUrl %>" target="_blank" rel="noopener" class="btn btn-primary">
+          <%= it.t.about.viewOnGitHub %>
+        </a>
+      </p>
+      <% } %>
+    </section>
 
-        <section class="about-section">
-            <h2><%= it.t.about.license %></h2>
-            <p><%= it.t.about.licenseContent.sourceCode %></p>
-            <p><%= it.t.about.licenseContent.modules %></p>
-        </section>
+    <section class="about-section">
+      <h2><%= it.t.about.license %></h2>
+      <p><%= it.t.about.licenseContent.sourceCode %></p>
+      <p><%= it.t.about.licenseContent.modules %></p>
+    </section>
 
-        <section class="about-section">
-            <h2><%= it.t.about.thirdPartyLicenses %></h2>
-            <p><%= it.t.about.thirdPartyLicensesContent %></p>
-            <ul>
-                <li><a href="<%= it.assetBase %>/thirdparty/lucide.txt" target="_blank" rel="noopener">Lucide Icons</a></li>
-            </ul>
-        </section>
+    <section class="about-section">
+      <h2><%= it.t.about.thirdPartyLicenses %></h2>
+      <p><%= it.t.about.thirdPartyLicensesContent %></p>
+      <ul>
+        <li><a href="<%= it.assetBase %>/thirdparty/lucide.txt" target="_blank" rel="noopener">Lucide Icons</a></li>
+      </ul>
+    </section>
 
-        <section class="about-section">
-            <h2><%= it.t.about.contact %></h2>
-            <p><%= it.t.about.contactContent %></p>
-            <ul>
-                <li>Email: <a href="mailto:<%= it.config.contactEmail %>"><%= it.config.contactEmail %></a></li>
-            </ul>
-        </section>
+    <section class="about-section">
+      <h2><%= it.t.about.contact %></h2>
+      <p><%= it.t.about.contactContent %></p>
+      <ul>
+        <li>Email: <a href="mailto:<%= it.config.contactEmail %>"><%= it.config.contactEmail %></a></li>
+      </ul>
+    </section>
 
-        <section class="about-section" id="support">
-            <h2><%= it.t.about.support %></h2>
-            <p><%= it.t.about.supportContent %></p>
-            <div style="display: flex; align-items: center; gap: var(--space-md); flex-wrap: wrap;">
-                <a class="btn btn-kofi" href="https://ko-fi.com/H2H21ME5VO" target="_blank">
-                    <img src="<%= it.assetBase %>/assets/donate/ko-fi-cup.webp" width="22" height="15" class="btn-kofi-cup" />
-                    <%= it.t.base.supportKoFi %>
-                </a>
-                <button class="btn btn-primary btn-support-share" onclick="openShareModal()">
-                    <%~ it.icons.iconShare() %>
+    <section class="about-section" id="support">
+      <h2><%= it.t.about.support %></h2>
+      <p><%= it.t.about.supportContent %></p>
+      <div style="display: flex; align-items: center; gap: var(--space-md); flex-wrap: wrap">
+        <a class="btn btn-kofi" href="https://ko-fi.com/H2H21ME5VO" target="_blank">
+          <img src="<%= it.assetBase %>/assets/donate/ko-fi-cup.webp" width="22" height="15" class="btn-kofi-cup" />
+          <%= it.t.base.supportKoFi %>
+        </a>
+        <button class="btn btn-primary btn-support-share" onclick="openShareModal()">
+          <%~ it.icons.iconShare() %>
                     <%= it.t.about.supportPromotion %>
-                </button>
-                <a href="<%= it.config.repoUrl %>" target="_blank" rel="noopener" class="btn btn-github">
-                    <%~ it.icons.iconGitHub() %>
+        </button>
+        <a href="<%= it.config.repoUrl %>" target="_blank" rel="noopener" class="btn btn-github">
+          <%~ it.icons.iconGitHub() %>
                     <%= it.t.about.supportStar %>
-                </a>
-            </div>
-            <details style="margin-top: var(--space-md);" open>
-                <summary style="cursor: pointer; font-weight: 500;">
-                    <%= it.t.about.donateOthers %>
-                </summary>
-                <div class="donate-images">
-                    <div class="donate-item">
-                        <img src="<%= it.assetBase %>/assets/donate/alipay.jpg" />
-                        <hr class="donate-divider" />
-                        <span class="donate-label"><%= it.t.about.donateAlipay %></span>
-                    </div>
-                    <div class="donate-item">
-                        <img src="<%= it.assetBase %>/assets/donate/wechatpay.png" />
-                        <hr class="donate-divider" />
-                        <span class="donate-label"><%= it.t.about.donateWeChatPay %></span>
-                    </div>
-                    <div class="donate-item">
-                        <img src="<%= it.assetBase %>/assets/donate/qqwallet.png" />
-                        <hr class="donate-divider" />
-                        <span class="donate-label"><%= it.t.about.donateQQWallet %></span>
-                    </div>
-                </div>
-            </details>
-        </section>
-
-        <div class="back-link">
-            <a href="<%= it.pageBase %>/">← <%= it.t.about.backToHome %></a>
+        </a>
+      </div>
+      <details style="margin-top: var(--space-md)" open>
+        <summary style="cursor: pointer; font-weight: 500">ETAPROTECT75AD3EBELINE4X</summary>
+        <div class="donate-images">
+          <div class="donate-item">
+            <img src="<%= it.assetBase %>/assets/donate/alipay.jpg" />
+            <hr class="donate-divider" />
+            <span class="donate-label"><%= it.t.about.donateAlipay %></span>
+          </div>
+          <div class="donate-item">
+            <img src="<%= it.assetBase %>/assets/donate/wechatpay.png" />
+            <hr class="donate-divider" />
+            <span class="donate-label"><%= it.t.about.donateWeChatPay %></span>
+          </div>
+          <div class="donate-item">
+            <img src="<%= it.assetBase %>/assets/donate/qqwallet.png" />
+            <hr class="donate-divider" />
+            <span class="donate-label"><%= it.t.about.donateQQWallet %></span>
+          </div>
         </div>
-    </article>
+      </details>
+    </section>
+
+    <div class="back-link">
+      <a href="<%= it.pageBase %>/">← <%= it.t.about.backToHome %></a>
+    </div>
+  </article>
 </main>
 
 <style>
-.about-content {
+  .about-content {
     max-width: 800px;
     margin: 0 auto;
     padding: var(--space-lg) var(--space-md);
-}
+  }
 
-.about-section {
+  .about-section {
     margin-bottom: var(--space-xl);
-}
+  }
 
-.about-section h2 {
+  .about-section h2 {
     color: var(--color-brand);
     margin-bottom: var(--space-md);
     font-size: var(--font-size-lg);
-}
+  }
 
-.about-section p {
+  .about-section p {
     line-height: 1.6;
     margin-bottom: var(--space-md);
-}
+  }
 
-.about-section ol {
+  .about-section ol {
     line-height: 1.8;
     padding-left: var(--space-lg);
-}
+  }
 
-.about-section ol li {
+  .about-section ol li {
     margin-bottom: var(--space-sm);
-}
+  }
 
-.donate-images {
+  .donate-images {
     display: flex;
     flex-wrap: wrap;
     gap: var(--space-md);
     margin-top: var(--space-md);
-}
+  }
 
-.donate-item {
+  .donate-item {
     flex: 1 1 0;
     min-width: 0;
     display: flex;
     flex-direction: column;
     align-items: center;
-}
+  }
 
-.donate-item img {
+  .donate-item img {
     width: 100%;
     height: auto;
     object-fit: contain;
-}
+  }
 
-.donate-divider {
+  .donate-divider {
     width: 40%;
     border: none;
     border-top: 2px solid var(--color-border-light);
     margin: var(--space-sm) 0;
-}
+  }
 
-.donate-label {
+  .donate-label {
     font-size: var(--font-size-sm);
     color: var(--color-text-secondary);
     text-align: center;
-}
+  }
 
-@media (max-width: 600px) {
+  @media (max-width: 600px) {
     .donate-images {
-        flex-direction: column;
+      flex-direction: column;
     }
 
     .donate-item {
-        flex: none;
-        width: 100%;
+      flex: none;
+      width: 100%;
     }
-}
+  }
 
-.back-link {
+  .back-link {
     margin-top: var(--space-xl);
     padding-top: var(--space-lg);
     border-top: 1px solid var(--color-border-light);
-}
+  }
 
-.back-link a {
+  .back-link a {
     color: var(--color-brand);
     text-decoration: none;
-}
+  }
 
-.back-link a:hover {
+  .back-link a:hover {
     text-decoration: underline;
-}
+  }
 </style>
