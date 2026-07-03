@@ -152,7 +152,7 @@ function safeJson(value: unknown): string {
     .replace(/\u2029/g, '\\u2029');
 }
 
-function renderSbBlock(
+export function renderSbBlock(
   content: unknown,
   editModuleId: unknown,
   editScriptId: unknown,

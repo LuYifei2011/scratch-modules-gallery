@@ -1,6 +1,16 @@
 import { describe, expect, it } from 'bun:test';
 import { markdownToHtml } from '../scripts/lib/markdown.ts';
 
+const t = {
+  module: {
+    copyScript: 'Copy script',
+    editScript: 'Edit script',
+    exportSVG: 'Export SVG',
+    exportPNG: 'Export PNG',
+    exportImage: 'Export image',
+  },
+};
+
 describe('markdownToHtml', () => {
   it('converts basic markdown to HTML', () => {
     const html = markdownToHtml('# Hello');
@@ -37,7 +47,11 @@ describe('markdownToHtml', () => {
   });
 
   it('handles scratchblocks block extension', () => {
-    const html = markdownToHtml('<scratchblocks>\nwhen green flag clicked\n</scratchblocks>');
+    const html = markdownToHtml('<scratchblocks>\nwhen green flag clicked\n</scratchblocks>', { t });
+    expect(html.includes('class="sb-block"')).toBeTruthy();
+    expect(html.includes('class="sb-actions"')).toBeTruthy();
+    expect(html.includes('class="sb-action sb-copy"')).toBeTruthy();
+    expect(html.includes('class="sb-action sb-export-svg"')).toBeTruthy();
     expect(html.includes('class="scratchblocks"')).toBeTruthy();
     expect(html.includes('when green flag clicked')).toBeTruthy();
   });

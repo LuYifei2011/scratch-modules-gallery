@@ -369,7 +369,11 @@ export async function translateModulesForLocale(
           if (commentsMapsForNotes) notesNameMaps.comments = commentsMapsForNotes;
           rawNotes = translateMarkdownScratchblocks(rawNotes, translateScriptText, languageTag, notesNameMaps);
         }
-        nm.notesHtml = markdownToHtml(rawNotes);
+        nm.notesHtml = markdownToHtml(rawNotes, {
+          t: dict[locale],
+          moduleId: m.id,
+          isDev: process.env.IS_DEV === '1',
+        });
       } else {
         nm.notesHtml = '';
       }

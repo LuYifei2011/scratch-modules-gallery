@@ -31,9 +31,17 @@ describe('translateModulesForLocale', () => {
     scriptTitles: { main: 'Main' },
   };
 
+  const moduleUi = {
+    copyScript: 'Copy script',
+    editScript: 'Edit script',
+    exportSVG: 'Export SVG',
+    exportPNG: 'Export PNG',
+    exportImage: 'Export image',
+  };
+
   const dict = {
-    en: { meta: { languageTag: 'en' } },
-    'zh-cn': { meta: { languageTag: 'zh-CN' } },
+    en: { meta: { languageTag: 'en' }, module: moduleUi },
+    'zh-cn': { meta: { languageTag: 'zh-CN' }, module: moduleUi },
   };
 
   it('returns localized name and description for zh-cn', async () => {

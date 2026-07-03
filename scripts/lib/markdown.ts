@@ -1,4 +1,5 @@
-import { marked } from 'marked';
+import { Marked } from 'marked';
+import { renderSbBlock } from './template-renderer.ts';
 
 interface ScratchblocksToken {
   type: string;
@@ -8,31 +9,42 @@ interface ScratchblocksToken {
   blockPath?: string;
 }
 
-export function markdownToHtml(markdown: string): string {
-  return marked.parse(markdown) as string;
+interface MarkdownRenderOptions {
+  t?: any;
+  moduleId?: string;
+  isDev?: boolean;
 }
 
-const scratchblocksBlockExtension = {
-  name: 'scratchblocks-block',
-  level: 'block' as const,
-  start(src: string) {
-    return src.indexOf('<scratchblocks>');
-  },
-  tokenizer(src: string): ScratchblocksToken | undefined {
-    const rule = /^<scratchblocks>([\s\S]+?)<\/scratchblocks>/;
-    const match = rule.exec(src);
-    if (match) {
-      return {
-        type: 'scratchblocks-block',
-        raw: match[0],
-        text: match[1]!.trim(),
-      };
-    }
-  },
-  renderer(token: ScratchblocksToken) {
-    return `<pre class="scratchblocks">${token.text}</pre>`;
-  },
-};
+export function markdownToHtml(markdown: string, options: MarkdownRenderOptions = {}): string {
+  const parser = new Marked({
+    extensions: [scratchblocksBlockExtension(options), scratchblocksInlineExtension, goToBlockExtension],
+  });
+  return parser.parse(markdown) as string;
+}
+
+function scratchblocksBlockExtension(options: MarkdownRenderOptions) {
+  return {
+    name: 'scratchblocks-block',
+    level: 'block' as const,
+    start(src: string) {
+      return src.indexOf('<scratchblocks>');
+    },
+    tokenizer(src: string): ScratchblocksToken | undefined {
+      const rule = /^<scratchblocks>([\s\S]+?)<\/scratchblocks>/;
+      const match = rule.exec(src);
+      if (match) {
+        return {
+          type: 'scratchblocks-block',
+          raw: match[0],
+          text: match[1]!.trim(),
+        };
+      }
+    },
+    renderer(token: ScratchblocksToken) {
+      return renderSbBlock(token.text, options.moduleId, '', '', options.t, options.isDev);
+    },
+  };
+}
 
 const scratchblocksInlineExtension = {
   name: 'scratchblocks-inline',
@@ -80,7 +92,3 @@ const goToBlockExtension = {
     return `<a href="javascript:void(0)" class="go-to-block" data-script-id="${token.scriptId}" data-block-path="${token.blockPath}">${token.text}</a>`;
   },
 };
-
-marked.use({
-  extensions: [scratchblocksBlockExtension, scratchblocksInlineExtension, goToBlockExtension],
-});
