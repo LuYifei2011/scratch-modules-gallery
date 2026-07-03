@@ -62,17 +62,15 @@
             <h2>{{ t.about.support }}</h2>
             <p>{{ t.about.supportContent }}</p>
             <div style="display: flex; align-items: center; gap: var(--space-md); flex-wrap: wrap;">
-                <a class="btn" href="https://ko-fi.com/H2H21ME5VO" target="_blank" 
-                    style="height: 22px; background-color: #ff6433; color: white;">
-                    <img src="{{ assetBase }}/assets/donate/ko-fi-cup.webp" width="22" height="15" style="vertical-align: middle; margin-right: 4px;" />
+                <a class="btn btn-kofi" href="https://ko-fi.com/H2H21ME5VO" target="_blank">
+                    <img src="{{ assetBase }}/assets/donate/ko-fi-cup.webp" width="22" height="15" class="btn-kofi-cup" />
                     {{ t.base.supportKoFi }}
                 </a>
-                <button class="btn btn-primary" style="height: 40px;" onclick="openShareModal()">
+                <button class="btn btn-primary btn-support-share" onclick="openShareModal()">
                     {{ icons.iconShare() }}
                     {{ t.about.supportPromotion }}
                 </button>
-                <a href="{{ config.repoUrl }}" target="_blank" rel="noopener" class="btn btn-primary"
-                    style="height: 22px; background-color: #24292e; color: white; border-color: #24292e;">
+                <a href="{{ config.repoUrl }}" target="_blank" rel="noopener" class="btn btn-github">
                     {{ icons.iconGitHub() }}
                     {{ t.about.supportStar }}
                 </a>

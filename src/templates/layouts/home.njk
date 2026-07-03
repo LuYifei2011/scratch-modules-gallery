@@ -4,7 +4,7 @@
 {% block meta_keywords %}<meta name="keywords" content="{{ config.keywords }}" />{% endblock %}
 {% block content %}
     <section style="display:flex;flex-direction:column">
-        <input id="search" type="text" placeholder="{{ t.home.searchPlaceholder }}" />
+        <input id="search" class="input search-input" type="text" placeholder="{{ t.home.searchPlaceholder }}" />
         <div id="results" class="module-list">
             {% for m in modules %}
                 <article class="module-item">
