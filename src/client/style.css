@@ -453,4 +453,33 @@ input#search:focus {
     background: #040506;
   }
 }
-/* 多脚本块布局 */
+
+/* 打印样式 */
+@media print {
+  header,
+  footer,
+  dialog {
+    display: none !important;
+  }
+  .badge {
+    color: var(--color-badge-bg);
+    border: 1px solid currentColor;
+  }
+}
+/* 适配 Safari/WebKit，确保无背景 */
+@supports (-webkit-appearance: none) {
+  @media print {
+    * {
+      background: transparent !important;
+    }
+  }
+}
+/* 适配 Safari，避免过大页边距 */
+@supports (font: -apple-system-body) and (-webkit-appearance: none) {
+  @media print {
+    main {
+      margin: 0;
+      padding: 0;
+    }
+  }
+}

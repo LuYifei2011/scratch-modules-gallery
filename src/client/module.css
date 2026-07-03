@@ -479,3 +479,23 @@ th {
     width: 100%;
   }
 }
+
+/* 打印样式 */
+@media print {
+  .module-toc,
+  .sb-translate-switcher,
+  .sb-style-switcher,
+  .sb-actions,
+  .sb-action,
+  #demo {
+    display: none !important;
+  }
+  #module-title {
+    margin-bottom: 0;
+  }
+  .variables th,
+  .variables td,
+  pre.scratchblocks {
+    border: 1px solid black;
+  }
+}

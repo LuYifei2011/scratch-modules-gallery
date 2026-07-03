@@ -587,3 +587,13 @@
     color: #ffd54a;
   }
 }
+
+/* === 打印样式 === */
+@media print {
+  .tag {
+    border: 1px solid var(--color-tag-text);
+  }
+  .hint-bar {
+    display: none;
+  }
+}
