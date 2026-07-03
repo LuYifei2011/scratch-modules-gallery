@@ -13,7 +13,7 @@ const PRETTIER_EXTENSIONS = new Set([
   '.jsonc',
   '.md',
   '.mjs',
-  '.njk',
+  '.eta',
   '.ts',
   '.tsx',
   '.yaml',

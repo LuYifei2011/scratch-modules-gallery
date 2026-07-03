@@ -1,15 +1,14 @@
 <!DOCTYPE html>
-<html lang="{{ lang | default("en") }}">
+<html lang="<%= it.lang || 'en' %>">
     <head>
         <meta charset="utf-8" />
         <meta http-equiv="Cache-Control" content="no-store" />
         <meta name="viewport" content="width=device-width,initial-scale=1" />
         <meta name="robots" content="noindex" />
-        <title>Redirecting…</title>
+        <title>Redirecting...</title>
         <noscript>
-            <meta http-equiv="refresh"
-                  content="0; url={{ basePath or '' }}/{{ defaultLocale }}/" />
-            <link rel="canonical" href="{{ configBaseUrl }}/{{ defaultLocale }}/" />
+            <meta http-equiv="refresh" content="0; url=<%= it.basePath || '' %>/<%= it.defaultLocale %>/" />
+            <link rel="canonical" href="<%= it.configBaseUrl %>/<%= it.defaultLocale %>/" />
             <style>
                 body {
                     font-family: system-ui, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
@@ -20,9 +19,9 @@
     </head>
     <body>
         <script>
-            var base ='{{ basePath or '' }}';
-            var locales = {{ redirectLocales | safe }};
-            {% include "partials/locale-picker.njk" %}
+            var base = '<%= it.basePath || '' %>';
+            var locales = <%~ it.redirectLocales %>;
+            <%~ include("/partials/locale-picker") %>
             var pref = '';
             var rememberLang = false;
             try {
@@ -34,13 +33,10 @@
                 : (
                     locales.includes(pref)
                     ? pref
-                    : pickLocale(navigator.languages || [navigator.language || ''], locales, '{{ defaultLocale }}'));
-            var dest = (
-                base
-                ? base
-                : '') + '/' + target + '/';
+                    : pickLocale(navigator.languages || [navigator.language || ''], locales, '<%= it.defaultLocale %>'));
+            var dest = (base ? base : '') + '/' + target + '/';
             location.replace(dest);
         </script>
-        <p>Redirecting…</p>
+        <p>Redirecting...</p>
     </body>
 </html>

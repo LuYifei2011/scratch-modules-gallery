@@ -1,0 +1,204 @@
+<% layout("/layouts/base") %>
+<% const module = it.module; %>
+<% block("title", () => { %><%= module.name %> - <%= it.config.siteName %><% }) %>
+<% block("og_title", () => { %><%= module.name %> - <%= it.config.siteName %><% }) %>
+<% block("og_description", () => { %><%= module.description %><% }) %>
+<% block("og_image", () => { %><%= it.config.baseUrl %>/<%= it.locale %>/modules/<%= module.slug %>/cover.png<% }) %>
+<% block("twitter_title", () => { %><%= module.name %> - <%= it.config.siteName %><% }) %>
+<% block("twitter_description", () => { %><%= module.description %><% }) %>
+<% block("twitter_image", () => { %><%= it.config.baseUrl %>/<%= it.locale %>/modules/<%= module.slug %>/cover.png<% }) %>
+<% block("meta_description", () => { %><%= module.seoDescription || module.description %><% }) %>
+<% block("meta_keywords", () => { %><meta name="keywords" content="<%= module.keywordsFinalStr %>" /><% }) %>
+<% block("head_extra", () => { %>
+    <% const structuredData = {
+        '@context': 'https://schema.org',
+        '@type': 'SoftwareSourceCode',
+        name: module.name,
+        description: `${module.description} `,
+        programmingLanguage: 'Scratch',
+        keywords: module.keywordsFinalStr,
+        url: `${it.config.baseUrl}/${it.locale}/modules/${module.slug}/`,
+    }; %>
+    <script type="application/ld+json">
+    <%~ it.helpers.json(structuredData) %>
+    </script>
+<% }) %>
+<% block("hints", () => { %>
+    <% if (module.hasPartialTranslation && it.locale !== 'en') { %>
+        <div class="hint-item hint-item-warning" id="hint-partial-translation" data-module="<%= module.slug %>">
+            <span class="hint-item-text"><%= it.t.hints.partialTranslation %></span>
+            <button class="hint-item-dismiss" aria-label="<%= it.t.hints.dismiss %>">x</button>
+        </div>
+    <% } %>
+<% }) %>
+
+<div class="module-layout">
+    <nav class="module-toc" id="module-toc" aria-label="<%= it.t.module.toc %>">
+        <button class="toc-toggle" id="toc-toggle" aria-expanded="false" aria-controls="toc-panel">
+            <span class="toc-title"><%= it.t.module.toc %></span>
+            <%~ it.icons.iconChevronDown(16, 16, "toc-arrow") %>
+        </button>
+        <div class="toc-panel" id="toc-panel">
+            <ol class="toc-list" id="toc-list">
+                <li class="toc-item"><a class="toc-link" href="#module-title"><%= module.name %></a></li>
+                <li class="toc-item">
+                    <a class="toc-link" href="#scripts"><%= it.t.module.scripts %></a>
+                    <ol class="toc-sub-list">
+                        <% for (const s of module.scripts) { %>
+                            <% if (!s.imported && s.title) { %>
+                                <li class="toc-sub-item"><a class="toc-link toc-link-sub" href="#script-<%= s.id %>"><%= s.title %></a></li>
+                            <% } %>
+                        <% } %>
+                    </ol>
+                </li>
+                <% if (module.variables.length) { %><li class="toc-item"><a class="toc-link" href="#variables"><%= it.t.module.variablesTitle %></a></li><% } %>
+                <% if (module.notesHtml) { %><li class="toc-item"><a class="toc-link" href="#notes"><%= it.t.module.notes %></a></li><% } %>
+                <% if (module.hasDemo) { %><li class="toc-item"><a class="toc-link" href="#demo"><%= it.t.module.demo %></a></li><% } %>
+                <% if (module.references.length) { %><li class="toc-item"><a class="toc-link" href="#references"><%= it.t.module.references %></a></li><% } %>
+            </ol>
+        </div>
+    </nav>
+    <article class="module-detail">
+        <div style="display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: var(--space-md)">
+            <h1 id="module-title"><%= module.name %></h1>
+            <% if (it.IS_DEV) { %>
+                <a href="/__dev/editor/?module=<%= module.id %>" class="btn btn-sm btn-primary" style="height: 20px; display:inline-flex; align-items:center; gap:6px">
+                    <%~ it.icons.iconEdit(14, 14) %>
+                    <%= it.t.module.editModule %>
+                </a>
+            <% } %>
+        </div>
+        <p><%= module.description %></p>
+        <p class="tags">
+            <% for (const tag of module.tags) { %><span class="tag"><%= tag %></span><% } %>
+        </p>
+        <% if (it.IS_DEV && module.keywordsStr) { %>
+            <p style="display: flex; align-items: center; gap: 8px; margin: var(--space-md) 0 0 0; font-size: 0.9em">
+                <%~ it.icons.iconDebug(16, 16) %> Keywords:
+                <span><%= module.keywordsStr %></span>
+            </p>
+        <% } %>
+        <% if (module.contributors.length) { %>
+            <p class="contributors">
+                <%= it.t.module.contributors %>:
+                <% for (const c of module.contributors) { %>
+                    <span class="contributor">
+                        <% if (c.url) { %>
+                            <a href="<%= c.url %>" target="_blank" rel="noopener"><%= c.name %></a>
+                        <% } else { %>
+                            <%= c.name %>
+                        <% } %>
+                    </span>
+                <% } %>
+            </p>
+        <% } %>
+        <section id="scripts">
+            <h2><%= it.t.module.scripts %></h2>
+            <div class="sb-style-switcher" style="margin-bottom: var(--space-lg);">
+                <label for="sb-style"><%= it.t.module.renderStyle %></label>
+                <select id="sb-style" class="select-inline">
+                    <option value="scratch3" selected>Scratch 3</option>
+                    <option value="scratch3-high-contrast">Scratch 3 (<%= it.t.module.highContrast %>)</option>
+                    <option value="scratch2">Scratch 2</option>
+                </select>
+            </div>
+            <div class="sb-translate-switcher" style="margin-bottom: var(--space-lg);">
+                <label for="sb-translate"><%= it.t.module.translateTo %></label>
+                <select id="sb-translate" class="select-inline">
+                    <option value="no-translate" selected><%= it.t.module.noTranslate %></option>
+                    <% for (const lang of it.scratchblocksLanguages) { %><option value="<%= lang.code %>"><%= lang.name %></option><% } %>
+                </select>
+            </div>
+            <% if (module.scripts && module.scripts.length) { %>
+                <% for (const s of module.scripts) { %>
+                    <% if (s.imported) { %>
+                        <%~ it.helpers.renderImportedDetails(s, it.t, it.IS_DEV, it.pageBase) %>
+                    <% } else { %>
+                        <div class="script-block"<% if (s.title) { %> id="script-<%= s.id %>"<% } %>>
+                            <% if (s.title) { %><h3 class="script-title"><%= s.title %></h3><% } %>
+                            <% if (s.leadingImports) { %>
+                                <% for (const imp of s.leadingImports) { %>
+                                    <%~ it.helpers.renderImportedDetails(imp, it.t, it.IS_DEV, it.pageBase) %>
+                                <% } %>
+                            <% } %>
+                            <%~ it.helpers.renderSbBlock(s.content, module.id, s.id, s.id, it.t, it.IS_DEV) %>
+                        </div>
+                    <% } %>
+                <% } %>
+            <% } %>
+        </section>
+        <% if (module.variables.length) { %>
+            <section id="variables">
+                <h2><%= it.t.module.variablesTitle %></h2>
+                <table class="variables">
+                    <thead>
+                        <tr>
+                            <th><%= it.t.module.varName %></th>
+                            <th><%= it.t.module.varType %></th>
+                            <th><%= it.t.module.varScope %></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% for (const v of module.variables) { %>
+                            <tr data-display-name="<%= v.displayName || v.name %>" data-type="<%= v.type %>" data-scope="<%= v.scope %>">
+                                <td class="var-name-cell">
+                                    <div class="var-name-wrap">
+                                        <span class="var-name-block"><%= v.displayName || v.name %></span>
+                                        <button class="sb-action sb-copy var-copy" type="button" aria-label="<%= it.t.module.copyScript %>" title="<%= it.t.module.copyScript %>">
+                                            <%~ it.icons.iconCopy() %>
+                                            <%~ it.icons.iconCheck() %>
+                                        </button>
+                                    </div>
+                                </td>
+                                <td><%= it.t.module.typeMap[v.type] || v.type %></td>
+                                <td><%= it.t.module.scopeMap[v.scope] || v.scope %></td>
+                            </tr>
+                        <% } %>
+                    </tbody>
+                </table>
+            </section>
+        <% } %>
+        <% if (module.notesHtml) { %>
+            <section id="notes">
+                <h2><%= it.t.module.notes %></h2>
+                <%~ module.notesHtml %>
+            </section>
+        <% } %>
+        <% if (module.hasDemo) { %>
+            <section id="demo">
+                <div class="demo-header">
+                    <h2 style="margin:0;"><%= it.t.module.demo %></h2>
+                    <div class="demo-actions">
+                        <a class="btn btn-primary demo-btn" href="https://turbowarp.org/editor?project_url=<%= encodeURIComponent(it.config.baseUrl + '/modules/' + module.slug + '/demo.sb3') %>" target="_blank" rel="noopener">
+                            <span class="btn-icon"><%~ it.icons.iconEdit(18, 18) %></span>
+                            <span class="btn-text"><%= it.t.module.openInTW %></span>
+                        </a>
+                        <a class="btn demo-btn" href="<%= it.config.baseUrl %>/modules/<%= module.slug %>/demo.sb3" download="<%= module.slug %>-demo.sb3">
+                            <span class="btn-icon"><%~ it.icons.iconDownload(18, 18) %></span>
+                            <span class="btn-text"><%= it.t.module.downloadDemo %></span>
+                        </a>
+                    </div>
+                </div>
+                <iframe src="https://turbowarp.org/embed?project_url=<%= encodeURIComponent(it.config.baseUrl + '/modules/' + module.slug + '/demo.sb3') %>&settings-button&addons=pause,clones" class="demo-iframe" allowtransparency="true" frameborder="0" scrolling="no" allowfullscreen loading="lazy"></iframe>
+            </section>
+        <% } %>
+        <% if (module.references.length) { %>
+            <section id="references">
+                <h2><%= it.t.module.references %></h2>
+                <ul>
+                    <% for (const r of module.references) { %>
+                        <li>
+                            <a href="<%= r.url %>" target="_blank" rel="noopener"><%= r.title %></a>
+                            <% if (r.type) { %><em>(<%= r.type %>)</em><% } %>
+                        </li>
+                    <% } %>
+                </ul>
+            </section>
+        <% } %>
+    </article>
+</div>
+
+<% block("page_scripts", () => { %>
+    <link rel="stylesheet" href="<%= it.assetBase %>/module.css" />
+    <script type="module" src="<%= it.assetBase %>/module.js"></script>
+<% }) %>

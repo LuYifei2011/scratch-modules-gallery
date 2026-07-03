@@ -82,7 +82,7 @@ export function buildModuleRecord(
     translations: extra.translations || {},
     // hasPartialTranslation: 由 i18n-engine 在翻译时按语言设置，
     // 标记当前语言下该模块存在未翻译字段（name/description/scriptTitles 等缺失）。
-    // 模板（module.njk）用此字段展示"部分内容未翻译"提示栏。
+    // 模板（module.eta）用此字段展示"部分内容未翻译"提示栏。
     hasPartialTranslation: false,
   };
   return { record, errors };

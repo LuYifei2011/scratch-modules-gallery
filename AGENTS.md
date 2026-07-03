@@ -10,7 +10,7 @@
 2. **数据模型 `scripts/lib/schema.ts`**：统一字段 (id, slug, name, description, tags, contributors[], scripts[], hasDemo, variables[], notesMap, references)。任何字段变更需评估链路：schema → build → 模板 → 搜索 → 前端脚本。
    - `parseContributors`: 支持 `gh/user` / `sc/user` 自动生成链接，或普通字符串/对象数组
    - `meta.json` 中的 `name` / `description` / `seoDescription` 是英文基线；非英文文本放入模块 `i18n/<locale>.json` 覆盖，禁止用 locale map 混写
-3. **模板 Nunjucks**：`src/templates/layouts/{base,home,module}.njk` 只做展示；上下文：`config,module,t,locale,pageBase,assetBase,pagePath,locales,year,IS_DEV,langTags,buildIssues,buildIssuesSummary`。
+3. **模板 Eta**：`src/templates/layouts/{base,home,module}.eta` 只做展示；上下文：`config,module,t,locale,pageBase,assetBase,pagePath,locales,year,IS_DEV,langTags,buildIssues,buildIssuesSummary`。
    - 禁止模板中直接调用时间或访问浏览器环境
 
 - `pageBase` / `assetBase` 由 `site.config.ts` baseUrl 计算，确保多语言路径正确
@@ -121,7 +121,7 @@
 
 ### 推荐阅读顺序
 
-`scripts/build.ts` → `scripts/lib/schema.ts` → `src/templates/layouts/*.njk` → `src/client/*.ts` → 示例模块 `content/modules/fps/`。
+`scripts/build.ts` → `scripts/lib/schema.ts` → `src/templates/layouts/*.eta` → `src/client/*.ts` → 示例模块 `content/modules/fps/`。
 
 若新增特性（如：额外资源类型、本地化维度、搜索字段）请在提交中同步更新此文件并列出回归验证步骤。
 

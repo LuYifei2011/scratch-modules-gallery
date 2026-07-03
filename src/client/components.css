@@ -485,7 +485,7 @@
 /**
  * .issue-banner
  * Shared component for displaying issue/warning banners.
- * Referenced in multiple templates: base.njk, issues.njk.
+ * Referenced in multiple templates: base.eta, issues.eta.
  * If you modify this style, check all usages to avoid breaking shared layouts.
  */
 .issue-banner {
@@ -526,7 +526,7 @@
 /**
  * .hint-bar / .hint-item
  * User-facing informational hints (partial translation, language suggestion).
- * Rendered both server-side (module.njk) and client-side (base.njk JS).
+ * Rendered both server-side (module.eta) and client-side (base.eta JS).
  */
 .hint-bar {
   display: flex;

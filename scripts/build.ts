@@ -1,6 +1,5 @@
 import fs from 'fs-extra';
 import path from 'path';
-import nunjucks from 'nunjucks';
 import * as scratchblocks from 'scratchblocks-plus/syntax/index.js';
 import { favicons as generateFavicons } from 'favicons';
 import { escapeHtml, maybeMinify, generateShareLinks } from './lib/html-utils.ts';
@@ -11,6 +10,7 @@ import { loadSiteCoverTemplate, generateSiteCover, generateModuleCover } from '.
 import { globFiles } from './lib/bun-utils.ts';
 import { createGitMtimeResolver } from './lib/git-mtime.ts';
 import { checkSeoDescriptions, seoIssueToBuildIssue } from './lib/seo-checker.ts';
+import { renderTemplate, setTemplateGlobals } from './lib/template-renderer.ts';
 import log, { c, paint, formatDuration, timeNow } from './lib/logger.ts';
 import type {
   BuildIssue,
@@ -23,7 +23,7 @@ import type {
 } from './lib/types.ts';
 
 const root = path.resolve('.');
-// 模块级 favicon HTML 片段，由 render() 生成后供 nunjucks.render monkey-patch 注入
+// 模块级 favicon HTML 片段，由 render() 生成后注入模板上下文。
 let _faviconHtml = '';
 const config = (await loadSiteConfig(root)) as SiteConfig & { baseUrl: string; outDir: string; siteName: string };
 // 覆盖 baseUrl 与开发模式标记
@@ -37,9 +37,6 @@ const isFast =
 
 // 构建所有可用的 scratchblocks 语言列表
 let scratchblocksLanguages: { code: string; name: string }[] = [];
-
-const templatesPath = path.join(root, 'src', 'templates');
-nunjucks.configure(templatesPath, { autoescape: true });
 
 function errorMessage(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
@@ -199,6 +196,7 @@ async function render(siteData: SiteData) {
   } else {
     log.warn('favicons', '未找到源文件 src/favicon.svg，跳过图标生成');
   }
+  setTemplateGlobals({ faviconHtml: _faviconHtml });
 
   // copy demo & assets
   for (const m of modules) {
@@ -343,8 +341,8 @@ async function render(siteData: SiteData) {
       }
     }
 
-    const indexHtml = nunjucks.render(
-      'layouts/home.njk',
+    const indexHtml = renderTemplate(
+      'layouts/home',
       createPageContext(loc, '/', {
         modules: modulesForLoc,
         shareLinks: generateShareLinks({
@@ -357,8 +355,8 @@ async function render(siteData: SiteData) {
     await fs.outputFile(path.join(locOut, 'index.html'), await maybeMinify(indexHtml, isFast), 'utf8');
 
     // 生成关于页面
-    const aboutHtml = nunjucks.render(
-      'layouts/about.njk',
+    const aboutHtml = renderTemplate(
+      'layouts/about',
       createPageContext(loc, '/about/', {
         shareLinks: generateShareLinks({
           // 关于页面的分享链接与主页相同，因为关于页面的分享按钮为推广站点而非单页面，因此仍使用主页信息
@@ -375,8 +373,8 @@ async function render(siteData: SiteData) {
     for (const m of modules) {
       const moduleData = localizedModuleSet.byId.get(m.id) || m;
       const moduleUrl = locConfig.baseUrl + '/' + loc + '/modules/' + m.slug + '/';
-      const html = nunjucks.render(
-        'layouts/module.njk',
+      const html = renderTemplate(
+        'layouts/module',
         createPageContext(loc, '/modules/' + m.slug + '/', {
           module: moduleData,
           scratchblocksLanguages,
@@ -393,11 +391,11 @@ async function render(siteData: SiteData) {
     }
   }
 
-  // 生成根路径自动语言跳转页（已抽离为 nunjucks 模板，使用本作用域的 basePath）
+  // 生成根路径自动语言跳转页（已抽离为 Eta 模板，使用本作用域的 basePath）
   const redirectLocales = JSON.stringify(locales);
   // 默认语言优先：若存在 en 则用之，否则第一个
   const defaultLocale = locales.includes('en') ? 'en' : locales[0] || 'en';
-  const redirectHtml = nunjucks.render('layouts/redirect.njk', {
+  const redirectHtml = renderTemplate('layouts/redirect', {
     basePath,
     redirectLocales: redirectLocales,
     defaultLocale,
@@ -417,7 +415,7 @@ async function render(siteData: SiteData) {
   for (const loc of locales) {
     languageNames[loc] = (dict[loc]?.meta && dict[loc].meta.languageName) || loc;
   }
-  const notFound404Html = nunjucks.render('layouts/404.njk', {
+  const notFound404Html = renderTemplate('layouts/404', {
     basePath,
     redirectLocales: redirectLocales,
     defaultLocale,
@@ -442,7 +440,7 @@ async function render(siteData: SiteData) {
     const sitemapMtimePaths = [
       'site.config.ts',
       'src/i18n',
-      'src/templates/layouts/about.njk',
+      'src/templates/layouts/about.eta',
       ...modules.flatMap((m) => [`${config.contentDir}/${m.slug}/scripts`, `${config.contentDir}/${m.slug}/i18n`]),
     ];
     const gitMtimes = await createGitMtimeResolver({
@@ -464,7 +462,7 @@ async function render(siteData: SiteData) {
     }
 
     // 关于页面：使用模板文件和全局 i18n 的最后修改时间
-    const aboutLastMod = gitMtimes.getLatestLastMod(['src/templates/layouts/about.njk', globalI18nPath]);
+    const aboutLastMod = gitMtimes.getLatestLastMod(['src/templates/layouts/about.eta', globalI18nPath]);
     for (const loc of locales) {
       sitemapUrls.push({
         loc: `/${loc}/about/`,
@@ -537,8 +535,6 @@ async function render(siteData: SiteData) {
   if (isDev) {
     // 统一使用最终 collectedIssues，并复用本次 render 阶段已加载的 i18n 数据。
     for (const loc of locales) {
-      // 由于我们在统一生成阶段调用 render，此时 monkey patch 仍会注入 buildIssues & summary。
-      // 但为稳妥（避免某些运行路径失效），这里显式计算一次并覆盖（模板优先使用传入值）。
       const summary = summarizeIssues(collectedIssues);
       const dictIssues = dict[loc]?.issues;
       const summaryText = dictIssues?.summaryPrefix
@@ -547,8 +543,8 @@ async function render(siteData: SiteData) {
             .replace('{errors}', String(summary.errors))
             .replace('{warnings}', String(summary.warnings))
         : '';
-      const issuesHtml = nunjucks.render(
-        'layouts/issues.njk',
+      const issuesHtml = renderTemplate(
+        'layouts/issues',
         createPageContext(loc, '/issues/', {
           modules: [],
           buildIssues: collectedIssues,
@@ -613,6 +609,10 @@ function reportIssue(type: BuildIssueType, message: string, details: Record<stri
       details: details || {},
     };
     collectedIssues.push(entry);
+    setTemplateGlobals({
+      buildIssues: collectedIssues,
+      buildIssuesSummary: summarizeIssues(collectedIssues),
+    });
   } catch {
     // 忽略收集失败，避免影响主流程
   }
@@ -639,33 +639,11 @@ function reportIssue(type: BuildIssueType, message: string, details: Record<stri
       reportIssue(buildIssue.type, buildIssue.message, buildIssue.details);
     }
   }
-  // 在渲染前把 issues 注入 nunjucks 全局或通过参数传递
-  // 这里采用环境变量对象传递：扩展 nunjucks.render 上下文
-  // 修改 render 调用：封装一层以包含 buildIssues
-  const origRender = nunjucks.render;
-  nunjucks.render = function (...args) {
-    if (typeof args[1] === 'object' && args[1] !== null) {
-      const context = args[1] as Record<string, unknown>;
-      context.faviconHtml = _faviconHtml;
-      context.buildIssues = collectedIssues;
-      const summary = summarizeIssues(collectedIssues);
-      context.buildIssuesSummary = summary;
-      // 预计算本地化 summary 文本，避免在模板中链式 replace 引发解析问题
-      try {
-        const t = context.t as { issues?: { summaryPrefix?: string } } | undefined;
-        const dictIssues = t?.issues;
-        if (dictIssues && typeof dictIssues.summaryPrefix === 'string') {
-          context.buildIssuesSummaryText = dictIssues.summaryPrefix
-            .replace('{total}', String(summary.total))
-            .replace('{errors}', String(summary.errors))
-            .replace('{warnings}', String(summary.warnings));
-        }
-      } catch (e) {
-        // 静默失败，不影响主流程
-      }
-    }
-    return origRender.apply(this, args);
-  };
+  setTemplateGlobals({
+    faviconHtml: _faviconHtml,
+    buildIssues: collectedIssues,
+    buildIssuesSummary: summarizeIssues(collectedIssues),
+  });
   const locales = Object.keys(siteData.dict);
   await render(siteData);
   const buildDuration = Date.now() - buildStart;

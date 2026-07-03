@@ -1,9 +1,5 @@
 import { describe, expect, it } from 'bun:test';
-import path from 'path';
-import nunjucks from 'nunjucks';
-
-const templatesPath = path.resolve('src', 'templates');
-const env = nunjucks.configure(templatesPath, { autoescape: true });
+import { renderTemplate } from '../scripts/lib/template-renderer.ts';
 
 const t = {
   hints: {
@@ -29,13 +25,33 @@ const t = {
     typeMap: {},
     scopeMap: {},
     copyScript: 'Copy script',
+    editScript: 'Edit script',
+    exportSVG: 'Export SVG',
+    exportPNG: 'Export PNG',
+    exportImage: 'Export image',
+    importedFrom: 'Imported from',
     openInTW: 'Open in TurboWarp',
     downloadDemo: 'Download demo',
+  },
+  base: {
+    languageSwitchTitle: 'Switch language',
+    rememberLanguage: 'Remember language',
+    rememberLanguageTooltip: 'Remember language',
+    moduleCount: '{count} modules',
+    aboutLink: 'About',
+    sourceCode: 'Source code',
+    sharePage: 'Share',
+    supportKoFi: 'Support on Ko-fi',
+    supportMore: 'More ways to support',
+    shareTitle: 'Share',
+    shareClose: 'Close',
+    shareCopyUrl: 'Copy URL',
+    shareNative: 'Share',
   },
 };
 
 function renderModule(moduleOverrides = {}) {
-  return env.render('layouts/module.njk', {
+  return renderTemplate('layouts/module', {
     module: {
       id: 'sample',
       slug: 'sample',
@@ -68,8 +84,17 @@ function renderModule(moduleOverrides = {}) {
     locale: 'en',
     locales: ['en'],
     langTags: { en: 'en' },
-    i18n: {},
+    i18n: { en: { meta: { languageName: 'English' } } },
     scratchblocksLanguages: [],
+    shareLinks: {
+      url: 'https://example.com/en/modules/sample/',
+      twitter: '#',
+      facebook: '#',
+      reddit: '#',
+      weibo: '#',
+      email: '#',
+      coverImage: '#',
+    },
   });
 }
 
@@ -81,7 +106,7 @@ describe('module template SEO description', () => {
     expect(html.includes('<p>Visible description.</p>')).toBeTruthy();
     expect(html.includes('<meta property="og:description" content="Visible description." />')).toBeTruthy();
     expect(html.includes('<meta name="twitter:description" content="Visible description." />')).toBeTruthy();
-    expect(html.includes('"description": "Visible description. "')).toBeTruthy();
+    expect(html.includes('"description":"Visible description. "')).toBeTruthy();
   });
 
   it('falls back to visible description when seoDescription is missing', () => {

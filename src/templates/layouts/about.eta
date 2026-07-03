@@ -1,106 +1,103 @@
-{% import "partials/icons.njk" as icons %}
-{% extends "layouts/base.njk" %}
+<% layout("/layouts/base") %>
+<% block("title", () => { %><%= it.t.about.title %> - <%= it.config.siteName %><% }) %>
+<% block("meta_description", () => { %><%= it.t.about.description %><% }) %>
 
-{% block title %}{{ t.about.title }} - {{ config.siteName }}{% endblock %}
-{% block meta_description %}{{ t.about.description }}{% endblock %}
-
-{% block content %}
 <main class="container">
     <article class="about-content">
-        <h1>{{ t.about.title }}</h1>
-        
+        <h1><%= it.t.about.title %></h1>
+
         <section class="about-section">
-            <h2>{{ t.about.whatIsThis }}</h2>
-            <p>{{ t.about.whatIsThisContent }}</p>
+            <h2><%= it.t.about.whatIsThis %></h2>
+            <p><%= it.t.about.whatIsThisContent %></p>
         </section>
 
         <section class="about-section">
-            <h2>{{ t.about.howToUse }}</h2>
-            <p>{{ t.about.howToUseContent }}</p>
+            <h2><%= it.t.about.howToUse %></h2>
+            <p><%= it.t.about.howToUseContent %></p>
             <ol>
-                <li>{{ t.about.step1 }}</li>
-                <li>{{ t.about.step2 }}</li>
-                <li>{{ t.about.step3 | safe }}</li>
+                <li><%= it.t.about.step1 %></li>
+                <li><%= it.t.about.step2 %></li>
+                <li><%~ it.t.about.step3 %></li>
             </ol>
         </section>
 
         <section class="about-section">
-            <h2>{{ t.about.contribute }}</h2>
-            <p>{{ t.about.contributeContent }}</p>
-            {% if config.repoUrl %}
+            <h2><%= it.t.about.contribute %></h2>
+            <p><%= it.t.about.contributeContent %></p>
+            <% if (it.config.repoUrl) { %>
             <p>
-                <a href="{{ config.repoUrl }}" target="_blank" rel="noopener" class="btn btn-primary">
-                    {{ t.about.viewOnGitHub }}
+                <a href="<%= it.config.repoUrl %>" target="_blank" rel="noopener" class="btn btn-primary">
+                    <%= it.t.about.viewOnGitHub %>
                 </a>
             </p>
-            {% endif %}
+            <% } %>
         </section>
 
         <section class="about-section">
-            <h2>{{ t.about.license }}</h2>
-            <p>{{ t.about.licenseContent.sourceCode }}</p>
-            <p>{{ t.about.licenseContent.modules }}</p>
+            <h2><%= it.t.about.license %></h2>
+            <p><%= it.t.about.licenseContent.sourceCode %></p>
+            <p><%= it.t.about.licenseContent.modules %></p>
         </section>
 
         <section class="about-section">
-            <h2>{{ t.about.thirdPartyLicenses }}</h2>
-            <p>{{ t.about.thirdPartyLicensesContent }}</p>
+            <h2><%= it.t.about.thirdPartyLicenses %></h2>
+            <p><%= it.t.about.thirdPartyLicensesContent %></p>
             <ul>
-                <li><a href="{{ assetBase }}/thirdparty/lucide.txt" target="_blank" rel="noopener">Lucide Icons</a></li>
+                <li><a href="<%= it.assetBase %>/thirdparty/lucide.txt" target="_blank" rel="noopener">Lucide Icons</a></li>
             </ul>
         </section>
 
         <section class="about-section">
-            <h2>{{ t.about.contact }}</h2>
-            <p>{{ t.about.contactContent }}</p>
+            <h2><%= it.t.about.contact %></h2>
+            <p><%= it.t.about.contactContent %></p>
             <ul>
-                <li>Email: <a href="mailto:{{ config.contactEmail }}">{{ config.contactEmail }}</a></li>
+                <li>Email: <a href="mailto:<%= it.config.contactEmail %>"><%= it.config.contactEmail %></a></li>
             </ul>
         </section>
 
         <section class="about-section" id="support">
-            <h2>{{ t.about.support }}</h2>
-            <p>{{ t.about.supportContent }}</p>
+            <h2><%= it.t.about.support %></h2>
+            <p><%= it.t.about.supportContent %></p>
             <div style="display: flex; align-items: center; gap: var(--space-md); flex-wrap: wrap;">
                 <a class="btn btn-kofi" href="https://ko-fi.com/H2H21ME5VO" target="_blank">
-                    <img src="{{ assetBase }}/assets/donate/ko-fi-cup.webp" width="22" height="15" class="btn-kofi-cup" />
-                    {{ t.base.supportKoFi }}
+                    <img src="<%= it.assetBase %>/assets/donate/ko-fi-cup.webp" width="22" height="15" class="btn-kofi-cup" />
+                    <%= it.t.base.supportKoFi %>
                 </a>
                 <button class="btn btn-primary btn-support-share" onclick="openShareModal()">
-                    {{ icons.iconShare() }}
-                    {{ t.about.supportPromotion }}
+                    <%~ it.icons.iconShare() %>
+                    <%= it.t.about.supportPromotion %>
                 </button>
-                <a href="{{ config.repoUrl }}" target="_blank" rel="noopener" class="btn btn-github">
-                    {{ icons.iconGitHub() }}
-                    {{ t.about.supportStar }}
+                <a href="<%= it.config.repoUrl %>" target="_blank" rel="noopener" class="btn btn-github">
+                    <%~ it.icons.iconGitHub() %>
+                    <%= it.t.about.supportStar %>
                 </a>
             </div>
             <details style="margin-top: var(--space-md);" open>
                 <summary style="cursor: pointer; font-weight: 500;">
-                    {{ t.about.donateOthers }}
+                    <%= it.t.about.donateOthers %>
                 </summary>
                 <div class="donate-images">
                     <div class="donate-item">
-                        <img src="{{ assetBase }}/assets/donate/alipay.jpg" />
+                        <img src="<%= it.assetBase %>/assets/donate/alipay.jpg" />
                         <hr class="donate-divider" />
-                        <span class="donate-label">{{ t.about.donateAlipay }}</span>
+                        <span class="donate-label"><%= it.t.about.donateAlipay %></span>
                     </div>
                     <div class="donate-item">
-                        <img src="{{ assetBase }}/assets/donate/wechatpay.png" />
+                        <img src="<%= it.assetBase %>/assets/donate/wechatpay.png" />
                         <hr class="donate-divider" />
-                        <span class="donate-label">{{ t.about.donateWeChatPay }}</span>
+                        <span class="donate-label"><%= it.t.about.donateWeChatPay %></span>
                     </div>
                     <div class="donate-item">
-                        <img src="{{ assetBase }}/assets/donate/qqwallet.png" />
+                        <img src="<%= it.assetBase %>/assets/donate/qqwallet.png" />
                         <hr class="donate-divider" />
-                        <span class="donate-label">{{ t.about.donateQQWallet }}</span>
+                        <span class="donate-label"><%= it.t.about.donateQQWallet %></span>
                     </div>
                 </div>
             </details>
         </section>
 
         <div class="back-link">
-            <a href="{{ pageBase }}/">← {{ t.about.backToHome }}</a>
+            <a href="<%= it.pageBase %>/">← <%= it.t.about.backToHome %></a>
         </div>
     </article>
 </main>
@@ -196,4 +193,3 @@
     text-decoration: underline;
 }
 </style>
-{% endblock %}

@@ -20,7 +20,6 @@ function pickLocale(browserLangs, locales, defaultLocale) {
         return null;
     }
 
-    // 优先精确匹配
     for (var i = 0; i < ls.length; i++) {
         var exact = findLocale(function (_loc, lowerLoc) {
             return lowerLoc === ls[i];
@@ -30,7 +29,6 @@ function pickLocale(browserLangs, locales, defaultLocale) {
         }
     }
 
-    // 特殊处理中文简繁体
     for (var j = 0; j < ls.length; j++) {
         var l = ls[j];
         if (l.indexOf('zh') === 0) {
@@ -59,7 +57,6 @@ function pickLocale(browserLangs, locales, defaultLocale) {
         }
     }
 
-    // 主语言前缀匹配，如 en-US -> en
     for (var k = 0; k < ls.length; k++) {
         var primary = ls[k].split('-')[0];
         var hit = findLocale(function (_loc, lowerLoc) {
