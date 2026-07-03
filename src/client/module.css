@@ -498,4 +498,7 @@ th {
   pre.scratchblocks {
     border: 1px solid black;
   }
+  details.imported-script {
+    border: 1px solid gray;
+  }
 }
