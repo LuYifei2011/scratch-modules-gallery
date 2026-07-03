@@ -59,7 +59,7 @@ const structuredData = {
               <a class="toc-link toc-link-sub" href="#script-<%= s.id %>"><%= s.title %></a>
             </li>
             <% } %>
-                    <% } %>
+                <% } %>
           </ol>
         </li>
         <% if (module.variables.length) { %>
@@ -139,7 +139,7 @@ const structuredData = {
           <% } %>
         </select>
       </div>
-                    <% if (module.scripts && module.scripts.length) { %>
+                        <% if (module.scripts && module.scripts.length) { %>
                         <% for (const s of module.scripts) { %>
                         <% if (s.imported) { %>
                         <%~ it.helpers.renderImportedDetails(s, it.t, it.IS_DEV, it.pageBase) %>
@@ -147,7 +147,7 @@ const structuredData = {
       <div class="script-block" <% if (s.title) { %> id="script-<%= s.id %>" <% } %>>
         <% if (s.title) { %>
         <h3 class="script-title"><%= s.title %></h3>
-                              <% } %>
+                                  <% } %>
                                     <% if (s.leadingImports) { %>
                                     <% for (const imp of s.leadingImports) { %>
                                     <%~ it.helpers.renderImportedDetails(imp, it.t, it.IS_DEV, it.pageBase) %>
@@ -156,7 +156,7 @@ const structuredData = {
                             <%~ it.helpers.renderSbBlock(s.content, module.id, s.id, s.id, it.t, it.IS_DEV) %>
       </div>
       <% } %>
-            <% } %>
+        <% } %>
       <% } %>
     </section>
     <% if (module.variables.length) { %>
