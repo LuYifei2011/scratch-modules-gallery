@@ -33,7 +33,6 @@
     "html-minifier-next": "^7.0.0",
     "marked": "^18.0.5",
     "minisearch": "^7.2.0",
-    "prettier-plugin-eta": "^0.2.11",
     "scratchblocks-plus": "^1.2.0"
   },
   "devDependencies": {
