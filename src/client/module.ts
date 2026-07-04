@@ -7,6 +7,7 @@ type ScratchblocksBlockEntry = {
   doc: Document;
   inline: boolean;
   scriptId?: string;
+  printEl?: HTMLDivElement;
   view?: DocumentView;
 };
 
@@ -20,6 +21,17 @@ const pageLangSb = window.__I18N.meta.languageTag.replace('-', '_').toLowerCase(
 
 // 记录已加载的语言，避免重复加载
 const loadedLanguages = new Set(['en']); // 英语默认内置
+
+function createPrintScriptsContainer(pre: HTMLPreElement, doc: Document): HTMLDivElement | undefined {
+  if (doc.scripts.length <= 1) return undefined;
+
+  const printEl = document.createElement('div');
+  printEl.className = 'sb-print-scripts';
+  printEl.setAttribute('aria-hidden', 'true');
+  pre.after(printEl);
+  pre.closest('.sb-block')?.classList.add('sb-print-split');
+  return printEl;
+}
 
 // 按需加载单个语言文件（除了英语）
 async function loadLanguage(langCode: string): Promise<void> {
@@ -58,11 +70,13 @@ async function initScratchblocks(): Promise<void> {
 
   const blocks: ScratchblocksBlockEntry[] = [];
   document.querySelectorAll<HTMLPreElement>('pre.scratchblocks').forEach((pre) => {
+    const doc = scratchblocks.parse(pre.textContent, { languages: [pageLangSb, 'en'] });
     blocks.push({
       el: pre,
-      doc: scratchblocks.parse(pre.textContent, { languages: [pageLangSb, 'en'] }),
+      doc,
       inline: false,
       scriptId: pre.getAttribute('data-script-id') ?? undefined,
+      printEl: createPrintScriptsContainer(pre, doc),
     });
   });
   document.querySelectorAll<HTMLElement>('code.scratchblocks').forEach((code) => {
@@ -149,6 +163,25 @@ async function initScratchblocks(): Promise<void> {
       svg.classList.add('scratchblocks-style-' + finalStyle);
       obj.el.innerHTML = '';
       obj.el.appendChild(svg);
+
+      if (obj.printEl) {
+        obj.printEl.innerHTML = '';
+        obj.doc.scripts.forEach((script) => {
+          const scriptDoc = new scratchblocks.Document([script]);
+          const scriptView = scratchblocks.newView(scriptDoc, {
+            style: finalStyle,
+            scale: /^scratch3($|-)/.test(finalStyle) ? 0.675 : 1,
+            inline: false,
+          });
+          const scriptSvg = scriptView.render();
+          scriptSvg.classList.add('scratchblocks-style-' + finalStyle);
+
+          const scriptEl = document.createElement('div');
+          scriptEl.className = 'sb-print-script';
+          scriptEl.appendChild(scriptSvg);
+          obj.printEl?.appendChild(scriptEl);
+        });
+      }
 
       obj.view = docView;
     });

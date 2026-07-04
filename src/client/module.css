@@ -1,9 +1,6 @@
 /* 模块页专属样式 */
 pre.scratchblocks {
-  background: var(--color-bg-secondary);
-  border: 1px solid var(--color-border-medium);
-  padding: var(--space-md);
-  border-radius: var(--radius-lg);
+  margin: 0;
   overflow: auto;
 }
 code.scratchblocks {
@@ -11,7 +8,14 @@ code.scratchblocks {
 }
 /* Copy button for script text */
 .sb-block {
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border-medium);
+  border-radius: var(--radius-lg);
+  padding: var(--space-md);
   position: relative;
+}
+.sb-print-scripts {
+  display: none;
 }
 .sb-actions {
   position: absolute;
@@ -151,7 +155,7 @@ details.imported-script .sb-actions .sb-action {
 details.imported-script .sb-actions .sb-action:hover {
   color: var(--color-text-primary);
 }
-details.imported-script pre {
+details.imported-script .sb-block {
   margin-top: var(--space-sm);
 }
 
@@ -495,8 +499,26 @@ th {
   }
   .variables th,
   .variables td,
-  pre.scratchblocks {
+  .sb-block {
     border: 1px solid black;
+  }
+  .sb-block.sb-print-split > pre.scratchblocks {
+    display: none;
+  }
+  .sb-block.sb-print-split > .sb-print-scripts {
+    display: block;
+  }
+  .sb-print-script {
+    break-inside: avoid;
+    margin: 0 0 var(--space-md);
+    overflow: visible;
+    page-break-inside: avoid;
+  }
+  .sb-print-script:last-child {
+    margin-bottom: 0;
+  }
+  .sb-print-script svg {
+    max-width: 100%;
   }
   details.imported-script {
     border: 1px solid gray;
