@@ -281,6 +281,85 @@ th {
   height: 16px;
 }
 
+/* Module details footer */
+.module-detail h1 {
+  margin-top: 0;
+}
+.module-info-footer {
+  margin-top: var(--space-3xl);
+  padding: var(--space-xl) 0 0;
+  border-top: 1px solid var(--color-border-light);
+  background: transparent;
+  box-shadow: none;
+  text-align: left;
+  color: var(--color-text-secondary);
+}
+.module-info-footer-main {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: var(--space-xl);
+}
+.module-info-group h2,
+.module-debug-info h2 {
+  margin: 0 0 var(--space-sm);
+  color: var(--color-text-primary);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold);
+}
+.module-debug-info h2 {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+}
+.module-info-footer .contributors {
+  margin: 0;
+}
+.module-last-modified {
+  margin: 0;
+  color: var(--color-text-primary);
+  font-size: var(--font-size-sm);
+}
+.contributors .contributor {
+  margin-right: var(--space-sm);
+}
+.module-meta-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+  margin: 0;
+}
+.module-meta-list div {
+  min-width: 0;
+  padding: var(--space-xs) var(--space-sm);
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius-md);
+  background: var(--color-bg-secondary);
+}
+.module-meta-list dt {
+  margin: 0 0 2px;
+  color: var(--color-text-tertiary);
+  font-size: var(--font-size-xs);
+}
+.module-meta-list dd {
+  margin: 0;
+  color: var(--color-text-primary);
+  font-size: var(--font-size-sm);
+}
+.module-meta-list code {
+  overflow-wrap: anywhere;
+  font-family: var(--font-family-mono);
+  font-size: inherit;
+}
+.module-license-note {
+  margin: var(--space-lg) 0 0;
+  font-size: var(--font-size-sm);
+}
+.module-debug-info {
+  margin-top: var(--space-lg);
+  padding-top: var(--space-lg);
+  border-top: 1px dashed var(--color-border-medium);
+}
+
 /* ===== Module layout: article + TOC sidebar ===== */
 .module-layout {
   display: block; /* article takes full width; TOC is positioned fixed */
@@ -486,6 +565,9 @@ th {
 
 /* 打印样式 */
 @media print {
+  .module-license-note {
+    color: var(--color-text-primary);
+  }
   .module-toc,
   .sb-translate-switcher,
   .sb-style-switcher,
