@@ -492,6 +492,13 @@ input.search-input {
   dialog {
     display: none !important;
   }
+  main {
+    margin: 0;
+    padding: 0;
+  }
+  body {
+    margin: 2px;
+  }
   .module-license-note {
     color: var(--color-text-primary);
   }
@@ -511,15 +518,6 @@ input.search-input {
   @media print {
     * {
       background: transparent !important;
-    }
-  }
-}
-/* 适配 Safari，避免过大页边距 */
-@supports (font: -apple-system-body) and (-webkit-appearance: none) {
-  @media print {
-    main {
-      margin: 0;
-      padding: 0;
     }
   }
 }
