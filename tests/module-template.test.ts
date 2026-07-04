@@ -15,7 +15,11 @@ const t = {
     references: 'References',
     editModule: 'Edit module',
     contributors: 'Contributors',
-    renderStyle: 'Render style',
+    renderStyle: {
+      title: 'Render Style:',
+      highContrast: 'High contrast',
+      outline: 'Outline',
+    },
     highContrast: 'High contrast',
     translateTo: 'Translate to',
     noTranslate: 'No translation',

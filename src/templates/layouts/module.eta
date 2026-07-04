@@ -95,10 +95,11 @@
         <section id="scripts">
             <h2><%= it.t.module.scripts %></h2>
             <div class="sb-style-switcher" style="margin-bottom: var(--space-lg);">
-                <label for="sb-style"><%= it.t.module.renderStyle %></label>
+                <label for="sb-style"><%= it.t.module.renderStyle.title %></label>
                 <select id="sb-style" class="select-inline">
                     <option value="scratch3" selected>Scratch 3</option>
-                    <option value="scratch3-high-contrast">Scratch 3 (<%= it.t.module.highContrast %>)</option>
+                    <option value="scratch3-high-contrast">Scratch 3 (<%= it.t.module.renderStyle.highContrast %>)</option>
+                    <option value="scratch3-outline">Scratch 3 (<%= it.t.module.renderStyle.outline %>)</option>
                     <option value="scratch2">Scratch 2</option>
                 </select>
             </div>

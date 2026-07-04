@@ -31,7 +31,11 @@
   "module": {
     "contributors": "贡献者",
     "scripts": "脚本",
-    "renderStyle": "渲染风格:",
+    "renderStyle": {
+      "title": "渲染风格:",
+      "highContrast": "高对比度",
+      "outline": "描边"
+    },
     "highContrast": "高对比度",
     "translateTo": "翻译为:",
     "noTranslate": "不翻译",

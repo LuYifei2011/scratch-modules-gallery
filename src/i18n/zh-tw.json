@@ -31,8 +31,11 @@
   "module": {
     "contributors": "貢獻者",
     "scripts": "腳本",
-    "renderStyle": "渲染風格:",
-    "highContrast": "高對比度",
+    "renderStyle": {
+      "title": "渲染風格:",
+      "highContrast": "高對比度",
+      "outline": "描边"
+    },
     "translateTo": "翻譯為:",
     "noTranslate": "不翻譯",
     "importedFrom": "引入模組",
