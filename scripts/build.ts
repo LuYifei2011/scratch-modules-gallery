@@ -519,9 +519,10 @@ async function render(siteData: SiteData) {
     // - 该目录用于存放构建时复制的第三方库的许可证文件
     // - 这些静态内容本身不会作为独立内容页面展示，允许抓取只会产生噪音和重复内容
     // - 因此通过 Disallow: /thirdparty/ 提示搜索引擎忽略该路径，避免污染索引结果
+    const disallowDirs = ['/thirdparty/', '/assets/donate/'];
     await fs.writeFile(
       path.join(outDir, 'robots.txt'),
-      `User-agent: *\nAllow: /\nDisallow: /thirdparty/\nSitemap: ${normalizedBaseUrl}/sitemap.xml\n`,
+      `User-agent: *\nAllow: /\nDisallow: ${disallowDirs.join('\nDisallow: ')}\nSitemap: ${normalizedBaseUrl}/sitemap.xml\n`,
       'utf8'
     );
   } else {
