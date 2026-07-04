@@ -437,12 +437,43 @@ async function render(siteData: SiteData) {
   // 快速模式下跳过生成以节省时间
   if (!isFast) {
     const sitemapUrls: SitemapUrl[] = [];
-    const sitemapMtimePaths = [
-      'site.config.ts',
-      'src/i18n',
-      'src/templates/layouts/about.eta',
-      ...modules.flatMap((m) => [`${config.contentDir}/${m.slug}/scripts`, `${config.contentDir}/${m.slug}/i18n`]),
-    ];
+    const pathExistsCache = new Map<string, Promise<boolean>>();
+    const pathExists = (relativePath: string) => {
+      if (!pathExistsCache.has(relativePath)) {
+        pathExistsCache.set(relativePath, fs.pathExists(path.join(root, relativePath)));
+      }
+      return pathExistsCache.get(relativePath)!;
+    };
+    const existingPaths = async (pathsToCheck: string[]) => {
+      const uniquePaths = Array.from(new Set(pathsToCheck));
+      const result: string[] = [];
+      for (const relativePath of uniquePaths) {
+        if (await pathExists(relativePath)) result.push(relativePath);
+      }
+      return result;
+    };
+    const layoutBasePath = 'src/templates/layouts/base.eta';
+    const localeI18nPath = (loc: string) => `src/i18n/${loc}.json`;
+    const homeMtimePaths = async (loc: string) =>
+      existingPaths([layoutBasePath, 'src/templates/layouts/home.eta', localeI18nPath(loc)]);
+    const aboutMtimePaths = async (loc: string) =>
+      existingPaths([layoutBasePath, 'src/templates/layouts/about.eta', localeI18nPath(loc)]);
+    const moduleMtimePaths = async (m: ModuleRecord, loc: string) =>
+      existingPaths([
+        layoutBasePath,
+        'src/templates/layouts/module.eta',
+        `${config.contentDir}/${m.slug}/meta.json`,
+        `${config.contentDir}/${m.slug}/scripts`,
+        `${config.contentDir}/${m.slug}/i18n/${loc}.json`,
+        `${config.contentDir}/${m.slug}/notes/${loc}.md`,
+      ]);
+
+    const sitemapMtimePathSets = await Promise.all([
+      ...locales.map((loc) => homeMtimePaths(loc)),
+      ...locales.map((loc) => aboutMtimePaths(loc)),
+      ...modules.flatMap((m) => locales.map((loc) => moduleMtimePaths(m, loc))),
+    ]);
+    const sitemapMtimePaths = Array.from(new Set(sitemapMtimePathSets.flat()));
     const gitMtimes = await createGitMtimeResolver({
       root,
       paths: sitemapMtimePaths,
@@ -450,34 +481,28 @@ async function render(siteData: SiteData) {
       warn: (message) => log.warn('git', message),
     });
 
-    // 首页：使用配置文件 + 全局 i18n 文件的最后修改时间
-    // 两者中较晚的时间
-    const globalI18nPath = 'src/i18n';
-    const indexLastMod = gitMtimes.getLatestLastMod(['site.config.ts', globalI18nPath]);
+    // 首页：使用首页模板、基础模板和当前语言 i18n 文件的最后修改时间。
     for (const loc of locales) {
+      const indexLastMod = gitMtimes.getLatestLastMod(await homeMtimePaths(loc));
       sitemapUrls.push({
         loc: `/${loc}/`,
         lastmod: indexLastMod,
       });
     }
 
-    // 关于页面：使用模板文件和全局 i18n 的最后修改时间
-    const aboutLastMod = gitMtimes.getLatestLastMod(['src/templates/layouts/about.eta', globalI18nPath]);
+    // 关于页面：使用关于页模板、基础模板和当前语言 i18n 文件的最后修改时间。
     for (const loc of locales) {
+      const aboutLastMod = gitMtimes.getLatestLastMod(await aboutMtimePaths(loc));
       sitemapUrls.push({
         loc: `/${loc}/about/`,
         lastmod: aboutLastMod,
       });
     }
 
-    // 模块页面：使用每个模块脚本目录 + 模块级 i18n + 全局 i18n 的最后修改时间
+    // 模块页面：使用模块内容、模块页模板和当前语言模块翻译/备注的最后修改时间。
     for (const m of modules) {
-      const moduleLastMod = gitMtimes.getLatestLastMod([
-        `${config.contentDir}/${m.slug}/scripts`,
-        `${config.contentDir}/${m.slug}/i18n`,
-        globalI18nPath,
-      ]);
       for (const loc of locales) {
+        const moduleLastMod = gitMtimes.getLatestLastMod(await moduleMtimePaths(m, loc));
         const imagePath = `/${loc}/modules/${m.slug}/cover.png`;
         const localizedModuleSet = await getLocalizedModuleSet(loc);
         const localizedModule = localizedModuleSet.bySlug.get(m.slug) || m;

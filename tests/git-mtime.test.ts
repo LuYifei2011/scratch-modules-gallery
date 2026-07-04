@@ -20,6 +20,14 @@ describe('parseGitLogMtimes', () => {
     expect(mtimes.get('src/i18n')).toBe('2026-04-12');
   });
 
+  it('does not match sibling locale files for exact file queries', () => {
+    const output = ['1775990084', '', 'src/i18n/en.json'].join('\n');
+
+    const mtimes = parseGitLogMtimes(output, ['src/i18n/zh-cn.json'], fallbackDate);
+
+    expect(mtimes.get('src/i18n/zh-cn.json')).toBe(fallbackDate);
+  });
+
   it('resolves multiple query paths from one log output', () => {
     const output = [
       '1775990084',
@@ -63,6 +71,31 @@ describe('createGitMtimeResolver', () => {
     expect(resolver.getLastMod('src/i18n')).toBe('2026-04-12');
     expect(resolver.getLatestLastMod(['site.config.ts', 'src/i18n'])).toBe('2026-07-01');
     expect(calls.filter((args) => args[0] === 'log')).toHaveLength(1);
+  });
+
+  it('compares exact locale files and shared directories independently', async () => {
+    const resolver = await createGitMtimeResolver({
+      root: '/repo',
+      paths: ['src/i18n/zh-cn.json', 'src/i18n/en.json', 'content/modules/fps/scripts'],
+      now: () => new Date('2026-07-01T00:00:00.000Z'),
+      runGit: async (args) => {
+        if (args.includes('--is-inside-work-tree')) return 'true\n';
+        if (args.includes('--is-shallow-repository')) return 'false\n';
+        return [
+          '1775990084',
+          '',
+          'src/i18n/en.json',
+          '',
+          '1774010980',
+          '',
+          'content/modules/fps/scripts/01-main.txt',
+        ].join('\n');
+      },
+    });
+
+    expect(resolver.getLastMod('src/i18n/en.json')).toBe('2026-04-12');
+    expect(resolver.getLastMod('src/i18n/zh-cn.json')).toBe(fallbackDate);
+    expect(resolver.getLatestLastMod(['src/i18n/zh-cn.json', 'content/modules/fps/scripts'])).toBe(fallbackDate);
   });
 
   it('falls back when the working directory is not a git repo', async () => {
