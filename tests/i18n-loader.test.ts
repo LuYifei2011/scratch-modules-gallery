@@ -42,6 +42,28 @@ describe('pickConfigForLocale', () => {
     expect(result.language).toBe('zh-CN');
   });
 
+  it('can derive localized metadata when base config has no localized fields', () => {
+    const configOnlyBase = {
+      contentDir: 'content/modules',
+    };
+    const dict = {
+      en: {
+        meta: {
+          siteName: 'Scratch Modules Gallery',
+          description: 'A searchable index of Scratch modules',
+          keywords: 'Scratch,modules,programming,code library',
+          languageTag: 'en',
+        },
+      },
+    };
+
+    const result = pickConfigForLocale(configOnlyBase, 'en', dict);
+    expect(result.siteName).toBe('Scratch Modules Gallery');
+    expect(result.description).toBe('A searchable index of Scratch modules');
+    expect(result.keywords).toBe('Scratch,modules,programming,code library');
+    expect(result.language).toBe('en');
+  });
+
   it('falls back to base config for missing meta fields', () => {
     const dict = {
       'zh-cn': {

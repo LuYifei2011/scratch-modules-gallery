@@ -25,7 +25,7 @@ import type {
 const root = path.resolve('.');
 // 模块级 favicon HTML 片段，由 render() 生成后注入模板上下文。
 let _faviconHtml = '';
-const config = (await loadSiteConfig(root)) as SiteConfig & { baseUrl: string; outDir: string; siteName: string };
+const config = (await loadSiteConfig(root)) as SiteConfig & { baseUrl: string; outDir: string };
 // 覆盖 baseUrl 与开发模式标记
 const isDev = String(process.env.IS_DEV || '').toLowerCase() === 'true' || process.env.IS_DEV === '1';
 // 快速构建模式：跳过耗时的资源生成（favicon PNG、封面图、HTML 压缩），与 IS_DEV 独立
@@ -650,6 +650,9 @@ function reportIssue(type: BuildIssueType, message: string, details: Record<stri
   log.info('build', `开始构建${modeFlags.length ? paint(c.dim, ` (${modeFlags.join(', ')})`) : ''}…`);
   const siteData = await loadSiteData({ root, config, isDev });
   const { modules, errorsAll } = siteData;
+  const locales = Object.keys(siteData.dict);
+  const defaultLocale = locales.includes('en') ? 'en' : locales[0] || 'en';
+  Object.assign(config, pickConfigForLocale(config, defaultLocale, siteData.dict));
   scratchblocksLanguages = Object.entries(scratchblocks.allLanguages)
     .map(([code, info]) => ({
       code,
@@ -670,7 +673,6 @@ function reportIssue(type: BuildIssueType, message: string, details: Record<stri
     buildIssues: collectedIssues,
     buildIssuesSummary: summarizeIssues(collectedIssues),
   });
-  const locales = Object.keys(siteData.dict);
   await render(siteData);
   const buildDuration = Date.now() - buildStart;
   log.success(
