@@ -259,6 +259,50 @@ async function render(siteData: SiteData) {
       ...extras,
     };
   };
+
+  const pathExistsCache = new Map<string, Promise<boolean>>();
+  const pathExists = (relativePath: string) => {
+    if (!pathExistsCache.has(relativePath)) {
+      pathExistsCache.set(relativePath, fs.pathExists(path.join(root, relativePath)));
+    }
+    return pathExistsCache.get(relativePath)!;
+  };
+  const existingPaths = async (pathsToCheck: string[]) => {
+    const uniquePaths = Array.from(new Set(pathsToCheck));
+    const result: string[] = [];
+    for (const relativePath of uniquePaths) {
+      if (await pathExists(relativePath)) result.push(relativePath);
+    }
+    return result;
+  };
+  const layoutBasePath = 'src/templates/layouts/base.eta';
+  const localeI18nPath = (loc: string) => `src/i18n/${loc}.json`;
+  const homeMtimePaths = async (loc: string) =>
+    existingPaths([layoutBasePath, 'src/templates/layouts/home.eta', localeI18nPath(loc)]);
+  const aboutMtimePaths = async (loc: string) =>
+    existingPaths([layoutBasePath, 'src/templates/layouts/about.eta', localeI18nPath(loc)]);
+  const moduleMtimePaths = async (m: ModuleRecord, loc: string) =>
+    existingPaths([
+      layoutBasePath,
+      'src/templates/layouts/module.eta',
+      `${config.contentDir}/${m.slug}/meta.json`,
+      `${config.contentDir}/${m.slug}/scripts`,
+      `${config.contentDir}/${m.slug}/i18n/${loc}.json`,
+      `${config.contentDir}/${m.slug}/notes/${loc}.md`,
+    ]);
+  const mtimePathSets = await Promise.all([
+    ...locales.map((loc) => homeMtimePaths(loc)),
+    ...locales.map((loc) => aboutMtimePaths(loc)),
+    ...modules.flatMap((m) => locales.map((loc) => moduleMtimePaths(m, loc))),
+  ]);
+  const gitMtimes = isFast
+    ? null
+    : await createGitMtimeResolver({
+        root,
+        paths: Array.from(new Set(mtimePathSets.flat())),
+        isDev,
+        warn: (message) => log.warn('git', message),
+      });
   // 预先一次性收集所有语言的缺失翻译警告，确保之后所有页面的 buildIssuesSummary 一致
   type LocalizedModuleSet = {
     modules: LocalizedModuleRecord[];
@@ -372,6 +416,9 @@ async function render(siteData: SiteData) {
 
     for (const m of modules) {
       const moduleData = localizedModuleSet.byId.get(m.id) || m;
+      if (gitMtimes) {
+        moduleData.lastModified = gitMtimes.getLatestLastMod(await moduleMtimePaths(m, loc));
+      }
       const moduleUrl = locConfig.baseUrl + '/' + loc + '/modules/' + m.slug + '/';
       const html = renderTemplate(
         'layouts/module',
@@ -437,49 +484,7 @@ async function render(siteData: SiteData) {
   // 快速模式下跳过生成以节省时间
   if (!isFast) {
     const sitemapUrls: SitemapUrl[] = [];
-    const pathExistsCache = new Map<string, Promise<boolean>>();
-    const pathExists = (relativePath: string) => {
-      if (!pathExistsCache.has(relativePath)) {
-        pathExistsCache.set(relativePath, fs.pathExists(path.join(root, relativePath)));
-      }
-      return pathExistsCache.get(relativePath)!;
-    };
-    const existingPaths = async (pathsToCheck: string[]) => {
-      const uniquePaths = Array.from(new Set(pathsToCheck));
-      const result: string[] = [];
-      for (const relativePath of uniquePaths) {
-        if (await pathExists(relativePath)) result.push(relativePath);
-      }
-      return result;
-    };
-    const layoutBasePath = 'src/templates/layouts/base.eta';
-    const localeI18nPath = (loc: string) => `src/i18n/${loc}.json`;
-    const homeMtimePaths = async (loc: string) =>
-      existingPaths([layoutBasePath, 'src/templates/layouts/home.eta', localeI18nPath(loc)]);
-    const aboutMtimePaths = async (loc: string) =>
-      existingPaths([layoutBasePath, 'src/templates/layouts/about.eta', localeI18nPath(loc)]);
-    const moduleMtimePaths = async (m: ModuleRecord, loc: string) =>
-      existingPaths([
-        layoutBasePath,
-        'src/templates/layouts/module.eta',
-        `${config.contentDir}/${m.slug}/meta.json`,
-        `${config.contentDir}/${m.slug}/scripts`,
-        `${config.contentDir}/${m.slug}/i18n/${loc}.json`,
-        `${config.contentDir}/${m.slug}/notes/${loc}.md`,
-      ]);
-
-    const sitemapMtimePathSets = await Promise.all([
-      ...locales.map((loc) => homeMtimePaths(loc)),
-      ...locales.map((loc) => aboutMtimePaths(loc)),
-      ...modules.flatMap((m) => locales.map((loc) => moduleMtimePaths(m, loc))),
-    ]);
-    const sitemapMtimePaths = Array.from(new Set(sitemapMtimePathSets.flat()));
-    const gitMtimes = await createGitMtimeResolver({
-      root,
-      paths: sitemapMtimePaths,
-      isDev,
-      warn: (message) => log.warn('git', message),
-    });
+    if (!gitMtimes) throw new Error('git mtime resolver unavailable for sitemap generation');
 
     // 首页：使用首页模板、基础模板和当前语言 i18n 文件的最后修改时间。
     for (const loc of locales) {

@@ -1,5 +1,7 @@
 <% layout("/layouts/base") %>
 <% const module = it.module; %>
+<% const ownScriptCount = module.scripts.filter((s) => !s.imported).length; %>
+<% const importedScriptCount = module.scripts.reduce((count, s) => count + (s.imported ? 1 : 0) + (Array.isArray(s.leadingImports) ? s.leadingImports.length : 0), 0); %>
 <% block("title", () => { %><%= module.name %> - <%= it.config.siteName %><% }) %>
 <% block("og_title", () => { %><%= module.name %> - <%= it.config.siteName %><% }) %>
 <% block("og_description", () => { %><%= module.description %><% }) %>
@@ -72,26 +74,6 @@
         <p class="tags">
             <% for (const tag of module.tags) { %><span class="tag"><%= tag %></span><% } %>
         </p>
-        <% if (it.IS_DEV && module.keywordsStr) { %>
-            <p style="display: flex; align-items: center; gap: 8px; margin: var(--space-md) 0 0 0; font-size: 0.9em">
-                <%~ it.icons.iconDebug(16, 16) %> Keywords:
-                <span><%= module.keywordsStr %></span>
-            </p>
-        <% } %>
-        <% if (module.contributors.length) { %>
-            <p class="contributors">
-                <%= it.t.module.contributors %>:
-                <% for (const c of module.contributors) { %>
-                    <span class="contributor">
-                        <% if (c.url) { %>
-                            <a href="<%= c.url %>" target="_blank" rel="noopener"><%= c.name %></a>
-                        <% } else { %>
-                            <%= c.name %>
-                        <% } %>
-                    </span>
-                <% } %>
-            </p>
-        <% } %>
         <section id="scripts">
             <h2><%= it.t.module.scripts %></h2>
             <div class="sb-style-switcher" style="margin-bottom: var(--space-lg);">
@@ -196,6 +178,80 @@
                 </ul>
             </section>
         <% } %>
+        <footer class="module-info-footer" aria-label="<%= it.t.module.details %>">
+            <div class="module-info-footer-main">
+                <% if (module.contributors.length) { %>
+                    <div class="module-info-group">
+                        <h2><%= it.t.module.contributors %></h2>
+                        <p class="contributors">
+                            <% for (const c of module.contributors) { %>
+                                <span class="contributor">
+                                    <% if (c.url) { %>
+                                        <a href="<%= c.url %>" target="_blank" rel="noopener"><%= c.name %></a>
+                                    <% } else { %>
+                                        <%= c.name %>
+                                    <% } %>
+                                </span>
+                            <% } %>
+                        </p>
+                    </div>
+                <% } %>
+                <% if (module.lastModified) { %>
+                    <div class="module-info-group">
+                        <h2><%= it.t.module.lastModified %></h2>
+                        <p class="module-last-modified"><time datetime="<%= module.lastModified %>"><%= module.lastModified %></time></p>
+                    </div>
+                <% } %>
+            </div>
+            <p class="module-license-note"><%= it.t.module.licenseNote %></p>
+            <% if (it.IS_DEV) { %>
+                <div class="module-debug-info">
+                    <h2><%~ it.icons.iconDebug(16, 16) %><%= it.t.module.debugInfo %></h2>
+                    <dl class="module-meta-list">
+                        <div>
+                            <dt><%= it.t.module.moduleId %></dt>
+                            <dd><code><%= module.id %></code></dd>
+                        </div>
+                        <div>
+                            <dt><%= it.t.module.scriptCount %></dt>
+                            <dd><%= ownScriptCount %></dd>
+                        </div>
+                        <div>
+                            <dt><%= it.t.module.variableCount %></dt>
+                            <dd><%= module.variables.length %></dd>
+                        </div>
+                        <div>
+                            <dt><%= it.t.module.demoAvailable %></dt>
+                            <dd><%= module.hasDemo ? it.t.module.yes : it.t.module.no %></dd>
+                        </div>
+                        <div>
+                            <dt><%= it.t.module.referenceCount %></dt>
+                            <dd><%= module.references.length %></dd>
+                        </div>
+                        <% if (module.keywordsStr) { %>
+                            <div>
+                                <dt><%= it.t.module.keywords %></dt>
+                                <dd><code><%= module.keywordsStr %></code></dd>
+                            </div>
+                        <% } %>
+                        <% if (module.keywordsFinalStr) { %>
+                            <div>
+                                <dt><%= it.t.module.finalKeywords %></dt>
+                                <dd><code><%= module.keywordsFinalStr %></code></dd>
+                            </div>
+                        <% } %>
+                        <div>
+                            <dt><%= it.t.module.partialTranslation %></dt>
+                            <dd><%= module.hasPartialTranslation ? it.t.module.yes : it.t.module.no %></dd>
+                        </div>
+                        <div>
+                            <dt><%= it.t.module.importedScriptCount %></dt>
+                            <dd><%= importedScriptCount %></dd>
+                        </div>
+                    </dl>
+                </div>
+            <% } %>
+        </footer>
     </article>
 </div>
 

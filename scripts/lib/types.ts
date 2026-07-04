@@ -101,12 +101,14 @@ export interface ModuleRecord {
   references?: ModuleReference[];
   translations?: Record<LocaleCode, ModuleTranslation>;
   hasPartialTranslation?: boolean;
+  lastModified?: string;
 }
 
 export interface LocalizedModuleRecord extends Omit<ModuleRecord, 'scripts' | 'variables'> {
   scripts: LocalizedModuleScript[];
   variables: ModuleVariable[];
   notesHtml: string;
+  lastModified?: string;
   keywordsFinal: string[];
   keywordsFinalStr: string;
   keywordsStr: string;

@@ -497,6 +497,9 @@ th {
   #module-title {
     margin-bottom: 0;
   }
+  .module-debug-info {
+    display: none !important;
+  }
   .variables th,
   .variables td,
   .sb-block {
