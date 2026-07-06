@@ -1,5 +1,5 @@
 export default {
-  baseUrl: 'https://scratch-modules-gallery.pages.dev',
+  baseUrl: 'https://luyifei2011.github.io/scratch-modules-gallery',
   outDir: 'dist',
   contentDir: 'content/modules',
   repoUrl: 'https://github.com/LuYifei2011/scratch-modules-gallery',
