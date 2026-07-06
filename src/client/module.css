@@ -174,19 +174,27 @@ td {
 .variables td {
   text-align: left;
 }
+.variables .var-name-cell {
+  vertical-align: middle;
+}
 th {
   background: var(--color-bg-primary);
   font-weight: var(--font-weight-semibold);
 }
 
 .var-name-wrap {
-  display: inline-flex;
+  display: flex;
   align-items: center;
   gap: var(--space-sm);
+  width: fit-content;
 }
 .var-name-block {
   display: inline-flex;
+  align-items: center;
   min-height: 24px;
+}
+.var-name-block > svg {
+  display: block;
 }
 .var-copy {
   width: 28px;
