@@ -17,6 +17,7 @@
     "lint": "eslint .",
     "precommit": "bun ./scripts/pre-commit.ts",
     "seo:context": "bun ./scripts/export-seo-context.ts",
+    "seo:generate": "bun ./scripts/generate-seo-descriptions.ts",
     "check-seo": "bun ./scripts/check-seo.ts",
     "test": "bun test tests/*.test.ts",
     "check-i18n": "bun ./scripts/check-translations.ts",

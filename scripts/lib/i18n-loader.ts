@@ -10,8 +10,6 @@ import log from './logger.ts';
 import { globFiles, readJsonFile } from './bun-utils.ts';
 import type { LocaleCode, ModuleTranslation, SiteConfig } from './types.ts';
 
-const root = path.resolve('.');
-
 export interface LocaleDictionary {
   meta?: {
     siteName?: string;
@@ -67,7 +65,7 @@ export function completeI18nDictionary(dict: I18nDictionary, sourceLocale: Local
 /**
  * 加载 i18n 词典（自动扫描 src/i18n/*.json，排除 tags.json 和 module-defaults.json）
  */
-export async function loadI18n(): Promise<I18nDictionary> {
+export async function loadI18n(root = path.resolve('.')): Promise<I18nDictionary> {
   const i18nDir = path.join(root, 'src', 'i18n');
   const EXCLUDED = new Set(['tags.json', 'module-defaults.json']);
   const files = (await globFiles('*.json', i18nDir))
@@ -91,7 +89,7 @@ export async function loadI18n(): Promise<I18nDictionary> {
  * 结构：{ [locale]: { scriptTitles?, variables?, ... } }
  * 在 translateModulesForLocale 中与模块级翻译深合并，模块的翻译优先级更高。
  */
-export async function loadModuleDefaults(): Promise<ModuleDefaultsDictionary> {
+export async function loadModuleDefaults(root = path.resolve('.')): Promise<ModuleDefaultsDictionary> {
   const defaultsFile = path.join(root, 'src', 'i18n', 'module-defaults.json');
   try {
     if (await fs.pathExists(defaultsFile)) {
@@ -106,7 +104,7 @@ export async function loadModuleDefaults(): Promise<ModuleDefaultsDictionary> {
 /**
  * 加载全局 tags 翻译字典（src/i18n/tags.json）
  */
-export async function loadGlobalTags(): Promise<GlobalTagsDictionary> {
+export async function loadGlobalTags(root = path.resolve('.')): Promise<GlobalTagsDictionary> {
   const tagsFile = path.join(root, 'src', 'i18n', 'tags.json');
   try {
     if (await fs.pathExists(tagsFile)) {

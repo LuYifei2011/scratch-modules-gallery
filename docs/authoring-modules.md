@@ -68,6 +68,58 @@ content/modules/fps/
 - `seoDescription`：字符串；可选，仅用于模块页 `<meta name="description">`。缺省时使用 `description`，不会影响页面正文、搜索、OG/Twitter 或 JSON-LD 描述。
 - `contributors`：字符串或数组；支持 `gh/` 与 `sc/` 前缀自动生成链接。
 
+### SEO 描述检查与生成
+
+`seoDescription` 建议为每个支持语言单独维护：
+
+- 英文基线写在 `content/modules/<id>/meta.json`。
+- 非英文写在 `content/modules/<id>/i18n/<locale>.json`，例如 `i18n/zh-cn.json`。
+- 推荐长度：英文 120-160 字符；中文、日文、韩文 80-140 字符；其它语言 80-160 字符。
+
+检查缺失或长度异常：
+
+```bash
+bun run check-seo
+bun run check-seo -- --format=json
+```
+
+导出某个模块的 SEO 生成上下文，适合手动复制给 LLM：
+
+```bash
+bun run seo:context -- fps --locale zh-cn
+```
+
+也可以直接使用 OpenAI-compatible LLM 自动生成缺失的 `seoDescription`：
+
+推荐把 LLM 配置写入本地 `.env` 系列文件，例如 `.env.local`。Bun 运行脚本时会自动读取这些 env files，避免每次命令行重复传入 key：
+
+```bash
+# .env.local
+LLM_API_KEY=sk-...
+LLM_MODEL=...
+LLM_BASE_URL=https://api.openai.com/v1
+```
+
+```bash
+bun run seo:generate
+bun run seo:generate fps --locale zh-cn
+```
+
+默认只预览生成结果，不写入文件。确认结果合适后加 `--apply` 写回：
+
+```bash
+bun run seo:generate fps --locale zh-cn --apply
+```
+
+生成工具只处理缺失项，不覆盖已有 `seoDescription`。生成结果会按当前语言长度规则校验；不合规时会自动重试一次，仍不合规则保留在输出中供人工查看，但不会写回。
+
+LLM 配置：
+
+- `LLM_API_KEY` 或 `OPENAI_API_KEY`：API key。
+- `LLM_MODEL`：模型名称；也可用 `--model <model>` 覆盖。
+- `LLM_BASE_URL`：OpenAI-compatible API base URL，默认 `https://api.openai.com/v1`；也可用 `--base-url <url>` 覆盖。
+- `.env`、`.env.local`、`.env.*.local` 已被 `.gitignore` 忽略；不要把真实 API key 写入会提交的文件。
+
 ### 多语言支持（name/description）
 
 推荐做法：

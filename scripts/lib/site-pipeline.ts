@@ -70,7 +70,7 @@ export async function loadSiteData({ root, config, isDev }: LoadSiteDataOptions)
   loadScratchblocksLanguages();
 
   const [i18nData, modulesData] = await Promise.all([
-    Promise.all([loadI18n(), loadGlobalTags(), loadModuleDefaults()]),
+    Promise.all([loadI18n(root), loadGlobalTags(root), loadModuleDefaults(root)]),
     loadModules({ root, config, isDev }),
   ]);
   const [dict, globalTags, moduleDefaults] = i18nData;
