@@ -15,9 +15,18 @@ import {
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const rootDir = path.resolve(__dirname, '../..');
-const modulesDir = path.join(rootDir, 'content/modules');
+const defaultModulesDir = path.join(rootDir, 'content/modules');
+let modulesDir = defaultModulesDir;
 const localePattern = /^[a-z]{2}(-[a-z]{2})?$/;
 const allowedAssetExtensions = ['.png', '.jpg', '.jpeg', '.gif', '.svg', '.pdf'];
+
+export function configureEditorApi(options: { modulesDir?: string }) {
+  modulesDir = options.modulesDir ? path.resolve(options.modulesDir) : defaultModulesDir;
+}
+
+export function resetEditorApiConfig() {
+  modulesDir = defaultModulesDir;
+}
 
 // ==================== 工具函数 ====================
 

@@ -1,15 +1,18 @@
-import { beforeAll, describe, expect, it } from 'bun:test';
+import { afterAll, beforeAll, describe, expect, it } from 'bun:test';
 import path from 'path';
 import fs from 'fs-extra';
 import { loadModules } from '../scripts/lib/module-loader.ts';
+import { makeTestTempDir, removeTestTempDir } from './helpers/temp.ts';
 
 // 仅复制 .test 和 fps 两个模块到临时目录，避免加载全部模块导致测试过慢
 const root = path.resolve('.');
-const fixtureRoot = path.join(root, 'tests', '.fixture-modules');
-const fixtureModules = path.join(fixtureRoot, 'content', 'modules');
+let fixtureRoot = '';
+let fixtureModules = '';
 const config = { contentDir: 'content/modules' };
 
 beforeAll(async () => {
+  fixtureRoot = await makeTestTempDir('scratch-module-loader');
+  fixtureModules = path.join(fixtureRoot, 'content', 'modules');
   await fs.emptyDir(fixtureModules);
   const srcModules = path.join(root, 'content', 'modules');
   for (const dir of ['.test', 'fps']) {
@@ -27,6 +30,10 @@ beforeAll(async () => {
   const fpsZhCn = await fs.readJson(fpsZhCnFile);
   fpsZhCn.seoDescription = '在 Scratch 中计算并显示 FPS。';
   await fs.writeJson(fpsZhCnFile, fpsZhCn);
+});
+
+afterAll(async () => {
+  await removeTestTempDir(fixtureRoot);
 });
 
 describe('loadModules', () => {

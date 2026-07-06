@@ -153,7 +153,7 @@
 - **编写规范**：
   - 使用 `describe` / `it` 组织测试
   - 测试数据尽量内联构造，避免依赖外部文件（`module-loader.test.ts` 除外，它使用临时 fixture 目录）
-  - `module-loader.test.ts` 通过 `before` 钩子将 `.test` 和 `fps` 两个模块复制到 `tests/.fixture-modules/` 临时目录，避免加载全部模块导致测试过慢
+  - `module-loader.test.ts` 通过 `before` 钩子将 `.test` 和 `fps` 两个模块复制到系统临时目录，避免加载全部模块导致测试过慢
   - 新增构建模块时，在对应 `*.test.ts` 中补充测试
 
 NOTE: When performing a code review, respond in Chinese.

@@ -3,6 +3,7 @@ import fs from 'fs-extra';
 import path from 'path';
 import { createMtimePathHelpers } from '../scripts/lib/mtime-paths.ts';
 import type { ModuleRecord } from '../scripts/lib/types.ts';
+import { makeTestTempDir, removeTestTempDir } from './helpers/temp.ts';
 
 let fixtureRoot = '';
 
@@ -14,11 +15,12 @@ async function touch(relativePath: string) {
 
 describe('mtime path helpers', () => {
   beforeEach(async () => {
-    fixtureRoot = await fs.mkdtemp(path.join('/tmp', 'scratch-mtime-paths-'));
+    fixtureRoot = await makeTestTempDir('scratch-mtime-paths');
   });
 
   afterEach(async () => {
-    if (fixtureRoot) await fs.remove(fixtureRoot);
+    await removeTestTempDir(fixtureRoot);
+    fixtureRoot = '';
   });
 
   it('keeps module lastmod paths scoped to shared content and the target locale', async () => {

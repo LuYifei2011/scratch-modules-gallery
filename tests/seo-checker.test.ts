@@ -1,6 +1,5 @@
 import { afterEach, describe, expect, it } from 'bun:test';
 import fs from 'fs-extra';
-import os from 'os';
 import path from 'path';
 import {
   checkSeoDescriptions,
@@ -11,6 +10,7 @@ import {
   seoIssueToBuildIssue,
 } from '../scripts/lib/seo-checker.ts';
 import type { ModuleRecord } from '../scripts/lib/types.ts';
+import { makeTestTempDir, removeTestTempDir } from './helpers/temp.ts';
 
 const tmpRoots: string[] = [];
 
@@ -50,7 +50,7 @@ function moduleRecord(overrides: Partial<ModuleRecord> = {}): ModuleRecord {
 }
 
 async function createCliFixture(seoDescription: string | undefined): Promise<string> {
-  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'scratch-seo-check-'));
+  const root = await makeTestTempDir('scratch-seo-check');
   tmpRoots.push(root);
 
   await fs.outputFile(
@@ -85,7 +85,7 @@ async function createCliFixture(seoDescription: string | undefined): Promise<str
 afterEach(async () => {
   while (tmpRoots.length) {
     const root = tmpRoots.pop();
-    if (root) await fs.remove(root);
+    await removeTestTempDir(root);
   }
 });
 

@@ -8,16 +8,21 @@ import {
   normalizeScriptContent,
   validateModuleId,
 } from '../scripts/lib/module-creator.ts';
+import { makeTestTempDir, removeTestTempDir } from './helpers/temp.ts';
 
-const fixtureRoot = path.join('/tmp', 'scratch-modules-gallery-module-creator-test');
-const modulesDir = path.join(fixtureRoot, 'modules');
+let fixtureRoot = '';
+let modulesDir = '';
 
 beforeEach(async () => {
-  await fs.emptyDir(modulesDir);
+  fixtureRoot = await makeTestTempDir('scratch-module-creator');
+  modulesDir = path.join(fixtureRoot, 'modules');
+  await fs.ensureDir(modulesDir);
 });
 
 afterEach(async () => {
-  await fs.remove(fixtureRoot);
+  await removeTestTempDir(fixtureRoot);
+  fixtureRoot = '';
+  modulesDir = '';
 });
 
 describe('module creator', () => {

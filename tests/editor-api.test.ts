@@ -1,22 +1,25 @@
-import { afterEach, beforeEach, describe, expect, it } from 'bun:test';
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'bun:test';
 import { Readable } from 'stream';
 import path from 'path';
 import fs from 'fs-extra';
 import {
+  configureEditorApi,
   createModule,
   createScript,
   deleteAsset,
   deleteI18n,
   getModule,
+  resetEditorApiConfig,
   getScripts,
   updateModuleMeta,
   updateScript,
 } from '../scripts/lib/editor-api.ts';
+import { makeTestTempDir, removeTestTempDir } from './helpers/temp.ts';
 
-const root = path.resolve('.');
-const modulesDir = path.join(root, 'content', 'modules');
 const testModuleId = '.editor-api-test';
-const testModuleDir = path.join(modulesDir, testModuleId);
+let fixtureRoot = '';
+let modulesDir = '';
+let testModuleDir = '';
 
 function jsonReq(body?: unknown) {
   if (body === undefined) {
@@ -65,6 +68,22 @@ async function writeModule(files: Record<string, string> = {}) {
   }
 }
 
+async function writeHiddenFixtureModule() {
+  const moduleDir = path.join(modulesDir, '.test');
+  await fs.outputJson(
+    path.join(moduleDir, 'meta.json'),
+    {
+      id: '.test',
+      name: 'Hidden Test Module',
+      description: 'Fixture module for editor API tests',
+      tags: [],
+      keywords: [],
+    },
+    { spaces: 2, EOL: '\n' }
+  );
+  await fs.outputFile(path.join(moduleDir, 'scripts', '01-main.txt'), 'say [test]\n', 'utf8');
+}
+
 async function call(handler: (...args: any[]) => Promise<void>, ...args: any[]) {
   const res = resMock();
   await handler(jsonReq(), res, ...args);
@@ -83,12 +102,25 @@ async function callWithRawBody(handler: (...args: any[]) => Promise<void>, body:
   return res;
 }
 
+beforeAll(async () => {
+  fixtureRoot = await makeTestTempDir('scratch-editor-api');
+  modulesDir = path.join(fixtureRoot, 'content', 'modules');
+  testModuleDir = path.join(modulesDir, testModuleId);
+  configureEditorApi({ modulesDir });
+  await writeHiddenFixtureModule();
+});
+
 beforeEach(async () => {
   await fs.remove(testModuleDir);
 });
 
 afterEach(async () => {
   await fs.remove(testModuleDir);
+});
+
+afterAll(async () => {
+  resetEditorApiConfig();
+  await removeTestTempDir(fixtureRoot);
 });
 
 describe('editor-api module id validation', () => {
