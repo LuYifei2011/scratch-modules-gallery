@@ -296,7 +296,7 @@ th {
 }
 .module-info-footer-main {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  grid-template-columns: 1fr 1fr;
   gap: var(--space-xl);
 }
 .module-info-group h2,
