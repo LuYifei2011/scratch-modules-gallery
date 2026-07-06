@@ -108,7 +108,7 @@ async function render(siteData: SiteData) {
   if (await fs.pathExists(thirdpartyDir)) await fs.copy(thirdpartyDir, path.join(outDir, 'thirdparty'));
   // copy client resources: TypeScript and CSS entry points are compiled via Bun's built-in bundler.
   const clientDir = path.join(root, 'src', 'client');
-  const clientFiles = await globFiles('*.ts', clientDir);
+  const clientFiles = ['home.ts', 'module.ts', 'share.ts'];
   for (const file of clientFiles) {
     const srcPath = path.join(root, 'src', 'client', file);
     const outFile = path.join(outDir, file.replace(/\.ts$/, '.js'));
