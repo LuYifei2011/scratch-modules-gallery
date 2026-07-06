@@ -119,6 +119,7 @@ async function render(siteData: SiteData) {
         target: 'browser',
         format: 'esm',
         splitting: false,
+        minify: !isDev, // 开发模式下不压缩，便于调试
       });
       if (!result.success) {
         for (const message of result.logs) log.error('client', message.message);
@@ -615,7 +616,7 @@ async function buildDevTools(outDir: string) {
       target: 'browser',
       format: 'esm',
       splitting: false,
-      minify: isFast,
+      minify: !isDev, // 开发模式下不压缩，便于调试
     });
     if (!result.success) {
       for (const message of result.logs) log.error('dev-tools', message.message);
