@@ -5,14 +5,7 @@ import tseslint from 'typescript-eslint';
 
 export default defineConfig([
   {
-    ignores: [
-      'dist/**',
-      'node_modules/**',
-      'src/client/vendor/**',
-      'src/fonts/**',
-      '.cert/**',
-      'coverage/**',
-    ],
+    ignores: ['dist/**', 'node_modules/**', 'src/client/vendor/**', 'src/fonts/**', '.cert/**', 'coverage/**'],
   },
   js.configs.recommended,
   ...tseslint.configs.recommended,
