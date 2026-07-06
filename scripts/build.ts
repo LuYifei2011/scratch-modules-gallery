@@ -106,31 +106,49 @@ async function render(siteData: SiteData) {
   // copy thirdparty
   const thirdpartyDir = path.join(root, 'thirdparty');
   if (await fs.pathExists(thirdpartyDir)) await fs.copy(thirdpartyDir, path.join(outDir, 'thirdparty'));
-  // copy client resources: TypeScript entry points are compiled to browser JS via Bun's built-in transpiler.
-  const clientFiles = await globFiles('*.{ts,css}', path.join(root, 'src', 'client'));
+  // copy client resources: TypeScript and CSS entry points are compiled via Bun's built-in bundler.
+  const clientDir = path.join(root, 'src', 'client');
+  const clientFiles = await globFiles('*.ts', clientDir);
   for (const file of clientFiles) {
     const srcPath = path.join(root, 'src', 'client', file);
-    if (file.endsWith('.ts')) {
-      const outFile = path.join(outDir, file.replace(/\.ts$/, '.js'));
-      const result = await Bun.build({
-        entrypoints: [srcPath],
-        outdir: outDir,
-        naming: '[dir]/[name].js',
-        target: 'browser',
-        format: 'esm',
-        splitting: false,
-        minify: !isDev, // 开发模式下不压缩，便于调试
-      });
-      if (!result.success) {
-        for (const message of result.logs) log.error('client', message.message);
-        throw new Error(`编译客户端 TypeScript 失败: ${file}`);
-      }
-      // Bun writes directly to outdir; keep the explicit target path documented by outFile.
-      if (!(await fs.pathExists(outFile))) {
-        throw new Error(`客户端 TypeScript 未生成预期输出: ${path.relative(root, outFile)}`);
-      }
-    } else {
-      await fs.copy(srcPath, path.join(outDir, file));
+    const outFile = path.join(outDir, file.replace(/\.ts$/, '.js'));
+    const result = await Bun.build({
+      entrypoints: [srcPath],
+      outdir: outDir,
+      naming: '[dir]/[name].js',
+      target: 'browser',
+      format: 'esm',
+      splitting: false,
+      minify: !isDev, // 开发模式下不压缩，便于调试
+    });
+    if (!result.success) {
+      for (const message of result.logs) log.error('client', message.message);
+      throw new Error(`编译客户端 TypeScript 失败: ${file}`);
+    }
+    // Bun writes directly to outdir; keep the explicit target path documented by outFile.
+    if (!(await fs.pathExists(outFile))) {
+      throw new Error(`客户端 TypeScript 未生成预期输出: ${path.relative(root, outFile)}`);
+    }
+  }
+
+  const cssEntries = ['site.css', 'module.css'];
+  for (const file of cssEntries) {
+    const srcPath = path.join(clientDir, file);
+    const outFile = path.join(outDir, file);
+    const result = await Bun.build({
+      entrypoints: [srcPath],
+      outdir: outDir,
+      naming: '[dir]/[name].css',
+      target: 'browser',
+      splitting: false,
+      minify: !isDev, // 开发模式下不压缩，便于调试
+    });
+    if (!result.success) {
+      for (const message of result.logs) log.error('client', message.message);
+      throw new Error(`编译客户端 CSS 失败: ${file}`);
+    }
+    if (!(await fs.pathExists(outFile))) {
+      throw new Error(`客户端 CSS 未生成预期输出: ${path.relative(root, outFile)}`);
     }
   }
 

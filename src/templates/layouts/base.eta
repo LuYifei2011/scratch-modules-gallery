@@ -39,8 +39,7 @@
                 <% } %>
             <% } %>
         <% } %>
-        <link rel="stylesheet" href="<%= it.assetBase %>/style.css" />
-        <link rel="stylesheet" href="<%= it.assetBase %>/components.css" />
+        <link rel="stylesheet" href="<%= it.assetBase %>/site.css" />
         <%~ block("head_extra") %>
     </head>
     <body>
