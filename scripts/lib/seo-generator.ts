@@ -33,6 +33,11 @@ export interface SeoGenerationResult {
   error?: string;
 }
 
+export type SeoGenerationProgressEvent =
+  | { type: 'start'; total: number }
+  | { type: 'target-start'; index: number; total: number; target: SeoGenerationTarget }
+  | { type: 'target-complete'; index: number; total: number; result: SeoGenerationResult };
+
 export interface GenerateMissingSeoDescriptionsOptions {
   root: string;
   moduleId?: string;
@@ -44,6 +49,7 @@ export interface GenerateMissingSeoDescriptionsOptions {
   apiKey?: string;
   maxRetries?: number;
   complete?: (request: SeoGenerationRequest) => Promise<string>;
+  onProgress?: (event: SeoGenerationProgressEvent) => void;
 }
 
 interface GenerationContext {
@@ -256,8 +262,14 @@ export async function generateMissingSeoDescriptions(
   const localeCache = new Map<string, Promise<LocalizedModuleRecord[]>>();
   const results: SeoGenerationResult[] = [];
 
-  for (const target of targets) {
-    results.push(await generateOne(context, localeCache, target, options));
+  options.onProgress?.({ type: 'start', total: targets.length });
+
+  for (const [index, target] of targets.entries()) {
+    const progressIndex = index + 1;
+    options.onProgress?.({ type: 'target-start', index: progressIndex, total: targets.length, target });
+    const result = await generateOne(context, localeCache, target, options);
+    results.push(result);
+    options.onProgress?.({ type: 'target-complete', index: progressIndex, total: targets.length, result });
   }
 
   return results;

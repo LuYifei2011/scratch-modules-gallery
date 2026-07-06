@@ -1,7 +1,11 @@
 import { afterEach, describe, expect, it } from 'bun:test';
 import fs from 'fs-extra';
 import path from 'path';
-import { cleanGeneratedSeoText, generateMissingSeoDescriptions } from '../scripts/lib/seo-generator.ts';
+import {
+  cleanGeneratedSeoText,
+  generateMissingSeoDescriptions,
+  type SeoGenerationProgressEvent,
+} from '../scripts/lib/seo-generator.ts';
 import { makeTestTempDir, removeTestTempDir } from './helpers/temp.ts';
 
 const tmpRoots: string[] = [];
@@ -67,10 +71,12 @@ describe('seo-generator', () => {
   it('generates only matching missing descriptions without writing by default', async () => {
     const root = await createFixture();
     const calls: string[] = [];
+    const progress: SeoGenerationProgressEvent[] = [];
     const results = await generateMissingSeoDescriptions({
       root,
       moduleId: 'sample',
       locale: 'zh-cn',
+      onProgress: (event) => progress.push(event),
       complete: async (request) => {
         calls.push(request.prompt);
         return validZhText;
@@ -86,6 +92,10 @@ describe('seo-generator', () => {
     expect(results[0].valid).toBe(true);
     expect(results[0].applied).toBe(false);
     expect(calls[0].includes('# Module SEO Context')).toBe(true);
+    expect(progress.map((event) => event.type)).toEqual(['start', 'target-start', 'target-complete']);
+    expect(progress[0]).toMatchObject({ type: 'start', total: 1 });
+    expect(progress[1]).toMatchObject({ type: 'target-start', index: 1, total: 1 });
+    expect(progress[2]).toMatchObject({ type: 'target-complete', index: 1, total: 1 });
 
     const i18n = await fs.readJson(path.join(root, 'content/modules/sample/i18n/zh-cn.json'));
     expect(i18n.seoDescription).toBeUndefined();
