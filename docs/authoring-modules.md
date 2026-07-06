@@ -113,7 +113,7 @@ bun run seo:generate fps --locale zh-cn --apply
 
 注意：`--apply` 会重新调用 LLM 生成内容，不会复用前一次 dry-run 的输出。生成工具只处理缺失项，不覆盖已有 `seoDescription`。生成结果会按当前语言长度规则校验；不合规时会自动重试一次，仍不合规则保留在输出中供人工查看，但不会写回。
 
-运行期间会在 stderr 显示进度，例如 `[3/12] Generating fps [zh-cn]...` 和完成状态；最终 markdown/json 结果仍输出到 stdout，便于重定向或脚本解析。
+默认 markdown 输出会显示进度，例如 `[3/12] Generating fps [zh-cn]...` 和完成状态；`--format=json` 会保持纯 JSON 输出，不显示进度，便于重定向或脚本解析。
 
 LLM 配置：
 

@@ -207,18 +207,18 @@ function progressStatus(result: SeoGenerationResult): string {
 
 function logProgress(event: SeoGenerationProgressEvent): void {
   if (event.type === 'start') {
-    console.error(`Found ${event.total} missing SEO description(s).`);
+    console.log(`Found ${event.total} missing SEO description(s).`);
     return;
   }
 
   if (event.type === 'target-start') {
-    console.error(`[${event.index}/${event.total}] Generating ${event.target.moduleId} [${event.target.locale}]...`);
+    console.log(`[${event.index}/${event.total}] Generating ${event.target.moduleId} [${event.target.locale}]...`);
     return;
   }
 
   const result = event.result;
   const length = typeof result.length === 'number' ? ` length ${result.length}/${result.min}-${result.max}` : '';
-  console.error(
+  console.log(
     `[${event.index}/${event.total}] ${result.target.moduleId} [${result.target.locale}]: ${progressStatus(result)}${length}`
   );
 }
@@ -238,7 +238,7 @@ async function main(): Promise<void> {
     limit: options.limit,
     model: options.model,
     baseUrl: options.baseUrl,
-    onProgress: logProgress,
+    onProgress: options.format === 'markdown' ? logProgress : undefined,
   });
 
   console.log(options.format === 'json' ? renderJson(results, options.apply) : renderMarkdown(results, options.apply));
