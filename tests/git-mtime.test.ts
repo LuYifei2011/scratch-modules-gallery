@@ -98,6 +98,43 @@ describe('createGitMtimeResolver', () => {
     expect(resolver.getLatestLastMod(['src/i18n/zh-cn.json', 'content/modules/fps/scripts'])).toBe(fallbackDate);
   });
 
+  it('does not let fallback date override older matched paths when comparing latest lastmod', async () => {
+    const resolver = await createGitMtimeResolver({
+      root: '/repo',
+      paths: [
+        'content/modules/fps/meta.json',
+        'content/modules/fps/scripts/01-main.txt',
+        'content/modules/fps/i18n/zh-tw.json',
+      ],
+      now: () => new Date('2026-07-06T00:00:00.000Z'),
+      runGit: async (args) => {
+        if (args.includes('--is-inside-work-tree')) return 'true\n';
+        if (args.includes('--is-shallow-repository')) return 'false\n';
+        return [
+          '1782864000',
+          '',
+          'content/modules/fps/meta.json',
+          '',
+          '1782691200',
+          '',
+          'content/modules/fps/i18n/zh-tw.json',
+          '',
+          '1768608000',
+          '',
+          'content/modules/fps/scripts/01-main.txt',
+        ].join('\n');
+      },
+    });
+
+    expect(
+      resolver.getLatestLastMod([
+        'content/modules/fps/meta.json',
+        'content/modules/fps/scripts/01-main.txt',
+        'content/modules/fps/i18n/zh-tw.json',
+      ])
+    ).toBe('2026-07-01');
+  });
+
   it('falls back when the working directory is not a git repo', async () => {
     const resolver = await createGitMtimeResolver({
       root: '/repo',

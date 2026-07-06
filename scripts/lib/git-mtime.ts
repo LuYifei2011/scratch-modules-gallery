@@ -117,9 +117,8 @@ export async function createGitMtimeResolver(options: GitMtimeResolverOptions): 
         return mtimes.get(normalizeGitPath(queryPath)) || fallbackDate;
       },
       getLatestLastMod(queryPathsToCompare: string[]): string {
-        return queryPathsToCompare
-          .map((queryPath) => mtimes.get(normalizeGitPath(queryPath)) || fallbackDate)
-          .reduce((latest, date) => (date > latest ? date : latest), fallbackDate);
+        const dates = queryPathsToCompare.map((queryPath) => mtimes.get(normalizeGitPath(queryPath)) || fallbackDate);
+        return dates.reduce((latest, date) => (date > latest ? date : latest), dates[0] || fallbackDate);
       },
     };
   } catch (e) {
