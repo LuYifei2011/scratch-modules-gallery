@@ -1,2 +1,2 @@
 define (a :: custom-arg) ^ (b :: custom-arg)
-set [result v] to ([e ^ v] ((b :: custom-arg) * ([ln v] (a :: custom-arg))))
+set [result v] to ([e ^ v] of ((b :: custom-arg) * ([ln v] of (a :: custom-arg))))
