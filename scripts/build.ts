@@ -9,6 +9,7 @@ import { loadLocalizedModules, loadSiteConfig, loadSiteData, type SiteData } fro
 import { loadSiteCoverTemplate, generateSiteCover, generateModuleCover } from './lib/cover-generator.ts';
 import { globFiles } from './lib/bun-utils.ts';
 import { createGitMtimeResolver } from './lib/git-mtime.ts';
+import { createMtimePathHelpers } from './lib/mtime-paths.ts';
 import { checkSeoDescriptions, seoIssueToBuildIssue } from './lib/seo-checker.ts';
 import { renderTemplate, setTemplateGlobals } from './lib/template-renderer.ts';
 import log, { c, paint, formatDuration, timeNow } from './lib/logger.ts';
@@ -279,36 +280,10 @@ async function render(siteData: SiteData) {
     };
   };
 
-  const pathExistsCache = new Map<string, Promise<boolean>>();
-  const pathExists = (relativePath: string) => {
-    if (!pathExistsCache.has(relativePath)) {
-      pathExistsCache.set(relativePath, fs.pathExists(path.join(root, relativePath)));
-    }
-    return pathExistsCache.get(relativePath)!;
-  };
-  const existingPaths = async (pathsToCheck: string[]) => {
-    const uniquePaths = Array.from(new Set(pathsToCheck));
-    const result: string[] = [];
-    for (const relativePath of uniquePaths) {
-      if (await pathExists(relativePath)) result.push(relativePath);
-    }
-    return result;
-  };
-  const layoutBasePath = 'src/templates/layouts/base.eta';
-  const localeI18nPath = (loc: string) => `src/i18n/${loc}.json`;
-  const homeMtimePaths = async (loc: string) =>
-    existingPaths([layoutBasePath, 'src/templates/layouts/home.eta', localeI18nPath(loc)]);
-  const aboutMtimePaths = async (loc: string) =>
-    existingPaths([layoutBasePath, 'src/templates/layouts/about.eta', localeI18nPath(loc)]);
-  const moduleMtimePaths = async (m: ModuleRecord, loc: string) =>
-    existingPaths([
-      layoutBasePath,
-      'src/templates/layouts/module.eta',
-      `${config.contentDir}/${m.slug}/meta.json`,
-      `${config.contentDir}/${m.slug}/scripts`,
-      `${config.contentDir}/${m.slug}/i18n/${loc}.json`,
-      `${config.contentDir}/${m.slug}/notes/${loc}.md`,
-    ]);
+  const { homeMtimePaths, aboutMtimePaths, moduleMtimePaths } = createMtimePathHelpers({
+    root,
+    contentDir: config.contentDir,
+  });
   const mtimePathSets = await Promise.all([
     ...locales.map((loc) => homeMtimePaths(loc)),
     ...locales.map((loc) => aboutMtimePaths(loc)),
@@ -523,7 +498,7 @@ async function render(siteData: SiteData) {
       });
     }
 
-    // 模块页面：使用模块内容、模块页模板和当前语言模块翻译/备注的最后修改时间。
+    // 模块页面：仅使用模块内容和当前语言模块翻译/备注的最后修改时间。
     for (const m of modules) {
       for (const loc of locales) {
         const moduleLastMod = gitMtimes.getLatestLastMod(await moduleMtimePaths(m, loc));
