@@ -12,6 +12,7 @@
 <% block("meta_description", () => { %><%= module.seoDescription || module.description %><% }) %>
 <% block("meta_keywords", () => { %><meta name="keywords" content="<%= module.keywordsFinalStr %>" /><% }) %>
 <% block("head_extra", () => { %>
+    <link rel="stylesheet" href="<%= it.assetBase %>/module.css" />
     <% const structuredData = {
         '@context': 'https://schema.org',
         '@type': 'SoftwareSourceCode',
@@ -256,6 +257,5 @@
 </div>
 
 <% block("page_scripts", () => { %>
-    <link rel="stylesheet" href="<%= it.assetBase %>/module.css" />
     <script type="module" src="<%= it.assetBase %>/module.js"></script>
 <% }) %>
