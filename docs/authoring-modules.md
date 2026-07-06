@@ -105,13 +105,13 @@ bun run seo:generate
 bun run seo:generate fps --locale zh-cn
 ```
 
-默认只预览生成结果，不写入文件。确认结果合适后加 `--apply` 写回：
+默认只预览生成结果，不写入文件。需要直接生成并写回缺失项时，使用 `--apply`：
 
 ```bash
 bun run seo:generate fps --locale zh-cn --apply
 ```
 
-生成工具只处理缺失项，不覆盖已有 `seoDescription`。生成结果会按当前语言长度规则校验；不合规时会自动重试一次，仍不合规则保留在输出中供人工查看，但不会写回。
+注意：`--apply` 会重新调用 LLM 生成内容，不会复用前一次 dry-run 的输出。生成工具只处理缺失项，不覆盖已有 `seoDescription`。生成结果会按当前语言长度规则校验；不合规时会自动重试一次，仍不合规则保留在输出中供人工查看，但不会写回。
 
 运行期间会在 stderr 显示进度，例如 `[3/12] Generating fps [zh-cn]...` 和完成状态；最终 markdown/json 结果仍输出到 stdout，便于重定向或脚本解析。
 

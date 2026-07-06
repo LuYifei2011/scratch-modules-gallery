@@ -75,7 +75,7 @@
 - **SEO 描述工具**：
   - `bun run check-seo`：检查所有语言 `seoDescription` 缺失与长度异常；缺失为阻塞错误，长度异常为 warning
   - `bun run seo:context -- <module-id> --locale <locale>`：导出模块元信息、脚本、变量、备注等上下文，便于手动给 LLM 生成描述
-  - `bun run seo:generate [module-id] [--locale <locale>] [--apply]`：调用 OpenAI-compatible LLM 生成缺失的 `seoDescription`；默认 dry-run 只预览，`--apply` 才写回
+  - `bun run seo:generate [module-id] [--locale <locale>] [--apply]`：调用 OpenAI-compatible LLM 生成缺失的 `seoDescription`；默认 dry-run 只预览，`--apply` 会重新生成并写回
   - 生成工具只处理缺失项，不覆盖已有 `seoDescription`；结果按 `seo-checker` 长度规则校验，不合规则重试一次，仍不合规则不写回
 - **环境变量**：
   - `BASE_URL`：覆盖 `site.config.ts` baseUrl（影响 canonical / sitemap）
@@ -105,7 +105,7 @@
 | 添加或更新备注       | `notes/<lang-code>.md`       | 每个语言独立文件；构建时按语言优先级选取                                   |
 | 自定义块新增 pattern | 模块 i18n `procedures`       | 保持英文源脚本同步；`_` 数量需与参数个数一致                               |
 | SEO 调整             | `site.config.ts` + 模板 head | 确保 `hreflang`、canonical 含语言段                                        |
-| 生成 SEO 描述        | `bun run seo:generate`       | 默认 dry-run；加 `--apply` 才写回；LLM 配置优先放 `.env.local`             |
+| 生成 SEO 描述        | `bun run seo:generate`       | 默认 dry-run；`--apply` 会重新生成并写回；LLM 配置优先放 `.env.local`      |
 
 ### 验证清单（提交前）
 
@@ -116,7 +116,7 @@
 5. Tags 显示正确的多语言翻译（从 `src/i18n/tags.json` 应用）。
 6. 首页搜索：中文子串命中（CJK 分词生效）。
 7. 根 `index.html` 按浏览器语言/LocalStorage 跳转期望语言。
-8. SEO 变更后运行 `bun run check-seo`；若用 LLM 生成，先检查 dry-run 输出，再用 `--apply` 写回。
+8. SEO 变更后运行 `bun run check-seo`；若用 LLM 写回，注意 `--apply` 会重新生成内容。
 
 ### 易踩坑 & 提示
 
