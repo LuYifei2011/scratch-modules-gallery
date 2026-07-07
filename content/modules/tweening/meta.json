@@ -22,5 +22,6 @@
       "url": "https://github.com/TurboWarp/extensions/blob/master/extensions/JeremyGamer13/tween.js",
       "type": "extension"
     }
-  ]
+  ],
+  "seoDescription": "Scratch scripts for smooth tweening animation with linear, sine, power, exponential, circular, back, elastic,and bounce easing."
 }

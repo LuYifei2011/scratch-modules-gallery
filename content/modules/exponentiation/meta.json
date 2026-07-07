@@ -5,5 +5,6 @@
   "tags": ["math"],
   "keywords": ["power", "exponential", "calculation"],
   "variables": [{ "name": "result", "type": "variable", "scope": "sprite" }],
-  "contributors": ["gh/LuYifei2011"]
+  "contributors": ["gh/LuYifei2011"],
+  "seoDescription": "Scratch custom block for exponentiation: compute a to the power of b using e^(b*ln(a)). The result stored in variable result."
 }

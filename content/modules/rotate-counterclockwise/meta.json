@@ -15,5 +15,6 @@
       "url": "https://www.youtube.com/watch?v=PuqyJOT83ko&t=1109s",
       "type": "video"
     }
-  ]
+  ],
+  "seoDescription": "Rotate a sprite counterclockwise around a given coordinate point by a specified angle using trigonometric calculations. Custom block with x, y, angle inputs."
 }

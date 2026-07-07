@@ -47,5 +47,6 @@
     "You can change exponent: square / cubic / quartic / quintic": "可以更改指數：二次 / 三次 / 四次 / 五次",
     "cubic: multiply again": "三次：再乘一次",
     "cubic: multiply again; quartic/quintic: and so on": "三次：再乘一次；四次/五次：以此類推"
-  }
+  },
+  "seoDescription": "用於Scratch的補間動畫模組，提供線性、正弦、次方、指數、圓形、回彈、彈性和彈跳等多種緩動函數，支援緩入、緩出、緩入和出，基於進度百分比計算插值，輕鬆實現平滑自然的動畫效果。"
 }

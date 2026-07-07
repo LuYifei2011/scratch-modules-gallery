@@ -12,5 +12,6 @@
       "url": "https://scratch.mit.edu/projects/805772453",
       "type": "project"
     }
-  ]
+  ],
+  "seoDescription": "Detects when a Scratch project stops using a timer variable, with a loop updating time and an event condition for project-end behavior."
 }

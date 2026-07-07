@@ -19,5 +19,6 @@
       "url": "https://youtu.be/bxjbYJLAUYU",
       "type": "video"
     }
-  ]
+  ],
+  "seoDescription": "Sort sprites by layer using a Z ORDER list. The block inserts a position and moves the sprite to that layer. A main loop refreshes ordering each frame."
 }

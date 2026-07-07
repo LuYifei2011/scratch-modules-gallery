@@ -22,5 +22,6 @@
       "url": "https://example.com",
       "type": "other"
     }
-  ]
+  ],
+  "seoDescription": "A Scratch test module demonstrating Markdown and Scratchblocks rendering, a main script with movement, and an imported exponent block using logarithms."
 }
