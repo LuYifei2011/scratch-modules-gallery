@@ -1,5 +1,6 @@
 import fs from 'fs-extra';
 import path from 'path';
+import { getSeoDescriptionRange } from './lib/seo-checker.ts';
 import { loadLocalizedModules, loadSiteConfig, loadSiteData } from './lib/site-pipeline.ts';
 import type {
   Contributor,
@@ -170,6 +171,43 @@ function appendScript(lines: string[], script: SeoScript, index: number, heading
   lines.push('');
 }
 
+function renderGenerationTask(locale: string): string {
+  const range = getSeoDescriptionRange(locale);
+  const normalizedLocale = locale.toLowerCase();
+  const language = normalizedLocale.split('-')[0] || normalizedLocale;
+
+  if (language === 'en') {
+    return [
+      'Generate a concise SEO description for this Scratch module using the localized metadata, variables, references, notes, and scripts above.',
+      '',
+      'Requirements:',
+      '- Write in English.',
+      '- Start directly with the description content. Do not add any prefix or suffix.',
+      '- Stay strictly faithful to the module behavior. Do not invent unsupported features.',
+      `- Keep the length between ${range.min} and ${range.max} characters.`,
+      '- Output plain text only.',
+    ].join('\n');
+  }
+
+  const targetLanguage =
+    normalizedLocale === 'zh-cn'
+      ? '简体中文'
+      : normalizedLocale === 'zh-tw'
+        ? '繁體中文'
+        : '当前 locale 对应的语言';
+
+  return [
+    `基于上方 Scratch 模块的详细代码和元数据，生成一段简洁的 SEO 描述。`,
+    '',
+    '要求：',
+    `- 使用${targetLanguage}。`,
+    '- 直接开始输出实质描述内容，禁止任何前缀、后缀。',
+    '- 严格忠于模块实际功能，不要添加未支持的行为。',
+    `- 长度控制在${range.min}-${range.max}字，适合用作 SEO 介绍。`,
+    '- 只输出纯文本。',
+  ].join('\n');
+}
+
 export function renderSeoContextMarkdown({ module, locale, systemPrompt }: RenderSeoContextOptions): string {
   const lines: string[] = [];
 
@@ -218,16 +256,7 @@ export function renderSeoContextMarkdown({ module, locale, systemPrompt }: Rende
   }
 
   lines.push('## Generation Task');
-  lines.push(
-    // 'Generate concise SEO description content for this Scratch module using the localized metadata, variables, references, notes, and scripts above. Focus on what the module does without inventing unsupported behavior. Output the result in plain text, not Markdown, and do not include any additional commentary or explanation.'
-    `基于上方 Scratch 模块的详细代码和元数据，生成一段简洁的SEO描述。
-
-要求：
-- 直接开始输出实质描述内容，禁止任何前缀、后缀。
-- 严格忠于模块实际功能，不要添加未支持的行为。
-- 长度控制在100-140字，适合用作SEO介绍。
-- 只输出纯文本。`
-  );
+  lines.push(renderGenerationTask(locale));
 
   return (
     lines

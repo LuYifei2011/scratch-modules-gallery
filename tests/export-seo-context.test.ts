@@ -91,6 +91,22 @@ describe('renderSeoContextMarkdown', () => {
     expect(markdown.includes('- has demo: no')).toBeTruthy();
     expect(markdown.includes('No scripts available.')).toBeTruthy();
   });
+
+  it('renders an English generation task for en locale', () => {
+    const markdown = renderSeoContextMarkdown({ module, locale: 'en' });
+
+    expect(markdown.includes('- Write in English.')).toBe(true);
+    expect(markdown.includes('between 120 and 160 characters')).toBe(true);
+    expect(markdown.includes('使用简体中文')).toBe(false);
+    expect(markdown.includes('长度控制在100-140字')).toBe(false);
+  });
+
+  it('renders a Simplified Chinese generation task for zh-cn locale', () => {
+    const markdown = renderSeoContextMarkdown({ module, locale: 'zh-cn' });
+
+    expect(markdown.includes('- 使用简体中文。')).toBe(true);
+    expect(markdown.includes('长度控制在80-140字')).toBe(true);
+  });
 });
 
 describe('export-seo-context CLI', () => {
