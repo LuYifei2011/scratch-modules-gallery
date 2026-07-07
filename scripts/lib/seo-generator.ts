@@ -18,7 +18,12 @@ export interface SeoGenerationRequest {
   messages: LlmMessage[];
   model?: string;
   baseUrl?: string;
+  generationMode?: SeoGenerationMode;
+  sourceLocale?: string;
+  sourceText?: string;
 }
+
+export type SeoGenerationMode = 'context' | 'sibling-locale';
 
 export interface SeoGenerationResult {
   target: SeoGenerationTarget;
@@ -26,6 +31,8 @@ export interface SeoGenerationResult {
   length?: number;
   min?: number;
   max?: number;
+  generationMode?: SeoGenerationMode;
+  sourceLocale?: string;
   valid: boolean;
   applied: boolean;
   skipped: boolean;
@@ -56,6 +63,11 @@ interface GenerationContext {
   root: string;
   config: SiteConfig;
   siteData: SiteData;
+}
+
+interface SeoGenerationSource {
+  locale: string;
+  text: string;
 }
 
 function moduleMatches(target: string | undefined, moduleId: string): boolean {
@@ -106,6 +118,9 @@ function collectTargets(
   context: GenerationContext,
   options: GenerateMissingSeoDescriptionsOptions
 ): SeoGenerationTarget[] {
+  const moduleOrder = new Map(
+    context.siteData.modules.map((module, index) => [module.id || module.slug || String(index), index])
+  );
   const locales = Object.keys(context.siteData.dict);
   const issues = checkSeoDescriptions(context.siteData.modules, { locales });
   const targets = issues
@@ -119,10 +134,90 @@ function collectTargets(
         locale: issue.locale,
         file: relativeFile(context.root, file),
       };
+    })
+    .sort((a, b) => {
+      const moduleDelta = (moduleOrder.get(a.moduleId) ?? 0) - (moduleOrder.get(b.moduleId) ?? 0);
+      if (moduleDelta !== 0) return moduleDelta;
+      return localeGenerationPriority(a.locale) - localeGenerationPriority(b.locale);
     });
 
   if (typeof options.limit === 'number' && options.limit >= 0) return targets.slice(0, options.limit);
   return targets;
+}
+
+function localeGenerationPriority(locale: string): number {
+  if (locale === 'zh-cn') return 10;
+  if (locale === 'zh-tw') return 11;
+  if (locale === 'en') return 0;
+  return 20;
+}
+
+function siblingChineseLocale(locale: string): string | undefined {
+  if (locale === 'zh-cn') return 'zh-tw';
+  if (locale === 'zh-tw') return 'zh-cn';
+  return undefined;
+}
+
+function sourceKey(moduleId: string, locale: string): string {
+  return `${moduleId}\0${locale}`;
+}
+
+function getExistingSeoText(context: GenerationContext, moduleId: string, locale: string): string {
+  const module = context.siteData.modules.find((entry) => entry.id === moduleId || entry.slug === moduleId);
+  if (!module) return '';
+  const value = locale === 'en' ? module.seoDescription : module.translations?.[locale]?.seoDescription;
+  return normalizeSeoText(value);
+}
+
+function createExistingSourceMap(context: GenerationContext): Map<string, string> {
+  const sources = new Map<string, string>();
+  const locales = Object.keys(context.siteData.dict);
+  for (const module of context.siteData.modules) {
+    const moduleId = module.id || module.slug;
+    if (!moduleId) continue;
+    for (const locale of locales) {
+      const text = getExistingSeoText(context, moduleId, locale);
+      if (text) sources.set(sourceKey(moduleId, locale), text);
+    }
+  }
+  return sources;
+}
+
+function findSiblingSource(
+  sources: Map<string, string>,
+  target: SeoGenerationTarget
+): SeoGenerationSource | undefined {
+  const siblingLocale = siblingChineseLocale(target.locale);
+  if (!siblingLocale) return undefined;
+  const text = sources.get(sourceKey(target.moduleId, siblingLocale));
+  if (!text) return undefined;
+  return { locale: siblingLocale, text };
+}
+
+function renderSiblingLocalePrompt(target: SeoGenerationTarget, source: SeoGenerationSource): string {
+  const targetName = target.locale === 'zh-cn' ? '简体中文' : target.locale === 'zh-tw' ? '繁體中文' : target.locale;
+  const sourceName = source.locale === 'zh-cn' ? '简体中文' : source.locale === 'zh-tw' ? '繁體中文' : source.locale;
+  const range = getSeoDescriptionRange(target.locale);
+
+  return [
+    '# SEO Description Locale Derivation',
+    '',
+    `Source locale: ${source.locale} (${sourceName})`,
+    `Target locale: ${target.locale} (${targetName})`,
+    '',
+    '## Source SEO Description',
+    source.text,
+    '',
+    '## Generation Task',
+    `将上方 SEO 描述转换为${targetName}。`,
+    '',
+    '要求：',
+    '- 保持事实、功能点、适用场景、信息顺序完全一致。',
+    '- 只做目标地区的中文用字、术语和表达习惯调整。',
+    '- 不新增、删除或扩展任何功能描述。',
+    `- 长度控制在${range.min}-${range.max}字。`,
+    '- 只输出纯文本，禁止任何前缀、后缀。',
+  ].join('\n');
 }
 
 async function loadLocalizedModuleForTarget(
@@ -146,7 +241,8 @@ async function generateOne(
   context: GenerationContext,
   localeCache: Map<string, Promise<LocalizedModuleRecord[]>>,
   target: SeoGenerationTarget,
-  options: GenerateMissingSeoDescriptionsOptions
+  options: GenerateMissingSeoDescriptionsOptions,
+  source?: SeoGenerationSource
 ): Promise<SeoGenerationResult> {
   const complete =
     options.complete ||
@@ -162,8 +258,13 @@ async function generateOne(
   const warnings: string[] = [];
 
   try {
-    const module = await loadLocalizedModuleForTarget(context.siteData, localeCache, target);
-    const prompt = renderSeoContextMarkdown({ module, locale: target.locale });
+    const generationMode: SeoGenerationMode = source ? 'sibling-locale' : 'context';
+    const prompt = source
+      ? renderSiblingLocalePrompt(target, source)
+      : renderSeoContextMarkdown({
+          module: await loadLocalizedModuleForTarget(context.siteData, localeCache, target),
+          locale: target.locale,
+        });
     const messages: LlmMessage[] = [{ role: 'user', content: prompt }];
     const maxRetries = options.maxRetries ?? 1;
     let text = '';
@@ -177,6 +278,9 @@ async function generateOne(
         messages,
         model: options.model,
         baseUrl: options.baseUrl,
+        generationMode,
+        sourceLocale: source?.locale,
+        sourceText: source?.text,
       });
       text = cleanGeneratedSeoText(raw);
       length = countSeoCharacters(text);
@@ -216,6 +320,8 @@ async function generateOne(
       length,
       min: range.min,
       max: range.max,
+      generationMode,
+      sourceLocale: source?.locale,
       valid,
       applied,
       skipped,
@@ -224,6 +330,8 @@ async function generateOne(
   } catch (e) {
     return {
       target,
+      generationMode: source ? 'sibling-locale' : 'context',
+      sourceLocale: source?.locale,
       valid: false,
       applied: false,
       skipped: false,
@@ -260,6 +368,7 @@ export async function generateMissingSeoDescriptions(
   const context = await loadContext(options.root);
   const targets = collectTargets(context, options);
   const localeCache = new Map<string, Promise<LocalizedModuleRecord[]>>();
+  const sourceTexts = createExistingSourceMap(context);
   const results: SeoGenerationResult[] = [];
 
   options.onProgress?.({ type: 'start', total: targets.length });
@@ -267,8 +376,12 @@ export async function generateMissingSeoDescriptions(
   for (const [index, target] of targets.entries()) {
     const progressIndex = index + 1;
     options.onProgress?.({ type: 'target-start', index: progressIndex, total: targets.length, target });
-    const result = await generateOne(context, localeCache, target, options);
+    const source = findSiblingSource(sourceTexts, target);
+    const result = await generateOne(context, localeCache, target, options, source);
     results.push(result);
+    if (result.valid && result.text) {
+      sourceTexts.set(sourceKey(result.target.moduleId, result.target.locale), result.text);
+    }
     options.onProgress?.({ type: 'target-complete', index: progressIndex, total: targets.length, result });
   }
 

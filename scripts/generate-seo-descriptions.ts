@@ -170,6 +170,9 @@ function renderMarkdown(results: SeoGenerationResult[], apply: boolean): string 
   for (const result of results) {
     lines.push(`### ${statusText(result)} ${result.target.moduleId} [${result.target.locale}]`, '');
     lines.push(`- file: \`${result.target.file}\``);
+    if (result.generationMode === 'sibling-locale' && result.sourceLocale) {
+      lines.push(`- source locale: ${result.sourceLocale}`);
+    }
     if (typeof result.length === 'number') lines.push(`- length: ${result.length}/${result.min}-${result.max}`);
     if (result.error) lines.push(`- error: ${result.error}`);
     for (const warning of result.warnings) lines.push(`- warning: ${warning}`);
@@ -205,6 +208,11 @@ function progressStatus(result: SeoGenerationResult): string {
   return 'ready';
 }
 
+function progressSource(result: SeoGenerationResult): string {
+  if (result.generationMode === 'sibling-locale' && result.sourceLocale) return ` from ${result.sourceLocale}`;
+  return '';
+}
+
 function logProgress(event: SeoGenerationProgressEvent): void {
   if (event.type === 'start') {
     console.log(`Found ${event.total} missing SEO description(s).`);
@@ -219,7 +227,7 @@ function logProgress(event: SeoGenerationProgressEvent): void {
   const result = event.result;
   const length = typeof result.length === 'number' ? ` length ${result.length}/${result.min}-${result.max}` : '';
   console.log(
-    `[${event.index}/${event.total}] ${result.target.moduleId} [${result.target.locale}]: ${progressStatus(result)}${length}`
+    `[${event.index}/${event.total}] ${result.target.moduleId} [${result.target.locale}]: ${progressStatus(result)}${progressSource(result)}${length}`
   );
 }
 

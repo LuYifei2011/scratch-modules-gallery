@@ -77,6 +77,7 @@
   - `bun run seo:context -- <module-id> --locale <locale>`：导出模块元信息、脚本、变量、备注等上下文，便于手动给 LLM 生成描述
   - `bun run seo:generate [module-id] [--locale <locale>] [--apply]`：调用 OpenAI-compatible LLM 生成缺失的 `seoDescription`；默认 dry-run 只预览，`--apply` 会重新生成并写回
   - 生成工具只处理缺失项，不覆盖已有 `seoDescription`；结果按 `seo-checker` 长度规则校验，不合规则重试一次，仍不合规则不写回
+  - `zh-cn` / `zh-tw` 使用同源策略：优先从已有或本轮刚生成的兄弟中文描述等义派生，避免简繁中文独立生成导致语义漂移
 - **环境变量**：
   - `BASE_URL`：覆盖 `site.config.ts` baseUrl（影响 canonical / sitemap）
   - `IS_DEV`：传入模板与前端（`window.IS_DEV`）；开发服务器自动设置；控制 issues 页面与 sitemap 跳过
