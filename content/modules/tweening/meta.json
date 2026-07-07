@@ -2,6 +2,7 @@
   "id": "tweening",
   "name": "Tweening",
   "description": "Use tweening/interpolation for smooth animation.",
+  "seoDescription": "Scratch scripts for smooth tweening animation with linear, sine, power, exponential, circular, back, elastic,and bounce easing.",
   "tags": ["animation", "tween"],
   "keywords": ["interpolation", "easing", "smooth animation"],
   "scriptTitles": {
@@ -22,6 +23,5 @@
       "url": "https://github.com/TurboWarp/extensions/blob/master/extensions/JeremyGamer13/tween.js",
       "type": "extension"
     }
-  ],
-  "seoDescription": "Scratch scripts for smooth tweening animation with linear, sine, power, exponential, circular, back, elastic,and bounce easing."
+  ]
 }

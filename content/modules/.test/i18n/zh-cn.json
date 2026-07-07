@@ -1,6 +1,7 @@
 {
   "name": "测试",
   "description": "用于开发和测试目的的测试模块。",
+  "seoDescription": "一个用于开发和测试的Scratch模块，包含Markdown语法测试、Scratchblocks代码块、全局/角色/云变量、列表变量及导入测试脚本，适合验证渲染器和解析器功能。",
   "scriptTitles": {
     "import": "导入测试"
   },
@@ -15,6 +16,5 @@
   },
   "references": {
     "Example Reference": "示例参考"
-  },
-  "seoDescription": "一个用于开发和测试的Scratch模块，包含Markdown语法测试、Scratchblocks代码块、全局/角色/云变量、列表变量及导入测试脚本，适合验证渲染器和解析器功能。"
+  }
 }

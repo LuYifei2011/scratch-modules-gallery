@@ -2,6 +2,7 @@
   "id": "when-project-stopped",
   "name": "When project stopped",
   "description": "Event triggered when the project stops.",
+  "seoDescription": "Detects when a Scratch project stops using a timer variable, with a loop updating time and an event condition for project-end behavior.",
   "tags": ["event"],
   "keywords": ["stop", "project end", "trigger"],
   "variables": [{ "name": "timer", "type": "variable", "scope": "choose" }],
@@ -12,6 +13,5 @@
       "url": "https://scratch.mit.edu/projects/805772453",
       "type": "project"
     }
-  ],
-  "seoDescription": "Detects when a Scratch project stops using a timer variable, with a loop updating time and an event condition for project-end behavior."
+  ]
 }

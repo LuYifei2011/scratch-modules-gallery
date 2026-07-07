@@ -2,6 +2,7 @@
   "id": ".test",
   "name": "Test",
   "description": "A test module for development and testing purposes.",
+  "seoDescription": "A Scratch test module demonstrating Markdown and Scratchblocks rendering, a main script with movement, and an imported exponent block using logarithms.",
   "tags": ["test-content"],
   "keywords": ["test", "development", "example"],
   "scriptTitles": {
@@ -22,6 +23,5 @@
       "url": "https://example.com",
       "type": "other"
     }
-  ],
-  "seoDescription": "A Scratch test module demonstrating Markdown and Scratchblocks rendering, a main script with movement, and an imported exponent block using logarithms."
+  ]
 }

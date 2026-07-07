@@ -1,6 +1,7 @@
 {
   "name": "补间",
   "description": "使用补间/插值实现平滑动画。",
+  "seoDescription": "用于Scratch的补间动画模块，提供线性、正弦、次方、指数、圆形、回弹、弹性和弹跳等多种缓动函数，支持缓入、缓出、缓入和出，基于进度百分比计算插值，轻松实现平滑自然的动画效果。",
   "scriptTitles": {
     "back": "回弹",
     "bounce": "弹跳",
@@ -47,6 +48,5 @@
     "You can change exponent: square / cubic / quartic / quintic": "可以更改指数：二次 / 三次 / 四次 / 五次",
     "cubic: multiply again": "三次：再乘一次",
     "cubic: multiply again; quartic/quintic: and so on": "三次：再乘一次；四次/五次：以此类推"
-  },
-  "seoDescription": "用于Scratch的补间动画模块，提供线性、正弦、次方、指数、圆形、回弹、弹性和弹跳等多种缓动函数，支持缓入、缓出、缓入和出，基于进度百分比计算插值，轻松实现平滑自然的动画效果。"
+  }
 }

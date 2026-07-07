@@ -1,6 +1,7 @@
 {
   "name": "排序角色",
   "description": "對角色進行排序。",
+  "seoDescription": "根據角色的Z位置值對角色進行排序，值越小圖層越靠前。透過全域列表「Z順序」記錄排序結果，並利用Scratch特性判斷角色圖層順序。主循環初始化列表後廣播觸發排序，實現角色圖層順序的動態管理。",
   "scriptTitles": {
     "main": "主循環",
     "order": "排序腳本"
@@ -19,6 +20,5 @@
   },
   "comments": {
     "The smaller the value, the higher the layer": "值越小，圖層越靠前"
-  },
-  "seoDescription": "根據角色的Z位置值對角色進行排序，值越小圖層越靠前。透過全域列表「Z順序」記錄排序結果，並利用Scratch特性判斷角色圖層順序。主循環初始化列表後廣播觸發排序，實現角色圖層順序的動態管理。"
+  }
 }

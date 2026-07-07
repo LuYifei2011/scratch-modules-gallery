@@ -2,9 +2,9 @@
   "id": "round-to-n",
   "name": "Round to n decimals",
   "description": "Round a number to n decimal places.",
+  "seoDescription": "Round any number to n decimal places in Scratch: multiply by 10^n, round, divide by 10^n. Supports custom precision for accurate results.",
   "tags": ["math"],
   "keywords": ["decimal", "precision", "rounding"],
   "variables": [{ "name": "result", "type": "variable", "scope": "sprite" }],
-  "contributors": ["gh/LuYifei2011"],
-  "seoDescription": "Round any number to n decimal places in Scratch: multiply by 10^n, round, divide by 10^n. Supports custom precision for accurate results."
+  "contributors": ["gh/LuYifei2011"]
 }

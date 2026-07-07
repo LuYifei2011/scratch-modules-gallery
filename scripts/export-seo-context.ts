@@ -190,11 +190,7 @@ function renderGenerationTask(locale: string): string {
   }
 
   const targetLanguage =
-    normalizedLocale === 'zh-cn'
-      ? '简体中文'
-      : normalizedLocale === 'zh-tw'
-        ? '繁體中文'
-        : '当前 locale 对应的语言';
+    normalizedLocale === 'zh-cn' ? '简体中文' : normalizedLocale === 'zh-tw' ? '繁體中文' : '当前 locale 对应的语言';
 
   return [
     `基于上方 Scratch 模块的详细代码和元数据，生成一段简洁的 SEO 描述。`,

@@ -2,6 +2,7 @@
   "id": "rotate-counterclockwise",
   "name": "Rotate counterclockwise",
   "description": "Rotate a sprite counterclockwise around a coordinate point by a given angle.",
+  "seoDescription": "Rotate a sprite counterclockwise around a given coordinate point by a specified angle using trigonometric calculations. Custom block with x, y, angle inputs.",
   "tags": ["motion", "rotate", "animation"],
   "keywords": ["rotation", "counterclockwise", "coordinate"],
   "variables": [
@@ -15,6 +16,5 @@
       "url": "https://www.youtube.com/watch?v=PuqyJOT83ko&t=1109s",
       "type": "video"
     }
-  ],
-  "seoDescription": "Rotate a sprite counterclockwise around a given coordinate point by a specified angle using trigonometric calculations. Custom block with x, y, angle inputs."
+  ]
 }

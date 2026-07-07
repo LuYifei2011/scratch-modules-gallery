@@ -183,10 +183,7 @@ function createExistingSourceMap(context: GenerationContext): Map<string, string
   return sources;
 }
 
-function findSiblingSource(
-  sources: Map<string, string>,
-  target: SeoGenerationTarget
-): SeoGenerationSource | undefined {
+function findSiblingSource(sources: Map<string, string>, target: SeoGenerationTarget): SeoGenerationSource | undefined {
   const siblingLocale = siblingChineseLocale(target.locale);
   if (!siblingLocale) return undefined;
   const text = sources.get(sourceKey(target.moduleId, siblingLocale));

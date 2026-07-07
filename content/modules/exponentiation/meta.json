@@ -2,9 +2,9 @@
   "id": "exponentiation",
   "name": "Exponentiation",
   "description": "Compute a to the power of b.",
+  "seoDescription": "Scratch custom block for exponentiation: compute a to the power of b using e^(b*ln(a)). The result stored in variable result.",
   "tags": ["math"],
   "keywords": ["power", "exponential", "calculation"],
   "variables": [{ "name": "result", "type": "variable", "scope": "sprite" }],
-  "contributors": ["gh/LuYifei2011"],
-  "seoDescription": "Scratch custom block for exponentiation: compute a to the power of b using e^(b*ln(a)). The result stored in variable result."
+  "contributors": ["gh/LuYifei2011"]
 }

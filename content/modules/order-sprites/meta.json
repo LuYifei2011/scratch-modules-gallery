@@ -2,6 +2,7 @@
   "id": "order-sprites",
   "name": "Order Sprites",
   "description": "Sort sprites by layer/index.",
+  "seoDescription": "Sort sprites by layer using a Z ORDER list. The block inserts a position and moves the sprite to that layer. A main loop refreshes ordering each frame.",
   "tags": ["layer", "sort"],
   "keywords": ["z-order", "layering", "sprite sorting"],
   "scriptTitles": {
@@ -19,6 +20,5 @@
       "url": "https://youtu.be/bxjbYJLAUYU",
       "type": "video"
     }
-  ],
-  "seoDescription": "Sort sprites by layer using a Z ORDER list. The block inserts a position and moves the sprite to that layer. A main loop refreshes ordering each frame."
+  ]
 }
