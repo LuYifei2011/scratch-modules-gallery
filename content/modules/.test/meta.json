@@ -7,7 +7,7 @@
   "scriptTitles": {
     "import": "Import Test"
   },
-  "contributors": "gh/LuYifei2011",
+  "contributors": ["gh/LuYifei2011"],
   "variables": [
     { "name": "Global Test Variable", "scope": "global", "type": "variable" },
     { "name": "Sprite Test Variable", "scope": "sprite", "type": "variable" },
