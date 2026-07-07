@@ -1,17 +1,17 @@
 {
   "name": "測試",
   "description": "用於開發和測試目的的測試模組。",
+  "scriptTitles": {
+    "import": "匯入測試"
+  },
   "variables": {
+    "Cloud Test Variable": "雲端測試變數",
     "Global Test Variable": "全域測試變數",
-    "Sprite Test Variable": "角色測試變數",
-    "Cloud Test Variable": "雲端測試變數"
+    "Sprite Test Variable": "角色測試變數"
   },
   "lists": {
     "Global Test List": "全域測試清單",
     "Sprite Test List": "角色測試清單"
-  },
-  "scriptTitles": {
-    "import": "匯入測試"
   },
   "references": {
     "Example Reference": "範例參考"

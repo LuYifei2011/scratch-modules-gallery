@@ -1,51 +1,51 @@
 {
   "name": "補間",
   "description": "使用補間/插值實現平滑動畫。",
+  "scriptTitles": {
+    "back": "回彈",
+    "bounce": "彈跳",
+    "circular": "圓形",
+    "elastic": "彈性",
+    "expo": "指數",
+    "linear": "線性",
+    "power": "次方",
+    "sine": "正弦"
+  },
   "variables": {
     "Tween": "補間"
   },
-  "scriptTitles": {
-    "linear": "線性",
-    "sine": "正弦",
-    "power": "次方",
-    "expo": "指數",
-    "circular": "圓形",
-    "back": "回彈",
-    "elastic": "彈性",
-    "bounce": "彈跳"
-  },
   "procedures": {
-    "linear from %1 to %2 progress %3": "線性 從 %1 到 %2 進度 %3 %",
-    "sine ease in from %1 to %2 progress %3": "正弦 緩入 從 %1 到 %2 進度 %3 %",
-    "sine ease out from %1 to %2 progress %3": "正弦 緩出 從 %1 到 %2 進度 %3 %",
-    "sine ease in-out from %1 to %2 progress %3": "正弦 緩入緩出 從 %1 到 %2 進度 %3 %",
-    "power-in from %1 to %2 progress %3": "二次 緩入 從 %1 到 %2 進度 %3 %",
-    "power-out from %1 to %2 progress %3": "二次 緩出 從 %1 到 %2 進度 %3 %",
-    "power-in-out from %1 to %2 progress %3": "二次 緩入緩出 從 %1 到 %2 進度 %3 %",
-    "expo ease in from %1 to %2 progress %3": "指數 緩入 從 %1 到 %2 進度 %3 %",
-    "expo ease out from %1 to %2 progress %3": "指數 緩出 從 %1 到 %2 進度 %3 %",
-    "expo ease in-out from %1 to %2 progress %3": "指數 緩入緩出 從 %1 到 %2 進度 %3 %",
-    "circular ease in from %1 to %2 progress %3": "圓形 緩入 從 %1 到 %2 進度 %3 %",
-    "circular ease out from %1 to %2 progress %3": "圓形 緩出 從 %1 到 %2 進度 %3 %",
-    "circular ease in-out from %1 to %2 progress %3": "圓形 緩入緩出 從 %1 到 %2 進度 %3 %",
     "back ease in from %1 to %2 progress %3": "回彈 緩入 從 %1 到 %2 進度 %3 %",
-    "back ease out from %1 to %2 progress %3": "回彈 緩出 從 %1 到 %2 進度 %3 %",
     "back ease in-out from %1 to %2 progress %3": "回彈 緩入緩出 從 %1 到 %2 進度 %3 %",
-    "elastic ease in from %1 to %2 progress %3": "彈性 緩入 從 %1 到 %2 進度 %3 %",
-    "elastic ease out from %1 to %2 progress %3": "彈性 緩出 從 %1 到 %2 進度 %3 %",
-    "elastic ease in-out from %1 to %2 progress %3": "彈性 緩入緩出 從 %1 到 %2 進度 %3 %",
+    "back ease out from %1 to %2 progress %3": "回彈 緩出 從 %1 到 %2 進度 %3 %",
     "bounce ease in from %1 to %2 progress %3": "彈跳 緩入 從 %1 到 %2 進度 %3 %",
+    "bounce ease in-out from %1 to %2 progress %3": "彈跳 緩入緩出 從 %1 到 %2 進度 %3 %",
     "bounce ease out from %1 to %2 progress %3": "彈跳 緩出 從 %1 到 %2 進度 %3 %",
-    "bounce ease in-out from %1 to %2 progress %3": "彈跳 緩入緩出 從 %1 到 %2 進度 %3 %"
+    "circular ease in from %1 to %2 progress %3": "圓形 緩入 從 %1 到 %2 進度 %3 %",
+    "circular ease in-out from %1 to %2 progress %3": "圓形 緩入緩出 從 %1 到 %2 進度 %3 %",
+    "circular ease out from %1 to %2 progress %3": "圓形 緩出 從 %1 到 %2 進度 %3 %",
+    "elastic ease in from %1 to %2 progress %3": "彈性 緩入 從 %1 到 %2 進度 %3 %",
+    "elastic ease in-out from %1 to %2 progress %3": "彈性 緩入緩出 從 %1 到 %2 進度 %3 %",
+    "elastic ease out from %1 to %2 progress %3": "彈性 緩出 從 %1 到 %2 進度 %3 %",
+    "expo ease in from %1 to %2 progress %3": "指數 緩入 從 %1 到 %2 進度 %3 %",
+    "expo ease in-out from %1 to %2 progress %3": "指數 緩入緩出 從 %1 到 %2 進度 %3 %",
+    "expo ease out from %1 to %2 progress %3": "指數 緩出 從 %1 到 %2 進度 %3 %",
+    "linear from %1 to %2 progress %3": "線性 從 %1 到 %2 進度 %3 %",
+    "power-in from %1 to %2 progress %3": "二次 緩入 從 %1 到 %2 進度 %3 %",
+    "power-in-out from %1 to %2 progress %3": "二次 緩入緩出 從 %1 到 %2 進度 %3 %",
+    "power-out from %1 to %2 progress %3": "二次 緩出 從 %1 到 %2 進度 %3 %",
+    "sine ease in from %1 to %2 progress %3": "正弦 緩入 從 %1 到 %2 進度 %3 %",
+    "sine ease in-out from %1 to %2 progress %3": "正弦 緩入緩出 從 %1 到 %2 進度 %3 %",
+    "sine ease out from %1 to %2 progress %3": "正弦 緩出 從 %1 到 %2 進度 %3 %"
   },
   "procedureParams": {
-    "start": "起始值",
     "end": "結束值",
-    "progress%": "進度"
+    "progress%": "進度",
+    "start": "起始值"
   },
   "comments": {
     "You can change exponent: square / cubic / quartic / quintic": "可以更改指數：二次 / 三次 / 四次 / 五次",
-    "cubic: multiply again; quartic/quintic: and so on": "三次：再乘一次；四次/五次：以此類推",
-    "cubic: multiply again": "三次：再乘一次"
+    "cubic: multiply again": "三次：再乘一次",
+    "cubic: multiply again; quartic/quintic: and so on": "三次：再乘一次；四次/五次：以此類推"
   }
 }

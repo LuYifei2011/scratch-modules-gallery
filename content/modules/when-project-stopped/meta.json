@@ -4,8 +4,8 @@
   "description": "Event triggered when the project stops.",
   "tags": ["event"],
   "keywords": ["stop", "project end", "trigger"],
+  "variables": [{ "name": "timer", "type": "variable", "scope": "choose" }],
   "contributors": ["gh/LuYifei2011"],
-  "variables": [{ "name": "timer", "scope": "choose", "type": "variable" }],
   "references": [
     {
       "title": "Rhythm Heaven",

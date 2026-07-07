@@ -1,29 +1,29 @@
 {
   "en": {
-    "scriptTitles": {
-      "main": "Main"
-    },
     "comments": {
       "!no-refresh": "Check \"Run without screen refresh\""
+    },
+    "scriptTitles": {
+      "main": "Main"
     }
   },
   "zh-cn": {
-    "scriptTitles": {
-      "main": "主脚本"
-    },
     "comments": {
       "!no-refresh": "勾选「运行时不刷新屏幕」"
+    },
+    "scriptTitles": {
+      "main": "主脚本"
     },
     "variables": {
       "result": "结果"
     }
   },
   "zh-tw": {
-    "scriptTitles": {
-      "main": "主腳本"
-    },
     "comments": {
       "!no-refresh": "勾選「執行完畢再更新畫面」"
+    },
+    "scriptTitles": {
+      "main": "主腳本"
     },
     "variables": {
       "result": "結果"

@@ -1,52 +1,52 @@
 {
-  "test-content": {
-    "en": "test content",
-    "zh-cn": "测试内容",
-    "zh-tw": "測試內容"
+  "animation": {
+    "en": "animation",
+    "zh-cn": "动画",
+    "zh-tw": "動畫"
   },
-  "math": {
-    "en": "math",
-    "zh-cn": "数学",
-    "zh-tw": "數學"
-  },
-  "performance": {
-    "en": "performance",
-    "zh-cn": "性能",
-    "zh-tw": "效能"
+  "event": {
+    "en": "event",
+    "zh-cn": "事件",
+    "zh-tw": "事件"
   },
   "layer": {
     "en": "layer",
     "zh-cn": "层",
     "zh-tw": "層"
   },
-  "sort": {
-    "en": "sort",
-    "zh-cn": "排序",
-    "zh-tw": "排序"
+  "math": {
+    "en": "math",
+    "zh-cn": "数学",
+    "zh-tw": "數學"
   },
   "motion": {
     "en": "motion",
     "zh-cn": "运动",
     "zh-tw": "運動"
   },
+  "performance": {
+    "en": "performance",
+    "zh-cn": "性能",
+    "zh-tw": "效能"
+  },
   "rotate": {
     "en": "rotate",
     "zh-cn": "旋转",
     "zh-tw": "旋轉"
   },
-  "animation": {
-    "en": "animation",
-    "zh-cn": "动画",
-    "zh-tw": "動畫"
+  "sort": {
+    "en": "sort",
+    "zh-cn": "排序",
+    "zh-tw": "排序"
+  },
+  "test-content": {
+    "en": "test content",
+    "zh-cn": "测试内容",
+    "zh-tw": "測試內容"
   },
   "tween": {
     "en": "tween",
     "zh-cn": "补间",
     "zh-tw": "補間"
-  },
-  "event": {
-    "en": "event",
-    "zh-cn": "事件",
-    "zh-tw": "事件"
   }
 }

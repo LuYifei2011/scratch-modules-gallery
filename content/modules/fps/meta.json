@@ -5,12 +5,12 @@
   "seoDescription": "Calculate FPS based on Scratch timer and custom blocks. By recording the tick30 variable at 30-frame intervals, calculating the time difference from the previous frame, and dividing 30 by the time difference to get an approximate frame rate, which is then rounded and displayed. Suitable for real-time rendering performance monitoring.",
   "tags": ["performance"],
   "keywords": ["frame rate", "rendering", "delta time", "fps"],
-  "contributors": ["gh/LuYifei2011"],
   "variables": [
-    { "name": "FPS", "scope": "global", "type": "variable" },
-    { "name": "DELTA", "scope": "global", "type": "variable" },
-    { "name": "tick30", "scope": "sprite", "type": "variable" }
+    { "name": "FPS", "type": "variable", "scope": "global" },
+    { "name": "DELTA", "type": "variable", "scope": "global" },
+    { "name": "tick30", "type": "variable", "scope": "sprite" }
   ],
+  "contributors": ["gh/LuYifei2011"],
   "references": [
     {
       "title": "ULTRA FAST Raycasting in Scratch - Unmissable E6 Update",

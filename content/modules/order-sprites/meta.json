@@ -5,14 +5,14 @@
   "tags": ["layer", "sort"],
   "keywords": ["z-order", "layering", "sprite sorting"],
   "scriptTitles": {
-    "order": "Ordering",
-    "main": "Main loop"
+    "main": "Main loop",
+    "order": "Ordering"
   },
-  "contributors": ["gh/LuYifei2011"],
   "variables": [
-    { "name": "Z ORDER", "scope": "global", "type": "list" },
-    { "name": "i", "scope": "sprite", "type": "variable" }
+    { "name": "Z ORDER", "type": "list", "scope": "global" },
+    { "name": "i", "type": "variable", "scope": "sprite" }
   ],
+  "contributors": ["gh/LuYifei2011"],
   "references": [
     {
       "title": "Perfect Sprite Ordering in Scratch 🐱 | Backpack Depth Sort Tutorial",

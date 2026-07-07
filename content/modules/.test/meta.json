@@ -7,15 +7,15 @@
   "scriptTitles": {
     "import": "Import Test"
   },
-  "contributors": ["gh/LuYifei2011"],
   "variables": [
-    { "name": "Global Test Variable", "scope": "global", "type": "variable" },
-    { "name": "Sprite Test Variable", "scope": "sprite", "type": "variable" },
-    { "name": "Cloud Test Variable", "scope": "global", "type": "cloud" },
-    { "name": "Global Test List", "scope": "global", "type": "list" },
-    { "name": "Sprite Test List", "scope": "sprite", "type": "list" },
-    { "name": "result", "scope": "sprite", "type": "variable" }
+    { "name": "Global Test Variable", "type": "variable", "scope": "global" },
+    { "name": "Sprite Test Variable", "type": "variable", "scope": "sprite" },
+    { "name": "Cloud Test Variable", "type": "cloud", "scope": "global" },
+    { "name": "Global Test List", "type": "list", "scope": "global" },
+    { "name": "Sprite Test List", "type": "list", "scope": "sprite" },
+    { "name": "result", "type": "variable", "scope": "sprite" }
   ],
+  "contributors": ["gh/LuYifei2011"],
   "references": [
     {
       "title": "Example Reference",

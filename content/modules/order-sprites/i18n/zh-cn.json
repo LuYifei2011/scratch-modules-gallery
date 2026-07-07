@@ -1,15 +1,15 @@
 {
   "name": "排序角色",
   "description": "对角色进行排序。",
-  "events": {
-    "Order Sprites": "排序角色"
-  },
   "scriptTitles": {
-    "order": "排序脚本",
-    "main": "主循环"
+    "main": "主循环",
+    "order": "排序脚本"
   },
   "lists": {
     "Z ORDER": "Z 顺序"
+  },
+  "events": {
+    "Order Sprites": "排序角色"
   },
   "procedures": {
     "Order Sprite by %1": "按 %1 排序角色"

@@ -5,17 +5,17 @@
   "tags": ["animation", "tween"],
   "keywords": ["interpolation", "easing", "smooth animation"],
   "scriptTitles": {
-    "linear": "Linear",
-    "sine": "Sine",
-    "power": "Power",
-    "expo": "Exponential",
-    "circular": "Circular",
     "back": "Back",
+    "bounce": "Bounce",
+    "circular": "Circular",
     "elastic": "Elastic",
-    "bounce": "Bounce"
+    "expo": "Exponential",
+    "linear": "Linear",
+    "power": "Power",
+    "sine": "Sine"
   },
+  "variables": [{ "name": "Tween", "type": "variable", "scope": "sprite" }],
   "contributors": ["gh/LuYifei2011"],
-  "variables": [{ "name": "Tween", "scope": "sprite", "type": "variable" }],
   "references": [
     {
       "title": "Tween | TurboWarp Extensions",

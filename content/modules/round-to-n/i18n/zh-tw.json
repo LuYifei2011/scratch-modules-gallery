@@ -5,7 +5,7 @@
     "Round %1 to %2 bits": "將 %1 四捨五入到小數點後 %2 位"
   },
   "procedureParams": {
-    "num": "數字",
-    "n": "位數"
+    "n": "位數",
+    "num": "數字"
   }
 }

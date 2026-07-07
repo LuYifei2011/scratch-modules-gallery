@@ -3,8 +3,8 @@
   "description": "计算帧率（FPS）。",
   "seoDescription": "基于Scratch计时器与自定义积木实现FPS计算。通过记录30帧间隔的tick30变量，计算与上一帧的时间差，再以30除以时间差得出近似帧率，并四舍五入显示。适用于实时渲染性能监测。",
   "variables": {
-    "FPS": "帧率",
     "DELTA": "时间差",
+    "FPS": "帧率",
     "tick30": "tick30"
   },
   "procedures": {
