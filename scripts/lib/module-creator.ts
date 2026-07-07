@@ -1,6 +1,7 @@
 import path from 'path';
 import fs from 'fs-extra';
 import { isStrictlyInside } from './path-safety.ts';
+import type { Contributor } from './types.ts';
 
 export const DEFAULT_MODULE_SCRIPT = `when green flag clicked
 say [Hello!] for (2) secs
@@ -72,6 +73,31 @@ function normalizeKeywords(value: unknown): string[] {
   return value.map((item) => String(item).trim()).filter(Boolean);
 }
 
+function normalizeContributors(value: unknown): (string | Contributor)[] {
+  if (value === undefined || value === null) return [];
+  if (!Array.isArray(value)) {
+    throw badRequest('contributors must be an array');
+  }
+
+  return value
+    .map((item) => {
+      if (typeof item === 'string') {
+        return item.trim();
+      }
+      if (item && typeof item === 'object' && 'name' in item && typeof item.name === 'string') {
+        const name = item.name.trim();
+        if (!name) return null;
+        const contributor: Contributor = { name };
+        if ('url' in item && typeof item.url === 'string' && item.url.trim()) {
+          contributor.url = item.url.trim();
+        }
+        return contributor;
+      }
+      throw badRequest('contributors must be an array of strings or contributor objects');
+    })
+    .filter((item): item is string | Contributor => Boolean(item));
+}
+
 function normalizeMeta(id: string, rawMeta: Record<string, unknown>) {
   const name = typeof rawMeta.name === 'string' ? rawMeta.name.trim() : '';
   const description = typeof rawMeta.description === 'string' ? rawMeta.description.trim() : '';
@@ -87,6 +113,7 @@ function normalizeMeta(id: string, rawMeta: Record<string, unknown>) {
     description,
     tags: normalizeTags(rawMeta.tags),
     keywords: normalizeKeywords(rawMeta.keywords),
+    contributors: normalizeContributors(rawMeta.contributors),
   };
 
   return meta;

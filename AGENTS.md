@@ -8,7 +8,7 @@
    - 开发模式(`IS_DEV=1`)：收集构建警告/错误至 `collectedIssues`，生成 `/issues/` 页面；跳过 sitemap 生成节省 ~8x 时间
    - Sitemap 使用 `simple-git` 从提交历史提取文件修改时间（CI 需 `fetch-depth: 0`）
 2. **数据模型 `scripts/lib/schema.ts`**：统一字段 (id, slug, name, description, tags, contributors[], scripts[], hasDemo, variables[], notesMap, references)。任何字段变更需评估链路：schema → build → 模板 → 搜索 → 前端脚本。
-   - `parseContributors`: 支持 `gh/user` / `sc/user` 自动生成链接，或普通字符串/对象数组
+   - `parseContributors`: 仅接受数组；数组项支持 `gh/user` / `sc/user` 自动生成链接，或普通字符串/对象
    - `meta.json` 中的 `name` / `description` / `seoDescription` 是英文基线；非英文文本放入模块 `i18n/<locale>.json` 覆盖，禁止用 locale map 混写
 3. **模板 Eta**：`src/templates/layouts/{base,home,module}.eta` 只做展示；上下文：`config,module,t,locale,pageBase,assetBase,pagePath,locales,year,IS_DEV,langTags,buildIssues,buildIssuesSummary`。
    - 禁止模板中直接调用时间或访问浏览器环境

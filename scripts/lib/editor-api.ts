@@ -225,7 +225,7 @@ async function scanModules() {
           name: meta.name || dir,
           description: meta.description || '',
           tags: meta.tags || [],
-          contributors: meta.contributors || [],
+          contributors: Array.isArray(meta.contributors) ? meta.contributors : [],
           scriptCount,
           hasDemo,
           locales,
@@ -366,6 +366,14 @@ export async function updateModuleMeta(req, res, moduleId) {
     // 验证 keywords 是数组（如果提供了的话）
     if (updatedMeta.keywords && !Array.isArray(updatedMeta.keywords)) {
       throw badRequest('keywords must be an array');
+    }
+
+    if (
+      updatedMeta.contributors !== undefined &&
+      updatedMeta.contributors !== null &&
+      !Array.isArray(updatedMeta.contributors)
+    ) {
+      throw badRequest('contributors must be an array');
     }
 
     // 写入 meta.json

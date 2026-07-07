@@ -14,7 +14,7 @@
     "elastic": "Elastic",
     "bounce": "Bounce"
   },
-  "contributors": "gh/LuYifei2011",
+  "contributors": ["gh/LuYifei2011"],
   "variables": [{ "name": "Tween", "scope": "sprite", "type": "variable" }],
   "references": [
     {

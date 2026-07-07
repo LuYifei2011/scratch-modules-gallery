@@ -35,7 +35,7 @@ describe('module creator', () => {
         description: 'A module created from tests',
         tags: ['utility', ' demo '],
         keywords: ['scratch'],
-        contributors: 'gh/example',
+        contributors: ['gh/example', ' sc/scratcher '],
       },
     });
 
@@ -46,7 +46,7 @@ describe('module creator', () => {
       description: 'A module created from tests',
       tags: ['utility', 'demo'],
       keywords: ['scratch'],
-      contributors: 'gh/example',
+      contributors: ['gh/example', 'sc/scratcher'],
     });
     expect(await fs.readFile(path.join(result.moduleDir, 'scripts', '01-main.txt'), 'utf8')).toBe(
       DEFAULT_MODULE_SCRIPT
@@ -108,5 +108,15 @@ describe('module creator', () => {
         meta: { name: 'Bad Keywords', description: 'Bad keywords', keywords: 'scratch' },
       })
     ).rejects.toThrow('keywords must be an array');
+  });
+
+  it('requires contributors to be an array when provided', async () => {
+    await expect(
+      createModuleScaffold({
+        modulesDir,
+        id: 'bad-contributors',
+        meta: { name: 'Bad Contributors', description: 'Bad contributors', contributors: 'gh/example' },
+      })
+    ).rejects.toThrow('contributors must be an array');
   });
 });

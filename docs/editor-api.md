@@ -54,7 +54,7 @@
 | `name`         | `string`             | 模块显示名称                                    |
 | `description`  | `string`             | 模块简短描述                                    |
 | `tags`         | `string[]`           | 标签列表                                        |
-| `contributors` | `string \| string[]` | 贡献者列表或字符串（直接返回 meta.json 原始值） |
+| `contributors` | `array`              | 贡献者列表（直接返回 meta.json 数组值；旧字符串格式会返回 `[]`） |
 | `scriptCount`  | `number`             | 脚本文件数量                                    |
 | `hasDemo`      | `boolean`            | 是否存在 demo.sb3 文件                          |
 | `locales`      | `string[]`           | 已有翻译的语言代码列表                          |
@@ -134,7 +134,7 @@
 | `meta.name`         | `string`   | ✅   | 模块名称                     |
 | `meta.description`  | `string`   | ✅   | 模块描述                     |
 | `meta.tags`         | `string[]` | ❌   | 标签列表，默认为 `[]`        |
-| `meta.contributors` | `string[]` | ❌   | 贡献者列表，默认为 `[]`      |
+| `meta.contributors` | `array`    | ❌   | 贡献者列表，默认为 `[]`；支持字符串项或 `{ "name": "...", "url": "..." }` 对象项 |
 | `meta.keywords`     | `string[]` | ❌   | 关键词列表，默认为 `[]`      |
 
 **响应（201）**
@@ -147,7 +147,7 @@
 
 | 状态码 | 原因                                                       |
 | ------ | ---------------------------------------------------------- |
-| 400    | ID 格式不合法，缺少 name/description，或 keywords 不是数组 |
+| 400    | ID 格式不合法，缺少 name/description，或 keywords/contributors 不是数组 |
 | 409    | 该 ID 的模块已存在                                         |
 
 ---
@@ -190,7 +190,7 @@
 
 | 状态码 | 原因                                            |
 | ------ | ----------------------------------------------- |
-| 400    | 尝试修改 id，缺少必填字段，或 keywords 不是数组 |
+| 400    | 尝试修改 id，缺少必填字段，或 keywords/contributors 不是数组 |
 | 404    | 模块不存在                                      |
 
 ---

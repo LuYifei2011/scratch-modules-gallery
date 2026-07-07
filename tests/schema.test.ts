@@ -7,26 +7,18 @@ describe('parseContributors', () => {
     expect(parseContributors(undefined)).toEqual([]);
   });
 
-  it('parses comma-separated string with gh/ prefix', () => {
-    const result = parseContributors('gh/alice, gh/bob');
-    expect(result).toEqual([
-      { name: 'alice', url: 'https://github.com/alice' },
-      { name: 'bob', url: 'https://github.com/bob' },
-    ]);
-  });
-
   it('parses sc/ prefix (Scratch user)', () => {
-    const result = parseContributors('sc/scratcher');
+    const result = parseContributors(['sc/scratcher']);
     expect(result).toEqual([{ name: 'scratcher', url: 'https://scratch.mit.edu/users/scratcher' }]);
   });
 
   it('parses plain name (no prefix)', () => {
-    const result = parseContributors('Alice');
+    const result = parseContributors(['Alice']);
     expect(result).toEqual([{ name: 'Alice' }]);
   });
 
-  it('parses mixed string', () => {
-    const result = parseContributors('gh/dev, sc/user, Plain Name');
+  it('parses mixed array entries', () => {
+    const result = parseContributors(['gh/dev', 'sc/user', 'Plain Name']);
     expect(result.length).toBe(3);
     expect(result[0]!.url).toBe('https://github.com/dev');
     expect(result[1]!.url).toBe('https://scratch.mit.edu/users/user');
@@ -46,11 +38,12 @@ describe('parseContributors', () => {
   });
 
   it('filters out empty entries', () => {
-    const result = parseContributors('gh/a, , gh/b');
+    const result = parseContributors(['gh/a', '', '  ', 'gh/b']);
     expect(result.length).toBe(2);
   });
 
-  it('returns empty array for non-string/non-array', () => {
+  it('returns empty array for strings and other non-array values', () => {
+    expect(parseContributors('gh/a')).toEqual([]);
     expect(parseContributors(42)).toEqual([]);
     expect(parseContributors({})).toEqual([]);
   });
@@ -124,12 +117,26 @@ describe('buildModuleRecord', () => {
       name: 'C',
       description: 'D',
       tags: ['x'],
-      contributors: 'gh/dev',
+      contributors: ['gh/dev'],
     };
     const extra = { scripts: [], notesMap: {} };
     const { record } = buildModuleRecord(meta, extra);
     expect(record.contributors.length).toBe(1);
     expect(record.contributors[0]!.name).toBe('dev');
+  });
+
+  it('reports an error when contributors is not an array', () => {
+    const meta = {
+      id: 'bad-contributors',
+      name: 'Bad Contributors',
+      description: 'D',
+      tags: ['x'],
+      contributors: 'gh/dev',
+    } as any;
+    const extra = { scripts: [], notesMap: {} };
+    const { record, errors } = buildModuleRecord(meta, extra);
+    expect(errors.includes('contributors must be array')).toBeTruthy();
+    expect(record.contributors).toEqual([]);
   });
 
   it('includes variables and references from meta', () => {

@@ -45,7 +45,7 @@ content/modules/fps/
   "name": "FPS 计数器",
   "description": "在 Scratch 中统计帧率的模块。",
   "tags": ["performance", "utility"],
-  "contributors": "gh/yourname, sc/scratchuser"
+  "contributors": ["gh/yourname", "sc/scratchuser"]
 }
 ```
 
@@ -66,7 +66,7 @@ content/modules/fps/
 - `tags`：数组；用于搜索与分类徽章。
 - `keywords`：数组；SEO 关键词，可在主页搜索中被匹配。与 tags 一起在模块页 meta keywords 中去重合并。
 - `seoDescription`：字符串；可选，仅用于模块页 `<meta name="description">`。缺省时使用 `description`，不会影响页面正文、搜索、OG/Twitter 或 JSON-LD 描述。
-- `contributors`：字符串或数组；支持 `gh/` 与 `sc/` 前缀自动生成链接。
+- `contributors`：数组；支持字符串项和 `{ "name": "...", "url": "..." }` 对象项。字符串项支持 `gh/` 与 `sc/` 前缀自动生成链接，不再兼容逗号分隔字符串。
 
 ### SEO 描述检查与生成
 

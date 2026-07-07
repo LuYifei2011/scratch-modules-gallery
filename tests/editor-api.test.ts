@@ -161,6 +161,7 @@ describe('editor-api module creation', () => {
         name: 'Editor API Test',
         description: 'Created through the editor API',
         tags: ['utility'],
+        contributors: ['gh/example'],
         keywords: [],
       },
     });
@@ -172,11 +173,38 @@ describe('editor-api module creation', () => {
       name: 'Editor API Test',
       description: 'Created through the editor API',
       tags: ['utility'],
+      contributors: ['gh/example'],
       keywords: [],
     });
     expect(await fs.readFile(path.join(testModuleDir, 'scripts', '01-main.txt'), 'utf8')).toBe(
       'when green flag clicked\nsay [Hello!] for (2) secs\n'
     );
+  });
+
+  it('rejects string contributors during module creation', async () => {
+    const res = await callWithBody(createModule, {
+      id: testModuleId,
+      meta: {
+        name: 'Editor API Test',
+        description: 'Created through the editor API',
+        tags: ['utility'],
+        contributors: 'gh/example',
+        keywords: [],
+      },
+    });
+
+    expect(res.statusCode).toBe(400);
+    expect(res.json()).toEqual({ error: 'contributors must be an array' });
+  });
+});
+
+describe('editor-api metadata updates', () => {
+  it('rejects string contributors during meta updates', async () => {
+    await writeModule({ '01-main.txt': 'say [main]\n' });
+
+    const res = await callWithBody(updateModuleMeta, { contributors: 'gh/example' }, testModuleId);
+    expect(res.statusCode).toBe(400);
+    expect(res.json()).toEqual({ error: 'contributors must be an array' });
   });
 });
 

@@ -8,7 +8,7 @@
     "order": "Ordering",
     "main": "Main loop"
   },
-  "contributors": "gh/LuYifei2011",
+  "contributors": ["gh/LuYifei2011"],
   "variables": [
     { "name": "Z ORDER", "scope": "global", "type": "list" },
     { "name": "i", "scope": "sprite", "type": "variable" }

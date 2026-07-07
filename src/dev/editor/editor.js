@@ -214,8 +214,6 @@ function renderModuleEditor() {
         return c.name;
       })
       .join(', ');
-  } else if (typeof meta.contributors === 'string') {
-    contributorsStr = meta.contributors;
   }
   document.getElementById('meta-contributors').value = contributorsStr;
 
@@ -443,7 +441,7 @@ document.getElementById('meta-form').addEventListener('submit', async (e) => {
     description: document.getElementById('meta-description').value,
     tags,
     keywords,
-    contributors: document.getElementById('meta-contributors').value,
+    contributors: parseCommaSeparatedInput(document.getElementById('meta-contributors').value),
   };
 
   try {

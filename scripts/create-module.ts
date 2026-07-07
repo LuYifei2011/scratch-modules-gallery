@@ -25,7 +25,7 @@ function usage(): string {
     '  --description <text>       Module baseline description.',
     '  --tags <a,b>               Comma-separated tag ids.',
     '  --keywords <a,b>           Comma-separated SEO/search keywords.',
-    '  --contributors <text>      Contributors string, e.g. "gh/user, sc/user".',
+    '  --contributors <a,b>       Comma-separated contributors, e.g. "gh/user, sc/user".',
     '  --script-content <text>    Initial Scratch script content.',
     '  --help                     Show this help message.',
   ].join('\n');
@@ -172,7 +172,7 @@ async function main() {
       description: options.description,
       tags: options.tags || [],
       keywords: options.keywords || [],
-      ...(options.contributors ? { contributors: options.contributors } : {}),
+      ...(options.contributors ? { contributors: parseCommaList(options.contributors) } : {}),
     },
     scriptContent: options.scriptContent,
   });

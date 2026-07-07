@@ -4,6 +4,6 @@
   "description": "Round a number to n decimal places.",
   "tags": ["math"],
   "keywords": ["decimal", "precision", "rounding"],
-  "contributors": "gh/LuYifei2011",
+  "contributors": ["gh/LuYifei2011"],
   "variables": [{ "name": "result", "scope": "sprite", "type": "variable" }]
 }

@@ -3,17 +3,8 @@ import type { Contributor, ModuleMeta, ModuleRecord, ModuleScript, ModuleTransla
 
 export function parseContributors(raw: unknown): Contributor[] {
   if (!raw) return [];
-  // 允许: "gh/name, sc/other, Alice" 或数组
   if (Array.isArray(raw)) {
     return raw.map(normalizeOne).filter((item): item is Contributor => Boolean(item));
-  }
-  if (typeof raw === 'string') {
-    return raw
-      .split(',')
-      .map((s) => s.trim())
-      .filter(Boolean)
-      .map(normalizeOne)
-      .filter((item): item is Contributor => Boolean(item));
   }
   return [];
 }
@@ -21,20 +12,26 @@ export function parseContributors(raw: unknown): Contributor[] {
 function normalizeOne(entry: unknown): Contributor | null {
   if (!entry) return null;
   if (typeof entry === 'string') {
+    const value = entry.trim();
+    if (!value) return null;
     // 形式: gh/用户名 或 sc/用户名 或 普通名字
-    if (entry.startsWith('gh/')) {
-      const name = entry.slice(3).trim();
+    if (value.startsWith('gh/')) {
+      const name = value.slice(3).trim();
+      if (!name) return null;
       return { name, url: `https://github.com/${name}` };
     }
-    if (entry.startsWith('sc/')) {
-      const name = entry.slice(3).trim();
+    if (value.startsWith('sc/')) {
+      const name = value.slice(3).trim();
+      if (!name) return null;
       return { name, url: `https://scratch.mit.edu/users/${name}` };
     }
-    return { name: entry };
+    return { name: value };
   }
   if (entry && typeof entry === 'object' && 'name' in entry && typeof entry.name === 'string') {
+    const name = entry.name.trim();
+    if (!name) return null;
     const url = 'url' in entry && typeof entry.url === 'string' ? entry.url : undefined;
-    return { name: entry.name, url };
+    return { name, url };
   }
   return null;
 }
@@ -56,6 +53,9 @@ export function buildModuleRecord(
   if (typeof name !== 'string' || !name.trim()) errors.push('missing name');
   if (typeof description !== 'string' || !description.trim()) errors.push('missing description');
   if (!Array.isArray(tags)) errors.push('tags must be array');
+  if (contributors !== undefined && contributors !== null && !Array.isArray(contributors)) {
+    errors.push('contributors must be array');
+  }
   // 脚本标题（英文，按脚本 id -> 标题）
   const scriptTitles =
     meta && typeof meta.scriptTitles === 'object' && !Array.isArray(meta.scriptTitles) ? meta.scriptTitles : {};

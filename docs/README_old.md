@@ -48,7 +48,7 @@ content/modules/<module-id>/
 - `id` (slug 同步使用)
 - `name`, `description`, `tags`：可为字符串 / 数组或多语言映射对象 `{ "en": "...", "zh-cn": "..." }`
 - `keywords`：可选，数组格式；SEO 关键词，用于搜索和 meta keywords（与 tags 合并后去重）
-- `contributors`：数组或逗号分隔字符串；支持 `gh/<user>` 与 `sc/<user>` 自动转链接
+- `contributors`：数组；支持字符串项和 `{ "name": "...", "url": "..." }` 对象项，字符串项支持 `gh/<user>` 与 `sc/<user>` 自动转链接
 - `scriptTitles`：可选，英文基准脚本标题映射 `{ "main": "Intro", "extra": "Advanced" }`（脚本 id 来自文件名解析）。
 - `variables`：数组，原 `variables.json` 已合并；形如 `[{"name":"FPS","type":"variable","scope":"global"}]`。
 - `references`：数组，原 `references.json` 已合并；形如 `[{"title":"...","url":"...","type":"video"}]`。

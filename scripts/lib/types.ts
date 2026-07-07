@@ -77,7 +77,7 @@ export interface ModuleMeta {
   seoDescription?: string;
   tags?: string[];
   keywords?: string[];
-  contributors?: string | (string | Contributor)[];
+  contributors?: (string | Contributor)[];
   scriptTitles?: Record<string, string>;
   variables?: ModuleVariable[];
   references?: ModuleReference[];
