@@ -249,6 +249,10 @@
                             <dt><%= it.t.module.importedScriptCount %></dt>
                             <dd><%= importedScriptCount %></dd>
                         </div>
+                        <div>
+                            <dt><%= it.t.module.seoDescription %></dt>
+                            <dd><%= module.seoDescription %></dd>
+                        </div>
                     </dl>
                 </div>
             <% } %>
